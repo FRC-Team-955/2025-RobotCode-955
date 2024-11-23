@@ -11,6 +11,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.dashboard.DashboardBoolean;
 import frc.robot.dashboard.DashboardSubsystem;
 import frc.robot.factories.*;
+import frc.robot.factories.auto.FourPieceWingAutoFactory;
+import frc.robot.factories.auto.ThreePieceMidlineAutoFactory;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.WheelRadiusCharacterization;
 import frc.robot.subsystems.intake.Intake;
