@@ -437,7 +437,7 @@ public class Shooter extends SubsystemBase {
     ////////////////////// CONSTRUCTOR //////////////////////
     private Shooter() {
         ////////////////////// IO CREATION //////////////////////
-        io = switch (Constants.mode) {
+        io = new ShooterIO();/*switch (Constants.mode) {
             case REAL -> new ShooterIOSparkMaxBeamBreak(
                     6,
                     7,
@@ -454,7 +454,7 @@ public class Shooter extends SubsystemBase {
                     DCMotor.getNEO(1)
             );
             case REPLAY -> new ShooterIO();
-        };
+        };*/
 
         ////////////////////// IO CONFIGURATION //////////////////////
 

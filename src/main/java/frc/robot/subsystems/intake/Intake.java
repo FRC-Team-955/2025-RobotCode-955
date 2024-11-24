@@ -191,7 +191,7 @@ public class Intake extends SubsystemBase {
     ////////////////////// CONSTRUCTOR //////////////////////
     private Intake() {
         ////////////////////// IO CREATION //////////////////////
-        io = switch (Constants.mode) {
+        io = new IntakeIO();/*switch (Constants.mode) {
             case REAL -> new IntakeIOSparkMax(
                     3,
                     16
@@ -203,7 +203,7 @@ public class Intake extends SubsystemBase {
                     DCMotor.getNEO(1)
             );
             case REPLAY -> new IntakeIO();
-        };
+        };*/
 
         ////////////////////// IO CONFIGURATION //////////////////////
 
