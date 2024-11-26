@@ -78,7 +78,7 @@ public class WheelRadiusCharacterization extends Command {
         }
         averageWheelPosition /= 4.0;
 
-        currentEffectiveWheelRadius = (accumGyroYawRads * Drive.DRIVE_BASE_RADIUS) / averageWheelPosition;
+        currentEffectiveWheelRadius = (accumGyroYawRads * DriveConstants.drivebaseRadius) / averageWheelPosition;
         Logger.recordOutput("Drive/RadiusCharacterization/DrivePosition", averageWheelPosition);
         Logger.recordOutput("Drive/RadiusCharacterization/AccumGyroYawRads", accumGyroYawRads);
         Logger.recordOutput(

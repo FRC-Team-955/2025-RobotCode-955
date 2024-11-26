@@ -70,21 +70,10 @@ public class Drive extends SubsystemBase {
 
     private final RobotState robotState = RobotState.get();
 
-    //    private static final double MAX_LINEAR_SPEED = Units.feetToMeters(14.5);
-    private static final double DRIVE_BASE_WIDTH = Units.inchesToMeters(21.75); // Measured from the center of the swerve wheels
-    private static final double DRIVE_BASE_LENGTH = DRIVE_BASE_WIDTH;
-    public static final double DRIVE_BASE_RADIUS = Math.hypot(DRIVE_BASE_WIDTH / 2.0, DRIVE_BASE_LENGTH / 2.0);
-    public static final Translation2d[] MODULE_TRANSLATIONS = new Translation2d[]{
-            new Translation2d(DRIVE_BASE_WIDTH / 2.0, DRIVE_BASE_LENGTH / 2.0),
-            new Translation2d(DRIVE_BASE_WIDTH / 2.0, -DRIVE_BASE_LENGTH / 2.0),
-            new Translation2d(-DRIVE_BASE_WIDTH / 2.0, DRIVE_BASE_LENGTH / 2.0),
-            new Translation2d(-DRIVE_BASE_WIDTH / 2.0, -DRIVE_BASE_LENGTH / 2.0)
-    };
-    //    private static final double MAX_ANGULAR_SPEED = MAX_LINEAR_SPEED / DRIVE_BASE_RADIUS;
     private static final double JOYSTICK_DRIVE_DEADBAND = 0.1;
     private static final double POINT_TOWARDS_TOLERANCE = Units.degreesToRadians(3);
 
-    private final GyroIO gyroIO;
+    private final GyroIO gyroIO = DriveConstants.gyroIO;
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
 
     private final VisionIO visionIO;
@@ -99,20 +88,20 @@ public class Drive extends SubsystemBase {
 
     private final TuningDashboardPIDController choreoFeedbackX = new TuningDashboardPIDController(
             DashboardSubsystem.DRIVE, "Choreo X PID",
-            new PIDConstants(1.5, 0, 0)
+            DriveConstants.driveConfig.choreoFeedbackXY()
     );
     private final TuningDashboardPIDController choreoFeedbackY = new TuningDashboardPIDController(
             DashboardSubsystem.DRIVE, "Choreo Y PID",
-            new PIDConstants(1.5, 0, 0)
+            DriveConstants.driveConfig.choreoFeedbackXY()
     );
     private final TuningDashboardPIDController choreoFeedbackTheta = new TuningDashboardPIDController(
             DashboardSubsystem.DRIVE, "Choreo Theta PID",
-            new PIDConstants(1.5, 0, 0),
+            DriveConstants.driveConfig.choreoFeedbackTheta(),
             (pid) -> pid.enableContinuousInput(-Math.PI, Math.PI)
     );
     private final TuningDashboardPIDController pointTowardsController = new TuningDashboardPIDController(
             DashboardSubsystem.DRIVE, "Point Towards PID",
-            new PIDConstants(2.1, 0, 0.1),
+            DriveConstants.driveConfig.pointTowardsController(),
             (pid) -> pid.enableContinuousInput(-Math.PI, Math.PI)
     );
 
@@ -146,21 +135,12 @@ public class Drive extends SubsystemBase {
     }
 
     private Drive() {
-        gyroIO = switch (Constants.mode) {
-            case REAL -> new GyroIOPigeon2(10);
-            case SIM, REPLAY -> new GyroIO();
-        };
         visionIO = switch (Constants.mode) {
-            case REAL -> new VisionIOCamera("Shooter_Cam");
+            case REAL -> new VisionIO();//Camera("Shooter_Cam");
             case SIM, REPLAY -> new VisionIO();
         };
         for (int i = 0; i < 4; i++) {
-            final var moduleIO = switch (Constants.mode) {
-                case REAL -> new ModuleIOSparkMaxCANcoder(i);
-                case SIM -> new ModuleIOSim();
-                case REPLAY -> new ModuleIO();
-            };
-            modules[i] = new Module(moduleIO, i);
+            modules[i] = new Module(DriveConstants.moduleIO[i], i);
         }
 
         sysId = Util.sysIdRoutine(
@@ -281,7 +261,7 @@ public class Drive extends SubsystemBase {
     private void stopWithX() {
         Rotation2d[] headings = new Rotation2d[4];
         for (int i = 0; i < 4; i++) {
-            headings[i] = MODULE_TRANSLATIONS[i].getAngle();
+            headings[i] = DriveConstants.moduleTranslations[i].getAngle();
         }
         robotState.getKinematics().resetHeadings(headings);
         stop();

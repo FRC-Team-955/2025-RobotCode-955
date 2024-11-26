@@ -13,13 +13,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
 
 /**
- * Module IO implementation for Talon FX drive motor controller, Talon FX turn motor controller, and
- * CANcoder
- *
- * <p>To calibrate the absolute encoder offsets, point the modules straight (such that forward
- * motion on the drive motor will propel the robot forward) and copy the reported values from the
- * absolute encoders using AdvantageScope. These values are logged under
- * "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
+ * Module IO implementation for Talon FX drive motor controller, Talon FX turn motor controller, and CANcoder
  */
 public class ModuleIOTalonFXCANcoder extends ModuleIO {
     private final TalonFX driveTalon;
@@ -37,42 +31,19 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
     private final StatusSignal<Double> turnAppliedVolts;
     private final StatusSignal<Double> turnCurrent;
 
-    // Gear ratios for SDS MK4i L2, adjust as necessary
-    private final double DRIVE_GEAR_RATIO = (50.0 / 14.0) * (17.0 / 27.0) * (45.0 / 15.0);
-    private final double TURN_GEAR_RATIO = 150.0 / 7.0;
-
     private final boolean isTurnMotorInverted = true;
     private final double absoluteEncoderOffsetRad;
 
-    public ModuleIOTalonFXCANcoder(int index) {
-        // See class level documentation comment for info on calibrating encoder offsets
-        switch (index) {
-            case 0 -> {
-                driveTalon = new TalonFX(0);
-                turnTalon = new TalonFX(1);
-                cancoder = new CANcoder(2);
-                absoluteEncoderOffsetRad = 0.0; // MUST BE CALIBRATED
-            }
-            case 1 -> {
-                driveTalon = new TalonFX(3);
-                turnTalon = new TalonFX(4);
-                cancoder = new CANcoder(5);
-                absoluteEncoderOffsetRad = 0.0; // MUST BE CALIBRATED
-            }
-            case 2 -> {
-                driveTalon = new TalonFX(6);
-                turnTalon = new TalonFX(7);
-                cancoder = new CANcoder(8);
-                absoluteEncoderOffsetRad = 0.0; // MUST BE CALIBRATED
-            }
-            case 3 -> {
-                driveTalon = new TalonFX(9);
-                turnTalon = new TalonFX(10);
-                cancoder = new CANcoder(11);
-                absoluteEncoderOffsetRad = 0.0; // MUST BE CALIBRATED
-            }
-            default -> throw new RuntimeException("Invalid module index");
-        }
+    public ModuleIOTalonFXCANcoder(
+            int driveCanID,
+            int turnCanID,
+            int cancoderCanID,
+            double absoluteEncoderOffsetRad
+    ) {
+        driveTalon = new TalonFX(driveCanID);
+        turnTalon = new TalonFX(turnCanID);
+        cancoder = new CANcoder(cancoderCanID);
+        this.absoluteEncoderOffsetRad = absoluteEncoderOffsetRad;
 
         var driveConfig = new TalonFXConfiguration();
         driveConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
@@ -128,16 +99,14 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
                 turnCurrent
         );
 
-        inputs.drivePositionRad =
-                Units.rotationsToRadians(drivePosition.getValueAsDouble()) / DRIVE_GEAR_RATIO;
-        inputs.driveVelocityRadPerSec =
-                Units.rotationsToRadians(driveVelocity.getValueAsDouble()) / DRIVE_GEAR_RATIO;
+        inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble()) / DriveConstants.moduleConfig.driveGearRatio();;
+        inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble()) / DriveConstants.moduleConfig.driveGearRatio();;
         inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
         inputs.driveCurrentAmps = driveCurrent.getValueAsDouble();
 
         inputs.turnAbsolutePositionRad = Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble()) - absoluteEncoderOffsetRad;
-        inputs.turnPositionRad = Units.rotationsToRadians(turnPosition.getValueAsDouble() / TURN_GEAR_RATIO);
-        inputs.turnVelocityRadPerSec = Units.rotationsToRadians(turnVelocity.getValueAsDouble()) / TURN_GEAR_RATIO;
+        inputs.turnPositionRad = Units.rotationsToRadians(turnPosition.getValueAsDouble() / DriveConstants.moduleConfig.turnGearRatio());
+        inputs.turnVelocityRadPerSec = Units.rotationsToRadians(turnVelocity.getValueAsDouble()) / DriveConstants.moduleConfig.turnGearRatio();
         inputs.turnAppliedVolts = turnAppliedVolts.getValueAsDouble();
         inputs.turnCurrentAmps = turnCurrent.getValueAsDouble();
     }

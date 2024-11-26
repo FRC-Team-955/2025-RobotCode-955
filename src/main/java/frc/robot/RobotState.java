@@ -15,6 +15,7 @@ import edu.wpi.first.units.Measure;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveConstants;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
@@ -27,7 +28,7 @@ public class RobotState {
     public static final LoggedDashboardBoolean tuningMode = new LoggedDashboardBoolean("1 Tuning Mode", false);
 
     @Getter
-    private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(Drive.MODULE_TRANSLATIONS);
+    private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(DriveConstants.moduleTranslations);
     private final SwerveModulePosition[] lastModulePositions = new SwerveModulePosition[]{
             new SwerveModulePosition(),
             new SwerveModulePosition(),

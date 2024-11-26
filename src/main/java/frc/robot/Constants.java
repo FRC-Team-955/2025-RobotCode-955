@@ -11,19 +11,16 @@ import edu.wpi.first.wpilibj.RobotBase;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-    /**
-     * Automatically determined based on if code is running on a real robot and if {@link
-     * Simulation#shouldReplay} is enabled
-     */
-    public static final Mode mode = RobotBase.isReal() ? Mode.REAL : (Simulation.shouldReplay ? Mode.REPLAY : Mode.SIM);
-    /**
-     * True if {@link #mode} is REAL or REPLAY
-     */
-    public static final boolean isReal = (mode == Mode.REAL) || (mode == Mode.REPLAY);
-    /**
-     * True if {@link #mode} is SIM
-     */
-    public static final boolean isSim = mode == Mode.SIM;
+    public static final RobotIdentity identity = RobotIdentity.determine();
+
+    public static final Mode mode = Simulation.shouldReplay
+            ? Mode.REPLAY
+            : switch (identity) {
+        case SIMBOT -> Mode.SIM;
+        default -> Mode.REAL;
+    };
+
+    public static final boolean isReplay = mode ==Mode.REPLAY;
 
     public enum Mode {
         /**
@@ -42,6 +39,8 @@ public final class Constants {
 
     public static final class Simulation {
         public static final boolean shouldReplay = false;
+        public static final RobotIdentity replayIdentity = RobotIdentity.COMPBOT;
+
         /**
          * If true, replay will run as fast as your computer can go and log to a log file instead of
          * NetworkTables. You will have to open the log file to see anything.

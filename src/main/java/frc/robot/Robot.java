@@ -52,7 +52,6 @@ public class Robot extends LoggedRobot {
     public void robotInit() {
         // https://github.com/Mechanical-Advantage/AdvantageKit/blob/main/docs/RECORDING-OUTPUTS.md#autologoutput-annotation
         AutoLogOutputManager.addPackage("frc");
-        AutoLogOutputManager.addPackage("frc.lib");
         try {
             AutoLogOutputManager.addPackage(getClass().getPackageName().split("\\.")[0]);
         } catch (IndexOutOfBoundsException ignored) {

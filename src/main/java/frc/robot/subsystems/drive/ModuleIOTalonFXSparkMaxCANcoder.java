@@ -1,8 +1,15 @@
 package frc.robot.subsystems.drive;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
@@ -10,70 +17,86 @@ import com.revrobotics.RelativeEncoder;
 import edu.wpi.first.math.util.Units;
 
 /**
- * Module IO implementation for SparkMax drive motor controller, SparkMax turn motor controller (NEO or NEO 550), and CANcoder
+ * Module IO implementation for TalonFX drive motor controller, SparkMax turn motor controller (NEO or NEO 550), and CANcoder
  */
-public class ModuleIOSparkMaxCANcoder extends ModuleIO {
-    private final CANSparkMax driveSparkMax;
+public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
+    private final TalonFX driveTalon;
     private final CANSparkMax turnSparkMax;
-
-    private final RelativeEncoder driveEncoder;
-    private final RelativeEncoder turnRelativeEncoder;
     private final CANcoder cancoder;
+
+    private final StatusSignal<Double> drivePosition;
+    private final StatusSignal<Double> driveVelocity;
+    private final StatusSignal<Double> driveAppliedVolts;
+    private final StatusSignal<Double> driveCurrent;
+
+    private final RelativeEncoder turnRelativeEncoder;
     private final StatusSignal<Double> turnAbsolutePosition;
 
     private final boolean isTurnMotorInverted = true;
     private final double absoluteEncoderOffsetRad;
 
-    public ModuleIOSparkMaxCANcoder(
+    public ModuleIOTalonFXSparkMaxCANcoder(
             int driveCanID,
             int turnCanID,
             int cancoderCanID,
             double absoluteEncoderOffsetRad
     ) {
-        driveSparkMax = new CANSparkMax(driveCanID, MotorType.kBrushless);
+        driveTalon = new TalonFX(driveCanID);
         turnSparkMax = new CANSparkMax(turnCanID, MotorType.kBrushless);
         cancoder = new CANcoder(cancoderCanID);
         this.absoluteEncoderOffsetRad = absoluteEncoderOffsetRad;
 
-        driveSparkMax.restoreFactoryDefaults();
         turnSparkMax.restoreFactoryDefaults();
-
-        driveSparkMax.setCANTimeout(250);
         turnSparkMax.setCANTimeout(250);
-
-        driveEncoder = driveSparkMax.getEncoder();
         turnRelativeEncoder = turnSparkMax.getEncoder();
-
         turnSparkMax.setInverted(isTurnMotorInverted);
-        driveSparkMax.setSmartCurrentLimit(40);
         turnSparkMax.setSmartCurrentLimit(30);
-        driveSparkMax.enableVoltageCompensation(12.0);
         turnSparkMax.enableVoltageCompensation(12.0);
-
-        driveEncoder.setPosition(0.0);
-        driveEncoder.setMeasurementPeriod(10);
-        driveEncoder.setAverageDepth(2);
-
         turnRelativeEncoder.setPosition(0.0);
         turnRelativeEncoder.setMeasurementPeriod(10);
         turnRelativeEncoder.setAverageDepth(2);
-
-        driveSparkMax.setCANTimeout(0);
         turnSparkMax.setCANTimeout(0);
-
-        driveSparkMax.burnFlash();
         turnSparkMax.burnFlash();
+
+        var driveConfig = new TalonFXConfiguration();
+        driveConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+        driveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        driveTalon.getConfigurator().apply(driveConfig);
+        setDriveBrakeMode(true);
+
+        drivePosition = driveTalon.getPosition();
+        driveVelocity = driveTalon.getVelocity();
+        driveAppliedVolts = driveTalon.getMotorVoltage();
+        driveCurrent = driveTalon.getSupplyCurrent();
 
         cancoder.getConfigurator().apply(new CANcoderConfiguration());
         turnAbsolutePosition = cancoder.getAbsolutePosition();
+
+        BaseStatusSignal.setUpdateFrequencyForAll(100.0, drivePosition); // Required for odometry, use faster rate
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                50.0,
+                driveVelocity,
+                driveAppliedVolts,
+                driveCurrent,
+                turnAbsolutePosition
+        );
+        driveTalon.optimizeBusUtilization();
     }
 
     @Override
     public void updateInputs(ModuleIOInputs inputs) {
-        inputs.drivePositionRad = Units.rotationsToRadians(driveEncoder.getPosition()) / DriveConstants.moduleConfig.driveGearRatio();;
-        inputs.driveVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(driveEncoder.getVelocity()) / DriveConstants.moduleConfig.driveGearRatio();
-        inputs.driveAppliedVolts = driveSparkMax.getAppliedOutput() * driveSparkMax.getBusVoltage();
-        inputs.driveCurrentAmps = driveSparkMax.getOutputCurrent();
+        BaseStatusSignal.refreshAll(
+                drivePosition,
+                driveVelocity,
+                driveAppliedVolts,
+                driveCurrent,
+                turnAbsolutePosition
+        );
+
+        inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble()) / DriveConstants.moduleConfig.driveGearRatio();
+        inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble()) / DriveConstants.moduleConfig.driveGearRatio();
+        inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
+        inputs.driveCurrentAmps = driveCurrent.getValueAsDouble();
 
         inputs.turnAbsolutePositionRad = Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble()) - absoluteEncoderOffsetRad;
         inputs.turnPositionRad = Units.rotationsToRadians(turnRelativeEncoder.getPosition() / DriveConstants.moduleConfig.turnGearRatio());
@@ -84,7 +107,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
 
     @Override
     public void setDriveVoltage(double volts) {
-        driveSparkMax.setVoltage(volts);
+        driveTalon.setControl(new VoltageOut(volts));
     }
 
     @Override
@@ -94,7 +117,10 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
 
     @Override
     public void setDriveBrakeMode(boolean enable) {
-        driveSparkMax.setIdleMode(enable ? IdleMode.kBrake : IdleMode.kCoast);
+        var config = new MotorOutputConfigs();
+        config.Inverted = InvertedValue.CounterClockwise_Positive;
+        config.NeutralMode = enable ? NeutralModeValue.Brake : NeutralModeValue.Coast;
+        driveTalon.getConfigurator().apply(config);
     }
 
     @Override

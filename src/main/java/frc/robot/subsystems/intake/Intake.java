@@ -116,15 +116,15 @@ public class Intake extends SubsystemBase {
     ////////////////////// PIVOT //////////////////////
     private final TuningDashboardArmFeedforward pivotFeedforward = new TuningDashboardArmFeedforward(
             DashboardSubsystem.INTAKE, "Pivot FF",
-            Constants.isReal
+            /*Constants.isReal
                     ? new ArmFeedforward(0, 0.6, 0)
-                    : new ArmFeedforward(0, 0.28, 0)
+                    : */new ArmFeedforward(0, 0.28, 0)
     );
     private final TuningDashboardPIDConstants pivotPID = new TuningDashboardPIDConstants(
             DashboardSubsystem.INTAKE, "Pivot PID",
-            Constants.isReal
+            /*Constants.isReal
                     ? new PIDConstants(0.12, 0.003)
-                    : new PIDConstants(8, 0)
+                    : */new PIDConstants(8, 0)
     );
     private Measure<Angle> pivotSetpoint = null;
     public final SysIdRoutine pivotSysId;
@@ -132,15 +132,15 @@ public class Intake extends SubsystemBase {
     ////////////////////// FEED //////////////////////
     private final TuningDashboardSimpleFeedforward feedFeedforward = new TuningDashboardSimpleFeedforward(
             DashboardSubsystem.INTAKE, "Feed FF",
-            Constants.isReal
+            /*Constants.isReal
                     ? new SimpleMotorFeedforward(0.21091, 0.080256, 0.0097204)
-                    : new SimpleMotorFeedforward(0, 0.058)
+                    :*/ new SimpleMotorFeedforward(0, 0.058)
     );
     private final TuningDashboardPIDConstants feedPID = new TuningDashboardPIDConstants(
             DashboardSubsystem.INTAKE, "Feed PID",
-            Constants.isReal
+            /*Constants.isReal
                     ? new PIDConstants(0.0001, 0.0001, 0)
-                    : new PIDConstants(0.1, 0)
+                    :*/ new PIDConstants(0.1, 0)
     );
     private Measure<Velocity<Angle>> feedSetpoint = null;
     public final SysIdRoutine feedSysId;

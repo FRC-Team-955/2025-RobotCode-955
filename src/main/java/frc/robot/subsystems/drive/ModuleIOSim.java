@@ -12,8 +12,8 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
  * approximation for the behavior of the module.
  */
 public class ModuleIOSim extends ModuleIO {
-    private final DCMotorSim driveSim = new DCMotorSim(DCMotor.getNEO(1), ModuleIOSparkMaxCANcoder.DRIVE_GEAR_RATIO, 0.025);
-    private final DCMotorSim turnSim = new DCMotorSim(DCMotor.getNEO(1), ModuleIOSparkMaxCANcoder.TURN_GEAR_RATIO, 0.004);
+    private final DCMotorSim driveSim = new DCMotorSim(DCMotor.getNEO(1), DriveConstants.moduleConfig.driveGearRatio(), 0.025);
+    private final DCMotorSim turnSim = new DCMotorSim(DCMotor.getNEO(1), DriveConstants.moduleConfig.turnGearRatio(), 0.004);
 
     private final double turnAbsoluteInitPosition = Math.random() * 2.0 * Math.PI;
     private double driveAppliedVolts = 0.0;

@@ -296,21 +296,21 @@ public class Shooter extends SubsystemBase {
     ////////////////////// PIVOT //////////////////////
     private final TuningDashboardArmFeedforward pivotFeedforward = new TuningDashboardArmFeedforward(
             DashboardSubsystem.SHOOTER, "Pivot FF",
-            Constants.isReal
+            /*Constants.isReal
                     ? new ArmFeedforward(0.574, 1.0, 0.65051, 0.21235)
-                    : new ArmFeedforward(0, 0.4, 0)
+                    :*/ new ArmFeedforward(0, 0.4, 0)
     );
     private final TuningDashboardPIDConstants pivotPIDShooting = new TuningDashboardPIDConstants(
             DashboardSubsystem.SHOOTER, "Pivot PID Shooting",
-            Constants.isReal
+            /*Constants.isReal
                     ? new PIDConstants(0.2, 0.001)
-                    : new PIDConstants(5, 0)
+                    :*/ new PIDConstants(5, 0)
     );
     private final TuningDashboardPIDConstants pivotPIDNotShooting = new TuningDashboardPIDConstants(
             DashboardSubsystem.SHOOTER, "Pivot PID Not Shooting",
-            Constants.isReal
+            /*Constants.isReal
                     ? new PIDConstants(0.075)
-                    : new PIDConstants(5, 0)
+                    :*/ new PIDConstants(5, 0)
     );
     private Measure<Angle> pivotSetpoint = PIVOT_INITIAL_POSITION;
     public final SysIdRoutine pivotSysId;
@@ -319,15 +319,15 @@ public class Shooter extends SubsystemBase {
     ////////////////////// FEED //////////////////////
     private final TuningDashboardSimpleFeedforward feedFeedforward = new TuningDashboardSimpleFeedforward(
             DashboardSubsystem.SHOOTER, "Feed FF",
-            Constants.isReal
+            /*Constants.isReal
                     ? new SimpleMotorFeedforward(0.23233, 0.060739, 0.006805)
-                    : new SimpleMotorFeedforward(0, 0.058)
+                    :*/ new SimpleMotorFeedforward(0, 0.058)
     );
     private final TuningDashboardPIDConstants feedPID = new TuningDashboardPIDConstants(
             DashboardSubsystem.SHOOTER, "Feed PID",
-            Constants.isReal
+            /*Constants.isReal
                     ? new PIDConstants(0.0001, 0.0001, 0)
-                    : new PIDConstants(0.1, 0)
+                    :*/ new PIDConstants(0.1, 0)
     );
     private Measure<Velocity<Angle>> feedSetpoint = null;
     public final SysIdRoutine feedSysId;
@@ -335,26 +335,26 @@ public class Shooter extends SubsystemBase {
     ////////////////////// FLYWHEELS //////////////////////
     private final TuningDashboardSimpleFeedforward flywheelTopFeedforward = new TuningDashboardSimpleFeedforward(
             DashboardSubsystem.SHOOTER, "Flywheel Top FF",
-            Constants.isReal
+            /*Constants.isReal
                     ? new SimpleMotorFeedforward(0.23795, 0.011308, 0.0069895)
-                    : new SimpleMotorFeedforward(0, 0.01)
+                    :*/ new SimpleMotorFeedforward(0, 0.01)
     );
     private final TuningDashboardSimpleFeedforward flywheelBottomFeedforward = new TuningDashboardSimpleFeedforward(
             DashboardSubsystem.SHOOTER, "Flywheel Bottom FF",
-            Constants.isReal
+            /*Constants.isReal
                     ? new SimpleMotorFeedforward(0.23279, 0.0113005, 0.0064997)
-                    : flywheelTopFeedforward.get()
+                    :*/ flywheelTopFeedforward.get()
     );
     private final TuningDashboardPIDConstants flywheelTopPID = new TuningDashboardPIDConstants(
             DashboardSubsystem.SHOOTER, "Flywheel Top PID",
-            Constants.isReal
+            /*Constants.isReal
                     ? new PIDConstants(0.0001, 0.01, 0)
-                    : new PIDConstants(0.2, 0));
+                    :*/ new PIDConstants(0.2, 0));
     private final TuningDashboardPIDConstants flywheelBottomPID = new TuningDashboardPIDConstants(
             DashboardSubsystem.SHOOTER, "Flywheel Bottom PID",
-            Constants.isReal
+            /*Constants.isReal
                     ? new PIDConstants(0.0001, 0.01, 0)
-                    : flywheelTopPID.get()
+                    :*/ flywheelTopPID.get()
     );
     private Measure<Velocity<Angle>> flywheelsSetpoint = null;
     public final SysIdRoutine flywheelsSysId;
