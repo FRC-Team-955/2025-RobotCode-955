@@ -11,9 +11,6 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.pathplanner.lib.util.PIDConstants;
 import edu.wpi.first.math.util.Units;
-import frc.robot.util.MotorFlags;
-
-import java.util.EnumSet;
 
 public class WheelIOTalonFX extends WheelIO {
     private final TalonFX motor;
