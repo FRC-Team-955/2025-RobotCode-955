@@ -77,7 +77,6 @@ public class Robot extends LoggedRobot {
 
         switch (Constants.mode) {
             case REAL -> {
-
                 Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
                 Logger.addDataReceiver(new NT4Publisher()); // Log to NetworkTables
                 // SmartDashboard.putData("PowerDistribution", new PowerDistribution(Constants.pdhId, PowerDistribution.ModuleType.kRev)); // Enables power distribution logging
