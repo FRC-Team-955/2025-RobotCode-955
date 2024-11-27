@@ -46,7 +46,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         this.absoluteEncoderOffsetRad = absoluteEncoderOffsetRad;
 
         var driveConfig = new TalonFXConfiguration();
-        driveConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+        driveConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
         driveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         driveTalon.getConfigurator().apply(driveConfig);
         setDriveBrakeMode(true);

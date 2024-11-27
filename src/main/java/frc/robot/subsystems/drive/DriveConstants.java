@@ -9,21 +9,21 @@ import frc.robot.Constants;
 public class DriveConstants {
     public static final DriveConfig driveConfig = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> new DriveConfig(
-                Units.inchesToMeters(1.90433686321622),
+                Units.inchesToMeters(2),
                 Units.inchesToMeters(21.75),
                 Units.inchesToMeters(21.75),
-                Units.inchesToMeters(25),
-                Units.inchesToMeters(25),
+                Units.inchesToMeters(31),
+                Units.inchesToMeters(31),
                 new PIDConstants(1.5, 0, 0),
                 new PIDConstants(1.5, 0, 0),
                 new PIDConstants(2.1, 0, 0.1)
         );
         case NEO_DRIVEBASE -> new DriveConfig(
                 Units.inchesToMeters(2),
-                Units.inchesToMeters(21.75),
-                Units.inchesToMeters(21.75),
-                Units.inchesToMeters(25),
-                Units.inchesToMeters(25),
+                Units.inchesToMeters(20.75),
+                Units.inchesToMeters(20.75),
+                Units.inchesToMeters(30),
+                Units.inchesToMeters(30),
                 new PIDConstants(1.5, 0, 0),
                 new PIDConstants(1.5, 0, 0),
                 new PIDConstants(2.1, 0, 0.1)
@@ -44,14 +44,24 @@ public class DriveConstants {
 
     public static final ModuleConfig moduleConfig = switch (Constants.identity) {
         case COMPBOT -> new ModuleConfig(
-                new SimpleMotorFeedforward(0.0689045, 0.1370225, 0.009731425),
+                new SimpleMotorFeedforward(
+                        // FL + FR + BL + BR
+                        (0.21524 + 0.16554 + 0.083665 + 0.061984) / 4.0,
+                        (0.11224 + 0.11693 + 0.12106 + 0.12449) / 4.0,
+                        (0.0038991 + 0.0018671 + 0.004602 + 0.0059919) / 4.0
+                ),
                 new PIDConstants(0.05, 0.0, 0.0),
                 new PIDConstants(5.0, 0.0, 0.0),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN
         );
         case NEO_DRIVEBASE -> new ModuleConfig(
-                new SimpleMotorFeedforward(0.0689045, 0.1370225, 0.009731425),
+                new SimpleMotorFeedforward(
+                        // FL + FR + BL + BR
+                        (0.024319 + 0.094701 /* + [erroneous] + [erroneous] (if adding back, change / 2.0) */) / 2.0,
+                        (0.13551 + 0.13733 + 0.13543 + 0.14087) / 4.0,
+                        (0.0065694 + 0.0054738 /* + [erroneous] (if adding back, change / 3.0) */ + 0.0091241) / 3.0
+                ),
                 new PIDConstants(0.05, 0.0, 0.0),
                 new PIDConstants(5.0, 0.0, 0.0),
                 Mk4iGearRatios.L2,
@@ -74,17 +84,17 @@ public class DriveConstants {
         // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
         case COMPBOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
-                new ModuleIOTalonFXSparkMaxCANcoder(10, 12, 13, 0.0),
-                new ModuleIOTalonFXSparkMaxCANcoder(7, 8, 9, 0.0),
-                new ModuleIOTalonFXSparkMaxCANcoder(1, 2, 3, 0.0),
-                new ModuleIOTalonFXSparkMaxCANcoder(5, 6, 4, 0.0),
+                new ModuleIOTalonFXSparkMaxCANcoder(10, 12, 13, 0.189),
+                new ModuleIOTalonFXSparkMaxCANcoder(7, 8, 9, 1.891),
+                new ModuleIOTalonFXSparkMaxCANcoder(1, 2, 3, -0.009),
+                new ModuleIOTalonFXSparkMaxCANcoder(5, 6, 4, 1.525),
         };
         case NEO_DRIVEBASE -> new ModuleIO[]{
                 // FL, FR, BL, BR
-                new ModuleIOSparkMaxCANcoder(2, 3, 1, -3.100),
-                new ModuleIOSparkMaxCANcoder(12, 13, 11, 0.0),
-                new ModuleIOSparkMaxCANcoder(4, 5, 6, -0.147),
-                new ModuleIOSparkMaxCANcoder(9, 10, 8, 0.0),
+                new ModuleIOSparkMaxCANcoder(2, 3, 1, 2.454),
+                new ModuleIOSparkMaxCANcoder(12, 13, 11, -0.735),
+                new ModuleIOSparkMaxCANcoder(4, 5, 6, 2.623),
+                new ModuleIOSparkMaxCANcoder(9, 10, 8, -1.302),
         };
         case SIMBOT -> new ModuleIO[]{
                 new ModuleIOSim(),
@@ -97,8 +107,8 @@ public class DriveConstants {
     public static final GyroIO gyroIO = Constants.isReplay
             ? new GyroIO()
             : switch (Constants.identity) {
-        case COMPBOT -> new GyroIOPigeon2(0);
-        case NEO_DRIVEBASE -> new GyroIOPigeon2(0);
+        case COMPBOT -> new GyroIOPigeon2(11);
+        case NEO_DRIVEBASE -> new GyroIOPigeon2(7);
         case SIMBOT -> new GyroIO();
     };
 
