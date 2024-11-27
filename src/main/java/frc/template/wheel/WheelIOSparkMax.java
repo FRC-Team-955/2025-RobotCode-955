@@ -3,9 +3,6 @@ package frc.template.wheel;
 import com.pathplanner.lib.util.PIDConstants;
 import com.revrobotics.*;
 import edu.wpi.first.math.util.Units;
-import frc.robot.util.MotorFlags;
-
-import java.util.EnumSet;
 
 public class WheelIOSparkMax extends WheelIO {
     private final CANSparkMax motor;
@@ -14,14 +11,14 @@ public class WheelIOSparkMax extends WheelIO {
 
     private double gearRatio = 1.0;
 
-    public WheelIOSparkMax(int canID, EnumSet<MotorFlags> flags) {
+    public WheelIOSparkMax(int canID, boolean inverted, boolean brakeMode) {
         motor = new CANSparkMax(canID, CANSparkLowLevel.MotorType.kBrushless);
         motor.restoreFactoryDefaults();
-        motor.setIdleMode(flags.contains(MotorFlags.IdleModeBrake) ? CANSparkBase.IdleMode.kBrake : CANSparkBase.IdleMode.kCoast);
+        motor.setIdleMode(brakeMode ? CANSparkBase.IdleMode.kBrake : CANSparkBase.IdleMode.kCoast);
         motor.setCANTimeout(250);
         motor.enableVoltageCompensation(12.0);
         motor.setSmartCurrentLimit(40);
-        motor.setInverted(flags.contains(MotorFlags.Inverted));
+        motor.setInverted(inverted);
         motor.burnFlash();
 
         encoder = motor.getEncoder();

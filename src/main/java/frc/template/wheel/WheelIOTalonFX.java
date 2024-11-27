@@ -25,13 +25,13 @@ public class WheelIOTalonFX extends WheelIO {
 
     private double gearRatio = 1.0;
 
-    public WheelIOTalonFX(int canID, EnumSet<MotorFlags> flags) {
+    public WheelIOTalonFX(int canID, boolean inverted, boolean brakeMode) {
         motor = new TalonFX(canID);
         var config = new TalonFXConfiguration();
         config.CurrentLimits.SupplyCurrentLimit = 40.0;
         config.CurrentLimits.SupplyCurrentLimitEnable = true;
-        config.MotorOutput.NeutralMode = flags.contains(MotorFlags.IdleModeBrake) ? NeutralModeValue.Brake : NeutralModeValue.Coast;
-        config.MotorOutput.Inverted = flags.contains(MotorFlags.Inverted) ? InvertedValue.CounterClockwise_Positive : InvertedValue.Clockwise_Positive;
+        config.MotorOutput.NeutralMode = brakeMode ? NeutralModeValue.Brake : NeutralModeValue.Coast;
+        config.MotorOutput.Inverted = inverted ? InvertedValue.CounterClockwise_Positive : InvertedValue.Clockwise_Positive;
         motor.getConfigurator().apply(config);
 
         position = motor.getPosition();

@@ -10,8 +10,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.units.Distance;
-import edu.wpi.first.units.Measure;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
@@ -21,8 +19,6 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
 
 import java.util.function.Supplier;
-
-import static edu.wpi.first.units.Units.Meters;
 
 public class RobotState {
     public static final LoggedDashboardBoolean tuningMode = new LoggedDashboardBoolean("1 Tuning Mode", false);
@@ -112,10 +108,5 @@ public class RobotState {
 
     public Command resetRotation() {
         return setPose(() -> new Pose2d(getTranslation(), new Rotation2d()));
-    }
-
-    @AutoLogOutput(key = "RobotState/SpeakerDistance")
-    public Measure<Distance> getDistanceToSpeaker() {
-        return Meters.of(getPose().getTranslation().getDistance(FieldLocations.SPEAKER.get()));
     }
 }

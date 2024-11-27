@@ -8,13 +8,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.dashboard.DashboardBoolean;
-import frc.robot.dashboard.DashboardSubsystem;
-import frc.robot.factories.CalculatedShootFactory;
-import frc.robot.factories.HandoffFactory;
-import frc.robot.factories.PassFactory;
-import frc.robot.factories.auto.FourPieceWingAutoFactory;
-import frc.robot.factories.auto.ThreePieceMidlineAutoFactory;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.WheelRadiusCharacterization;
 import frc.robot.subsystems.intake.Intake;
@@ -58,14 +51,7 @@ public class RobotContainer {
 
         autoChooser.addOption("None", null);
 
-        autoChooser.addOption("Shoot & Move", Commands.sequence(
-                shooter.shootSubwoofer(),
-                drive.driveVelocity(new ChassisSpeeds(2, 0, 0), 3)
-        ));
-
         var factory = drive.createAutoFactory(new AutoFactory.AutoBindings());
-        autoChooser.addDefaultOption("4 Piece Wing", FourPieceWingAutoFactory.get(factory));
-        autoChooser.addOption("3 Piece Midline", ThreePieceMidlineAutoFactory.get(factory));
 
         autoChooser.addOption("Characterization", Commands.deferredProxy(characterizationChooser::get));
     }
@@ -202,30 +188,6 @@ public class RobotContainer {
 
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
-
-        driverController.rightTrigger(0.25).whileTrue(intake.intake());
-
-        var presetShooting = new DashboardBoolean(
-                DashboardSubsystem.SHOOTER, "Preset Shooting",
-                false
-        );
-        driverController.leftTrigger(0.25).toggleOnTrue(Commands.either(
-                // Both need to be proxied to avoid Drive requirement when using preset shooting
-                shooter.shootSubwoofer().asProxy(),
-                CalculatedShootFactory.get(driverController::getLeftY, driverController::getLeftX).asProxy(),
-                presetShooting::get
-        ).withName("Shooter Shoot"));
-
-        driverController.leftBumper().toggleOnTrue(shooter.amp());
-
-        driverController.b().toggleOnTrue(PassFactory.get(driverController::getLeftY, driverController::getLeftX));
-
-        driverController.x().toggleOnTrue(Commands.parallel(
-                shooter.eject(),
-                intake.eject().withTimeout(1)
-        ).withName("Eject"));
-
-        driverController.rightBumper().toggleOnTrue(HandoffFactory.get());
     }
 
     public Command getAutonomousCommand() {

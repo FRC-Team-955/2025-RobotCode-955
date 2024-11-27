@@ -11,13 +11,14 @@ public class ArmIOSparkMax extends ArmIO {
 
     private double gearRatio = 1.0;
 
-    public ArmIOSparkMax(int canID) {
+    public ArmIOSparkMax(int canID, boolean inverted) {
         motor = new CANSparkMax(canID, CANSparkLowLevel.MotorType.kBrushless);
         motor.restoreFactoryDefaults();
         motor.setIdleMode(CANSparkBase.IdleMode.kBrake);
         motor.setCANTimeout(250);
         motor.enableVoltageCompensation(12.0);
         motor.setSmartCurrentLimit(40);
+        motor.setInverted(inverted);
         motor.burnFlash();
 
         encoder = motor.getEncoder();
