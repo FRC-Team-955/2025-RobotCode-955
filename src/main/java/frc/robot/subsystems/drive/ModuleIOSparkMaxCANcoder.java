@@ -70,7 +70,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
 
     @Override
     public void updateInputs(ModuleIOInputs inputs) {
-        inputs.drivePositionRad = Units.rotationsToRadians(driveEncoder.getPosition()) / DriveConstants.moduleConfig.driveGearRatio();;
+        inputs.drivePositionRad = Units.rotationsToRadians(driveEncoder.getPosition()) / DriveConstants.moduleConfig.driveGearRatio();
         inputs.driveVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(driveEncoder.getVelocity()) / DriveConstants.moduleConfig.driveGearRatio();
         inputs.driveAppliedVolts = driveSparkMax.getAppliedOutput() * driveSparkMax.getBusVoltage();
         inputs.driveCurrentAmps = driveSparkMax.getOutputCurrent();

@@ -99,8 +99,8 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
                 turnCurrent
         );
 
-        inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble()) / DriveConstants.moduleConfig.driveGearRatio();;
-        inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble()) / DriveConstants.moduleConfig.driveGearRatio();;
+        inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble()) / DriveConstants.moduleConfig.driveGearRatio();
+        inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble()) / DriveConstants.moduleConfig.driveGearRatio();
         inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
         inputs.driveCurrentAmps = driveCurrent.getValueAsDouble();
 
