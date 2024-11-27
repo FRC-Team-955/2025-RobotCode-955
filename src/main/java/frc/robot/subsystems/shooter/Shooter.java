@@ -127,12 +127,12 @@ public class Shooter extends SubsystemBase {
         ),
         SHOOT_CALCULATED_SPINUP(
                 () -> get().pivotSetpoint,
-                () -> ShooterRegression.getSpeed(RobotState.get().getDistanceToSpeaker()),
+                () -> ShooterRegression.getSpeed(Feet.zero()/*RobotState.get().getDistanceToSpeaker()*/),
                 () -> FeedSetpoint.velocity(RPM.zero())
         ),
         SHOOT_CALCULATED(
-                () -> ShooterRegression.getAngle(RobotState.get().getDistanceToSpeaker()).plus(shootingSkew.get()),
-                () -> ShooterRegression.getSpeed(RobotState.get().getDistanceToSpeaker()),
+                () -> ShooterRegression.getAngle(Feet.zero()/*RobotState.get().getDistanceToSpeaker()*/).plus(shootingSkew.get()),
+                () -> ShooterRegression.getSpeed(Feet.zero()/*RobotState.get().getDistanceToSpeaker()*/),
                 FeedSetpoint::shoot
         ),
         SHOOT_CONFIGURABLE(
@@ -156,21 +156,21 @@ public class Shooter extends SubsystemBase {
         HANDOFF_WAIT_FOR_INTAKE(
                 waitForIntakePivot::get,
                 () -> DriverStation.isAutonomous()
-                        ? ShooterRegression.getSpeed(RobotState.get().getDistanceToSpeaker())
+                        ? ShooterRegression.getSpeed(Feet.zero()/*RobotState.get().getDistanceToSpeaker()*/)
                         : RPM.zero(),
                 () -> FeedSetpoint.velocity(RPM.zero())
         ),
         HANDOFF_READY(
                 handoffPivot::get,
                 () -> DriverStation.isAutonomous()
-                        ? ShooterRegression.getSpeed(RobotState.get().getDistanceToSpeaker())
+                        ? ShooterRegression.getSpeed(Feet.zero()/*RobotState.get().getDistanceToSpeaker()*/)
                         : RPM.zero(),
                 () -> FeedSetpoint.velocity(RPM.zero())
         ),
         HANDOFF_FEED(
                 handoffPivot::get,
                 () -> DriverStation.isAutonomous()
-                        ? ShooterRegression.getSpeed(RobotState.get().getDistanceToSpeaker())
+                        ? ShooterRegression.getSpeed(Feet.zero()/*RobotState.get().getDistanceToSpeaker()*/)
                         : RPM.zero(),
                 () -> FeedSetpoint.velocity(handoffFeed.get())
         );
