@@ -35,7 +35,7 @@ public class Robot extends LoggedRobot {
                 } else {
                     Logger.recordMetadata(key, value.toString());
                 }
-            } catch (IllegalAccessException | IllegalArgumentException e) {
+            } catch (Throwable e) {
                 Logger.recordMetadata(key, "Unknown");
             }
         }
