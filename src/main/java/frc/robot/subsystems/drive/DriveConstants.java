@@ -103,7 +103,7 @@ public class DriveConstants {
     };
 
     public record DriveConfig(
-            double wheelRadius,
+            double wheelRadiusMeters,
             double trackWidthMeters, // Measured from the center of the swerve wheels
             double trackLengthMeters,
             double bumperWidthMeters,

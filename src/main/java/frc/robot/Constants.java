@@ -13,14 +13,11 @@ import edu.wpi.first.wpilibj.RobotBase;
 public final class Constants {
     public static final RobotIdentity identity = RobotIdentity.determine();
 
-    public static final Mode mode = Simulation.shouldReplay
-            ? Mode.REPLAY
-            : switch (identity) {
-        case SIMBOT -> Mode.SIM;
-        default -> Mode.REAL;
-    };
+    public static final Mode mode = RobotBase.isReal()
+            ? Mode.REAL
+            : (Simulation.shouldReplay ? Mode.REPLAY : Mode.SIM);
 
-    public static final boolean isReplay = mode ==Mode.REPLAY;
+    public static final boolean isReplay = mode == Mode.REPLAY;
 
     public enum Mode {
         /**
@@ -38,8 +35,12 @@ public final class Constants {
     }
 
     public static final class Simulation {
-        public static final boolean shouldReplay = false;
-        public static final RobotIdentity replayIdentity = RobotIdentity.COMPBOT;
+        /**
+         * Set this to a RobotIdentity to replay using a log from that robot.
+         * If replayIdentity is null, log replay will not run and simulation will run like normal.
+         */
+        public static final RobotIdentity replayIdentity = null;
+        public static final boolean shouldReplay = RobotBase.isSimulation() && replayIdentity != null; // Don't modify please!
 
         /**
          * If true, replay will run as fast as your computer can go and log to a log file instead of
