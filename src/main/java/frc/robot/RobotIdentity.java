@@ -3,8 +3,8 @@ package frc.robot;
 import edu.wpi.first.wpilibj.RobotBase;
 
 public enum RobotIdentity {
-    COMPBOT(""),
-    NEO_DRIVEBASE(""),
+    COMPBOT("00-80-2F-22-AE-61"),
+    NEO_DRIVEBASE("00-80-2F-38-8E-B8"),
     SIMBOT(null);
 
     public final String macAddress;
