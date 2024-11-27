@@ -13,8 +13,6 @@ import frc.robot.dashboard.TuningDashboardSimpleFeedforward;
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
-    private static final double WHEEL_RADIUS = Units.inchesToMeters(1.90433686321622);
-
     private final ModuleIO io;
     private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
     private final int index;
@@ -92,7 +90,7 @@ public class Module {
                 double adjustSpeedSetpoint = speedSetpoint * Math.cos(turnFeedback.get().getPositionError());
 
                 // Run drive controller
-                double velocityRadPerSec = adjustSpeedSetpoint / WHEEL_RADIUS;
+                double velocityRadPerSec = adjustSpeedSetpoint / DriveConstants.driveConfig.wheelRadiusMeters();
                 io.setDriveVoltage(driveFeedforward.get().calculate(velocityRadPerSec) + driveFeedback.get().calculate(inputs.driveVelocityRadPerSec, velocityRadPerSec));
             }
         }
@@ -163,7 +161,7 @@ public class Module {
      * Returns the current drive position of the module in meters.
      */
     public double getPositionMeters() {
-        return inputs.drivePositionRad * WHEEL_RADIUS;
+        return inputs.drivePositionRad * DriveConstants.driveConfig.wheelRadiusMeters();
     }
 
     public double getPositionRad() {
@@ -174,7 +172,7 @@ public class Module {
      * Returns the current drive velocity of the module in meters per second.
      */
     public double getVelocityMetersPerSec() {
-        return inputs.driveVelocityRadPerSec * WHEEL_RADIUS;
+        return inputs.driveVelocityRadPerSec * DriveConstants.driveConfig.wheelRadiusMeters();
     }
 
     /**
