@@ -51,7 +51,7 @@ public class DriveConstants {
                         (0.0038991 + 0.0018671 + 0.004602 + 0.0059919) / 4.0
                 ),
                 new PIDConstants(0.05, 0.0, 0.0),
-                new PIDConstants(5.0, 0.0, 0.0),
+                new PIDConstants(8.0, 0.0, 0.0),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN
         );
