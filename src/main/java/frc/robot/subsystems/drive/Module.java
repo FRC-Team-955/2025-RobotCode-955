@@ -105,7 +105,8 @@ public class Module {
 
         // Update setpoints, controllers run in "periodic"
         angleSetpoint = optimizedState.angle;
-        speedSetpoint = optimizedState.speedMetersPerSecond;
+        // https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/swerve-drive-kinematics.html#cosine-compensation
+        speedSetpoint = optimizedState.speedMetersPerSecond * angleSetpoint.minus(getAngle()).getCos();
 
         if (Drive.disableDriving.get())
             speedSetpoint = 0.0;
