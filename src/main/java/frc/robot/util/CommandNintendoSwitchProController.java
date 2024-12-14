@@ -1,11 +1,33 @@
 package frc.robot.util;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class CommandNintendoSwitchProController extends CommandXboxController {
     private static final double STICK_MULTIPLIER = 1 / 0.75; // Sticks normally only go to 0.75 max
+
+    // https://squircular.blogspot.com/2015/09/mapping-circle-to-square.html
+    private static double circleToSquareX(double u, double v) {
+        double u2 = u * u;
+        double v2 = v * v;
+        double twosqrt2 = 2.0 * Math.sqrt(2.0);
+        double subtermx = 2.0 + u2 - v2;
+        double termx1 = subtermx + u * twosqrt2;
+        double termx2 = subtermx - u * twosqrt2;
+        return 0.5 * Math.sqrt(termx1) - 0.5 * Math.sqrt(termx2);
+    }
+
+    private static double circleToSquareY(double u, double v) {
+        double u2 = u * u;
+        double v2 = v * v;
+        double twosqrt2 = 2.0 * Math.sqrt(2.0);
+        double subtermy = 2.0 - u2 + v2;
+        double termy1 = subtermy + v * twosqrt2;
+        double termy2 = subtermy - v * twosqrt2;
+        return 0.5 * Math.sqrt(termy1) - 0.5 * Math.sqrt(termy2);
+    }
 
     public CommandNintendoSwitchProController(int port) {
         super(port);
@@ -81,24 +103,40 @@ public class CommandNintendoSwitchProController extends CommandXboxController {
         return rightTrigger();
     }
 
-    @Override
-    public double getLeftX() {
+    private double getLeftXRaw() {
         return getRawAxis(0) * STICK_MULTIPLIER;
     }
 
-    @Override
-    public double getLeftY() {
+    private double getLeftYRaw() {
         return getRawAxis(1) * STICK_MULTIPLIER;
     }
 
     @Override
-    public double getRightX() {
+    public double getLeftX() {
+        return MathUtil.clamp(circleToSquareX(getLeftXRaw(), getLeftYRaw()), -1.0, 1.0);
+    }
+
+    @Override
+    public double getLeftY() {
+        return MathUtil.clamp(circleToSquareY(getLeftXRaw(), getLeftYRaw()), -1.0, 1.0);
+    }
+
+    private double getRightXRaw() {
         return getRawAxis(2) * STICK_MULTIPLIER;
+    }
+
+    private double getRightYRaw() {
+        return getRawAxis(3) * STICK_MULTIPLIER;
+    }
+
+    @Override
+    public double getRightX() {
+        return MathUtil.clamp(circleToSquareX(getRightXRaw(), getRightYRaw()), -1.0, 1.0);
     }
 
     @Override
     public double getRightY() {
-        return getRawAxis(3) * STICK_MULTIPLIER;
+        return MathUtil.clamp(circleToSquareY(getRightXRaw(), getRightYRaw()), -1.0, 1.0);
     }
 
     @Override
