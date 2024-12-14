@@ -3,9 +3,9 @@ package frc.template.wheel;
 import com.pathplanner.lib.util.PIDConstants;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Measure;
+import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import org.littletonrobotics.junction.Logger;
 
@@ -60,7 +60,7 @@ public final class ExampleSubsystemUsage {
     /**
      * 0 means parallel to the ground
      */
-    public void setSetpoint(Measure<Velocity<Angle>> setpoint) {
+    public void setSetpoint(AngularVelocity setpoint) {
         wheelSetpointRadPerSec = setpoint.in(RadiansPerSecond);
     }
 

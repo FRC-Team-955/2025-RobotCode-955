@@ -1,10 +1,11 @@
 package frc.robot;
 
+import com.ctre.phoenix6.StatusCode;
 import com.pathplanner.lib.util.GeometryUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Voltage;
+import edu.wpi.first.units.measure.Measure;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Subsystem;
@@ -13,8 +14,15 @@ import org.littletonrobotics.junction.Logger;
 
 import java.net.NetworkInterface;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class Util {
+    public static void phoenixTryUntilOk(int maxAttempts, Supplier<StatusCode> command) {
+        for (int i = 0; i < maxAttempts; i++) {
+            var error = command.get();
+            if (error.isOK()) break;
+        }
+    }
     public static boolean shouldFlip() {
         return DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
     }
@@ -42,7 +50,7 @@ public class Util {
      */
     public static SysIdRoutine sysIdRoutine(
             String name,
-            Consumer<Measure<Voltage>> voltageConsumer,
+            Consumer<Voltage> voltageConsumer,
             Runnable start,
             Runnable end,
             Subsystem subsystem

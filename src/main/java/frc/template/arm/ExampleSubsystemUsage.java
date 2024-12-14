@@ -3,8 +3,8 @@ package frc.template.arm;
 import com.pathplanner.lib.util.PIDConstants;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Measure;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
@@ -27,7 +27,7 @@ public final class ExampleSubsystemUsage extends SubsystemBase {
     private final AbsoluteEncoderIO absoluteEncoderIO;
 
     private final ArmFeedforward armFeedforward;
-    private Measure<Angle> armInitialPosition;
+    private Angle armInitialPosition;
     private Double armSetpointRad;
 
     private final double ARM_VISUALIZATION_SIZE = 6;
@@ -45,7 +45,7 @@ public final class ExampleSubsystemUsage extends SubsystemBase {
             PIDConstants armFeedback,
             double gearRatio,
             AbsoluteEncoderIO absoluteEncoderIO,
-            Measure<Angle> absoluteEncoderOffset
+            Angle absoluteEncoderOffset
     ) {
         this.absoluteEncoderIO = absoluteEncoderIO;
         this.armIO = armIO;
@@ -68,7 +68,7 @@ public final class ExampleSubsystemUsage extends SubsystemBase {
             ArmFeedforward armFeedforward,
             PIDConstants armFeedback,
             double gearRatio,
-            Measure<Angle> initialPosition
+            Angle initialPosition
     ) {
         this.armIO = armIO;
         this.armFeedforward = armFeedforward;
@@ -116,7 +116,7 @@ public final class ExampleSubsystemUsage extends SubsystemBase {
         ligament.setAngle(Units.radiansToDegrees(armInputs.positionRad));
     }
 
-    public Measure<Angle> getPosition() {
+    public Angle getPosition() {
         return Radians.of(armInputs.positionRad);
     }
 
@@ -128,7 +128,7 @@ public final class ExampleSubsystemUsage extends SubsystemBase {
     /**
      * 0 means parallel to the ground
      */
-    public void setSetpoint(Measure<Angle> setpoint) {
+    public void setSetpoint(Angle setpoint) {
         armSetpointRad = setpoint.in(Radians);
     }
 
@@ -155,7 +155,7 @@ public final class ExampleSubsystemUsage extends SubsystemBase {
     /**
      * Tells the encoder the current position is the one specified.
      */
-    public void setPosition(Measure<Angle> position) {
+    public void setPosition(Angle position) {
         armIO.setPosition(position.in(Radians));
     }
 

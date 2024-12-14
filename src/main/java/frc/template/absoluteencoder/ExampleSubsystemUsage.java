@@ -1,7 +1,7 @@
 package frc.template.absoluteencoder;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Measure;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
@@ -17,7 +17,7 @@ public final class ExampleSubsystemUsage extends SubsystemBase {
     private ExampleSubsystemUsage(
             AbsoluteEncoderIO absoluteEncoderIO,
             Double absoluteEncoderGearRatio,
-            Measure<Angle> absoluteEncoderOffset
+            Angle absoluteEncoderOffset
     ) {
         this.absoluteEncoderIO = absoluteEncoderIO;
 
@@ -38,7 +38,7 @@ public final class ExampleSubsystemUsage extends SubsystemBase {
         return absoluteEncoderInputs.isConnected;
     }
 
-    public Measure<Angle> getPosition() {
+    public Angle getPosition() {
         return Radians.of(absoluteEncoderInputs.absolutePositionRad);
     }
 }

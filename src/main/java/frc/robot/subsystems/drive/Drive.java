@@ -1,3 +1,5 @@
+
+
 package frc.robot.subsystems.drive;
 
 import choreo.Choreo;
@@ -28,12 +30,15 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.Arrays;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.measure.Units.*;
 
 public class Drive extends SubsystemBase {
+    static final Lock odometryLock = new ReentrantLock();
     protected static final TuningDashboardBoolean disableDriving = new TuningDashboardBoolean(
             DashboardSubsystem.DRIVE, "Disable Driving",
             false
@@ -141,6 +146,8 @@ public class Drive extends SubsystemBase {
         for (int i = 0; i < 4; i++) {
             modules[i] = new Module(DriveConstants.moduleIO[i], i);
         }
+
+        PhoenixOdometryThread.getInstance().start();
 
         sysId = Util.sysIdRoutine(
                 "Drive",

@@ -7,9 +7,9 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Measure;
+import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -22,7 +22,7 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.measure.Units.*;
 
 public class Intake extends SubsystemBase {
     ////////////////////// GOAL SETPOINTS - HOVER //////////////////////
@@ -71,10 +71,10 @@ public class Intake extends SubsystemBase {
 
         public static final Goal DEFAULT = Goal.HOVER;
 
-        public final Supplier<Measure<Angle>> pivotSetpoint;
-        public final Supplier<Measure<Velocity<Angle>>> feedSetpoint;
+        public final Supplier<Angle> pivotSetpoint;
+        public final Supplier<AngularVelocity> feedSetpoint;
 
-        Goal(Supplier<Measure<Angle>> pivotSetpoint, Supplier<Measure<Velocity<Angle>>> feedSetpoint) {
+        Goal(Supplier<Angle> pivotSetpoint, Supplier<AngularVelocity> feedSetpoint) {
             this.pivotSetpoint = pivotSetpoint;
             this.feedSetpoint = feedSetpoint;
         }
@@ -83,7 +83,7 @@ public class Intake extends SubsystemBase {
     ////////////////////// CONSTANTS //////////////////////
 
     protected static final double PIVOT_GEAR_RATIO = 45;
-    protected static final Measure<Angle> PIVOT_INITIAL_POSITION = Degrees.of(-141);
+    protected static final Angle PIVOT_INITIAL_POSITION = Degrees.of(-141);
     protected static final double FEED_GEAR_RATIO = 4;
 
     ////////////////////// GENERAL DASHBOARD VALUES //////////////////////
@@ -124,7 +124,7 @@ public class Intake extends SubsystemBase {
                     ? new PIDConstants(0.12, 0.003)
                     : */new PIDConstants(8, 0)
     );
-    private Measure<Angle> pivotSetpoint = null;
+    private Angle pivotSetpoint = null;
     public final SysIdRoutine pivotSysId;
 
     ////////////////////// FEED //////////////////////
@@ -140,7 +140,7 @@ public class Intake extends SubsystemBase {
                     ? new PIDConstants(0.0001, 0.0001, 0)
                     :*/ new PIDConstants(0.1, 0)
     );
-    private Measure<Velocity<Angle>> feedSetpoint = null;
+    private AngularVelocity feedSetpoint = null;
     public final SysIdRoutine feedSysId;
 
     ////////////////////// GOAL STUFF //////////////////////

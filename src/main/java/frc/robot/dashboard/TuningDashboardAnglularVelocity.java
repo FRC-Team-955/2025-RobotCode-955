@@ -1,17 +1,15 @@
 package frc.robot.dashboard;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.AngularVelocity;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 public class TuningDashboardAnglularVelocity extends TuningDashboardNumber {
-    public TuningDashboardAnglularVelocity(DashboardSubsystem subsystem, String key, Measure<Velocity<Angle>> defaultValue) {
+    public TuningDashboardAnglularVelocity(DashboardSubsystem subsystem, String key, AngularVelocity defaultValue) {
         super(subsystem, key + " (rad per sec)", defaultValue.in(RadiansPerSecond));
     }
 
-    public Measure<Velocity<Angle>> get() {
+    public AngularVelocity get() {
         return RadiansPerSecond.of(getRaw());
     }
 }

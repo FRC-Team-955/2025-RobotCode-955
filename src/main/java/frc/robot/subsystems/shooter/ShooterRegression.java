@@ -2,12 +2,12 @@ package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Distance;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Measure;
+import edu.wpi.first.units.measure.Velocity;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.measure.Units.*;
 
 public final class ShooterRegression {
     /*
@@ -20,14 +20,14 @@ public final class ShooterRegression {
     4.342                   | -22.3                   | 5200
     */
 
-    public static Measure<Angle> getAngle(Measure<Distance> distance) {
+    public static Angle getAngle(Distance distance) {
         var distanceMeters = distance.in(Meters);
         var angleRad = Math.atan(-1.23351 / (distanceMeters - 0.20496)) - 0.0332181 * distanceMeters;
         var clampedAngleRad = MathUtil.clamp(angleRad, Units.degreesToRadians(-60), 0);
         return Radians.of(clampedAngleRad);
     }
 
-    public static Measure<Velocity<Angle>> getSpeed(Measure<Distance> distance) {
+    public static AngularVelocity getSpeed(Distance distance) {
         var distanceMeters = distance.in(Meters);
         var speedRPM = Math.min(51.0189 * Math.pow(distanceMeters, 2) + 276.094 * distanceMeters + 3041.66, 6000);
         var clampedSpeedRPM = MathUtil.clamp(speedRPM, 1000, 6000);

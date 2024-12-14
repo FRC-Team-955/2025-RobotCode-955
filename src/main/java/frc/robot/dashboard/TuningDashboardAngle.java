@@ -1,16 +1,16 @@
 package frc.robot.dashboard;
 
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Measure;
 
 import static edu.wpi.first.units.Units.Degrees;
 
 public class TuningDashboardAngle extends TuningDashboardNumber {
-    public TuningDashboardAngle(DashboardSubsystem subsystem, String key, Measure<Angle> defaultValue) {
+    public TuningDashboardAngle(DashboardSubsystem subsystem, String key, Angle defaultValue) {
         super(subsystem, key + " (degrees)", defaultValue.in(Degrees));
     }
 
-    public Measure<Angle> get() {
+    public Angle get() {
         return Degrees.of(getRaw());
     }
 }

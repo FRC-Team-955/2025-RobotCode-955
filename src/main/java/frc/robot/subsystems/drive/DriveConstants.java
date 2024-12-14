@@ -1,5 +1,6 @@
 package frc.robot.subsystems.drive;
 
+import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.pathplanner.lib.util.PIDConstants;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -104,6 +105,18 @@ public class DriveConstants {
         };
     };
 
+    public static final OdometryConfig odometryConfig = switch (Constants.identity) {
+        case COMPBOT, SIMBOT -> new OdometryConfig(
+                true,
+                100,
+                250
+        );
+        case NEO_DRIVEBASE -> new OdometryConfig(
+                false,
+                100,
+                100
+        );
+    };
     public static final GyroIO gyroIO = Constants.isReplay
             ? new GyroIO()
             : switch (Constants.identity) {
@@ -124,6 +137,13 @@ public class DriveConstants {
     ) {
     }
 
+    public record OdometryConfig(
+            boolean usingCANivore,
+            double odometryFrequencySpark,
+            double odometryFrequencyPhoenix
+    ){
+    }
+
     public record ModuleConfig(
             SimpleMotorFeedforward driveFeedforward,
             PIDConstants driveFeedback,
@@ -132,7 +152,6 @@ public class DriveConstants {
             double turnGearRatio
     ) {
     }
-
 
     private static class Mk4iGearRatios {
         public static final double L2 = (50.0 / 14.0) * (17.0 / 27.0) * (45.0 / 15.0);

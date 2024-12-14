@@ -1,8 +1,8 @@
 package frc.template.absoluteencoder;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Measure;
 
 import static edu.wpi.first.units.Units.Radians;
 
@@ -13,7 +13,7 @@ public class AbsoluteEncoderIOSim extends AbsoluteEncoderIO {
         positionRad = Math.random() * 2.0 * Math.PI;
     }
 
-    public AbsoluteEncoderIOSim(Measure<Angle> minPosition, Measure<Angle> maxPosition) {
+    public AbsoluteEncoderIOSim(Angle minPosition, Angle maxPosition) {
         positionRad = MathUtil.clamp(Math.random() * 2.0 * Math.PI, minPosition.in(Radians), maxPosition.in(Radians));
     }
 

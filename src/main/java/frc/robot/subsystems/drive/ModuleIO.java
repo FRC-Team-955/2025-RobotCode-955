@@ -35,6 +35,8 @@ public class ModuleIO {
     public void setTurnVoltage(double volts) {
     }
 
+    public void setDriveVelocity(double velocityRadPerSec) {}
+
     /**
      * Enable or disable brake mode on the drive motor.
      */

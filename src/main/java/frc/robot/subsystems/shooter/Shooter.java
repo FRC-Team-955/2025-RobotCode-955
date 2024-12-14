@@ -7,9 +7,9 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Measure;
+import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -29,7 +29,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.measure.Units.*;
 
 public class Shooter extends SubsystemBase {
     ////////////////////// GOAL SETPOINTS - HOVER //////////////////////
@@ -176,14 +176,14 @@ public class Shooter extends SubsystemBase {
 
         public static final Goal DEFAULT = Goal.HOVER;
 
-        public final Supplier<Measure<Angle>> pivotSetpoint;
-        public final Supplier<Measure<Velocity<Angle>>> flywheelsSetpoint;
+        public final Supplier<Angle> pivotSetpoint;
+        public final Supplier<AngularVelocity> flywheelsSetpoint;
         public final Supplier<FeedSetpoint> feedSetpoint;
         public final Supplier<Optional<Goal>> goalChange;
 
         Goal(
-                Supplier<Measure<Angle>> pivotSetpoint,
-                Supplier<Measure<Velocity<Angle>>> flywheelsSetpoint,
+                Supplier<Angle> pivotSetpoint,
+                Supplier<AngularVelocity> flywheelsSetpoint,
                 Supplier<FeedSetpoint> feedCommand
         ) {
             this.pivotSetpoint = pivotSetpoint;
@@ -193,8 +193,8 @@ public class Shooter extends SubsystemBase {
         }
 
         Goal(
-                Supplier<Measure<Angle>> pivotSetpoint,
-                Supplier<Measure<Velocity<Angle>>> flywheelsSetpoint,
+                Supplier<Angle> pivotSetpoint,
+                Supplier<AngularVelocity> flywheelsSetpoint,
                 Supplier<FeedSetpoint> feedCommand,
                 Supplier<Optional<Goal>> goalChange
         ) {
@@ -206,19 +206,19 @@ public class Shooter extends SubsystemBase {
 
         public static class FeedSetpoint {
             private final Type type;
-            private final Measure<Velocity<Angle>> velocity;
+            private final AngularVelocity velocity;
 
             private enum Type {
                 Velocity,
                 Shoot
             }
 
-            private FeedSetpoint(Type type, Measure<Velocity<Angle>> velocity) {
+            private FeedSetpoint(Type type, AngularVelocity velocity) {
                 this.type = type;
                 this.velocity = velocity;
             }
 
-            public static FeedSetpoint velocity(Measure<Velocity<Angle>> velocity) {
+            public static FeedSetpoint velocity(AngularVelocity velocity) {
                 return new FeedSetpoint(Type.Velocity, velocity);
             }
 
@@ -230,7 +230,7 @@ public class Shooter extends SubsystemBase {
                 return type == Type.Shoot;
             }
 
-            public void ifVelocity(Consumer<Measure<Velocity<Angle>>> velocityConsumer, Runnable elseRun) {
+            public void ifVelocity(Consumer<AngularVelocity> velocityConsumer, Runnable elseRun) {
                 if (type == Type.Velocity)
                     velocityConsumer.accept(velocity);
                 else
@@ -242,7 +242,7 @@ public class Shooter extends SubsystemBase {
     ////////////////////// CONSTANTS //////////////////////
 
     protected static final double PIVOT_GEAR_RATIO = 40;
-    protected static final Measure<Angle> PIVOT_INITIAL_POSITION = Degrees.of(-90);
+    protected static final Angle PIVOT_INITIAL_POSITION = Degrees.of(-90);
     protected static final double FEED_GEAR_RATIO = 3;
     protected static final double FLYWHEEL_GEAR_RATIO = 1 / 2.0;
     private final Debouncer hasNoteDebouncer = new Debouncer(0.01);
@@ -309,7 +309,7 @@ public class Shooter extends SubsystemBase {
                     ? new PIDConstants(0.075)
                     :*/ new PIDConstants(5, 0)
     );
-    private Measure<Angle> pivotSetpoint = PIVOT_INITIAL_POSITION;
+    private Angle pivotSetpoint = PIVOT_INITIAL_POSITION;
     public final SysIdRoutine pivotSysId;
     private Goal pivotPIDGoalConfigured = Goal.DEFAULT;
 
@@ -326,7 +326,7 @@ public class Shooter extends SubsystemBase {
                     ? new PIDConstants(0.0001, 0.0001, 0)
                     :*/ new PIDConstants(0.1, 0)
     );
-    private Measure<Velocity<Angle>> feedSetpoint = null;
+    private AngularVelocity feedSetpoint = null;
     public final SysIdRoutine feedSysId;
 
     ////////////////////// FLYWHEELS //////////////////////
@@ -353,7 +353,7 @@ public class Shooter extends SubsystemBase {
                     ? new PIDConstants(0.0001, 0.01, 0)
                     :*/ flywheelTopPID.get()
     );
-    private Measure<Velocity<Angle>> flywheelsSetpoint = null;
+    private AngularVelocity flywheelsSetpoint = null;
     public final SysIdRoutine flywheelsSysId;
 
     ////////////////////// GOAL STUFF //////////////////////
