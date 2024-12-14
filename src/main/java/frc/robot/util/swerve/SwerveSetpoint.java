@@ -2,7 +2,7 @@
 
 package frc.robot.util.swerve;
 
-import frc.robot.util.DriveFeedforwards;
+import frc.robot.util.swerve.DriveFeedforwards;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
