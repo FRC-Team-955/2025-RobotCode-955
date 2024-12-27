@@ -15,6 +15,10 @@ public class DriveConstants {
                 Units.inchesToMeters(21.75),
                 Units.inchesToMeters(31),
                 Units.inchesToMeters(31),
+                4.731,
+                12.960,
+                12.112,
+                40.186,
                 new PIDConstants(1.5, 0, 0),
                 new PIDConstants(1.5, 0, 0),
                 new PIDConstants(2.1, 0, 0.1)
@@ -25,6 +29,10 @@ public class DriveConstants {
                 Units.inchesToMeters(20.75),
                 Units.inchesToMeters(30),
                 Units.inchesToMeters(30),
+                4.637,
+                12.123,
+                12.442,
+                35.864,
                 new PIDConstants(1.5, 0, 0),
                 new PIDConstants(1.5, 0, 0),
                 new PIDConstants(2.1, 0, 0.1)
@@ -119,6 +127,10 @@ public class DriveConstants {
             double trackLengthMeters,
             double bumperWidthMeters,
             double bumperLengthMeters,
+            double maxLinearSpeedMetersPerSec,
+            double maxLinearAccelMetersPerSecSquared,
+            double maxAngularSpeedRadPerSec,
+            double maxAngularAccelRadPerSecSquared,
             PIDConstants choreoFeedbackXY,
             PIDConstants choreoFeedbackTheta,
             PIDConstants pointTowardsController
