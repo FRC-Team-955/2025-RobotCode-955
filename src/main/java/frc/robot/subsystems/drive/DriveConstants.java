@@ -42,6 +42,7 @@ public class DriveConstants {
     };
 
     public static final double drivebaseRadius = Math.hypot(driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0);
+    public static final double joystickMaxAngularSpeedRadPerSec = 5.53;
 
     /**
      * FL, FR, BL, BR

@@ -23,7 +23,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.RobotState;
 import frc.robot.Util;
-import frc.robot.dashboard.*;
+import frc.robot.dashboard.DashboardSubsystem;
+import frc.robot.dashboard.TuningDashboardBoolean;
+import frc.robot.dashboard.TuningDashboardPIDController;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -31,7 +33,7 @@ import java.util.Arrays;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.Volts;
 
 public class Drive extends SubsystemBase {
     protected static final TuningDashboardBoolean disableDriving = new TuningDashboardBoolean(
@@ -45,15 +47,6 @@ public class Drive extends SubsystemBase {
     private final TuningDashboardBoolean disableGyro = new TuningDashboardBoolean(
             DashboardSubsystem.DRIVE, "Disable Gyro",
             false
-    );
-
-    private static final TuningDashboardVelocity maxLinearSpeed = new TuningDashboardVelocity(
-            DashboardSubsystem.DRIVE, "Max Linear Speed",
-            FeetPerSecond.of(15)
-    );
-    private static final TuningDashboardAnglularVelocity maxAngularSpeed = new TuningDashboardAnglularVelocity(
-            DashboardSubsystem.DRIVE, "Max Angular Speed",
-            DegreesPerSecond.of(317)
     );
 
     public enum State {
@@ -232,7 +225,7 @@ public class Drive extends SubsystemBase {
         // Calculate module setpoints
         ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
         SwerveModuleState[] setpointStates = robotState.getKinematics().toSwerveModuleStates(discreteSpeeds);
-        SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, maxLinearSpeed.get());
+        SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, DriveConstants.driveConfig.maxLinearSpeedMetersPerSec());
 
         // Send setpoints to modules
         SwerveModuleState[] optimizedSetpointStates = new SwerveModuleState[4];
@@ -336,9 +329,9 @@ public class Drive extends SubsystemBase {
         // Convert to field relative speeds & send command
         runVelocity(
                 ChassisSpeeds.fromFieldRelativeSpeeds(
-                        linearVelocity.getX() * maxLinearSpeed.get().in(MetersPerSecond),
-                        linearVelocity.getY() * maxLinearSpeed.get().in(MetersPerSecond),
-                        omega * maxAngularSpeed.get().in(RadiansPerSecond),
+                        linearVelocity.getX() * DriveConstants.driveConfig.maxLinearSpeedMetersPerSec(),
+                        linearVelocity.getY() * DriveConstants.driveConfig.maxLinearSpeedMetersPerSec(),
+                        omega * DriveConstants.joystickMaxAngularSpeedRadPerSec,
                         Util.shouldFlip()
                                 ? robotState.getRotation()
                                 : robotState.getRotation().plus(new Rotation2d(Math.PI))
