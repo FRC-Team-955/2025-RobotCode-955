@@ -15,6 +15,7 @@ public class DriveConstants {
                 Units.inchesToMeters(21.75),
                 Units.inchesToMeters(31),
                 Units.inchesToMeters(31),
+                // from Choreo
                 4.731,
                 12.960,
                 12.112,
@@ -29,6 +30,7 @@ public class DriveConstants {
                 Units.inchesToMeters(20.75),
                 Units.inchesToMeters(30),
                 Units.inchesToMeters(30),
+                // from Choreo
                 4.637,
                 12.123,
                 12.442,
