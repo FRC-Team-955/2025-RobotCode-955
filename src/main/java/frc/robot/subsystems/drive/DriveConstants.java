@@ -5,6 +5,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
+import frc.robot.Util;
 
 public class DriveConstants {
     public static final DriveConfig driveConfig = switch (Constants.identity) {
@@ -46,9 +47,9 @@ public class DriveConstants {
         case COMPBOT -> new ModuleConfig(
                 new SimpleMotorFeedforward(
                         // FL + FR + BL + BR
-                        (0.21524 + 0.16554 + 0.083665 + 0.061984) / 4.0,
-                        (0.11224 + 0.11693 + 0.12106 + 0.12449) / 4.0,
-                        (0.0038991 + 0.0018671 + 0.004602 + 0.0059919) / 4.0
+                        Util.average(0.21524, 0.16554, 0.083665, 0.061984),
+                        Util.average(0.11224, 0.11693, 0.12106, 0.12449),
+                        Util.average(0.0038991, 0.0018671, 0.004602, 0.0059919)
                 ),
                 new PIDConstants(0.05, 0.0, 0.0),
                 new PIDConstants(8.0, 0.0, 0.0),
@@ -58,9 +59,9 @@ public class DriveConstants {
         case NEO_DRIVEBASE -> new ModuleConfig(
                 new SimpleMotorFeedforward(
                         // FL + FR + BL + BR
-                        (0.024319 + 0.094701 /* + [erroneous] + [erroneous] (if adding back, change / 2.0) */) / 2.0,
-                        (0.13551 + 0.13733 + 0.13543 + 0.14087) / 4.0,
-                        (0.0065694 + 0.0054738 /* + [erroneous] (if adding back, change / 3.0) */ + 0.0091241) / 3.0
+                        Util.average(0.024319, 0.094701 /* , [erroneous], [erroneous] */),
+                        Util.average(0.13551, 0.13733, 0.13543, 0.14087),
+                        Util.average(0.0065694, 0.0054738, /* [erroneous], */ 0.0091241)
                 ),
                 new PIDConstants(0.05, 0.0, 0.0),
                 new PIDConstants(5.0, 0.0, 0.0),

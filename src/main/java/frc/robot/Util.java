@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import org.littletonrobotics.junction.Logger;
 
 import java.net.NetworkInterface;
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class Util {
@@ -104,5 +105,9 @@ public class Util {
         }
 
         return "";
+    }
+
+    public static double average(double... inputs) {
+        return Arrays.stream(inputs).sum() / inputs.length;
     }
 }
