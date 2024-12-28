@@ -17,7 +17,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
@@ -26,6 +25,7 @@ import frc.robot.Util;
 import frc.robot.dashboard.DashboardSubsystem;
 import frc.robot.dashboard.TuningDashboardBoolean;
 import frc.robot.dashboard.TuningDashboardPIDController;
+import frc.robot.util.SubsystemBaseExt;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -35,7 +35,7 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Volts;
 
-public class Drive extends SubsystemBase {
+public class Drive extends SubsystemBaseExt {
     protected static final TuningDashboardBoolean disableDriving = new TuningDashboardBoolean(
             DashboardSubsystem.DRIVE, "Disable Driving",
             false
@@ -148,16 +148,24 @@ public class Drive extends SubsystemBase {
         );
     }
 
-    public void periodic() {
+    @Override
+    public void periodicBeforeCommands() {
         visionIO.updateInputs(visionInputs);
         gyroIO.updateInputs(gyroInputs);
         Logger.processInputs("Inputs/Drive/Gyro", gyroInputs);
         Logger.processInputs("Inputs/Drive/Vision", visionInputs);
 
+        for (var module : modules) {
+            module.periodicBeforeCommands();
+        }
+    }
+
+    @Override
+    public void periodicAfterCommands() {
         Logger.recordOutput("Drive/State", state);
 
         for (var module : modules) {
-            module.periodic();
+            module.periodicAfterCommands();
         }
 
         // Stop moving when idle or disabled
@@ -222,6 +230,11 @@ public class Drive extends SubsystemBase {
      * @param speeds Speeds in meters/sec
      */
     public void runVelocity(ChassisSpeeds speeds) {
+        if (Drive.disableDriving.get()) {
+            speeds.vxMetersPerSecond = 0.0;
+            speeds.vyMetersPerSecond = 0.0;
+        }
+
         // Calculate module setpoints
         ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
         SwerveModuleState[] setpointStates = robotState.getKinematics().toSwerveModuleStates(discreteSpeeds);

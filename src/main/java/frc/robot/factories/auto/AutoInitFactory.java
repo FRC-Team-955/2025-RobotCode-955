@@ -20,10 +20,11 @@ public class AutoInitFactory {
                 return initialPose.get();
             } else {
                 var msg = "No initial pose for the first trajectory in auto " + autoName + "!";
-                if (RobotBase.isSimulation())
+                if (RobotBase.isSimulation()) {
                     throw new RuntimeException(msg);
-                else
+                } else {
                     DriverStation.reportError(msg, false);
+                }
 
                 loop.kill();
                 return robotState.getPose();

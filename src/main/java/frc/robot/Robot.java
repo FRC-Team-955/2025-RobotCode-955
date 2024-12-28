@@ -1,7 +1,10 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.util.SubsystemBaseExt;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -11,6 +14,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import java.lang.reflect.Array;
+import java.util.HashSet;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -19,37 +23,22 @@ import java.lang.reflect.Array;
  * project.
  */
 public class Robot extends LoggedRobot {
+    private static final HashSet<SubsystemBaseExt> extendedSubsystems = new HashSet<>();
+    private final RobotContainer robotContainer;
     private Command autonomousCommand;
-    private RobotContainer robotContainer;
 
-    private void logConstantClass(Class<?> clazz, String parentName) {
-        var parent = (parentName != null ? parentName + "." : "");
-        for (var field : clazz.getFields()) {
-            var key = parent + clazz.getSimpleName() + "." + field.getName();
-            try {
-                var value = field.get(null);
-                if (value.getClass().isArray()) {
-                    for (int i = 0; i < Array.getLength(value); i++) {
-                        Logger.recordMetadata(key + "[" + i + "]", Array.get(value, i).toString());
-                    }
-                } else {
-                    Logger.recordMetadata(key, value.toString());
-                }
-            } catch (Throwable e) {
-                Logger.recordMetadata(key, "Unknown");
+    public static void registerExtendedSubsystem(SubsystemBaseExt subsystem) {
+        if (!extendedSubsystems.add(subsystem)) {
+            var msg = "An extended subsystem has been registered more than once: " + subsystem.getName();
+            if (RobotBase.isSimulation()) {
+                throw new RuntimeException(msg);
+            } else {
+                DriverStation.reportError(msg, false);
             }
-        }
-        for (var subclass : clazz.getClasses()) {
-            logConstantClass(subclass, parent + clazz.getSimpleName());
         }
     }
 
-    /**
-     * This function is run when the robot is first started up and should be used for any
-     * initialization code.
-     */
-    @Override
-    public void robotInit() {
+    public Robot() {
         // https://github.com/Mechanical-Advantage/AdvantageKit/blob/main/docs/RECORDING-OUTPUTS.md#autologoutput-annotation
         AutoLogOutputManager.addPackage("frc");
         try {
@@ -101,17 +90,37 @@ public class Robot extends LoggedRobot {
         robotContainer = new RobotContainer();
     }
 
+    private void logConstantClass(Class<?> clazz, String parentName) {
+        var parent = (parentName != null ? parentName + "." : "");
+        for (var field : clazz.getFields()) {
+            var key = parent + clazz.getSimpleName() + "." + field.getName();
+            try {
+                var value = field.get(null);
+                if (value.getClass().isArray()) {
+                    for (int i = 0; i < Array.getLength(value); i++) {
+                        Logger.recordMetadata(key + "[" + i + "]", Array.get(value, i).toString());
+                    }
+                } else {
+                    Logger.recordMetadata(key, value.toString());
+                }
+            } catch (Throwable e) {
+                Logger.recordMetadata(key, "Unknown");
+            }
+        }
+        for (var subclass : clazz.getClasses()) {
+            logConstantClass(subclass, parent + clazz.getSimpleName());
+        }
+    }
+
     /**
      * This function is called periodically during all modes.
      */
     @Override
     public void robotPeriodic() {
-        // Runs the Scheduler. This is responsible for polling buttons, adding
-        // newly-scheduled commands, running already-scheduled commands, removing
-        // finished or interrupted commands, and running subsystem periodic() methods.
-        // This must be called from the robot's periodic block in order for anything in
-        // the Command-based framework to work.
         CommandScheduler.getInstance().run();
+        for (var subsystem : extendedSubsystems) {
+            subsystem.periodicAfterCommands();
+        }
     }
 
     /**
