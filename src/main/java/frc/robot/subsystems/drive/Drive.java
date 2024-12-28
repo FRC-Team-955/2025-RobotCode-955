@@ -63,7 +63,6 @@ public class Drive extends SubsystemBase {
     private final RobotState robotState = RobotState.get();
 
     private static final double JOYSTICK_DRIVE_DEADBAND = 0.1;
-    private static final double POINT_TOWARDS_TOLERANCE = Units.degreesToRadians(3);
 
     private final GyroIO gyroIO = DriveConstants.gyroIO;
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
@@ -388,11 +387,6 @@ public class Drive extends SubsystemBase {
             );
         });
         return withState(State.POINT_TOWARDS, cmd).withName("Drive Joystick Point Towards");
-    }
-
-    public boolean pointingShooterTowardsPoint(Translation2d pointTowards) {
-        var angleTowards = Util.angle(pointTowards, robotState.getTranslation());
-        return Math.abs(MathUtil.angleModulus(robotState.getRotation().getRadians() + Math.PI) - angleTowards) <= POINT_TOWARDS_TOLERANCE;
     }
 
     protected void startCharacterization() {
