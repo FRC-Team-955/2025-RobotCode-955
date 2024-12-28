@@ -175,6 +175,13 @@ public class Module {
     }
 
     /**
+     * Returns the drive velocity in radians/sec.
+     */
+    public double getVelocityRadPerSec() {
+        return inputs.driveVelocityRadPerSec;
+    }
+
+    /**
      * Returns the module position (turn angle and drive position).
      */
     public SwerveModulePosition getPosition() {
@@ -186,12 +193,5 @@ public class Module {
      */
     public SwerveModuleState getState() {
         return new SwerveModuleState(getVelocityMetersPerSec(), getAngle());
-    }
-
-    /**
-     * Returns the drive velocity in radians/sec.
-     */
-    public double getCharacterizationVelocity() {
-        return inputs.driveVelocityRadPerSec;
     }
 }
