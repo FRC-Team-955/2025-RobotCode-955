@@ -163,6 +163,9 @@ public class Module {
         return inputs.drivePositionRad * DriveConstants.driveConfig.wheelRadiusMeters();
     }
 
+    /**
+     * Returns the current drive position of the module in radians.
+     */
     public double getPositionRad() {
         return inputs.drivePositionRad;
     }

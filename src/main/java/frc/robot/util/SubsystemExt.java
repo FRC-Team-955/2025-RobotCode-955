@@ -8,4 +8,7 @@ public interface SubsystemExt extends Subsystem {
 
     default void periodicAfterCommands() {
     }
+
+    default void onCommandEnd() {
+    }
 }

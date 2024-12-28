@@ -1,7 +1,5 @@
 package frc.robot;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.SubsystemBaseExt;
@@ -29,11 +27,16 @@ public class Robot extends LoggedRobot {
 
     public static void registerExtendedSubsystem(SubsystemBaseExt subsystem) {
         if (!extendedSubsystems.add(subsystem)) {
-            var msg = "An extended subsystem has been registered more than once: " + subsystem.getName();
-            if (RobotBase.isSimulation()) {
-                throw new RuntimeException(msg);
+            Util.error("An extended subsystem has been registered more than once: " + subsystem.getName());
+        }
+    }
+
+    private static void onCommandEnd(Command command) {
+        for (var subsystem : command.getRequirements()) {
+            if (subsystem instanceof SubsystemBaseExt) {
+                ((SubsystemBaseExt) subsystem).onCommandEnd();
             } else {
-                DriverStation.reportError(msg, false);
+                Util.error("Subsystem " + subsystem.getName() + " is not an extended subsystem");
             }
         }
     }
@@ -88,6 +91,9 @@ public class Robot extends LoggedRobot {
         // Instantiate our RobotContainer. This will perform all our button bindings,
         // and put our autonomous chooser on the dashboard.
         robotContainer = new RobotContainer();
+
+        CommandScheduler.getInstance().onCommandFinish(Robot::onCommandEnd);
+        CommandScheduler.getInstance().onCommandInterrupt(Robot::onCommandEnd);
     }
 
     private void logConstantClass(Class<?> clazz, String parentName) {
