@@ -14,13 +14,13 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Util;
 import frc.robot.dashboard.*;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.util.GoalBasedCommandRunner;
+import frc.robot.util.SubsystemBaseExt;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -31,7 +31,7 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 
-public class Shooter extends SubsystemBase {
+public class Shooter extends SubsystemBaseExt {
     ////////////////////// GOAL SETPOINTS - HOVER //////////////////////
     private static final TuningDashboardAngle hoverPivot = new TuningDashboardAngle(
             DashboardSubsystem.SHOOTER, "Hover Pivot",
@@ -491,7 +491,6 @@ public class Shooter extends SubsystemBase {
                 "Shooter/Pivot",
                 (voltage) -> io.pivotSetVoltage(voltage.in(Volts)),
                 () -> goal = Goal.CHARACTERIZATION,
-                () -> goal = Goal.DEFAULT,
                 this
         );
 
@@ -499,7 +498,6 @@ public class Shooter extends SubsystemBase {
                 "Shooter/Feed",
                 (voltage) -> io.feedSetVoltage(voltage.in(Volts)),
                 () -> goal = Goal.CHARACTERIZATION,
-                () -> goal = Goal.DEFAULT,
                 this
         );
 
@@ -507,14 +505,13 @@ public class Shooter extends SubsystemBase {
                 "Shooter/Flywheels",
                 (voltage) -> io.flywheelsSetVoltage(voltage.in(Volts)),
                 () -> goal = Goal.CHARACTERIZATION,
-                () -> goal = Goal.DEFAULT,
                 this
         );
     }
 
     ////////////////////// PERIODIC //////////////////////
     @Override
-    public void periodic() {
+    public void periodicBeforeCommands() {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Shooter", inputs);
 

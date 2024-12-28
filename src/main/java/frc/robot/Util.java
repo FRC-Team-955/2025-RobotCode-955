@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -45,7 +46,7 @@ public class Util {
             String name,
             Consumer<Measure<Voltage>> voltageConsumer,
             Runnable start,
-            Runnable end,
+//            Runnable end,
             Subsystem subsystem
     ) {
         // Java forces us to do this if we want to use the variable in the lambda
@@ -63,7 +64,7 @@ public class Util {
                                 start.run();
                                 ref.hasStarted = true;
                             } else if (ref.hasStarted && state == SysIdRoutineLog.State.kNone) {
-                                end.run();
+//                                end.run();
                                 ref.hasStarted = false;
                             }
                         }
@@ -109,5 +110,13 @@ public class Util {
 
     public static double average(double... inputs) {
         return Arrays.stream(inputs).sum() / inputs.length;
+    }
+
+    public static void error(String msg) {
+        if (RobotBase.isSimulation()) {
+            throw new RuntimeException(msg);
+        } else {
+            DriverStation.reportError(msg, false);
+        }
     }
 }
