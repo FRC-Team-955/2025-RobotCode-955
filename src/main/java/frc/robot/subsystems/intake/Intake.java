@@ -13,10 +13,10 @@ import edu.wpi.first.units.Velocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Util;
 import frc.robot.dashboard.*;
+import frc.robot.util.SubsystemBaseExt;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
 
@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 
-public class Intake extends SubsystemBase {
+public class Intake extends SubsystemBaseExt {
     ////////////////////// GOAL SETPOINTS - HOVER //////////////////////
     private static final TuningDashboardAngle hoverPivot = new TuningDashboardAngle(
             DashboardSubsystem.INTAKE, "Hover Pivot",
@@ -220,7 +220,6 @@ public class Intake extends SubsystemBase {
                 "Intake/Pivot",
                 (voltage) -> io.pivotSetVoltage(voltage.in(Volts)),
                 () -> goal = Goal.CHARACTERIZATION,
-                () -> goal = Goal.DEFAULT,
                 this
         );
 
@@ -228,14 +227,13 @@ public class Intake extends SubsystemBase {
                 "Intake/Feed",
                 (voltage) -> io.feedSetVoltage(voltage.in(Volts)),
                 () -> goal = Goal.CHARACTERIZATION,
-                () -> goal = Goal.DEFAULT,
                 this
         );
     }
 
     ////////////////////// PERIODIC //////////////////////
     @Override
-    public void periodic() {
+    public void periodicBeforeCommands() {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Intake", inputs);
 

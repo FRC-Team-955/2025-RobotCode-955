@@ -64,10 +64,12 @@ public class Module {
         setBrakeMode(true);
     }
 
-    public void periodic() {
+    public void periodicBeforeCommands() {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Drive/Module" + index, inputs);
+    }
 
+    public void periodicAfterCommands() {
         // On first cycle, reset relative turn encoder
         // Wait until absolute angle is nonzero in case it wasn't initialized yet
         if (turnRelativeOffset == null && inputs.turnAbsolutePositionRad != 0.0) {
@@ -107,9 +109,6 @@ public class Module {
         angleSetpoint = optimizedState.angle;
         // https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/swerve-drive-kinematics.html#cosine-compensation
         speedSetpoint = optimizedState.speedMetersPerSecond * angleSetpoint.minus(getAngle()).getCos();
-
-        if (Drive.disableDriving.get())
-            speedSetpoint = 0.0;
 
         return optimizedState;
     }
@@ -164,6 +163,9 @@ public class Module {
         return inputs.drivePositionRad * DriveConstants.driveConfig.wheelRadiusMeters();
     }
 
+    /**
+     * Returns the current drive position of the module in radians.
+     */
     public double getPositionRad() {
         return inputs.drivePositionRad;
     }

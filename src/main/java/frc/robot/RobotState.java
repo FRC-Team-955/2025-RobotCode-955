@@ -49,13 +49,9 @@ public class RobotState {
     private RobotState() {
     }
 
-    private SwerveModulePosition[] getModulePositions() {
-        return Drive.get().getModulePositions();
-    }
-
     public void applyOdometryUpdate(Rotation2d gyroRotation) {
         // Read wheel positions and deltas from each module
-        SwerveModulePosition[] modulePositions = getModulePositions();
+        SwerveModulePosition[] modulePositions = Drive.get().getModulePositions();
         SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
         for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
             moduleDeltas[moduleIndex] = new SwerveModulePosition(
@@ -100,9 +96,13 @@ public class RobotState {
         return getPose().getRotation();
     }
 
+    public void setPose(Pose2d pose) {
+        poseEstimator.resetPosition(rawGyroRotation, Drive.get().getModulePositions(), pose);
+    }
+
     public Command setPose(Supplier<Pose2d> pose) {
         return Commands
-                .runOnce(() -> poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose.get()))
+                .runOnce(() -> setPose(pose.get()))
                 .ignoringDisable(true);
     }
 

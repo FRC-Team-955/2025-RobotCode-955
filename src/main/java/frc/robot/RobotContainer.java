@@ -1,15 +1,14 @@
 package frc.robot;
 
 import choreo.auto.AutoFactory;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.WheelRadiusCharacterization;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.util.CommandNintendoSwitchProController;
@@ -37,18 +36,12 @@ public class RobotContainer {
     public RobotContainer() {
         addAutos();
         addCharacterizations();
-        setDefaultCommands();
         configureButtonBindings();
 
         SmartDashboard.putData("Command Scheduler", CommandScheduler.getInstance());
     }
 
     private void addAutos() {
-        autoChooser.addOption(
-                "Mobility (robot relative forward)",
-                drive.driveVelocity(new ChassisSpeeds(2, 0, 0), 3)
-        );
-
         autoChooser.addOption("None", null);
 
         var factory = drive.createAutoFactory(new AutoFactory.AutoBindings());
@@ -61,11 +54,11 @@ public class RobotContainer {
 
         characterizationChooser.addOption(
                 "Drive Wheel Radius (Clockwise)",
-                new WheelRadiusCharacterization(WheelRadiusCharacterization.Direction.CLOCKWISE)
+                drive.wheelRadiusCharacterization(Drive.WheelRadiusCharacterization.Direction.CLOCKWISE)
         );
         characterizationChooser.addOption(
                 "Drive Wheel Radius (Counter-Clockwise)",
-                new WheelRadiusCharacterization(WheelRadiusCharacterization.Direction.COUNTER_CLOCKWISE)
+                drive.wheelRadiusCharacterization(Drive.WheelRadiusCharacterization.Direction.COUNTER_CLOCKWISE)
         );
 
         characterizationChooser.addOption(
@@ -175,19 +168,17 @@ public class RobotContainer {
         );
     }
 
-    private void setDefaultCommands() {
+    private void configureButtonBindings() {
+        driverController.y().onTrue(robotState.resetRotation());
+
         //noinspection SuspiciousNameCombination
-        drive.setDefaultCommand(
+        RobotModeTriggers.teleop().whileTrue(
                 drive.driveJoystick(
                         driverController::getLeftY,
                         driverController::getLeftX,
                         () -> -driverController.getRightX()
                 )
         );
-    }
-
-    private void configureButtonBindings() {
-        driverController.y().onTrue(robotState.resetRotation());
     }
 
     public Command getAutonomousCommand() {
