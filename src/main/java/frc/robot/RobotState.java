@@ -13,16 +13,13 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.drive.temp.DriveConstants;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
 
 import java.util.function.Supplier;
 
 public class RobotState {
-    public static final LoggedDashboardBoolean tuningMode = new LoggedDashboardBoolean("1 Tuning Mode", false);
-
     @Getter
     private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(DriveConstants.moduleTranslations);
     private final SwerveModulePosition[] lastModulePositions = new SwerveModulePosition[]{

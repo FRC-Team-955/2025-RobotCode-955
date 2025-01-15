@@ -3,8 +3,8 @@ package frc.robot.subsystems.drive.old;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.ModuleIO;
+import frc.robot.subsystems.drive.temp.DriveConstants;
 
 /**
  * Physics sim implementation of module IO.

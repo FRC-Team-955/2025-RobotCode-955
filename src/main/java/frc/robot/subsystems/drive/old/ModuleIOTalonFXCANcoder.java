@@ -11,8 +11,8 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
-import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.ModuleIO;
+import frc.robot.subsystems.drive.temp.DriveConstants;
 
 /**
  * Module IO implementation for Talon FX drive motor controller, Talon FX turn motor controller, and CANcoder

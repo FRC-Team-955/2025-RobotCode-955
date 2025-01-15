@@ -3,8 +3,7 @@ package frc.robot;
 import com.pathplanner.lib.util.GeometryUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Voltage;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
@@ -44,7 +43,7 @@ public class Util {
      */
     public static SysIdRoutine sysIdRoutine(
             String name,
-            Consumer<Measure<Voltage>> voltageConsumer,
+            Consumer<Voltage> voltageConsumer,
             Runnable start,
 //            Runnable end,
             Subsystem subsystem

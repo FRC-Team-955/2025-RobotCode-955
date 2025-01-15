@@ -16,7 +16,7 @@ package frc.robot.subsystems.drive;
 import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
-public interface ModuleIO {
+public class ModuleIO {
     @AutoLog
     class ModuleIOInputs {
         public boolean driveConnected = false;
@@ -41,30 +41,30 @@ public interface ModuleIO {
     /**
      * Updates the set of loggable inputs.
      */
-    default void updateInputs(ModuleIOInputs inputs) {
+    public void updateInputs(ModuleIOInputs inputs) {
     }
 
     /**
      * Run the drive motor at the specified open loop value.
      */
-    default void setDriveOpenLoop(double output) {
+    public void setDriveVoltage(double volts) {
     }
 
     /**
      * Run the turn motor at the specified open loop value.
      */
-    default void setTurnOpenLoop(double output) {
+    public void setTurnVoltage(double volts) {
     }
 
     /**
      * Run the drive motor at the specified velocity.
      */
-    default void setDriveVelocity(double velocityRadPerSec) {
+    public void setDriveVelocity(double velocityRadPerSec) {
     }
 
     /**
      * Run the turn motor to the specified rotation.
      */
-    default void setTurnPosition(Rotation2d rotation) {
+    public void setTurnPosition(Rotation2d rotation) {
     }
 }

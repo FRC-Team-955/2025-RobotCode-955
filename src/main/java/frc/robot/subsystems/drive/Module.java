@@ -94,7 +94,7 @@ public class Module {
      * Runs the module with the specified output while controlling to zero degrees.
      */
     public void runCharacterization(double output) {
-        io.setDriveOpenLoop(output);
+        io.setDriveVoltage(output);
         io.setTurnPosition(new Rotation2d());
     }
 
@@ -102,8 +102,8 @@ public class Module {
      * Disables all outputs to motors.
      */
     public void stop() {
-        io.setDriveOpenLoop(0.0);
-        io.setTurnOpenLoop(0.0);
+        io.setDriveVoltage(0.0);
+        io.setTurnVoltage(0.0);
     }
 
     /**

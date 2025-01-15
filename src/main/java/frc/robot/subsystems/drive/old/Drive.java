@@ -21,9 +21,9 @@ import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotState;
 import frc.robot.Util;
-import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.Module;
+import frc.robot.subsystems.drive.temp.DriveConstants;
 import frc.robot.util.SubsystemBaseExt;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -35,8 +35,8 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.subsystems.drive.DriveConstants.moduleTranslations;
 import static frc.robot.subsystems.drive.DriveDashboard.*;
+import static frc.robot.subsystems.drive.temp.DriveConstants.moduleTranslations;
 
 public class Drive extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
