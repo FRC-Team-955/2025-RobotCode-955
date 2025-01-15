@@ -17,7 +17,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
-public interface VisionIO {
+public class VisionIO {
   @AutoLog
   public static class VisionIOInputs {
     public boolean connected = false;
@@ -45,5 +45,5 @@ public interface VisionIO {
     PHOTONVISION
   }
 
-  public default void updateInputs(VisionIOInputs inputs) {}
+  public void updateInputs(VisionIOInputs inputs) {}
 }

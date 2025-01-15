@@ -25,7 +25,7 @@ import java.util.Set;
 import org.photonvision.PhotonCamera;
 
 /** IO implementation for real PhotonVision hardware. */
-public class VisionIOPhotonVision implements VisionIO {
+public class VisionIOPhotonVision extends VisionIO {
   protected final PhotonCamera camera;
   protected final Transform3d robotToCamera;
 

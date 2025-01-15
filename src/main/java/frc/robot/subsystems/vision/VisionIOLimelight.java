@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 /** IO implementation for real Limelight hardware. */
-public class VisionIOLimelight implements VisionIO {
+public class VisionIOLimelight extends VisionIO {
   private final Supplier<Rotation2d> rotationSupplier;
   private final DoubleArrayPublisher orientationPublisher;
 
