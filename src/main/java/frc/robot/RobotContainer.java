@@ -1,18 +1,35 @@
+// Copyright 2021-2025 FRC 6328
+// http://github.com/Mechanical-Advantage
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// version 3 as published by the Free Software Foundation or
+// available in the root directory of this project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
 package frc.robot;
 
-import choreo.auto.AutoFactory;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import com.pathplanner.lib.auto.AutoBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.commands.DriveCommands;
+import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.WheelRadiusCharacterization;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.util.CommandNintendoSwitchProController;
+import frc.robot.subsystems.drive.GyroIO;
+import frc.robot.subsystems.drive.GyroIOPigeon2;
+import frc.robot.subsystems.drive.ModuleIO;
+import frc.robot.subsystems.drive.ModuleIOSim;
+import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -22,176 +39,121 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-    private final CommandXboxController driverController = Constants.Simulation.useNintendoSwitchProController ? new CommandNintendoSwitchProController(0) : new CommandXboxController(0);
+  // Subsystems
+  private final Drive drive;
 
-    private final LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Choices");
-    private final LoggedDashboardChooser<Command> characterizationChooser = new LoggedDashboardChooser<>("Characterization Choices");
+  // Controller
+  private final CommandXboxController controller = new CommandXboxController(0);
 
-    private final RobotState robotState = RobotState.get();
+  // Dashboard inputs
+  private final LoggedDashboardChooser<Command> autoChooser;
 
-    /* Subsystems */
-    private final Drive drive = Drive.get();
-    private final Intake intake = Intake.get();
-    private final Shooter shooter = Shooter.get();
+  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  public RobotContainer() {
+    switch (Constants.currentMode) {
+      case REAL:
+        // Real robot, instantiate hardware IO implementations
+        drive =
+            new Drive(
+                new GyroIOPigeon2(),
+                new ModuleIOTalonFX(TunerConstants.FrontLeft),
+                new ModuleIOTalonFX(TunerConstants.FrontRight),
+                new ModuleIOTalonFX(TunerConstants.BackLeft),
+                new ModuleIOTalonFX(TunerConstants.BackRight));
+        break;
 
-    public RobotContainer() {
-        addAutos();
-        addCharacterizations();
-        setDefaultCommands();
-        configureButtonBindings();
+      case SIM:
+        // Sim robot, instantiate physics sim IO implementations
+        drive =
+            new Drive(
+                new GyroIO() {},
+                new ModuleIOSim(TunerConstants.FrontLeft),
+                new ModuleIOSim(TunerConstants.FrontRight),
+                new ModuleIOSim(TunerConstants.BackLeft),
+                new ModuleIOSim(TunerConstants.BackRight));
+        break;
 
-        SmartDashboard.putData("Command Scheduler", CommandScheduler.getInstance());
+      default:
+        // Replayed robot, disable IO implementations
+        drive =
+            new Drive(
+                new GyroIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {});
+        break;
     }
 
-    private void addAutos() {
-        autoChooser.addOption(
-                "Mobility (robot relative forward)",
-                drive.driveVelocity(new ChassisSpeeds(2, 0, 0), 3)
-        );
+    // Set up auto routines
+    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
-        autoChooser.addOption("None", null);
+    // Set up SysId routines
+    autoChooser.addOption(
+        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+    autoChooser.addOption(
+        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Forward)",
+        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Reverse)",
+        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-        var factory = drive.createAutoFactory(new AutoFactory.AutoBindings());
+    // Configure the button bindings
+    configureButtonBindings();
+  }
 
-        autoChooser.addOption("Characterization", Commands.deferredProxy(characterizationChooser::get));
-    }
+  /**
+   * Use this method to define your button->command mappings. Buttons can be created by
+   * instantiating a {@link GenericHID} or one of its subclasses ({@link
+   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
+   * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
+   */
+  private void configureButtonBindings() {
+    // Default command, normal field-relative drive
+    drive.setDefaultCommand(
+        DriveCommands.joystickDrive(
+            drive,
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () -> -controller.getRightX()));
 
-    private void addCharacterizations() {
-        ////////////////////// DRIVE //////////////////////
+    // Lock to 0° when A button is held
+    controller
+        .a()
+        .whileTrue(
+            DriveCommands.joystickDriveAtAngle(
+                drive,
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                () -> new Rotation2d()));
 
-        characterizationChooser.addOption(
-                "Drive Wheel Radius (Clockwise)",
-                new WheelRadiusCharacterization(WheelRadiusCharacterization.Direction.CLOCKWISE)
-        );
-        characterizationChooser.addOption(
-                "Drive Wheel Radius (Counter-Clockwise)",
-                new WheelRadiusCharacterization(WheelRadiusCharacterization.Direction.COUNTER_CLOCKWISE)
-        );
+    // Switch to X pattern when X button is pressed
+    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-        characterizationChooser.addOption(
-                "Drive SysId (Quasistatic Forward)",
-                drive.sysId.quasistatic(SysIdRoutine.Direction.kForward)
-        );
-        characterizationChooser.addOption(
-                "Drive SysId (Quasistatic Reverse)",
-                drive.sysId.quasistatic(SysIdRoutine.Direction.kReverse)
-        );
-        characterizationChooser.addOption(
-                "Drive SysId (Dynamic Forward)",
-                drive.sysId.dynamic(SysIdRoutine.Direction.kForward)
-        );
-        characterizationChooser.addOption(
-                "Drive SysId (Dynamic Reverse)",
-                drive.sysId.dynamic(SysIdRoutine.Direction.kReverse)
-        );
+    // Reset gyro to 0° when B button is pressed
+    controller
+        .b()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                    drive)
+                .ignoringDisable(true));
+  }
 
-        ////////////////////// SHOOTER //////////////////////
-
-        characterizationChooser.addOption(
-                "Shooter Pivot SysId (Quasistatic Forward)",
-                shooter.pivotSysId.quasistatic(SysIdRoutine.Direction.kForward)
-        );
-        characterizationChooser.addOption(
-                "Shooter Pivot SysId (Quasistatic Reverse)",
-                shooter.pivotSysId.quasistatic(SysIdRoutine.Direction.kReverse)
-        );
-        characterizationChooser.addOption(
-                "Shooter Pivot SysId (Dynamic Forward)",
-                shooter.pivotSysId.dynamic(SysIdRoutine.Direction.kForward)
-        );
-        characterizationChooser.addOption(
-                "Shooter Pivot SysId (Dynamic Reverse)",
-                shooter.pivotSysId.dynamic(SysIdRoutine.Direction.kReverse)
-        );
-
-        characterizationChooser.addOption(
-                "Shooter Feed SysId (Quasistatic Forward)",
-                shooter.feedSysId.quasistatic(SysIdRoutine.Direction.kForward)
-        );
-        characterizationChooser.addOption(
-                "Shooter Feed SysId (Quasistatic Reverse)",
-                shooter.feedSysId.quasistatic(SysIdRoutine.Direction.kReverse)
-        );
-        characterizationChooser.addOption(
-                "Shooter Feed SysId (Dynamic Forward)",
-                shooter.feedSysId.dynamic(SysIdRoutine.Direction.kForward)
-        );
-        characterizationChooser.addOption(
-                "Shooter Feed SysId (Dynamic Reverse)",
-                shooter.feedSysId.dynamic(SysIdRoutine.Direction.kReverse)
-        );
-
-        characterizationChooser.addOption(
-                "Shooter Flywheels SysId (Quasistatic Forward)",
-                shooter.flywheelsSysId.quasistatic(SysIdRoutine.Direction.kForward)
-        );
-        characterizationChooser.addOption(
-                "Shooter Flywheels SysId (Quasistatic Reverse)",
-                shooter.flywheelsSysId.quasistatic(SysIdRoutine.Direction.kReverse)
-        );
-        characterizationChooser.addOption(
-                "Shooter Flywheels SysId (Dynamic Forward)",
-                shooter.flywheelsSysId.dynamic(SysIdRoutine.Direction.kForward)
-        );
-        characterizationChooser.addOption(
-                "Shooter Flywheels SysId (Dynamic Reverse)",
-                shooter.flywheelsSysId.dynamic(SysIdRoutine.Direction.kReverse)
-        );
-
-        ////////////////////// INTAKE //////////////////////
-
-        characterizationChooser.addOption(
-                "Intake Pivot SysId (Quasistatic Forward)",
-                intake.pivotSysId.quasistatic(SysIdRoutine.Direction.kForward)
-        );
-        characterizationChooser.addOption(
-                "Intake Pivot SysId (Quasistatic Reverse)",
-                intake.pivotSysId.quasistatic(SysIdRoutine.Direction.kReverse)
-        );
-        characterizationChooser.addOption(
-                "Intake Pivot SysId (Dynamic Forward)",
-                intake.pivotSysId.dynamic(SysIdRoutine.Direction.kForward)
-        );
-        characterizationChooser.addOption(
-                "Intake Pivot SysId (Dynamic Reverse)",
-                intake.pivotSysId.dynamic(SysIdRoutine.Direction.kReverse)
-        );
-
-        characterizationChooser.addOption(
-                "Intake Feed SysId (Quasistatic Forward)",
-                intake.feedSysId.quasistatic(SysIdRoutine.Direction.kForward)
-        );
-        characterizationChooser.addOption(
-                "Intake Feed SysId (Quasistatic Reverse)",
-                intake.feedSysId.quasistatic(SysIdRoutine.Direction.kReverse)
-        );
-        characterizationChooser.addOption(
-                "Intake Feed SysId (Dynamic Forward)",
-                intake.feedSysId.dynamic(SysIdRoutine.Direction.kForward)
-        );
-        characterizationChooser.addOption(
-                "Intake Feed SysId (Dynamic Reverse)",
-                intake.feedSysId.dynamic(SysIdRoutine.Direction.kReverse)
-        );
-    }
-
-    private void setDefaultCommands() {
-        //noinspection SuspiciousNameCombination
-        drive.setDefaultCommand(
-                drive.driveJoystick(
-                        driverController::getLeftY,
-                        driverController::getLeftX,
-                        () -> -driverController.getRightX()
-                )
-        );
-    }
-
-    private void configureButtonBindings() {
-        driverController.y().onTrue(robotState.resetRotation());
-    }
-
-    public Command getAutonomousCommand() {
-        // Return null to do nothing.
-        return autoChooser.get();
-    }
+  /**
+   * Use this to pass the autonomous command to the main {@link Robot} class.
+   *
+   * @return the command to run in autonomous
+   */
+  public Command getAutonomousCommand() {
+    return autoChooser.get();
+  }
 }
