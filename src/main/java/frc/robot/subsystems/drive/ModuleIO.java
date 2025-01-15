@@ -13,12 +13,11 @@
 
 package frc.robot.subsystems.drive;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
 public class ModuleIO {
     @AutoLog
-    class ModuleIOInputs {
+    public class ModuleIOInputs {
         public boolean driveConnected = false;
         public double drivePositionRad = 0.0;
         public double driveVelocityRadPerSec = 0.0;
@@ -27,15 +26,15 @@ public class ModuleIO {
 
         public boolean turnConnected = false;
         public boolean turnEncoderConnected = false;
-        public Rotation2d turnAbsolutePosition = new Rotation2d();
-        public Rotation2d turnPosition = new Rotation2d();
+        public double turnAbsolutePositionRad = 0.0;
+        public double turnPositionRad = 0.0;
         public double turnVelocityRadPerSec = 0.0;
         public double turnAppliedVolts = 0.0;
         public double turnCurrentAmps = 0.0;
 
         public double[] odometryTimestamps = new double[]{};
         public double[] odometryDrivePositionsRad = new double[]{};
-        public Rotation2d[] odometryTurnPositions = new Rotation2d[]{};
+        public double[] odometryTurnPositionsRad = new double[]{};
     }
 
     /**
@@ -47,13 +46,13 @@ public class ModuleIO {
     /**
      * Run the drive motor at the specified open loop value.
      */
-    public void setDriveVoltage(double volts) {
+    public void setDriveOpenLoop(double output) {
     }
 
     /**
      * Run the turn motor at the specified open loop value.
      */
-    public void setTurnVoltage(double volts) {
+    public void setTurnOpenLoop(double output) {
     }
 
     /**
@@ -65,6 +64,6 @@ public class ModuleIO {
     /**
      * Run the turn motor to the specified rotation.
      */
-    public void setTurnPosition(Rotation2d rotation) {
+    public void setTurnPosition(double positionRad) {
     }
 }

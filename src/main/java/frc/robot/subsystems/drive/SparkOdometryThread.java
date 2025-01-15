@@ -53,12 +53,12 @@ public class SparkOdometryThread {
     }
 
     private SparkOdometryThread() {
-        notifier.setName("OdometryThread");
+        notifier.setName("SparkOdometryThread");
     }
 
     public void start() {
         if (timestampQueues.size() > 0) {
-            notifier.startPeriodic(1.0 / DriveConstants.sparkFrequency);
+            notifier.startPeriodic(1.0 / DriveConstants.sparkFrequencyHz);
         }
     }
 

@@ -15,19 +15,20 @@ package frc.robot.subsystems.drive;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.*;
+import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.geometry.Rotation2d;
 
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
@@ -39,8 +40,8 @@ import static frc.robot.util.SparkUtil.*;
  * Module IO implementation for Spark Flex drive motor controller, Spark Max turn motor controller,
  * and duty cycle absolute encoder.
  */
-public class ModuleIOSpark implements ModuleIO {
-    private final Rotation2d zeroRotation;
+public class ModuleIOSpark extends ModuleIO {
+    private final double zeroRotationRad;
 
     // Hardware objects
     private final SparkBase driveSpark;
@@ -61,42 +62,22 @@ public class ModuleIOSpark implements ModuleIO {
     private final Debouncer driveConnectedDebounce = new Debouncer(0.5);
     private final Debouncer turnConnectedDebounce = new Debouncer(0.5);
 
-    public ModuleIOSpark(int module) {
-        zeroRotation =
-                switch (module) {
-                    case 0 -> frontLeftZeroRotation;
-                    case 1 -> frontRightZeroRotation;
-                    case 2 -> backLeftZeroRotation;
-                    case 3 -> backRightZeroRotation;
-                    default -> new Rotation2d();
-                };
-        driveSpark =
-                new SparkFlex(
-                        switch (module) {
-                            case 0 -> frontLeftDriveCanId;
-                            case 1 -> frontRightDriveCanId;
-                            case 2 -> backLeftDriveCanId;
-                            case 3 -> backRightDriveCanId;
-                            default -> 0;
-                        },
-                        MotorType.kBrushless);
-        turnSpark =
-                new SparkMax(
-                        switch (module) {
-                            case 0 -> frontLeftTurnCanId;
-                            case 1 -> frontRightTurnCanId;
-                            case 2 -> backLeftTurnCanId;
-                            case 3 -> backRightTurnCanId;
-                            default -> 0;
-                        },
-                        MotorType.kBrushless);
+    public ModuleIOSpark(
+            int driveCanID,
+            int turnCanID,
+            int cancoderCanID,
+            double absoluteEncoderOffsetRad
+    ) {
+        zeroRotationRad = absoluteEncoderOffsetRad;
+        driveSpark = new SparkMax(driveCanID, MotorType.kBrushless);
+        turnSpark = new SparkMax(turnCanID, MotorType.kBrushless);
         driveEncoder = driveSpark.getEncoder();
         turnEncoder = turnSpark.getAbsoluteEncoder();
         driveController = driveSpark.getClosedLoopController();
         turnController = turnSpark.getClosedLoopController();
 
         // Configure drive motor
-        var driveConfig = new SparkFlexConfig();
+        var driveConfig = new SparkMaxConfig();
         driveConfig
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(driveMotorCurrentLimit)
@@ -116,7 +97,7 @@ public class ModuleIOSpark implements ModuleIO {
         driveConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
-                .primaryEncoderPositionPeriodMs((int) (1000.0 / odometryFrequency))
+                .primaryEncoderPositionPeriodMs((int) (1000.0 / DriveConstants.sparkFrequencyHz))
                 .primaryEncoderVelocityAlwaysOn(true)
                 .primaryEncoderVelocityPeriodMs(20)
                 .appliedOutputPeriodMs(20)
@@ -152,7 +133,7 @@ public class ModuleIOSpark implements ModuleIO {
         turnConfig
                 .signals
                 .absoluteEncoderPositionAlwaysOn(true)
-                .absoluteEncoderPositionPeriodMs((int) (1000.0 / odometryFrequency))
+                .absoluteEncoderPositionPeriodMs((int) (1000.0 / DriveConstants.sparkFrequencyHz))
                 .absoluteEncoderVelocityAlwaysOn(true)
                 .absoluteEncoderVelocityPeriodMs(20)
                 .appliedOutputPeriodMs(20)
@@ -191,7 +172,7 @@ public class ModuleIOSpark implements ModuleIO {
         ifOk(
                 turnSpark,
                 turnEncoder::getPosition,
-                (value) -> inputs.turnPosition = new Rotation2d(value).minus(zeroRotation));
+                (value) -> inputs.turnPositionRad = value - zeroRotationRad);
         ifOk(turnSpark, turnEncoder::getVelocity, (value) -> inputs.turnVelocityRadPerSec = value);
         ifOk(
                 turnSpark,
@@ -205,10 +186,10 @@ public class ModuleIOSpark implements ModuleIO {
                 timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryDrivePositionsRad =
                 drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
-        inputs.odometryTurnPositions =
+        inputs.odometryTurnPositionsRad =
                 turnPositionQueue.stream()
-                        .map((Double value) -> new Rotation2d(value).minus(zeroRotation))
-                        .toArray(Rotation2d[]::new);
+                        .mapToDouble((Double value) -> value - zeroRotationRad)
+                        .toArray();
         timestampQueue.clear();
         drivePositionQueue.clear();
         turnPositionQueue.clear();
@@ -232,14 +213,13 @@ public class ModuleIOSpark implements ModuleIO {
                 ControlType.kVelocity,
                 ClosedLoopSlot.kSlot0,
                 ffVolts,
-                ArbFFUnits.kVoltage);
+                ArbFFUnits.kVoltage
+        );
     }
 
     @Override
-    public void setTurnPosition(Rotation2d rotation) {
-        double setpoint =
-                MathUtil.inputModulus(
-                        rotation.plus(zeroRotation).getRadians(), turnPIDMinInput, turnPIDMaxInput);
+    public void setTurnPosition(double positionRad) {
+        double setpoint = MathUtil.inputModulus(positionRad + zeroRotationRad, turnPIDMinInput, turnPIDMaxInput);
         turnController.setReference(setpoint, ControlType.kPosition);
     }
 }

@@ -80,7 +80,7 @@ public class Module {
 
         // Run closed loop turn control
         if (angleSetpoint != null) {
-            io.setTurnVoltage(turnFeedback.get().calculate(getAngle().getRadians(), angleSetpoint.getRadians()));
+            io.setTurnOpenLoop(turnFeedback.get().calculate(getAngle().getRadians(), angleSetpoint.getRadians()));
 
             // Run closed loop drive control
             // Only allowed if closed loop turn control is running
@@ -94,7 +94,7 @@ public class Module {
 
                 // Run drive controller
                 double velocityRadPerSec = adjustSpeedSetpoint / DriveConstants.driveConfig.wheelRadiusMeters();
-                io.setDriveVoltage(driveFeedforward.get().calculate(velocityRadPerSec) + driveFeedback.get().calculate(inputs.driveVelocityRadPerSec, velocityRadPerSec));
+                io.setDriveOpenLoop(driveFeedforward.get().calculate(velocityRadPerSec) + driveFeedback.get().calculate(inputs.driveVelocityRadPerSec, velocityRadPerSec));
             }
         }
     }
@@ -123,7 +123,7 @@ public class Module {
         angleSetpoint = new Rotation2d();
 
         // Open loop drive control
-        io.setDriveVoltage(volts);
+        io.setDriveOpenLoop(volts);
         speedSetpoint = null;
     }
 
@@ -131,8 +131,8 @@ public class Module {
      * Disables all outputs to motors.
      */
     public void stop() {
-        io.setTurnVoltage(0.0);
-        io.setDriveVoltage(0.0);
+        io.setTurnOpenLoop(0.0);
+        io.setDriveOpenLoop(0.0);
 
         // Disable closed loop control for turn and drive
         angleSetpoint = null;

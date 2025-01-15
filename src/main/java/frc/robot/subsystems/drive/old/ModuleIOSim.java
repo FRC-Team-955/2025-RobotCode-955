@@ -39,14 +39,14 @@ public class ModuleIOSim extends ModuleIO {
     }
 
     @Override
-    public void setDriveVoltage(double volts) {
-        driveAppliedVolts = MathUtil.clamp(volts, -12.0, 12.0);
+    public void setDriveOpenLoop(double output) {
+        driveAppliedVolts = MathUtil.clamp(output, -12.0, 12.0);
         driveSim.setInputVoltage(driveAppliedVolts);
     }
 
     @Override
-    public void setTurnVoltage(double volts) {
-        turnAppliedVolts = MathUtil.clamp(volts, -12.0, 12.0);
+    public void setTurnOpenLoop(double output) {
+        turnAppliedVolts = MathUtil.clamp(output, -12.0, 12.0);
         turnSim.setInputVoltage(turnAppliedVolts);
     }
 }

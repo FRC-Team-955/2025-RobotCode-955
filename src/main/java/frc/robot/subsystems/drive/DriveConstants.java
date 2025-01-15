@@ -6,12 +6,11 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.Util;
 import frc.robot.generated.TunerConstants;
-import frc.robot.util.PID;
 import frc.robot.util.PIDF;
 
 public class DriveConstants {
-    public static final double phoenixFrequency = 250.0;
-    public static final double sparkFrequency = 100.0;
+    public static final double phoenixFrequencyHz = 250.0;
+    public static final double sparkFrequencyHz = 100.0;
 
     public static final boolean isCANFD = new CANBus(TunerConstants.DrivetrainConstants.CANBusName).isNetworkFD();
 
@@ -27,9 +26,9 @@ public class DriveConstants {
                 12.960,
                 12.112,
                 40.186,
-                new PID(1.5, 0, 0),
-                new PID(1.5, 0, 0),
-                new PID(2.1, 0, 0.1)
+                PIDF.ofPD(1.5, 0),
+                PIDF.ofPD(1.5, 0),
+                PIDF.ofPD(2.1, 0.1)
         );
         case ALPHABOT -> new DriveConfig(
                 Units.inchesToMeters(2),
@@ -42,9 +41,9 @@ public class DriveConstants {
                 12.123,
                 12.442,
                 35.864,
-                new PID(1.5, 0, 0),
-                new PID(1.5, 0, 0),
-                new PID(2.1, 0, 0.1)
+                PIDF.ofPD(1.5, 0),
+                PIDF.ofPD(1.5, 0),
+                PIDF.ofPD(2.1, 0.1)
         );
     };
 
@@ -63,32 +62,32 @@ public class DriveConstants {
 
     public static final ModuleConfig moduleConfig = switch (Constants.identity) {
         case COMPBOT -> new ModuleConfig(
-                new PIDF(
+                PIDF.ofPDSVA(
                         0.05, 0.0,
                         // FL + FR + BL + BR
                         Util.average(0.21524, 0.16554, 0.083665, 0.061984),
                         Util.average(0.11224, 0.11693, 0.12106, 0.12449),
                         Util.average(0.0038991, 0.0018671, 0.004602, 0.0059919)
                 ),
-                new PID(8.0, 0.0),
+                PIDF.ofPD(8.0, 0.0),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN
         );
         case ALPHABOT -> new ModuleConfig(
-                new PIDF(
+                PIDF.ofPDSVA(
                         0.05, 0.0,
                         // FL + FR + BL + BR
                         Util.average(0.024319, 0.094701 /* , [erroneous], [erroneous] */),
                         Util.average(0.13551, 0.13733, 0.13543, 0.14087),
                         Util.average(0.0065694, 0.0054738, /* [erroneous], */ 0.0091241)
                 ),
-                new PID(5.0, 0.0),
+                PIDF.ofPD(5.0, 0.0),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN
         );
         case SIMBOT -> new ModuleConfig(
-                new PIDF(0.1, 0.0, 0.0, 0.13),
-                new PID(10.0, 0.0),
+                PIDF.ofPDSV(0.1, 0.0, 0.0, 0.13),
+                PIDF.ofPD(10.0, 0.0),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN
         );
@@ -115,9 +114,9 @@ public class DriveConstants {
                 new ModuleIOSparkMaxCANcoder(9, 10, 8, -1.302),
         };
         case SIMBOT -> new ModuleIO[]{
-                new frc.robot.subsystems.drive.ModuleIOSim(),
-                new frc.robot.subsystems.drive.ModuleIOSim(),
-                new frc.robot.subsystems.drive.ModuleIOSim(),
+                new ModuleIOSim(),
+                new ModuleIOSim(),
+                new ModuleIOSim(),
                 new ModuleIOSim()
         };
     };
@@ -140,17 +139,20 @@ public class DriveConstants {
             double maxLinearAccelMetersPerSecSquared,
             double maxAngularSpeedRadPerSec,
             double maxAngularAccelRadPerSecSquared,
-            PID choreoFeedbackXY,
-            PID choreoFeedbackTheta,
-            PID pointTowardsController
+            PIDF choreoFeedbackXY,
+            PIDF choreoFeedbackTheta,
+            PIDF pointTowardsController
     ) {
     }
 
     public record ModuleConfig(
             PIDF driveGains,
-            PID turnFeedback,
+            PIDF turnFeedback,
             double driveGearRatio,
-            double turnGearRatio
+            double turnGearRatio,
+            boolean turnInverted,
+            boolean driveInverted,
+            double slipCurrent
     ) {
     }
 

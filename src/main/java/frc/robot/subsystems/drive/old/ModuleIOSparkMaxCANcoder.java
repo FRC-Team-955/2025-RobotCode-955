@@ -85,13 +85,13 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
     }
 
     @Override
-    public void setDriveVoltage(double volts) {
-        driveSparkMax.setVoltage(volts);
+    public void setDriveOpenLoop(double output) {
+        driveSparkMax.setVoltage(output);
     }
 
     @Override
-    public void setTurnVoltage(double volts) {
-        turnSparkMax.setVoltage(volts);
+    public void setTurnOpenLoop(double output) {
+        turnSparkMax.setVoltage(output);
     }
 
     @Override

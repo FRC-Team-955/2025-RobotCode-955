@@ -114,13 +114,13 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
     }
 
     @Override
-    public void setDriveVoltage(double volts) {
-        driveTalon.setControl(new VoltageOut(volts));
+    public void setDriveOpenLoop(double output) {
+        driveTalon.setControl(new VoltageOut(output));
     }
 
     @Override
-    public void setTurnVoltage(double volts) {
-        turnTalon.setControl(new VoltageOut(volts));
+    public void setTurnOpenLoop(double output) {
+        turnTalon.setControl(new VoltageOut(output));
     }
 
     @Override

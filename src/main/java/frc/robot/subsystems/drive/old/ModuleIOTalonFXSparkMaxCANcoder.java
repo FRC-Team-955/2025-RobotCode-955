@@ -108,13 +108,13 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
     }
 
     @Override
-    public void setDriveVoltage(double volts) {
-        driveTalon.setControl(new VoltageOut(volts));
+    public void setDriveOpenLoop(double output) {
+        driveTalon.setControl(new VoltageOut(output));
     }
 
     @Override
-    public void setTurnVoltage(double volts) {
-        turnSparkMax.setVoltage(volts);
+    public void setTurnOpenLoop(double output) {
+        turnSparkMax.setVoltage(output);
     }
 
     @Override
