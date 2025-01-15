@@ -38,51 +38,57 @@ import org.littletonrobotics.junction.AutoLogOutput;
  * methods is compatible with this project's vision code.
  */
 public class DemoDrive extends SubsystemBase {
-  private final DifferentialDrivetrainSim sim =
-      DifferentialDrivetrainSim.createKitbotSim(
-          KitbotMotor.kDualCIMPerSide, KitbotGearing.k10p71, KitbotWheelSize.kSixInch, null);
-  private final DifferentialDrivePoseEstimator poseEstimator =
-      new DifferentialDrivePoseEstimator(
-          new DifferentialDriveKinematics(Units.inchesToMeters(26)),
-          new Rotation2d(),
-          0.0,
-          0.0,
-          new Pose2d());
+    private final DifferentialDrivetrainSim sim =
+            DifferentialDrivetrainSim.createKitbotSim(
+                    KitbotMotor.kDualCIMPerSide, KitbotGearing.k10p71, KitbotWheelSize.kSixInch, null);
+    private final DifferentialDrivePoseEstimator poseEstimator =
+            new DifferentialDrivePoseEstimator(
+                    new DifferentialDriveKinematics(Units.inchesToMeters(26)),
+                    new Rotation2d(),
+                    0.0,
+                    0.0,
+                    new Pose2d());
 
-  @Override
-  public void periodic() {
-    sim.update(0.02);
-    poseEstimator.update(
-        sim.getHeading(), sim.getLeftPositionMeters(), sim.getRightPositionMeters());
-  }
+    @Override
+    public void periodic() {
+        sim.update(0.02);
+        poseEstimator.update(
+                sim.getHeading(), sim.getLeftPositionMeters(), sim.getRightPositionMeters());
+    }
 
-  /**
-   * Drive open loop with percent out.
-   *
-   * @param xAxis The forward-back axis, where positive is forward.
-   * @param zAxis The left-right axis, where positive is left.
-   */
-  public void run(double xAxis, double zAxis) {
-    sim.setInputs((xAxis - zAxis) * 12.0, (xAxis + zAxis) * 12.0);
-  }
+    /**
+     * Drive open loop with percent out.
+     *
+     * @param xAxis The forward-back axis, where positive is forward.
+     * @param zAxis The left-right axis, where positive is left.
+     */
+    public void run(double xAxis, double zAxis) {
+        sim.setInputs((xAxis - zAxis) * 12.0, (xAxis + zAxis) * 12.0);
+    }
 
-  /** Returns the latest estimated pose from the pose estimator. */
-  @AutoLogOutput(key = "EstimatedPose")
-  public Pose2d getPose() {
-    return poseEstimator.getEstimatedPosition();
-  }
+    /**
+     * Returns the latest estimated pose from the pose estimator.
+     */
+    @AutoLogOutput(key = "EstimatedPose")
+    public Pose2d getPose() {
+        return poseEstimator.getEstimatedPosition();
+    }
 
-  /** Returns the latest estimated rotation from the pose estimator. */
-  public Rotation2d getRotation() {
-    return getPose().getRotation();
-  }
+    /**
+     * Returns the latest estimated rotation from the pose estimator.
+     */
+    public Rotation2d getRotation() {
+        return getPose().getRotation();
+    }
 
-  /** Adds a new timestamped vision measurement. */
-  public void addVisionMeasurement(
-      Pose2d visionRobotPoseMeters,
-      double timestampSeconds,
-      Matrix<N3, N1> visionMeasurementStdDevs) {
-    poseEstimator.addVisionMeasurement(
-        visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
-  }
+    /**
+     * Adds a new timestamped vision measurement.
+     */
+    public void addVisionMeasurement(
+            Pose2d visionRobotPoseMeters,
+            double timestampSeconds,
+            Matrix<N3, N1> visionMeasurementStdDevs) {
+        poseEstimator.addVisionMeasurement(
+                visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+    }
 }
