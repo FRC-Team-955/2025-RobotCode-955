@@ -13,9 +13,6 @@
 
 package frc.robot.subsystems.drive;
 
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -25,13 +22,12 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
 
+import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
+
 public class Module {
     private final ModuleIO io;
     private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
     private final int index;
-    private final SwerveModuleConstants<
-            TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
-            constants;
 
     private final Alert driveDisconnectedAlert;
     private final Alert turnDisconnectedAlert;
@@ -43,25 +39,13 @@ public class Module {
     @Getter
     private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[]{};
 
-    public Module(
-            ModuleIO io,
-            int index,
-            SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
-                    constants) {
+    public Module(ModuleIO io, int index) {
         this.io = io;
         this.index = index;
-        this.constants = constants;
-        driveDisconnectedAlert =
-                new Alert(
-                        "Disconnected drive motor on module " + index + ".",
-                        AlertType.kError);
-        turnDisconnectedAlert =
-                new Alert(
-                        "Disconnected turn motor on module " + index + ".", AlertType.kError);
-        turnEncoderDisconnectedAlert =
-                new Alert(
-                        "Disconnected turn encoder on module " + index + ".",
-                        AlertType.kError);
+
+        driveDisconnectedAlert = new Alert("Disconnected drive motor on module " + index + ".", AlertType.kError);
+        turnDisconnectedAlert = new Alert("Disconnected turn motor on module " + index + ".", AlertType.kError);
+        turnEncoderDisconnectedAlert = new Alert("Disconnected turn encoder on module " + index + ".", AlertType.kError);
     }
 
     public void periodicBeforeCommands() {
@@ -79,7 +63,7 @@ public class Module {
         int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
         odometryPositions = new SwerveModulePosition[sampleCount];
         for (int i = 0; i < sampleCount; i++) {
-            double positionMeters = inputs.odometryDrivePositionsRad[i] * constants.WheelRadius;
+            double positionMeters = inputs.odometryDrivePositionsRad[i] * driveConfig.wheelRadiusMeters();
             double angle = inputs.odometryTurnPositionsRad[i];
             odometryPositions[i] = new SwerveModulePosition(positionMeters, new Rotation2d(angle));
         }
@@ -95,7 +79,7 @@ public class Module {
         state.cosineScale(currentAngle);
 
         // Apply setpoints
-        io.setDriveVelocity(state.speedMetersPerSecond / constants.WheelRadius);
+        io.setDriveVelocity(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
         io.setTurnPosition(state.angle.getRadians());
     }
 
@@ -122,18 +106,22 @@ public class Module {
         return new Rotation2d(inputs.turnPositionRad);
     }
 
+    public double getPositionRad() {
+        return inputs.drivePositionRad;
+    }
+
     /**
      * Returns the current drive position of the module in meters.
      */
     public double getPositionMeters() {
-        return inputs.drivePositionRad * constants.WheelRadius;
+        return inputs.drivePositionRad * driveConfig.wheelRadiusMeters();
     }
 
     /**
      * Returns the current drive velocity of the module in meters per second.
      */
     public double getVelocityMetersPerSec() {
-        return inputs.driveVelocityRadPerSec * constants.WheelRadius;
+        return inputs.driveVelocityRadPerSec * driveConfig.wheelRadiusMeters();
     }
 
     /**

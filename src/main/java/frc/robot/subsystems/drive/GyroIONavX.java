@@ -15,7 +15,6 @@ package frc.robot.subsystems.drive;
 
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.drive.temp.Drive;
 
@@ -37,15 +36,15 @@ public class GyroIONavX extends GyroIO {
     @Override
     public void updateInputs(GyroIOInputs inputs) {
         inputs.connected = navX.isConnected();
-        inputs.yawPosition = Rotation2d.fromDegrees(-navX.getYaw());
+        inputs.yawPositionRad = Units.degreesToRadians(-navX.getYaw());
         inputs.yawVelocityRadPerSec = Units.degreesToRadians(-navX.getRawGyroZ());
 
         inputs.odometryYawTimestamps =
                 yawTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
-        inputs.odometryYawPositions =
+        inputs.odometryYawPositionsRad =
                 yawPositionQueue.stream()
-                        .map((Double value) -> Rotation2d.fromDegrees(-value))
-                        .toArray(Rotation2d[]::new);
+                        .mapToDouble((Double value) -> Units.degreesToRadians(-value))
+                        .toArray();
         yawTimestampQueue.clear();
         yawPositionQueue.clear();
     }

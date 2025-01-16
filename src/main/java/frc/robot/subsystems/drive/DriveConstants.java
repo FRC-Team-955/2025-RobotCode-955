@@ -71,7 +71,11 @@ public class DriveConstants {
                 ),
                 PIDF.ofPD(8.0, 0.0),
                 Mk4iGearRatios.L2,
-                Mk4iGearRatios.TURN
+                Mk4iGearRatios.TURN,
+                true,
+                false,
+                false,
+                120
         );
         case ALPHABOT -> new ModuleConfig(
                 PIDF.ofPDSVA(
@@ -83,7 +87,11 @@ public class DriveConstants {
                 ),
                 PIDF.ofPD(5.0, 0.0),
                 Mk4iGearRatios.L2,
-                Mk4iGearRatios.TURN
+                Mk4iGearRatios.TURN,
+                true,
+                false,
+                false,
+                120
         );
         case SIMBOT -> new ModuleConfig(
                 PIDF.ofPDSV(0.1, 0.0, 0.0, 0.13),
@@ -121,10 +129,10 @@ public class DriveConstants {
         };
     };
 
-    public static final frc.robot.subsystems.drive.GyroIO gyroIO = Constants.isReplay
-            ? new frc.robot.subsystems.drive.GyroIO()
+    public static final GyroIO gyroIO = Constants.isReplay
+            ? new GyroIO()
             : switch (Constants.identity) {
-        case COMPBOT -> new frc.robot.subsystems.drive.GyroIOPigeon2(11);
+        case COMPBOT -> new GyroIOPigeon2(11);
         case ALPHABOT -> new GyroIOPigeon2(7);
         case SIMBOT -> new GyroIO();
     };
@@ -152,6 +160,7 @@ public class DriveConstants {
             double turnGearRatio,
             boolean turnInverted,
             boolean driveInverted,
+            boolean encoderInverted,
             double slipCurrent
     ) {
     }

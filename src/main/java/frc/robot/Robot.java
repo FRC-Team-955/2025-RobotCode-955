@@ -45,15 +45,15 @@ public class Robot extends LoggedRobot {
         }
     }
 
-    private static void onCommandEnd(Command command) {
-        for (var subsystem : command.getRequirements()) {
-            if (subsystem instanceof SubsystemBaseExt) {
-                ((SubsystemBaseExt) subsystem).onCommandEnd();
-            } else {
-                Util.error("Subsystem " + subsystem.getName() + " is not an extended subsystem");
-            }
-        }
-    }
+//    private static void onCommandEnd(Command command) {
+//        for (var subsystem : command.getRequirements()) {
+//            if (subsystem instanceof SubsystemBaseExt) {
+//                ((SubsystemBaseExt) subsystem).onCommandEnd();
+//            } else {
+//                Util.error("Subsystem " + subsystem.getName() + " is not an extended subsystem");
+//            }
+//        }
+//    }
 
     public Robot() {
         AutoLogOutputManager.addPackage("frc");
@@ -101,8 +101,8 @@ public class Robot extends LoggedRobot {
         // and put our autonomous chooser on the dashboard.
         robotContainer = new RobotContainer();
 
-        CommandScheduler.getInstance().onCommandFinish(Robot::onCommandEnd);
-        CommandScheduler.getInstance().onCommandInterrupt(Robot::onCommandEnd);
+//        CommandScheduler.getInstance().onCommandFinish(Robot::onCommandEnd);
+//        CommandScheduler.getInstance().onCommandInterrupt(Robot::onCommandEnd);
     }
 
     private void logConstantClass(Class<?> clazz, String parentName) {

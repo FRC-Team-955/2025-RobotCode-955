@@ -33,7 +33,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
-import static frc.robot.subsystems.drive.temp.DriveConstants.*;
+import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
 import static frc.robot.util.SparkUtil.*;
 
 /**
@@ -80,20 +80,18 @@ public class ModuleIOSpark extends ModuleIO {
         var driveConfig = new SparkMaxConfig();
         driveConfig
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(driveMotorCurrentLimit)
+                .smartCurrentLimit(50)
                 .voltageCompensation(12.0);
         driveConfig
                 .encoder
-                .positionConversionFactor(driveEncoderPositionFactor)
-                .velocityConversionFactor(driveEncoderVelocityFactor)
+                .positionConversionFactor(2 * Math.PI / moduleConfig.driveGearRatio()) // Rotor Rotations -> Wheel Radians
+                .velocityConversionFactor((2 * Math.PI) / 60.0 / moduleConfig.driveGearRatio()) // Rotor RPM -> Wheel Rad/Sec
                 .uvwMeasurementPeriod(10)
                 .uvwAverageDepth(2);
         driveConfig
                 .closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                .pidf(
-                        driveKp, 0.0,
-                        driveKd, 0.0);
+                .pidf(moduleConfig.driveGains().p(), moduleConfig.driveGains().i(), moduleConfig.driveGains().d(), 0.0);
         driveConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
@@ -114,22 +112,22 @@ public class ModuleIOSpark extends ModuleIO {
         // Configure turn motor
         var turnConfig = new SparkMaxConfig();
         turnConfig
-                .inverted(turnInverted)
+                .inverted(moduleConfig.turnInverted())
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(turnMotorCurrentLimit)
+                .smartCurrentLimit(20)
                 .voltageCompensation(12.0);
         turnConfig
                 .absoluteEncoder
-                .inverted(turnEncoderInverted)
-                .positionConversionFactor(turnEncoderPositionFactor)
-                .velocityConversionFactor(turnEncoderVelocityFactor)
+                .inverted(moduleConfig.encoderInverted())
+                .positionConversionFactor(2 * Math.PI) // Rotations -> Radians
+                .velocityConversionFactor((2 * Math.PI) / 60.0) // RPM -> Rad/Sec
                 .averageDepth(2);
         turnConfig
                 .closedLoop
                 .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
                 .positionWrappingEnabled(true)
-                .positionWrappingInputRange(turnPIDMinInput, turnPIDMaxInput)
-                .pidf(turnKp, 0.0, turnKd, 0.0);
+                .positionWrappingInputRange(0.0, 2 * Math.PI)
+                .pidf(moduleConfig.turnFeedback().p(), moduleConfig.turnFeedback().i(), moduleConfig.turnFeedback().d(), 0.0);
         turnConfig
                 .signals
                 .absoluteEncoderPositionAlwaysOn(true)
@@ -207,7 +205,7 @@ public class ModuleIOSpark extends ModuleIO {
 
     @Override
     public void setDriveVelocity(double velocityRadPerSec) {
-        double ffVolts = driveKs * Math.signum(velocityRadPerSec) + driveKv * velocityRadPerSec;
+        double ffVolts = moduleConfig.driveGains().s() * Math.signum(velocityRadPerSec) + moduleConfig.driveGains().v() * velocityRadPerSec;
         driveController.setReference(
                 velocityRadPerSec,
                 ControlType.kVelocity,
@@ -219,7 +217,7 @@ public class ModuleIOSpark extends ModuleIO {
 
     @Override
     public void setTurnPosition(double positionRad) {
-        double setpoint = MathUtil.inputModulus(positionRad + zeroRotationRad, turnPIDMinInput, turnPIDMaxInput);
+        double setpoint = MathUtil.inputModulus(positionRad + zeroRotationRad, 0.0, 2 * Math.PI);
         turnController.setReference(setpoint, ControlType.kPosition);
     }
 }

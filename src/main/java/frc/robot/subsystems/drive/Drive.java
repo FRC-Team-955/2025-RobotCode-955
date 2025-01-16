@@ -8,10 +8,7 @@ import edu.wpi.first.hal.FRCNetComm;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -63,6 +60,13 @@ public class Drive extends SubsystemBaseExt {
      * FL, FR, BL, BR
      */
     private final Module[] modules = new Module[4];
+    private final SwerveModulePosition[] lastModulePositions = new SwerveModulePosition[]{
+            new SwerveModulePosition(),
+            new SwerveModulePosition(),
+            new SwerveModulePosition(),
+            new SwerveModulePosition()
+    };
+    private Rotation2d rawGyroRotation = new Rotation2d();
 
     public final SysIdRoutine sysId;
     private final Alert gyroDisconnectedAlert = new Alert("Disconnected gyro, using kinematics as fallback.", Alert.AlertType.kError);
@@ -95,6 +99,7 @@ public class Drive extends SubsystemBaseExt {
         for (int i = 0; i < 4; i++) {
             modules[i] = new Module(moduleIO[i], i);
         }
+
         // Usage reporting for swerve template
         HAL.report(FRCNetComm.tResourceType.kResourceType_RobotDrive, FRCNetComm.tInstances.kRobotDriveSwerve_AdvantageKit);
 
@@ -130,7 +135,38 @@ public class Drive extends SubsystemBaseExt {
         sparkLock.unlock();
 
         // Update gyro alert
-        gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Constants.Mode.SIM);
+        gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.mode != Constants.Mode.SIM);
+
+        // Odometry
+        double[] sampleTimestamps =
+                modules[0].getOdometryTimestamps(); // All signals are sampled together
+        int sampleCount = sampleTimestamps.length;
+        for (int i = 0; i < sampleCount; i++) {
+            // Read wheel positions and deltas from each module
+            SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
+            SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
+            for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
+                modulePositions[moduleIndex] = modules[moduleIndex].getOdometryPositions()[i];
+                moduleDeltas[moduleIndex] = new SwerveModulePosition(
+                        modulePositions[moduleIndex].distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
+                        modulePositions[moduleIndex].angle
+                );
+                lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
+            }
+
+            // Update gyro angle
+            if (gyroInputs.connected) {
+                // Use the real gyro angle
+                rawGyroRotation = new Rotation2d(gyroInputs.odometryYawPositionsRad[i]);
+            } else {
+                // Use the angle delta from the kinematics and module deltas
+                Twist2d twist = robotState.getKinematics().toTwist2d(moduleDeltas);
+                rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
+            }
+
+            // Apply update
+            robotState.applyOdometryUpdate(sampleTimestamps[i], rawGyroRotation, modulePositions);
+        }
     }
 
     @Override
@@ -143,6 +179,8 @@ public class Drive extends SubsystemBaseExt {
             for (var module : modules) {
                 module.stop();
             }
+            Logger.recordOutput("Drive/ModuleStates/Setpoints", new SwerveModuleState[]{});
+            Logger.recordOutput("Drive/ModuleStates/SetpointsOptimized", new SwerveModuleState[]{});
         }
         // Closed loop control
         else if (goal != Goal.CHARACTERIZATION && closedLoopSetpoint != null) {
@@ -159,17 +197,16 @@ public class Drive extends SubsystemBaseExt {
             } else {
                 SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, driveConfig.maxLinearSpeedMetersPerSec());
             }
+            Logger.recordOutput("Drive/ModuleStates/Setpoints", setpointStates);
 
             // Send setpoints to modules
-            SwerveModuleState[] optimizedSetpointStates = new SwerveModuleState[4];
             for (int i = 0; i < 4; i++) {
-                // The module returns the optimized goal, useful for logging
-                optimizedSetpointStates[i] = modules[i].runSetpoint(setpointStates[i]);
+                // The module set setpointStates[i] to the optimized setpoint, useful for logging
+                modules[i].runSetpoint(setpointStates[i]);
             }
 
             // Log setpoint states
-            Logger.recordOutput("Drive/ModuleStates/Setpoints", setpointStates);
-            Logger.recordOutput("Drive/ModuleStates/SetpointsOptimized", optimizedSetpointStates);
+            Logger.recordOutput("Drive/ModuleStates/SetpointsOptimized", setpointStates);
         } else {
             Logger.recordOutput("Drive/ClosedLoop", false);
         }
@@ -178,17 +215,6 @@ public class Drive extends SubsystemBaseExt {
         for (var module : modules) {
             module.periodicAfterCommands();
         }
-
-        robotState.applyOdometryUpdate(
-                (!disableGyro.get() && gyroInputs.isConnected)
-                        ? new Rotation2d(gyroInputs.yawPositionRad)
-                        : null
-        );
-    }
-
-    @Override
-    public void onCommandEnd() {
-        goal = Goal.IDLE;
     }
 
     /**
@@ -339,8 +365,6 @@ public class Drive extends SubsystemBaseExt {
     }
 
     public class WheelRadiusCharacterization extends Command {
-        private final DoubleSupplier gyroYawRadsSupplier = () -> robotState.getRawGyroRotation().getRadians();
-
         @RequiredArgsConstructor
         public enum Direction {
             CLOCKWISE(-1),
@@ -371,7 +395,7 @@ public class Drive extends SubsystemBaseExt {
         @Override
         public void initialize() {
             // Reset
-            lastGyroYawRads = gyroYawRadsSupplier.getAsDouble();
+            lastGyroYawRads = rawGyroRotation.getRadians();
             accumGyroYawRads = 0.0;
 
             startWheelPositions = getWheelRadiusCharacterizationPositions();

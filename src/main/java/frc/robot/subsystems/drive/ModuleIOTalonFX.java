@@ -25,7 +25,6 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
-import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -45,8 +44,6 @@ import static frc.robot.util.PhoenixUtil.tryUntilOk;
  * <p>Device configuration and other behaviors not exposed by TunerConstants can be customized here.
  */
 public class ModuleIOTalonFX extends ModuleIO {
-    private final SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> constants;
-
     // Hardware objects
     private final TalonFX driveTalon;
     private final TalonFX turnTalon;
@@ -126,15 +123,15 @@ public class ModuleIOTalonFX extends ModuleIO {
                     default -> throw new RuntimeException(
                             "You are using an unsupported swerve configuration, which this template does not support without manual customization. The 2025 release of Phoenix supports some swerve configurations which were not available during 2025 beta testing, preventing any development and support from the AdvantageKit developers.");
                 };
-        turnConfig.Feedback.RotorToSensorRatio = constants.SteerMotorGearRatio;
-        turnConfig.MotionMagic.MotionMagicCruiseVelocity = 100.0 / constants.SteerMotorGearRatio;
+        turnConfig.Feedback.RotorToSensorRatio = moduleConfig.turnGearRatio();
+        turnConfig.MotionMagic.MotionMagicCruiseVelocity = 100.0 / moduleConfig.turnGearRatio();
         turnConfig.MotionMagic.MotionMagicAcceleration =
                 turnConfig.MotionMagic.MotionMagicCruiseVelocity / 0.100;
-        turnConfig.MotionMagic.MotionMagicExpo_kV = 0.12 * constants.SteerMotorGearRatio;
+        turnConfig.MotionMagic.MotionMagicExpo_kV = 0.12 * moduleConfig.turnGearRatio();
         turnConfig.MotionMagic.MotionMagicExpo_kA = 0.1;
         turnConfig.ClosedLoopGeneral.ContinuousWrap = true;
         turnConfig.MotorOutput.Inverted =
-                constants.SteerMotorInverted
+                moduleConfig.turnInverted()
                         ? InvertedValue.Clockwise_Positive
                         : InvertedValue.CounterClockwise_Positive;
         tryUntilOk(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));
