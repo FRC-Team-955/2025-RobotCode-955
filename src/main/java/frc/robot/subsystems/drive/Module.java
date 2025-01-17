@@ -16,7 +16,6 @@ package frc.robot.subsystems.drive;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import lombok.Getter;
@@ -32,6 +31,7 @@ public class Module {
     private final Alert driveDisconnectedAlert;
     private final Alert turnDisconnectedAlert;
     private final Alert turnEncoderDisconnectedAlert;
+
     /**
      * -- GETTER --
      * Returns the module positions received this cycle.
@@ -56,9 +56,7 @@ public class Module {
         driveDisconnectedAlert.set(!inputs.driveConnected);
         turnDisconnectedAlert.set(!inputs.turnConnected);
         turnEncoderDisconnectedAlert.set(!inputs.turnEncoderConnected);
-    }
 
-    public void periodicAfterCommands() {
         // Calculate positions for odometry
         int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
         odometryPositions = new SwerveModulePosition[sampleCount];
@@ -67,6 +65,9 @@ public class Module {
             double angle = inputs.odometryTurnPositionsRad[i];
             odometryPositions[i] = new SwerveModulePosition(positionMeters, new Rotation2d(angle));
         }
+    }
+
+    public void periodicAfterCommands() {
     }
 
     /**
@@ -97,6 +98,11 @@ public class Module {
     public void stop() {
         io.setDriveOpenLoop(0.0);
         io.setTurnOpenLoop(0.0);
+    }
+
+    public void setBrakeMode(boolean enable) {
+        io.setDriveBrakeMode(enable);
+        io.setTurnBrakeMode(enable);
     }
 
     /**
@@ -150,12 +156,5 @@ public class Module {
      */
     public double getWheelRadiusCharacterizationPosition() {
         return inputs.drivePositionRad;
-    }
-
-    /**
-     * Returns the module velocity in rotations/sec (Phoenix native units).
-     */
-    public double getFFCharacterizationVelocity() {
-        return Units.radiansToRotations(inputs.driveVelocityRadPerSec);
     }
 }

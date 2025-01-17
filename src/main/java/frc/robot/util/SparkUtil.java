@@ -16,12 +16,16 @@ package frc.robot.util;
 import com.revrobotics.REVLibError;
 import com.revrobotics.spark.SparkBase;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class SparkUtil {
+    protected static final Executor asyncExecutor = Executors.newFixedThreadPool(4);
+
     /**
      * Stores whether any error was has been detected by other utility methods.
      */
@@ -57,7 +61,7 @@ public class SparkUtil {
     /**
      * Attempts to run the command until no error is produced.
      */
-    public static void tryUntilOk(SparkBase spark, int maxAttempts, Supplier<REVLibError> command) {
+    public static void tryUntilOk(int maxAttempts, Supplier<REVLibError> command) {
         for (int i = 0; i < maxAttempts; i++) {
             var error = command.get();
             if (error == REVLibError.kOk) {
@@ -66,5 +70,12 @@ public class SparkUtil {
                 sparkStickyFault = true;
             }
         }
+    }
+
+    /**
+     * Attempts to run the command until no error is produced.
+     */
+    public static void tryUntilOkAsync(int maxAttempts, Supplier<REVLibError> command) {
+        asyncExecutor.execute(() -> tryUntilOk(maxAttempts, command));
     }
 }

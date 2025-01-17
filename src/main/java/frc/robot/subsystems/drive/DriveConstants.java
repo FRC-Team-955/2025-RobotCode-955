@@ -5,14 +5,14 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.Util;
-import frc.robot.generated.TunerConstants;
 import frc.robot.util.PIDF;
 
 public class DriveConstants {
     public static final double phoenixFrequencyHz = 250.0;
     public static final double sparkFrequencyHz = 100.0;
 
-    public static final boolean isCANFD = new CANBus(TunerConstants.DrivetrainConstants.CANBusName).isNetworkFD();
+    public static final String canbusName = "phoenix";
+    public static final boolean isCANFD = new CANBus(canbusName).isNetworkFD();
 
     public static final DriveConfig driveConfig = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> new DriveConfig(
@@ -48,7 +48,7 @@ public class DriveConstants {
     };
 
     public static final double drivebaseRadius = Math.hypot(driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0);
-    public static final double joystickMaxAngularSpeedRadPerSec = 5.53;
+    public static final double joystickMaxAngularSpeedRadPerSec = Units.degreesToRadians(315);
 
     /**
      * FL, FR, BL, BR
@@ -63,19 +63,20 @@ public class DriveConstants {
     public static final ModuleConfig moduleConfig = switch (Constants.identity) {
         case COMPBOT -> new ModuleConfig(
                 PIDF.ofPDSVA(
-                        0.05, 0.0,
+                        0.1, 0.0,
                         // FL + FR + BL + BR
                         Util.average(0.21524, 0.16554, 0.083665, 0.061984),
                         Util.average(0.11224, 0.11693, 0.12106, 0.12449),
                         Util.average(0.0038991, 0.0018671, 0.004602, 0.0059919)
                 ),
-                PIDF.ofPD(8.0, 0.0),
+                PIDF.ofPDSVA(100.0, 0.0, 0.1, 1.91, 0),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
                 false,
                 false,
-                120
+                120,
+                60
         );
         case ALPHABOT -> new ModuleConfig(
                 PIDF.ofPDSVA(
@@ -91,13 +92,19 @@ public class DriveConstants {
                 true,
                 false,
                 false,
-                120
+                120,
+                60
         );
         case SIMBOT -> new ModuleConfig(
                 PIDF.ofPDSV(0.1, 0.0, 0.0, 0.13),
                 PIDF.ofPD(10.0, 0.0),
                 Mk4iGearRatios.L2,
-                Mk4iGearRatios.TURN
+                Mk4iGearRatios.TURN,
+                true,
+                false,
+                false,
+                0,
+                0
         );
     };
 
@@ -109,17 +116,17 @@ public class DriveConstants {
         // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
         case COMPBOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
-                new ModuleIOTalonFXSparkMaxCANcoder(10, 12, 13, 0.189),
-                new ModuleIOTalonFXSparkMaxCANcoder(7, 8, 9, 1.891),
-                new ModuleIOTalonFXSparkMaxCANcoder(1, 2, 3, -0.009),
-                new ModuleIOTalonFXSparkMaxCANcoder(5, 6, 4, 1.525),
+                new ModuleIOCompbot(10, 12, 13, 0.189),
+                new ModuleIOCompbot(7, 8, 9, 1.891),
+                new ModuleIOCompbot(1, 2, 3, -0.009),
+                new ModuleIOCompbot(5, 6, 4, 1.525),
         };
         case ALPHABOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
-                new ModuleIOSparkMaxCANcoder(2, 3, 1, 2.454),
-                new ModuleIOSparkMaxCANcoder(12, 13, 11, -0.735),
-                new ModuleIOSparkMaxCANcoder(4, 5, 6, 2.623),
-                new ModuleIOSparkMaxCANcoder(9, 10, 8, -1.302),
+                new ModuleIOAlphabot(2, 3, 1, 2.454),
+                new ModuleIOAlphabot(12, 13, 11, -0.735),
+                new ModuleIOAlphabot(4, 5, 6, 2.623),
+                new ModuleIOAlphabot(9, 10, 8, -1.302),
         };
         case SIMBOT -> new ModuleIO[]{
                 new ModuleIOSim(),
@@ -161,7 +168,8 @@ public class DriveConstants {
             boolean turnInverted,
             boolean driveInverted,
             boolean encoderInverted,
-            double slipCurrent
+            double driveCurrentLimit, // AKA current that causes wheel slip
+            double turnCurrentLimit
     ) {
     }
 

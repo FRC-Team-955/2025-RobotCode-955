@@ -17,7 +17,7 @@ import org.littletonrobotics.junction.AutoLog;
 
 public class ModuleIO {
     @AutoLog
-    public class ModuleIOInputs {
+    public static class ModuleIOInputs {
         public boolean driveConnected = false;
         public double drivePositionRad = 0.0;
         public double driveVelocityRadPerSec = 0.0;
@@ -41,6 +41,18 @@ public class ModuleIO {
      * Updates the set of loggable inputs.
      */
     public void updateInputs(ModuleIOInputs inputs) {
+    }
+
+    /**
+     * Enable or disable brake mode on the drive motor.
+     */
+    public void setDriveBrakeMode(boolean enable) {
+    }
+
+    /**
+     * Enable or disable brake mode on the turn motor.
+     */
+    public void setTurnBrakeMode(boolean enable) {
     }
 
     /**

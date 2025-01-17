@@ -16,7 +16,6 @@ package frc.robot.subsystems.drive;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -40,14 +39,16 @@ import static frc.robot.util.SparkUtil.*;
  * Module IO implementation for Spark Flex drive motor controller, Spark Max turn motor controller,
  * and duty cycle absolute encoder.
  */
-public class ModuleIOSpark extends ModuleIO {
+public class ModuleIOAlphabot extends ModuleIO {
     private final double zeroRotationRad;
 
     // Hardware objects
-    private final SparkBase driveSpark;
-    private final SparkBase turnSpark;
+    private final SparkMax driveSpark;
+    private final SparkMax turnSpark;
     private final RelativeEncoder driveEncoder;
     private final AbsoluteEncoder turnEncoder;
+    private final SparkMaxConfig driveConfig;
+    private final SparkMaxConfig turnConfig;
 
     // Closed loop controllers
     private final SparkClosedLoopController driveController;
@@ -62,7 +63,7 @@ public class ModuleIOSpark extends ModuleIO {
     private final Debouncer driveConnectedDebounce = new Debouncer(0.5);
     private final Debouncer turnConnectedDebounce = new Debouncer(0.5);
 
-    public ModuleIOSpark(
+    public ModuleIOAlphabot(
             int driveCanID,
             int turnCanID,
             int cancoderCanID,
@@ -77,7 +78,7 @@ public class ModuleIOSpark extends ModuleIO {
         turnController = turnSpark.getClosedLoopController();
 
         // Configure drive motor
-        var driveConfig = new SparkMaxConfig();
+        driveConfig = new SparkMaxConfig();
         driveConfig
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(50)
@@ -101,16 +102,15 @@ public class ModuleIOSpark extends ModuleIO {
                 .appliedOutputPeriodMs(20)
                 .busVoltagePeriodMs(20)
                 .outputCurrentPeriodMs(20);
-        tryUntilOk(
-                driveSpark,
-                5,
-                () ->
-                        driveSpark.configure(
-                                driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
-        tryUntilOk(driveSpark, 5, () -> driveEncoder.setPosition(0.0));
+        tryUntilOk(5, () -> driveSpark.configure(
+                driveConfig,
+                ResetMode.kResetSafeParameters,
+                PersistMode.kPersistParameters
+        ));
+        tryUntilOk(5, () -> driveEncoder.setPosition(0.0));
 
         // Configure turn motor
-        var turnConfig = new SparkMaxConfig();
+        turnConfig = new SparkMaxConfig();
         turnConfig
                 .inverted(moduleConfig.turnInverted())
                 .idleMode(IdleMode.kBrake)
@@ -137,12 +137,11 @@ public class ModuleIOSpark extends ModuleIO {
                 .appliedOutputPeriodMs(20)
                 .busVoltagePeriodMs(20)
                 .outputCurrentPeriodMs(20);
-        tryUntilOk(
-                turnSpark,
-                5,
-                () ->
-                        turnSpark.configure(
-                                turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+        tryUntilOk(5, () -> turnSpark.configure(
+                turnConfig,
+                ResetMode.kResetSafeParameters,
+                PersistMode.kPersistParameters
+        ));
 
         // Create odometry queues
         timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
@@ -161,7 +160,8 @@ public class ModuleIOSpark extends ModuleIO {
         ifOk(
                 driveSpark,
                 new DoubleSupplier[]{driveSpark::getAppliedOutput, driveSpark::getBusVoltage},
-                (values) -> inputs.driveAppliedVolts = values[0] * values[1]);
+                (values) -> inputs.driveAppliedVolts = values[0] * values[1]
+        );
         ifOk(driveSpark, driveSpark::getOutputCurrent, (value) -> inputs.driveCurrentAmps = value);
         inputs.driveConnected = driveConnectedDebounce.calculate(!sparkStickyFault);
 
@@ -170,20 +170,20 @@ public class ModuleIOSpark extends ModuleIO {
         ifOk(
                 turnSpark,
                 turnEncoder::getPosition,
-                (value) -> inputs.turnPositionRad = value - zeroRotationRad);
+                (value) -> inputs.turnPositionRad = value - zeroRotationRad
+        );
         ifOk(turnSpark, turnEncoder::getVelocity, (value) -> inputs.turnVelocityRadPerSec = value);
         ifOk(
                 turnSpark,
                 new DoubleSupplier[]{turnSpark::getAppliedOutput, turnSpark::getBusVoltage},
-                (values) -> inputs.turnAppliedVolts = values[0] * values[1]);
+                (values) -> inputs.turnAppliedVolts = values[0] * values[1]
+        );
         ifOk(turnSpark, turnSpark::getOutputCurrent, (value) -> inputs.turnCurrentAmps = value);
         inputs.turnConnected = turnConnectedDebounce.calculate(!sparkStickyFault);
 
         // Update odometry inputs
-        inputs.odometryTimestamps =
-                timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
-        inputs.odometryDrivePositionsRad =
-                drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
+        inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+        inputs.odometryDrivePositionsRad = drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryTurnPositionsRad =
                 turnPositionQueue.stream()
                         .mapToDouble((Double value) -> value - zeroRotationRad)
@@ -191,6 +191,26 @@ public class ModuleIOSpark extends ModuleIO {
         timestampQueue.clear();
         drivePositionQueue.clear();
         turnPositionQueue.clear();
+    }
+
+    @Override
+    public void setDriveBrakeMode(boolean enable) {
+        var newConfig = new SparkMaxConfig().idleMode(enable ? IdleMode.kBrake : IdleMode.kCoast);
+        tryUntilOkAsync(5, () -> driveSpark.configure(
+                newConfig,
+                ResetMode.kNoResetSafeParameters,
+                PersistMode.kPersistParameters
+        ));
+    }
+
+    @Override
+    public void setTurnBrakeMode(boolean enable) {
+        var newConfig = new SparkMaxConfig().idleMode(enable ? IdleMode.kBrake : IdleMode.kCoast);
+        tryUntilOkAsync(5, () -> turnSpark.configure(
+                newConfig,
+                ResetMode.kNoResetSafeParameters,
+                PersistMode.kPersistParameters
+        ));
     }
 
     @Override

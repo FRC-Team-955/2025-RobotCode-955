@@ -17,7 +17,7 @@ import org.littletonrobotics.junction.AutoLog;
 
 public class GyroIO {
     @AutoLog
-    public class GyroIOInputs {
+    public static class GyroIOInputs {
         public boolean connected = false;
         public double yawPositionRad = 0.0;
         public double yawVelocityRadPerSec = 0.0;

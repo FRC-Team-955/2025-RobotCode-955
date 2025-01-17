@@ -11,8 +11,8 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
-import frc.robot.subsystems.drive.temp.Drive;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 
@@ -51,7 +51,6 @@ public class RobotState {
             Rotation2d gyroAngle,
             SwerveModulePosition[] wheelPositions
     ) {
-        rawGyroRotation = gyroAngle;
         poseEstimator.updateWithTime(currentTimeSeconds, gyroAngle, wheelPositions);
     }
 
@@ -77,7 +76,7 @@ public class RobotState {
     }
 
     public void setPose(Pose2d pose) {
-        poseEstimator.resetPosition(rawGyroRotation, Drive.get().getModulePositions(), pose);
+        poseEstimator.resetPosition(Drive.get().getRawGyroRotation(), Drive.get().getModulePositions(), pose);
     }
 
     public Command setPose(Supplier<Pose2d> pose) {

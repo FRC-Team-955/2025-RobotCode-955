@@ -1,6 +1,8 @@
 package frc.robot.util;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
+import edu.wpi.first.math.controller.*;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 
 public record PIDF(double p, double i, double d, double s, double v, double a, double g) {
     public static PIDF ofP(double p) {
@@ -48,5 +50,25 @@ public record PIDF(double p, double i, double d, double s, double v, double a, d
                 .withKV(v)
                 .withKA(a)
                 .withKG(g);
+    }
+
+    public PIDController toPID() {
+        return new PIDController(p, i, d);
+    }
+
+    public ProfiledPIDController toProfiledPID(TrapezoidProfile.Constraints constraints) {
+        return new ProfiledPIDController(p, i, d, constraints);
+    }
+
+    public SimpleMotorFeedforward toSimpleFF() {
+        return new SimpleMotorFeedforward(s, v, a);
+    }
+
+    public ArmFeedforward toArmFF() {
+        return new ArmFeedforward(s, g, v, a);
+    }
+
+    public ElevatorFeedforward toElevatorFF() {
+        return new ElevatorFeedforward(s, g, v, a);
     }
 }
