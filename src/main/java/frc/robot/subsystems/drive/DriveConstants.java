@@ -1,13 +1,19 @@
 package frc.robot.subsystems.drive;
 
-import com.pathplanner.lib.util.PIDConstants;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.Util;
+import frc.robot.util.PIDF;
 
 public class DriveConstants {
+    public static final double phoenixFrequencyHz = 250.0;
+    public static final double sparkFrequencyHz = 100.0;
+
+    public static final String canbusName = "phoenix";
+    public static final boolean isCANFD = new CANBus(canbusName).isNetworkFD();
+
     public static final DriveConfig driveConfig = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> new DriveConfig(
                 Units.inchesToMeters(2),
@@ -20,11 +26,11 @@ public class DriveConstants {
                 12.960,
                 12.112,
                 40.186,
-                new PIDConstants(1.5, 0, 0),
-                new PIDConstants(1.5, 0, 0),
-                new PIDConstants(2.1, 0, 0.1)
+                PIDF.ofPD(1.5, 0),
+                PIDF.ofPD(1.5, 0),
+                PIDF.ofPD(2.1, 0.1)
         );
-        case NEO_DRIVEBASE -> new DriveConfig(
+        case ALPHABOT -> new DriveConfig(
                 Units.inchesToMeters(2),
                 Units.inchesToMeters(20.75),
                 Units.inchesToMeters(20.75),
@@ -35,14 +41,14 @@ public class DriveConstants {
                 12.123,
                 12.442,
                 35.864,
-                new PIDConstants(1.5, 0, 0),
-                new PIDConstants(1.5, 0, 0),
-                new PIDConstants(2.1, 0, 0.1)
+                PIDF.ofPD(1.5, 0),
+                PIDF.ofPD(1.5, 0),
+                PIDF.ofPD(2.1, 0.1)
         );
     };
 
     public static final double drivebaseRadius = Math.hypot(driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0);
-    public static final double joystickMaxAngularSpeedRadPerSec = 5.53;
+    public static final double joystickMaxAngularSpeedRadPerSec = Units.degreesToRadians(315);
 
     /**
      * FL, FR, BL, BR
@@ -56,35 +62,49 @@ public class DriveConstants {
 
     public static final ModuleConfig moduleConfig = switch (Constants.identity) {
         case COMPBOT -> new ModuleConfig(
-                new SimpleMotorFeedforward(
+                PIDF.ofPDSVA(
+                        0.1, 0.0,
                         // FL + FR + BL + BR
                         Util.average(0.21524, 0.16554, 0.083665, 0.061984),
                         Util.average(0.11224, 0.11693, 0.12106, 0.12449),
                         Util.average(0.0038991, 0.0018671, 0.004602, 0.0059919)
                 ),
-                new PIDConstants(0.05, 0.0, 0.0),
-                new PIDConstants(8.0, 0.0, 0.0),
+                PIDF.ofPDSVA(100.0, 0.0, 0.1, 1.91, 0),
                 Mk4iGearRatios.L2,
-                Mk4iGearRatios.TURN
+                Mk4iGearRatios.TURN,
+                true,
+                false,
+                false,
+                120,
+                60
         );
-        case NEO_DRIVEBASE -> new ModuleConfig(
-                new SimpleMotorFeedforward(
+        case ALPHABOT -> new ModuleConfig(
+                PIDF.ofPDSVA(
+                        0.05, 0.0,
                         // FL + FR + BL + BR
                         Util.average(0.024319, 0.094701 /* , [erroneous], [erroneous] */),
                         Util.average(0.13551, 0.13733, 0.13543, 0.14087),
                         Util.average(0.0065694, 0.0054738, /* [erroneous], */ 0.0091241)
                 ),
-                new PIDConstants(0.05, 0.0, 0.0),
-                new PIDConstants(5.0, 0.0, 0.0),
+                PIDF.ofPD(5.0, 0.0),
                 Mk4iGearRatios.L2,
-                Mk4iGearRatios.TURN
+                Mk4iGearRatios.TURN,
+                true,
+                false,
+                false,
+                120,
+                60
         );
         case SIMBOT -> new ModuleConfig(
-                new SimpleMotorFeedforward(0.0, 0.13),
-                new PIDConstants(0.1, 0.0, 0.0),
-                new PIDConstants(10.0, 0.0, 0.0),
+                PIDF.ofPDSV(0.1, 0.0, 0.0, 0.13),
+                PIDF.ofPD(10.0, 0.0),
                 Mk4iGearRatios.L2,
-                Mk4iGearRatios.TURN
+                Mk4iGearRatios.TURN,
+                true,
+                false,
+                false,
+                0,
+                0
         );
     };
 
@@ -96,17 +116,17 @@ public class DriveConstants {
         // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
         case COMPBOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
-                new ModuleIOTalonFXSparkMaxCANcoder(10, 12, 13, 0.189),
-                new ModuleIOTalonFXSparkMaxCANcoder(7, 8, 9, 1.891),
-                new ModuleIOTalonFXSparkMaxCANcoder(1, 2, 3, -0.009),
-                new ModuleIOTalonFXSparkMaxCANcoder(5, 6, 4, 1.525),
+                new ModuleIOCompbot(10, 12, 13, 0.189),
+                new ModuleIOCompbot(7, 8, 9, 1.891),
+                new ModuleIOCompbot(1, 2, 3, -0.009),
+                new ModuleIOCompbot(5, 6, 4, 1.525),
         };
-        case NEO_DRIVEBASE -> new ModuleIO[]{
+        case ALPHABOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
-                new ModuleIOSparkMaxCANcoder(2, 3, 1, 2.454),
-                new ModuleIOSparkMaxCANcoder(12, 13, 11, -0.735),
-                new ModuleIOSparkMaxCANcoder(4, 5, 6, 2.623),
-                new ModuleIOSparkMaxCANcoder(9, 10, 8, -1.302),
+                new ModuleIOAlphabot(2, 3, 1, 2.454),
+                new ModuleIOAlphabot(12, 13, 11, -0.735),
+                new ModuleIOAlphabot(4, 5, 6, 2.623),
+                new ModuleIOAlphabot(9, 10, 8, -1.302),
         };
         case SIMBOT -> new ModuleIO[]{
                 new ModuleIOSim(),
@@ -120,7 +140,7 @@ public class DriveConstants {
             ? new GyroIO()
             : switch (Constants.identity) {
         case COMPBOT -> new GyroIOPigeon2(11);
-        case NEO_DRIVEBASE -> new GyroIOPigeon2(7);
+        case ALPHABOT -> new GyroIOPigeon2(7);
         case SIMBOT -> new GyroIO();
     };
 
@@ -134,18 +154,22 @@ public class DriveConstants {
             double maxLinearAccelMetersPerSecSquared,
             double maxAngularSpeedRadPerSec,
             double maxAngularAccelRadPerSecSquared,
-            PIDConstants choreoFeedbackXY,
-            PIDConstants choreoFeedbackTheta,
-            PIDConstants pointTowardsController
+            PIDF choreoFeedbackXY,
+            PIDF choreoFeedbackTheta,
+            PIDF pointTowardsController
     ) {
     }
 
     public record ModuleConfig(
-            SimpleMotorFeedforward driveFeedforward,
-            PIDConstants driveFeedback,
-            PIDConstants turnFeedback,
+            PIDF driveGains,
+            PIDF turnFeedback,
             double driveGearRatio,
-            double turnGearRatio
+            double turnGearRatio,
+            boolean turnInverted,
+            boolean driveInverted,
+            boolean encoderInverted,
+            double driveCurrentLimit, // AKA current that causes wheel slip
+            double turnCurrentLimit
     ) {
     }
 

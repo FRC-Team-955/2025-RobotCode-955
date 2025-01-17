@@ -1,5 +1,19 @@
+// Copyright 2021-2025 FRC 6328
+// http://github.com/Mechanical-Advantage
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// version 3 as published by the Free Software Foundation or
+// available in the root directory of this project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.SubsystemBaseExt;
@@ -31,23 +45,18 @@ public class Robot extends LoggedRobot {
         }
     }
 
-    private static void onCommandEnd(Command command) {
-        for (var subsystem : command.getRequirements()) {
-            if (subsystem instanceof SubsystemBaseExt) {
-                ((SubsystemBaseExt) subsystem).onCommandEnd();
-            } else {
-                Util.error("Subsystem " + subsystem.getName() + " is not an extended subsystem");
-            }
-        }
-    }
+//    private static void onCommandEnd(Command command) {
+//        for (var subsystem : command.getRequirements()) {
+//            if (subsystem instanceof SubsystemBaseExt) {
+//                ((SubsystemBaseExt) subsystem).onCommandEnd();
+//            } else {
+//                Util.error("Subsystem " + subsystem.getName() + " is not an extended subsystem");
+//            }
+//        }
+//    }
 
     public Robot() {
-        // https://github.com/Mechanical-Advantage/AdvantageKit/blob/main/docs/RECORDING-OUTPUTS.md#autologoutput-annotation
         AutoLogOutputManager.addPackage("frc");
-        try {
-            AutoLogOutputManager.addPackage(getClass().getPackageName().split("\\.")[0]);
-        } catch (IndexOutOfBoundsException ignored) {
-        }
 
         Logger.recordMetadata("* ProjectName", BuildConstants.MAVEN_NAME);
         Logger.recordMetadata("* BuildDate", BuildConstants.BUILD_DATE);
@@ -92,8 +101,8 @@ public class Robot extends LoggedRobot {
         // and put our autonomous chooser on the dashboard.
         robotContainer = new RobotContainer();
 
-        CommandScheduler.getInstance().onCommandFinish(Robot::onCommandEnd);
-        CommandScheduler.getInstance().onCommandInterrupt(Robot::onCommandEnd);
+//        CommandScheduler.getInstance().onCommandFinish(Robot::onCommandEnd);
+//        CommandScheduler.getInstance().onCommandInterrupt(Robot::onCommandEnd);
     }
 
     private void logConstantClass(Class<?> clazz, String parentName) {
@@ -123,10 +132,22 @@ public class Robot extends LoggedRobot {
      */
     @Override
     public void robotPeriodic() {
+        // Switch thread to high priority to improve loop timing
+        Threads.setCurrentThreadPriority(true, 99);
+
+        // Runs the Scheduler. This is responsible for polling buttons, adding
+        // newly-scheduled commands, running already-scheduled commands, removing
+        // finished or interrupted commands, and running subsystem periodic() methods.
+        // This must be called from the robot's periodic block in order for anything in
+        // the Command-based framework to work.
         CommandScheduler.getInstance().run();
+
         for (var subsystem : extendedSubsystems) {
             subsystem.periodicAfterCommands();
         }
+
+        // Return to normal thread priority
+        Threads.setCurrentThreadPriority(false, 10);
     }
 
     /**

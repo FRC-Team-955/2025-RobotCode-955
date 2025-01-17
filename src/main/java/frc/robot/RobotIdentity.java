@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 
 public enum RobotIdentity {
     COMPBOT("00-80-2F-22-AE-61"),
-    NEO_DRIVEBASE("00-80-2F-38-8E-B8"),
+    ALPHABOT("00-80-2F-38-8E-B8"),
     SIMBOT(null);
 
     public final String macAddress;
@@ -20,8 +20,8 @@ public enum RobotIdentity {
             if (macAddress.equals(COMPBOT.macAddress))
                 return COMPBOT;
 
-            if (macAddress.equals(NEO_DRIVEBASE.macAddress))
-                return NEO_DRIVEBASE;
+            if (macAddress.equals(ALPHABOT.macAddress))
+                return ALPHABOT;
 
             System.out.println("Mac address " + macAddress + " did not match any robot identities. Assuming COMPBOT");
             return COMPBOT;

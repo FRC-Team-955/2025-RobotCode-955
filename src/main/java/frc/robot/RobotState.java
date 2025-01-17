@@ -5,7 +5,6 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
@@ -16,24 +15,22 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
 
 import java.util.function.Supplier;
 
 public class RobotState {
-    public static final LoggedDashboardBoolean tuningMode = new LoggedDashboardBoolean("1 Tuning Mode", false);
-
     @Getter
     private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(DriveConstants.moduleTranslations);
-    private final SwerveModulePosition[] lastModulePositions = new SwerveModulePosition[]{
-            new SwerveModulePosition(),
-            new SwerveModulePosition(),
-            new SwerveModulePosition(),
-            new SwerveModulePosition()
-    };
-    @Getter
-    private Rotation2d rawGyroRotation = new Rotation2d();
-    private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
+    private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(
+            kinematics,
+            new Rotation2d(),
+            new SwerveModulePosition[]{
+                    new SwerveModulePosition(),
+                    new SwerveModulePosition(),
+                    new SwerveModulePosition(),
+                    new SwerveModulePosition()
+            },
+            new Pose2d());
 
     private static RobotState instance;
 
@@ -49,30 +46,12 @@ public class RobotState {
     private RobotState() {
     }
 
-    public void applyOdometryUpdate(Rotation2d gyroRotation) {
-        // Read wheel positions and deltas from each module
-        SwerveModulePosition[] modulePositions = Drive.get().getModulePositions();
-        SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
-        for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
-            moduleDeltas[moduleIndex] = new SwerveModulePosition(
-                    modulePositions[moduleIndex].distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
-                    modulePositions[moduleIndex].angle
-            );
-            lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
-        }
-
-        // Update gyro angle
-        if (gyroRotation != null) {
-            // Use the real gyro angle
-            rawGyroRotation = gyroRotation;
-        } else {
-            // Use the angle delta from the kinematics and module deltas
-            Twist2d twist = kinematics.toTwist2d(moduleDeltas);
-            rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
-        }
-
-        // Apply odometry update
-        poseEstimator.update(rawGyroRotation, modulePositions);
+    public void applyOdometryUpdate(
+            double currentTimeSeconds,
+            Rotation2d gyroAngle,
+            SwerveModulePosition[] wheelPositions
+    ) {
+        poseEstimator.updateWithTime(currentTimeSeconds, gyroAngle, wheelPositions);
     }
 
     public void addVisionMeasurement(
@@ -97,7 +76,7 @@ public class RobotState {
     }
 
     public void setPose(Pose2d pose) {
-        poseEstimator.resetPosition(rawGyroRotation, Drive.get().getModulePositions(), pose);
+        poseEstimator.resetPosition(Drive.get().getRawGyroRotation(), Drive.get().getModulePositions(), pose);
     }
 
     public Command setPose(Supplier<Pose2d> pose) {

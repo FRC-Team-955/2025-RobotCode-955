@@ -44,7 +44,7 @@ public class SteppableCommandGroup extends Command {
 
         for (Command command : commands) {
             this.commands.add(command);
-            m_requirements.addAll(command.getRequirements());
+            addRequirements(command.getRequirements());
             runsWhenDisabled &= command.runsWhenDisabled();
             if (command.getInterruptionBehavior() == InterruptionBehavior.kCancelSelf) {
                 interruptionBehavior = InterruptionBehavior.kCancelSelf;
