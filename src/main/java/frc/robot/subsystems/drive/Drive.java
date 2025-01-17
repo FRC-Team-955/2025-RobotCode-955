@@ -303,7 +303,6 @@ public class Drive extends SubsystemBaseExt {
         Translation2d linearVelocity = new Pose2d(new Translation2d(), linearDirection)
                 .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
                 .getTranslation();
-        Logger.recordOutput("Drive/linearMagnitude", linearMagnitude);
 
         // Convert to field relative speeds & send command
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
