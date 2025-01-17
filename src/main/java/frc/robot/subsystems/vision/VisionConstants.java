@@ -65,20 +65,20 @@ public class VisionConstants {
         ? new VisionIO[]{new VisionIO(), new VisionIO(), new VisionIO()}
         : new VisionIO[] {
             new VisionIOPhotonVision(camera0Name, robotToCamera0),
-            new VisionIOPhotonVision(camera0Name, robotToCamera0),
-            new VisionIOLimelight(camera0Name, null)
+            new VisionIOPhotonVision(camera1Name, robotToCamera1),
+            new VisionIOLimelight(camera2Name, RobotState::getRotation)
         };
     case ALPHABOT -> Constants.isReplay
         ? new VisionIO[] {new VisionIO(), new VisionIO()}
         : new VisionIO[] {
             new VisionIOPhotonVision(camera0Name, robotToCamera0),
-            new VisionIOLimelight(camera0Name, null)
+            new VisionIOLimelight(camera2Name, RobotState::getRotation)
         };
     case SIMBOT -> Constants.isReplay
         ? new VisionIO[] {new VisionIO(), new VisionIO()}
         : new VisionIO[] {
-            new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, null),
-            new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, null)
+            new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, RobotState::getPose),
+            new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, RobotState::getPose)
         };
   };
 }
