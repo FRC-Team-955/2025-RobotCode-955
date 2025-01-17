@@ -42,9 +42,7 @@ public class RobotContainer {
     public RobotContainer() {
         addAutos();
         addCharacterizations();
-        configureButtonBindings();
-
-        // Configure the button bindings
+        setDefaultCommands();
         configureButtonBindings();
     }
 
@@ -61,6 +59,17 @@ public class RobotContainer {
         characterizationChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysId.dynamic(SysIdRoutine.Direction.kReverse));
     }
 
+    private void setDefaultCommands() {
+        //noinspection SuspiciousNameCombination
+        drive.setDefaultCommand(
+                drive.driveJoystick(
+                        driverController::getLeftY,
+                        driverController::getLeftX,
+                        () -> -driverController.getRightX()
+                )
+        );
+    }
+
     /**
      * Use this method to define your button->command mappings. Buttons can be created by
      * instantiating a {@link GenericHID} or one of its subclasses ({@link
@@ -70,14 +79,6 @@ public class RobotContainer {
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
 
-        //noinspection SuspiciousNameCombination
-        drive.setDefaultCommand(
-                drive.driveJoystick(
-                        driverController::getLeftY,
-                        driverController::getLeftX,
-                        () -> -driverController.getRightX()
-                )
-        );
 
 //        // Lock to 0° when A button is held
 //        controller
