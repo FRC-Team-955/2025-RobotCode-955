@@ -150,11 +150,9 @@ public class Robot extends LoggedRobot {
         // Switch thread to high priority to improve loop timing
         Threads.setCurrentThreadPriority(true, 99);
 
-        // Runs the Scheduler. This is responsible for polling buttons, adding
-        // newly-scheduled commands, running already-scheduled commands, removing
-        // finished or interrupted commands, and running subsystem periodic() methods.
-        // This must be called from the robot's periodic block in order for anything in
-        // the Command-based framework to work.
+        // Run the command scheduler.
+        // This first runs all subsystem periodic() (AKA periodicBeforeCommands())
+        // and then runs all of the commands.
         CommandScheduler.getInstance().run();
 
         for (var subsystem : extendedSubsystems) {
