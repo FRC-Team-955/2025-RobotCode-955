@@ -159,7 +159,7 @@ public class Drive extends SubsystemBaseExt {
             }
 
             // Update gyro angle
-            if (gyroInputs.connected) {
+            if (gyroInputs.connected && gyroInputs.odometryYawPositionsRad.length > i) {
                 // Use the real gyro angle
                 rawGyroRotation = new Rotation2d(gyroInputs.odometryYawPositionsRad[i]);
             } else {
