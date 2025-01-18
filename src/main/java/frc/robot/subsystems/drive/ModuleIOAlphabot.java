@@ -176,7 +176,7 @@ public class ModuleIOAlphabot extends ModuleIO {
                     sparkStickyFault = false;
                     tryUntilOk(5, () -> turnEncoder.setPosition(absolutePositionRad));
                     if (!sparkStickyFault) {
-                        System.out.println("Drive module with cancoder ID " + cancoderCanID + " setting initial position of turn relative encoder to " + absolutePositionRad);
+                        System.out.printf("Drive module with cancoder ID %d setting initial position of turn relative encoder to %s%n", cancoderCanID, absolutePositionRad);
                         successful = true;
                         break;
                     }
