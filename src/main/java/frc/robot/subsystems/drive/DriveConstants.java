@@ -12,7 +12,10 @@ public class DriveConstants {
         case COMPBOT, SIMBOT -> 250.0;
         case ALPHABOT -> 100.0;
     };
-    public static final double sparkFrequencyHz = 100.0;
+    public static final double sparkFrequencyHz = switch (Constants.identity) {
+        case COMPBOT, SIMBOT -> 250.0;
+        case ALPHABOT -> 100.0;
+    };
 
     public static final String canbusName = "phoenix";
     public static final boolean isCANFD = switch (Constants.identity) {
