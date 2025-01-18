@@ -13,8 +13,10 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.SubsystemBaseExt;
@@ -39,6 +41,7 @@ public class Robot extends LoggedRobot {
     private static final HashSet<SubsystemBaseExt> extendedSubsystems = new HashSet<>();
     private final RobotContainer robotContainer;
     private Command autonomousCommand;
+    private double autonomousStart;
 
     public static void registerExtendedSubsystem(SubsystemBaseExt subsystem) {
         if (!extendedSubsystems.add(subsystem)) {
@@ -142,9 +145,6 @@ public class Robot extends LoggedRobot {
         }
     }
 
-    /**
-     * This function is called periodically during all modes.
-     */
     @Override
     public void robotPeriodic() {
         // Switch thread to high priority to improve loop timing
@@ -159,91 +159,76 @@ public class Robot extends LoggedRobot {
             subsystem.periodicAfterCommands();
         }
 
+        if (DriverStation.isAutonomousEnabled()) {
+            // We want this to run after the command scheduler,
+            // so this can't go in autonomousPeriodic
+            if (autonomousCommand != null && !autonomousCommand.isScheduled()) {
+                var autonomousEnd = Timer.getTimestamp();
+                autonomousCommand = null;
+                System.out.printf("********** Auto finished in %.2f seconds **********%n", autonomousEnd - autonomousStart);
+            }
+        }
+
         // Return to normal thread priority
         Threads.setCurrentThreadPriority(false, 10);
     }
 
-    /**
-     * This function is called once when the robot is disabled.
-     */
     @Override
     public void disabledInit() {
     }
 
-    /**
-     * This function is called periodically when disabled.
-     */
     @Override
     public void disabledPeriodic() {
     }
 
-    /**
-     * This autonomous runs the autonomous command selected by your {@link RobotContainer} class.
-     */
     @Override
     public void autonomousInit() {
         autonomousCommand = robotContainer.getAutonomousCommand();
 
-        // schedule the autonomous command (example)
         if (autonomousCommand != null) {
             autonomousCommand.schedule();
+            autonomousStart = Timer.getTimestamp();
+            System.out.println("********** Auto started **********");
         }
     }
 
-    /**
-     * This function is called periodically during autonomous.
-     */
     @Override
     public void autonomousPeriodic() {
     }
 
-    /**
-     * This function is called once when teleop is enabled.
-     */
     @Override
-    public void teleopInit() {
-        // This makes sure that the autonomous stops running when
-        // teleop starts running. If you want the autonomous to
-        // continue until interrupted by another command, remove
-        // this line or comment it out.
-        if (autonomousCommand != null) {
+    public void autonomousExit() {
+        // We want this to run before the command scheduler, so it goes in autonomousExit
+        if (autonomousCommand != null && autonomousCommand.isScheduled()) {
+            var autonomousEnd = Timer.getTimestamp();
             autonomousCommand.cancel();
+            autonomousCommand = null;
+            System.out.printf("********** Auto cancelled in %.2f seconds **********%n", autonomousEnd - autonomousStart);
         }
     }
 
-    /**
-     * This function is called periodically during operator control.
-     */
+    @Override
+    public void teleopInit() {
+    }
+
     @Override
     public void teleopPeriodic() {
     }
 
-    /**
-     * This function is called once when test mode is enabled.
-     */
     @Override
     public void testInit() {
         // Cancels all running commands at the start of test mode.
         CommandScheduler.getInstance().cancelAll();
     }
 
-    /**
-     * This function is called periodically during test mode.
-     */
     @Override
     public void testPeriodic() {
     }
 
-    /**
-     * This function is called once when the robot is first started up.
-     */
     @Override
     public void simulationInit() {
     }
 
-    /**
-     * This function is called periodically whilst in simulation.
-     */
     @Override
     public void simulationPeriodic() {
     }

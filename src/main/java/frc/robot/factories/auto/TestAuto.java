@@ -15,8 +15,7 @@ public class TestAuto {
                 )
         );
 
-        traj.done().onTrue(Commands.waitSeconds(2));
-
-        return routine.cmd();
+        // Finish after traj is done being followed
+        return routine.cmd(traj.done());
     }
 }
