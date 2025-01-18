@@ -39,12 +39,12 @@ import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 /**
- * Module IO implementation for Talon FX drive motor controller, Spark MAX turn motor controller, and
+ * Module IO implementation for Talon FX drive motor controller, Talon FX turn motor controller, and
  * CANcoder. Configured using a set of module constants from Phoenix.
  *
  * <p>Device configuration and other behaviors not exposed by TunerConstants can be customized here.
  */
-public class ModuleIOCompbot extends ModuleIO {
+public class ModuleIOTalonFX extends ModuleIO {
     private static final SwerveModuleConstants.ClosedLoopOutputType steerClosedLoopOutput = SwerveModuleConstants.ClosedLoopOutputType.Voltage;
     // The closed-loop output type to use for the drive motors;
     // This affects the PID/FF gains for the drive motors
@@ -93,7 +93,7 @@ public class ModuleIOCompbot extends ModuleIO {
     private final Debouncer turnConnectedDebounce = new Debouncer(0.5);
     private final Debouncer turnEncoderConnectedDebounce = new Debouncer(0.5);
 
-    public ModuleIOCompbot(
+    public ModuleIOTalonFX(
             int driveCanID,
             int turnCanID,
             int cancoderCanID,

@@ -13,11 +13,7 @@
 
 package frc.robot.subsystems.drive;
 
-import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.signals.SensorDirectionValue;
+import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
@@ -33,9 +29,6 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj.Alert;
 
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
@@ -45,21 +38,18 @@ import static frc.robot.util.SparkUtil.*;
 
 /**
  * Module IO implementation for Spark Max drive motor controller, Spark Max turn motor controller,
- * and CANcoder.
+ * and duty cycle absolute encoder.
  */
-public class ModuleIOAlphabot extends ModuleIO {
-    private static final Alert turnRelativeEncoderNotReset = new Alert("One or more drive modules has not successfully reset their relative turn encoder", Alert.AlertType.kError);
-
+public class ModuleIOSparkMax extends ModuleIO {
     private final double zeroRotationRad;
 
     // Hardware objects
     private final SparkMax driveSpark;
     private final SparkMax turnSpark;
     private final RelativeEncoder driveEncoder;
-    private final RelativeEncoder turnEncoder;
+    private final AbsoluteEncoder turnEncoder;
     private final SparkMaxConfig driveConfig;
     private final SparkMaxConfig turnConfig;
-    private final CANcoder cancoder;
 
     // Closed loop controllers
     private final SparkClosedLoopController driveController;
@@ -70,16 +60,13 @@ public class ModuleIOAlphabot extends ModuleIO {
     private final Queue<Double> drivePositionQueue;
     private final Queue<Double> turnPositionQueue;
 
-    private final StatusSignal<Angle> turnAbsolutePosition;
-
     // Connection debouncers
     private final Debouncer driveConnectedDebounce = new Debouncer(0.5);
     private final Debouncer turnConnectedDebounce = new Debouncer(0.5);
-    private final Debouncer turnEncoderConnectedDebounce = new Debouncer(0.5);
 
     private final SimpleMotorFeedforward driveFF = moduleConfig.driveGains().toSimpleFF();
 
-    public ModuleIOAlphabot(
+    public ModuleIOSparkMax(
             int driveCanID,
             int turnCanID,
             int cancoderCanID,
@@ -88,9 +75,8 @@ public class ModuleIOAlphabot extends ModuleIO {
         zeroRotationRad = absoluteEncoderOffsetRad;
         driveSpark = new SparkMax(driveCanID, MotorType.kBrushless);
         turnSpark = new SparkMax(turnCanID, MotorType.kBrushless);
-        cancoder = new CANcoder(cancoderCanID);
         driveEncoder = driveSpark.getEncoder();
-        turnEncoder = turnSpark.getEncoder();
+        turnEncoder = turnSpark.getAbsoluteEncoder();
         driveController = driveSpark.getClosedLoopController();
         turnController = turnSpark.getClosedLoopController();
 
@@ -134,12 +120,23 @@ public class ModuleIOAlphabot extends ModuleIO {
                 .smartCurrentLimit(20)
                 .voltageCompensation(12.0);
         turnConfig
+                .absoluteEncoder
+                .inverted(moduleConfig.encoderInverted())
+                .positionConversionFactor(2 * Math.PI) // Rotations -> Radians
+                .velocityConversionFactor((2 * Math.PI) / 60.0) // RPM -> Rad/Sec
+                .averageDepth(2);
+        turnConfig
                 .closedLoop
+                .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
                 .positionWrappingEnabled(true)
                 .positionWrappingInputRange(0.0, 2 * Math.PI);
         moduleConfig.turnGains().applySpark(turnConfig.closedLoop);
         turnConfig
                 .signals
+                .absoluteEncoderPositionAlwaysOn(true)
+                .absoluteEncoderPositionPeriodMs((int) (1000.0 / DriveConstants.sparkFrequencyHz))
+                .absoluteEncoderVelocityAlwaysOn(true)
+                .absoluteEncoderVelocityPeriodMs(20)
                 .appliedOutputPeriodMs(20)
                 .busVoltagePeriodMs(20)
                 .outputCurrentPeriodMs(20);
@@ -149,46 +146,12 @@ public class ModuleIOAlphabot extends ModuleIO {
                 PersistMode.kPersistParameters
         ));
 
-        // Configure CANCoder
-        var cancoderConfig = new CANcoderConfiguration();
-        cancoderConfig.MagnetSensor.MagnetOffset = Units.radiansToRotations(absoluteEncoderOffsetRad);
-        cancoderConfig.MagnetSensor.SensorDirection =
-                moduleConfig.encoderInverted()
-                        ? SensorDirectionValue.Clockwise_Positive
-                        : SensorDirectionValue.CounterClockwise_Positive;
-        cancoder.getConfigurator().apply(cancoderConfig);
-
-        turnAbsolutePosition = cancoder.getAbsolutePosition();
-
-        BaseStatusSignal.setUpdateFrequencyForAll(50.0, turnAbsolutePosition);
-
-        // Reset turn spark
-        // Not the prettiest but doing it now is better than in updateInputs
-        var successful = false;
-        // 15 attempts because this is really important
-        for (int i = 0; i < 15; i++) {
-            var turnEncoderStatus = BaseStatusSignal.refreshAll(turnAbsolutePosition);
-            var turnEncoderConnected = turnEncoderConnectedDebounce.calculate(turnEncoderStatus.isOK());
-            if (turnEncoderConnected) {
-                var absolutePositionRad = Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble());
-                if (absolutePositionRad != 0) {
-                    turnEncoder.setPosition(absolutePositionRad);
-                    System.out.println("Drive module with cancoder ID " + cancoderCanID + " setting initial position of turn relative encoder to " + absolutePositionRad);
-                    successful = true;
-                    break;
-                }
-            }
-            System.out.println("Drive module with cancoder ID " + cancoderCanID + " FAILED on attempt " + (i + 1) + " to set initial position of turn relative encoder (connected: " + turnEncoderConnected + ")");
-        }
-        if (!successful) {
-            System.out.println("Drive module with cancoder ID " + cancoderCanID + " FAILED AND GAVE UP setting initial position of turn relative encoder");
-            turnRelativeEncoderNotReset.set(true);
-        }
-
         // Create odometry queues
         timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
-        drivePositionQueue = SparkOdometryThread.getInstance().registerSignal(driveSpark, driveEncoder::getPosition);
-        turnPositionQueue = SparkOdometryThread.getInstance().registerSignal(turnSpark, turnEncoder::getPosition);
+        drivePositionQueue =
+                SparkOdometryThread.getInstance().registerSignal(driveSpark, driveEncoder::getPosition);
+        turnPositionQueue =
+                SparkOdometryThread.getInstance().registerSignal(turnSpark, turnEncoder::getPosition);
     }
 
     @Override
@@ -221,15 +184,13 @@ public class ModuleIOAlphabot extends ModuleIO {
         ifOk(turnSpark, turnSpark::getOutputCurrent, (value) -> inputs.turnCurrentAmps = value);
         inputs.turnConnected = turnConnectedDebounce.calculate(!sparkStickyFault);
 
-        // Turn cancoder
-        var turnEncoderStatus = BaseStatusSignal.refreshAll(turnAbsolutePosition);
-        inputs.turnEncoderConnected = turnEncoderConnectedDebounce.calculate(turnEncoderStatus.isOK());
-        inputs.turnAbsolutePositionRad = Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble());
-
         // Update odometry inputs
         inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryDrivePositionsRad = drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
-        inputs.odometryTurnPositionsRad = turnPositionQueue.stream().mapToDouble((Double value) -> value - zeroRotationRad).toArray();
+        inputs.odometryTurnPositionsRad =
+                turnPositionQueue.stream()
+                        .mapToDouble((Double value) -> value - zeroRotationRad)
+                        .toArray();
         timestampQueue.clear();
         drivePositionQueue.clear();
         turnPositionQueue.clear();

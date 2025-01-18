@@ -162,7 +162,7 @@ public class DriveConstants {
 
     public record ModuleConfig(
             PIDF driveGains,
-            PIDF turnFeedback,
+            PIDF turnGains,
             double driveGearRatio,
             double turnGearRatio,
             boolean turnInverted,
