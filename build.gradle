@@ -149,3 +149,58 @@ tasks.register("deployEvent", Exec) {
 
     finalizedBy tasks.named("deploy")
 }
+
+// https://gist.github.com/falOn-Dev/512c62e009025b3b7569b899bbef955a
+
+boolean isNewer(String versionA, String versionB) {
+    def parseVersion = { String version ->
+        if (version.startsWith('v')) version = version.substring(1)
+        def parts = version.split("\\.")
+        return [major: parts[0].toInteger(), minor: parts[1].toInteger(), patch: parts[2].toInteger()]
+    }
+
+    def vA = parseVersion(versionA)
+    def vB = parseVersion(versionB)
+
+    if (vA.major != vB.major) {
+        return vA.major > vB.major
+    } else if (vA.minor != vB.minor) {
+        return vA.minor > vB.minor
+    } else {
+        return vA.patch > vB.patch
+    }
+}
+
+
+tasks.register("updateVendordeps") {
+    description = "Update vendor dependencies"
+
+    def jsonDir = file("vendordeps")
+    def slurper = new groovy.json.JsonSlurper()
+
+    doLast {
+        jsonDir.eachFile { File file ->
+            if (file.name.startsWith("WPILibNewCommands")) return // WPILibNewCommands doesn't have a json url, skip it
+            if (file.name.endsWith(".json")) {
+                def json = slurper.parse(file)
+                def version = json.version
+                def url = json.jsonUrl
+
+                try {
+                    def remoteJsonText = new URL(url).text
+                    def remoteJson = slurper.parseText(remoteJsonText)
+                    def remoteVersion = remoteJson.version
+
+                    if (isNewer(remoteVersion, version)) {
+                        file.text = remoteJsonText
+                        println("Updated ${remoteJson.name} from $version to $remoteVersion")
+                    } else {
+                        println("${remoteJson.name} is up to date")
+                    }
+                } catch (Exception e) {
+                    println("Failed to update ${file.name}: ${e.message}")
+                }
+            }
+        }
+    }
+}
