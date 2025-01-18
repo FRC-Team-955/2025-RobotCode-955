@@ -84,7 +84,7 @@ public class ModuleIOSparkMax extends ModuleIO {
         driveConfig = new SparkMaxConfig();
         driveConfig
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(50)
+                .smartCurrentLimit(moduleConfig.driveCurrentLimit())
                 .voltageCompensation(12.0);
         driveConfig
                 .encoder
@@ -117,7 +117,7 @@ public class ModuleIOSparkMax extends ModuleIO {
         turnConfig
                 .inverted(moduleConfig.turnInverted())
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(20)
+                .smartCurrentLimit(moduleConfig.turnCurrentLimit())
                 .voltageCompensation(12.0);
         turnConfig
                 .absoluteEncoder

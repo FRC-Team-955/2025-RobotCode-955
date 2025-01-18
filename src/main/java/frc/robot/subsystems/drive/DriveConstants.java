@@ -92,8 +92,8 @@ public class DriveConstants {
                 true,
                 false,
                 false,
-                120,
-                60
+                50,
+                20
         );
         case SIMBOT -> new ModuleConfig(
                 PIDF.ofPDSV(0.1, 0.0, 0.0, 0.13),
@@ -168,8 +168,8 @@ public class DriveConstants {
             boolean turnInverted,
             boolean driveInverted,
             boolean encoderInverted,
-            double driveCurrentLimit, // AKA current that causes wheel slip
-            double turnCurrentLimit
+            int driveCurrentLimit, // AKA current that causes wheel slip
+            int turnCurrentLimit
     ) {
     }
 

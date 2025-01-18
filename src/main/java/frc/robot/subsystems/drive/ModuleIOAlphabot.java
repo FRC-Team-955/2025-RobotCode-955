@@ -48,7 +48,7 @@ import static frc.robot.util.SparkUtil.*;
  * and CANcoder.
  */
 public class ModuleIOAlphabot extends ModuleIO {
-    private static final Alert turnRelativeEncoderNotReset = new Alert("One or more drive modules has not successfully reset their relative turn encoder", Alert.AlertType.kError);
+    private static final Alert turnRelativeEncoderNotReset = new Alert("One or more alpha drive modules has not successfully reset their relative turn encoder", Alert.AlertType.kError);
 
     private final double zeroRotationRad;
 
@@ -98,7 +98,7 @@ public class ModuleIOAlphabot extends ModuleIO {
         driveConfig = new SparkMaxConfig();
         driveConfig
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(50)
+                .smartCurrentLimit(moduleConfig.driveCurrentLimit())
                 .voltageCompensation(12.0);
         driveConfig
                 .encoder
@@ -131,10 +131,11 @@ public class ModuleIOAlphabot extends ModuleIO {
         turnConfig
                 .inverted(moduleConfig.turnInverted())
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(20)
+                .smartCurrentLimit(moduleConfig.turnCurrentLimit())
                 .voltageCompensation(12.0);
         turnConfig
                 .closedLoop
+                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .positionWrappingEnabled(true)
                 .positionWrappingInputRange(0.0, 2 * Math.PI);
         moduleConfig.turnGains().applySpark(turnConfig.closedLoop);
@@ -172,16 +173,19 @@ public class ModuleIOAlphabot extends ModuleIO {
             if (turnEncoderConnected) {
                 var absolutePositionRad = Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble());
                 if (absolutePositionRad != 0) {
-                    turnEncoder.setPosition(absolutePositionRad);
-                    System.out.println("Drive module with cancoder ID " + cancoderCanID + " setting initial position of turn relative encoder to " + absolutePositionRad);
-                    successful = true;
-                    break;
+                    sparkStickyFault = false;
+                    tryUntilOk(5, () -> turnEncoder.setPosition(absolutePositionRad));
+                    if (!sparkStickyFault) {
+                        System.out.println("Drive module with cancoder ID " + cancoderCanID + " setting initial position of turn relative encoder to " + absolutePositionRad);
+                        successful = true;
+                        break;
+                    }
                 }
             }
-            System.out.println("Drive module with cancoder ID " + cancoderCanID + " FAILED on attempt " + (i + 1) + " to set initial position of turn relative encoder (connected: " + turnEncoderConnected + ")");
+            System.out.printf("Drive module with cancoder ID %d FAILED on attempt %d to set initial position of turn relative encoder (connected: %s, sparkStickyFault: %s)%n", cancoderCanID, i + 1, turnEncoderConnected, sparkStickyFault);
         }
         if (!successful) {
-            System.out.println("Drive module with cancoder ID " + cancoderCanID + " FAILED AND GAVE UP setting initial position of turn relative encoder");
+            System.out.printf("Drive module with cancoder ID %d GAVE UP setting initial position of turn relative encoder%n", cancoderCanID);
             turnRelativeEncoderNotReset.set(true);
         }
 
