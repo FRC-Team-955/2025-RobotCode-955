@@ -97,8 +97,15 @@ public class Robot extends LoggedRobot {
 
         Logger.start();
 
-        // Instantiate our RobotContainer. This will perform all our button bindings,
-        // and put our autonomous chooser on the dashboard.
+        try {
+            // Give some time for the log receiver to start so that printlns from constructors are caught
+            // Sleeping isn't the best, but since this just happens on initialization I think it's fine
+            Thread.sleep(200);
+        } catch (InterruptedException ignored) {
+        }
+
+        // No references to RobotContainer/RobotState/any subsystem should be made before this point!
+        System.out.println("********** Initializing RobotContainer **********");
         robotContainer = new RobotContainer();
 
 //        CommandScheduler.getInstance().onCommandFinish(Robot::onCommandEnd);
