@@ -41,7 +41,7 @@ import static frc.robot.util.SparkUtil.*;
  * and duty cycle absolute encoder.
  */
 public class ModuleIOSparkMax extends ModuleIO {
-    private final double zeroRotationRad;
+    private final double absoluteEncoderOffsetRad;
 
     // Hardware objects
     private final SparkMax driveSpark;
@@ -69,10 +69,9 @@ public class ModuleIOSparkMax extends ModuleIO {
     public ModuleIOSparkMax(
             int driveCanID,
             int turnCanID,
-            int cancoderCanID,
             double absoluteEncoderOffsetRad
     ) {
-        zeroRotationRad = absoluteEncoderOffsetRad;
+        this.absoluteEncoderOffsetRad = absoluteEncoderOffsetRad;
         driveSpark = new SparkMax(driveCanID, MotorType.kBrushless);
         turnSpark = new SparkMax(turnCanID, MotorType.kBrushless);
         driveEncoder = driveSpark.getEncoder();
@@ -83,6 +82,7 @@ public class ModuleIOSparkMax extends ModuleIO {
         // Configure drive motor
         driveConfig = new SparkMaxConfig();
         driveConfig
+                .inverted(moduleConfig.driveInverted())
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(moduleConfig.driveCurrentLimit())
                 .voltageCompensation(12.0);
@@ -173,7 +173,7 @@ public class ModuleIOSparkMax extends ModuleIO {
         ifOk(
                 turnSpark,
                 turnEncoder::getPosition,
-                (value) -> inputs.turnPositionRad = value - zeroRotationRad
+                (value) -> inputs.turnPositionRad = value - absoluteEncoderOffsetRad
         );
         ifOk(turnSpark, turnEncoder::getVelocity, (value) -> inputs.turnVelocityRadPerSec = value);
         ifOk(
@@ -189,7 +189,7 @@ public class ModuleIOSparkMax extends ModuleIO {
         inputs.odometryDrivePositionsRad = drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryTurnPositionsRad =
                 turnPositionQueue.stream()
-                        .mapToDouble((Double value) -> value - zeroRotationRad)
+                        .mapToDouble((Double value) -> value - absoluteEncoderOffsetRad)
                         .toArray();
         timestampQueue.clear();
         drivePositionQueue.clear();
@@ -240,7 +240,7 @@ public class ModuleIOSparkMax extends ModuleIO {
 
     @Override
     public void setTurnPosition(double positionRad) {
-        double setpoint = MathUtil.inputModulus(positionRad + zeroRotationRad, 0.0, 2 * Math.PI);
+        double setpoint = MathUtil.inputModulus(positionRad + absoluteEncoderOffsetRad, 0.0, 2 * Math.PI);
         turnController.setReference(setpoint, ControlType.kPosition);
     }
 }

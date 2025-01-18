@@ -144,12 +144,12 @@ public class ModuleIOTalonFX extends ModuleIO {
 
         // Configure CANCoder
         var cancoderConfig = new CANcoderConfiguration();
-        cancoderConfig.MagnetSensor.MagnetOffset = Units.radiansToRotations(absoluteEncoderOffsetRad);
+        cancoderConfig.MagnetSensor.MagnetOffset = Units.radiansToRotations(-absoluteEncoderOffsetRad);
         cancoderConfig.MagnetSensor.SensorDirection =
                 moduleConfig.encoderInverted()
                         ? SensorDirectionValue.Clockwise_Positive
                         : SensorDirectionValue.CounterClockwise_Positive;
-        cancoder.getConfigurator().apply(cancoderConfig);
+        tryUntilOk(5, () -> cancoder.getConfigurator().apply(cancoderConfig));
 
         // Create timestamp queue
         timestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
