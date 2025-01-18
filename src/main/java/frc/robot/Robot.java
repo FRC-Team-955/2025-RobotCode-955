@@ -111,6 +111,7 @@ public class Robot extends LoggedRobot {
             var key = parent + clazz.getSimpleName() + "." + field.getName();
             try {
                 var value = field.get(null);
+
                 if (value.getClass().isArray()) {
                     for (int i = 0; i < Array.getLength(value); i++) {
                         Logger.recordMetadata(key + "[" + i + "]", Array.get(value, i).toString());
@@ -123,6 +124,9 @@ public class Robot extends LoggedRobot {
             }
         }
         for (var subclass : clazz.getClasses()) {
+            if (subclass.isEnum())
+                continue;
+
             logConstantClass(subclass, parent + clazz.getSimpleName());
         }
     }
