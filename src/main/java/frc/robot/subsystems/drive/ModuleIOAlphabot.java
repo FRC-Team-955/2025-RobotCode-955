@@ -177,7 +177,7 @@ public class ModuleIOAlphabot extends ModuleIO {
         try {
             // Wait for cancoder status signal to use new offset
             // TODO: do this better
-            Thread.sleep(250);
+            Thread.sleep(500);
         } catch (InterruptedException ignored) {
         }
         var successful = false;
