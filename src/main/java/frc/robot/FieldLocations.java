@@ -1,4 +1,4 @@
 package frc.robot;
 
-public final class FieldLocations {
+public class FieldLocations {
 }

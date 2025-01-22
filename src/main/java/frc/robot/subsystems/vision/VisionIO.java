@@ -17,12 +17,12 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
-public interface VisionIO {
+public class VisionIO {
     @AutoLog
-    class VisionIOInputs {
+    public static class VisionIOInputs {
         public boolean connected = false;
         public TargetObservation latestTargetObservation =
-                new TargetObservation(new Rotation2d(), new Rotation2d());
+                new TargetObservation(new Rotation2d(), new Rotation2d(), false);
         public PoseObservation[] poseObservations = new PoseObservation[0];
         public int[] tagIds = new int[0];
     }
@@ -30,12 +30,12 @@ public interface VisionIO {
     /**
      * Represents the angle to a simple target, not used for pose estimation.
      */
-    record TargetObservation(Rotation2d tx, Rotation2d ty) {}
+    public record TargetObservation(Rotation2d tx, Rotation2d ty, boolean isPresent) {}
 
     /**
      * Represents a robot pose sample used for pose estimation.
      */
-    record PoseObservation(
+    public record PoseObservation(
             double timestamp,
             Pose3d pose,
             double ambiguity,
@@ -43,12 +43,12 @@ public interface VisionIO {
             double averageTagDistance,
             PoseObservationType type) {}
 
-    enum PoseObservationType {
+    public enum PoseObservationType {
         MEGATAG_1,
         MEGATAG_2,
         PHOTONVISION
     }
 
-    default void updateInputs(VisionIOInputs inputs) {
+    public void updateInputs(VisionIOInputs inputs) {
     }
 }

@@ -13,16 +13,13 @@
 
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotState;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import org.littletonrobotics.junction.Logger;
 
@@ -32,16 +29,13 @@ import java.util.List;
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 public class Vision extends SubsystemBase {
-    private final VisionConsumer consumer;
-    private final VisionIO[] io;
+    private final VisionIO[] io = visionIO;
     private final VisionIOInputsAutoLogged[] inputs;
     private final Alert[] disconnectedAlerts;
 
-    public Vision(VisionConsumer consumer, VisionIO... io) {
-        this.consumer = consumer;
-        this.io = io;
+    private static Vision instance;
 
-        // Initialize inputs
+    private Vision() { // Initialize inputs
         this.inputs = new VisionIOInputsAutoLogged[io.length];
         for (int i = 0; i < inputs.length; i++) {
             inputs[i] = new VisionIOInputsAutoLogged();
@@ -54,6 +48,15 @@ public class Vision extends SubsystemBase {
                     new Alert(
                             "Vision camera " + i + " is disconnected.", AlertType.kWarning);
         }
+    }
+
+    public static Vision get() {
+        if (instance == null)
+            synchronized (Vision.class) {
+                instance = new Vision();
+            }
+
+        return instance;
     }
 
     /**
@@ -141,7 +144,7 @@ public class Vision extends SubsystemBase {
                 }
 
                 // Send vision observation
-                consumer.accept(
+                RobotState.get().addVisionMeasurement(
                         observation.pose().toPose2d(),
                         observation.timestamp(),
                         VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
@@ -177,13 +180,5 @@ public class Vision extends SubsystemBase {
         Logger.recordOutput(
                 "Vision/Summary/RobotPosesRejected",
                 allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
-    }
-
-    @FunctionalInterface
-    public interface VisionConsumer {
-        void accept(
-                Pose2d visionRobotPoseMeters,
-                double timestampSeconds,
-                Matrix<N3, N1> visionMeasurementStdDevs);
     }
 }
