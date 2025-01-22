@@ -8,11 +8,20 @@ import frc.robot.Util;
 import frc.robot.util.PIDF;
 
 public class DriveConstants {
-    public static final double phoenixFrequencyHz = 250.0;
-    public static final double sparkFrequencyHz = 100.0;
+    public static final double phoenixFrequencyHz = switch (Constants.identity) {
+        case COMPBOT, SIMBOT -> 250.0;
+        case ALPHABOT -> 100.0;
+    };
+    public static final double sparkFrequencyHz = switch (Constants.identity) {
+        case COMPBOT, SIMBOT -> 250.0;
+        case ALPHABOT -> 100.0;
+    };
 
     public static final String canbusName = "phoenix";
-    public static final boolean isCANFD = new CANBus(canbusName).isNetworkFD();
+    public static final boolean isCANFD = switch (Constants.identity) {
+        case COMPBOT -> new CANBus(canbusName).isNetworkFD();
+        case ALPHABOT, SIMBOT -> false;
+    };
 
     public static final DriveConfig driveConfig = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> new DriveConfig(
@@ -80,20 +89,20 @@ public class DriveConstants {
         );
         case ALPHABOT -> new ModuleConfig(
                 PIDF.ofPDSVA(
-                        0.05, 0.0,
+                        0.0, 0.0,
                         // FL + FR + BL + BR
                         Util.average(0.024319, 0.094701 /* , [erroneous], [erroneous] */),
                         Util.average(0.13551, 0.13733, 0.13543, 0.14087),
                         Util.average(0.0065694, 0.0054738, /* [erroneous], */ 0.0091241)
                 ),
-                PIDF.ofPD(5.0, 0.0),
+                PIDF.ofPD(0.5, 0.0),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
                 false,
                 false,
-                120,
-                60
+                50,
+                20
         );
         case SIMBOT -> new ModuleConfig(
                 PIDF.ofPDSV(0.1, 0.0, 0.0, 0.13),
@@ -123,10 +132,10 @@ public class DriveConstants {
         };
         case ALPHABOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
-                new ModuleIOAlphabot(2, 3, 1, 2.454),
-                new ModuleIOAlphabot(12, 13, 11, -0.735),
-                new ModuleIOAlphabot(4, 5, 6, 2.623),
-                new ModuleIOAlphabot(9, 10, 8, -1.302),
+                new ModuleIOAlphabot(2, 3, 1, 2.551),
+                new ModuleIOAlphabot(12, 13, 11, -0.719),
+                new ModuleIOAlphabot(4, 5, 6, 2.597),
+                new ModuleIOAlphabot(9, 10, 8, -1.316),
         };
         case SIMBOT -> new ModuleIO[]{
                 new ModuleIOSim(),
@@ -162,14 +171,14 @@ public class DriveConstants {
 
     public record ModuleConfig(
             PIDF driveGains,
-            PIDF turnFeedback,
+            PIDF turnGains,
             double driveGearRatio,
             double turnGearRatio,
             boolean turnInverted,
             boolean driveInverted,
             boolean encoderInverted,
-            double driveCurrentLimit, // AKA current that causes wheel slip
-            double turnCurrentLimit
+            int driveCurrentLimit, // AKA current that causes wheel slip
+            int turnCurrentLimit
     ) {
     }
 

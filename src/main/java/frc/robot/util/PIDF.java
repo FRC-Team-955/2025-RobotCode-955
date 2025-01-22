@@ -1,6 +1,7 @@
 package frc.robot.util;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.revrobotics.spark.config.ClosedLoopConfig;
 import edu.wpi.first.math.controller.*;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 
@@ -39,6 +40,10 @@ public record PIDF(double p, double i, double d, double s, double v, double a, d
 
     public static PIDF ofPIDSVAG(double p, double i, double d, double s, double v, double a, double g) {
         return new PIDF(p, i, d, s, v, a, g);
+    }
+
+    public void applySpark(ClosedLoopConfig config) {
+        config.pidf(p, i, d, 0);
     }
 
     public Slot0Configs toPhoenix() {

@@ -50,7 +50,7 @@ public class Module {
 
     public void periodicBeforeCommands() {
         io.updateInputs(inputs);
-        Logger.processInputs("Drive/Module" + index, inputs);
+        Logger.processInputs("Inputs/Drive/Module" + index, inputs);
 
         // Update alerts
         driveDisconnectedAlert.set(!inputs.driveConnected);

@@ -13,7 +13,10 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.SubsystemBaseExt;
@@ -38,6 +41,7 @@ public class Robot extends LoggedRobot {
     private static final HashSet<SubsystemBaseExt> extendedSubsystems = new HashSet<>();
     private final RobotContainer robotContainer;
     private Command autonomousCommand;
+    private double autonomousStart;
 
     public static void registerExtendedSubsystem(SubsystemBaseExt subsystem) {
         if (!extendedSubsystems.add(subsystem)) {
@@ -97,8 +101,18 @@ public class Robot extends LoggedRobot {
 
         Logger.start();
 
-        // Instantiate our RobotContainer. This will perform all our button bindings,
-        // and put our autonomous chooser on the dashboard.
+        try {
+            // Give some time for the log receiver to start so that printlns from constructors are caught
+            // Sleeping isn't the best, but since this just happens on initialization I think it's fine
+            Thread.sleep(200);
+        } catch (InterruptedException ignored) {
+        }
+
+        // Configure brownout voltage
+        RobotController.setBrownoutVoltage(6.0);
+
+        // No references to RobotContainer/RobotState/any subsystem should be made before this point!
+        System.out.println("********** Initializing RobotContainer **********");
         robotContainer = new RobotContainer();
 
 //        CommandScheduler.getInstance().onCommandFinish(Robot::onCommandEnd);
@@ -111,6 +125,7 @@ public class Robot extends LoggedRobot {
             var key = parent + clazz.getSimpleName() + "." + field.getName();
             try {
                 var value = field.get(null);
+
                 if (value.getClass().isArray()) {
                     for (int i = 0; i < Array.getLength(value); i++) {
                         Logger.recordMetadata(key + "[" + i + "]", Array.get(value, i).toString());
@@ -123,114 +138,97 @@ public class Robot extends LoggedRobot {
             }
         }
         for (var subclass : clazz.getClasses()) {
+            if (subclass.isEnum())
+                continue;
+
             logConstantClass(subclass, parent + clazz.getSimpleName());
         }
     }
 
-    /**
-     * This function is called periodically during all modes.
-     */
     @Override
     public void robotPeriodic() {
         // Switch thread to high priority to improve loop timing
         Threads.setCurrentThreadPriority(true, 99);
 
-        // Runs the Scheduler. This is responsible for polling buttons, adding
-        // newly-scheduled commands, running already-scheduled commands, removing
-        // finished or interrupted commands, and running subsystem periodic() methods.
-        // This must be called from the robot's periodic block in order for anything in
-        // the Command-based framework to work.
+        // Run the command scheduler.
+        // This first runs all subsystem periodic() (AKA periodicBeforeCommands())
+        // and then runs all of the commands.
         CommandScheduler.getInstance().run();
 
         for (var subsystem : extendedSubsystems) {
             subsystem.periodicAfterCommands();
         }
 
+        if (DriverStation.isAutonomousEnabled()) {
+            // We want this to run after the command scheduler,
+            // so this can't go in autonomousPeriodic
+            if (autonomousCommand != null && !autonomousCommand.isScheduled()) {
+                var autonomousEnd = Timer.getTimestamp();
+                autonomousCommand = null;
+                System.out.printf("********** Auto finished in %.2f seconds **********%n", autonomousEnd - autonomousStart);
+            }
+        }
+
         // Return to normal thread priority
         Threads.setCurrentThreadPriority(false, 10);
     }
 
-    /**
-     * This function is called once when the robot is disabled.
-     */
     @Override
     public void disabledInit() {
     }
 
-    /**
-     * This function is called periodically when disabled.
-     */
     @Override
     public void disabledPeriodic() {
     }
 
-    /**
-     * This autonomous runs the autonomous command selected by your {@link RobotContainer} class.
-     */
     @Override
     public void autonomousInit() {
         autonomousCommand = robotContainer.getAutonomousCommand();
 
-        // schedule the autonomous command (example)
         if (autonomousCommand != null) {
             autonomousCommand.schedule();
+            autonomousStart = Timer.getTimestamp();
+            System.out.println("********** Auto started **********");
         }
     }
 
-    /**
-     * This function is called periodically during autonomous.
-     */
     @Override
     public void autonomousPeriodic() {
     }
 
-    /**
-     * This function is called once when teleop is enabled.
-     */
     @Override
-    public void teleopInit() {
-        // This makes sure that the autonomous stops running when
-        // teleop starts running. If you want the autonomous to
-        // continue until interrupted by another command, remove
-        // this line or comment it out.
-        if (autonomousCommand != null) {
+    public void autonomousExit() {
+        // We want this to run before the command scheduler, so it goes in autonomousExit
+        if (autonomousCommand != null && autonomousCommand.isScheduled()) {
+            var autonomousEnd = Timer.getTimestamp();
             autonomousCommand.cancel();
+            autonomousCommand = null;
+            System.out.printf("********** Auto cancelled in %.2f seconds **********%n", autonomousEnd - autonomousStart);
         }
     }
 
-    /**
-     * This function is called periodically during operator control.
-     */
+    @Override
+    public void teleopInit() {
+    }
+
     @Override
     public void teleopPeriodic() {
     }
 
-    /**
-     * This function is called once when test mode is enabled.
-     */
     @Override
     public void testInit() {
         // Cancels all running commands at the start of test mode.
         CommandScheduler.getInstance().cancelAll();
     }
 
-    /**
-     * This function is called periodically during test mode.
-     */
     @Override
     public void testPeriodic() {
     }
 
-    /**
-     * This function is called once when the robot is first started up.
-     */
     @Override
     public void simulationInit() {
     }
 
-    /**
-     * This function is called periodically whilst in simulation.
-     */
     @Override
     public void simulationPeriodic() {
     }

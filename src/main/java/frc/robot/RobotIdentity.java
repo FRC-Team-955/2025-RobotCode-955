@@ -1,6 +1,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.RobotBase;
+import org.littletonrobotics.junction.Logger;
 
 public enum RobotIdentity {
     COMPBOT("00-80-2F-22-AE-61"),
@@ -16,6 +17,8 @@ public enum RobotIdentity {
     public static RobotIdentity determine() {
         if (RobotBase.isReal()) {
             final var macAddress = Util.getMacAddress();
+
+            Logger.recordMetadata("MacAddress", macAddress);
 
             if (macAddress.equals(COMPBOT.macAddress))
                 return COMPBOT;

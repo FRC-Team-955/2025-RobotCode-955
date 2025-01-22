@@ -159,7 +159,10 @@ public class Drive extends SubsystemBaseExt {
             }
 
             // Update gyro angle
-            if (gyroInputs.connected) {
+            // Sanity check that gyroInputs.odometryYawPositionsRad has an element at i
+            // This might not always happen due to timing stuff
+            // The modules themselves should be synced up though?
+            if (gyroInputs.connected && gyroInputs.odometryYawPositionsRad.length > i) {
                 // Use the real gyro angle
                 rawGyroRotation = new Rotation2d(gyroInputs.odometryYawPositionsRad[i]);
             } else {

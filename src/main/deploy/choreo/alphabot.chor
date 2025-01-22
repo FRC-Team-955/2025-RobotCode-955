@@ -1,6 +1,6 @@
 {
  "name":"alphabot",
- "version":"v2025.0.0",
+ "version":1,
  "type":"Swerve",
  "variables":{
   "expressions":{},
@@ -51,18 +51,22 @@
    "exp":"1.087 N * m",
    "val":1.087
   },
+  "cof":{
+   "exp":"1.5",
+   "val":1.5
+  },
   "bumper":{
    "front":{
-    "exp":"15 in",
-    "val":0.381
+    "exp":"15.5 in",
+    "val":0.3937
    },
    "side":{
-    "exp":"15 in",
-    "val":0.381
+    "exp":"15.5 in",
+    "val":0.3937
    },
    "back":{
-    "exp":"15 in",
-    "val":0.381
+    "exp":"15.5 in",
+    "val":0.3937
    }
   },
   "differentialTrackWidth":{
