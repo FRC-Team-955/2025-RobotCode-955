@@ -25,6 +25,8 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotState;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,7 +37,9 @@ public class Vision extends SubsystemBase {
   private final VisionIOInputsAutoLogged[] inputs;
   private final Alert[] disconnectedAlerts;
 
-  public Vision() {
+  private static Vision instance;
+
+  private Vision() {
     this.io = visionIO;
 
     // Initialize inputs
@@ -51,6 +55,15 @@ public class Vision extends SubsystemBase {
           new Alert(
               "Vision camera " + Integer.toString(i) + " is disconnected.", AlertType.kWarning);
     }
+  }
+
+  public static Vision get() {
+      if (instance == null)
+          synchronized (Vision.class) {
+              instance = new Vision();
+          }
+
+      return instance;
   }
 
   /**

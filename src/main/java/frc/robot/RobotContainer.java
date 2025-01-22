@@ -2,16 +2,16 @@ package frc.robot;
 
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.factories.auto.TestAuto;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.WheelRadiusCharacterization;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.CommandNintendoSwitchProController;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -23,10 +23,6 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-    // Subsystems
-    private final Drive drive;
-    private final Vision vision;
-
     // Controller
     private final CommandXboxController driverController = Constants.Simulation.useNintendoSwitchProController ? new CommandNintendoSwitchProController(0) : new CommandXboxController(0);
 
@@ -38,6 +34,7 @@ public class RobotContainer {
 
     /* Subsystems */
     private final Drive drive = Drive.get();
+    private final Vision vision = Vision.get();
 
     public RobotContainer() {
         addAutos();

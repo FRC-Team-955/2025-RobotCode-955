@@ -17,6 +17,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import frc.robot.RobotState;
 import frc.robot.Constants;
 
 public class VisionConstants {
@@ -66,19 +67,19 @@ public class VisionConstants {
         : new VisionIO[] {
             new VisionIOPhotonVision(camera0Name, robotToCamera0),
             new VisionIOPhotonVision(camera1Name, robotToCamera1),
-            new VisionIOLimelight(camera2Name, RobotState::getRotation)
+            new VisionIOLimelight(camera2Name, RobotState.get()::getRotation)
         };
     case ALPHABOT -> Constants.isReplay
         ? new VisionIO[] {new VisionIO(), new VisionIO()}
         : new VisionIO[] {
             new VisionIOPhotonVision(camera0Name, robotToCamera0),
-            new VisionIOLimelight(camera2Name, RobotState::getRotation)
+            new VisionIOLimelight(camera2Name, RobotState.get()::getRotation)
         };
     case SIMBOT -> Constants.isReplay
         ? new VisionIO[] {new VisionIO(), new VisionIO()}
         : new VisionIO[] {
-            new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, RobotState::getPose),
-            new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, RobotState::getPose)
+            new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, RobotState.get()::getPose),
+            new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, RobotState.get()::getPose)
         };
   };
 }
