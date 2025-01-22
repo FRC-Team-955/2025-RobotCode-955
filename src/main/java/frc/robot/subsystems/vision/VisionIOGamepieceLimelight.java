@@ -7,19 +7,14 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringSubscriber;
 import edu.wpi.first.wpilibj.RobotController;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-public class VisionIOGamepiece extends VisionIO {
+public class VisionIOGamepieceLimelight extends VisionIO {
     private final DoubleSubscriber latencySubscriber;
     private final DoubleSubscriber txSubscriber;
     private final DoubleSubscriber tySubscriber;
     private final StringSubscriber tclassSubscriber;
     private final IntegerSubscriber tvSubscriber;
 
-    public VisionIOGamepiece(String name) {
+    public VisionIOGamepieceLimelight(String name) {
         var table = NetworkTableInstance.getDefault().getTable(name);
 
         latencySubscriber = table.getDoubleTopic("tl").subscribe(0.0);

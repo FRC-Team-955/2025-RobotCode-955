@@ -99,8 +99,8 @@ public class Robot extends LoggedRobot {
             }
         }
 
-    // Start AdvantageKit logger
-    Logger.start();
+        // Start AdvantageKit logger
+        Logger.start();
 
         try {
             // Give some time for the log receiver to start so that printlns from constructors are caught
