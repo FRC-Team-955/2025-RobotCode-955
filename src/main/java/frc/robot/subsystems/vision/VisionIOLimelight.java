@@ -34,6 +34,7 @@ public class VisionIOLimelight extends VisionIO {
   private final DoubleSubscriber latencySubscriber;
   private final DoubleSubscriber txSubscriber;
   private final DoubleSubscriber tySubscriber;
+  private final IntegerSubscriber tvSubscriber;
   private final DoubleArraySubscriber megatag1Subscriber;
   private final DoubleArraySubscriber megatag2Subscriber;
 
@@ -53,6 +54,7 @@ public class VisionIOLimelight extends VisionIO {
     latencySubscriber = table.getDoubleTopic("tl").subscribe(0.0);
     txSubscriber = table.getDoubleTopic("tx").subscribe(0.0);
     tySubscriber = table.getDoubleTopic("ty").subscribe(0.0);
+    tvSubscriber = table.getIntegerTopic("tv").subscribe(0);
     megatag1Subscriber = table.getDoubleArrayTopic("botpose_wpiblue").subscribe(new double[] {});
     megatag2Subscriber = table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe(new double[] {});
   }
@@ -66,7 +68,10 @@ public class VisionIOLimelight extends VisionIO {
     // Update target observation
     inputs.latestTargetObservation =
         new TargetObservation(
-            Rotation2d.fromDegrees(txSubscriber.get()), Rotation2d.fromDegrees(tySubscriber.get()));
+                Rotation2d.fromDegrees(txSubscriber.get()),
+                Rotation2d.fromDegrees(tySubscriber.get()),
+                tvSubscriber.get() == 1
+        );
 
     // Update orientation for MegaTag 2
     orientationPublisher.accept(
