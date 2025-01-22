@@ -29,16 +29,13 @@ import java.util.List;
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 public class Vision extends SubsystemBase {
-    private final VisionIO[] io;
+    private final VisionIO[] io = visionIO;
     private final VisionIOInputsAutoLogged[] inputs;
     private final Alert[] disconnectedAlerts;
 
     private static Vision instance;
 
-    private Vision() {
-        this.io = visionIO;
-
-        // Initialize inputs
+    private Vision() { // Initialize inputs
         this.inputs = new VisionIOInputsAutoLogged[io.length];
         for (int i = 0; i < inputs.length; i++) {
             inputs[i] = new VisionIOInputsAutoLogged();

@@ -21,7 +21,6 @@ import edu.wpi.first.wpilibj.RobotBase;
  * (log replay from a file).
  */
 public final class Constants {
-
     public static final RobotIdentity identity = RobotIdentity.determine();
 
     public static final Mode mode = RobotBase.isReal()
