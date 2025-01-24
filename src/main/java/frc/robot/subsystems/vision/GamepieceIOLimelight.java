@@ -45,7 +45,7 @@ public class GamepieceIOLimelight extends GamepieceIO {
                         Rotation2d.fromDegrees(tx),
                         Rotation2d.fromDegrees(ty),
                         // TODO: check if math works
-                        new Translation2d(dist, new Rotation2d(robotToCam.getRotation().getZ()-tx)),
+                        new Translation2d(dist, new Rotation2d(robotToCam.getRotation().getZ() - tx)),
                         tvSubscriber.get() == 1
                 );
 

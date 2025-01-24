@@ -18,8 +18,6 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.AngleUnit;
-import edu.wpi.first.units.measure.Angle;
 import frc.robot.Constants;
 import frc.robot.RobotState;
 
@@ -53,16 +51,16 @@ public class VisionConstants {
     public static final GamepieceIO[] gamepieceIO = switch (Constants.identity) {
         case COMPBOT -> Constants.isReplay
                 ? new GamepieceIO[]{new GamepieceIO()}
-                : new GamepieceIO[]{ new GamepieceIOLimelight("camera_1", new Transform3d())};
+                : new GamepieceIO[]{new GamepieceIOLimelight("camera_1", new Transform3d())};
         case ALPHABOT -> Constants.isReplay
                 ? new GamepieceIO[]{new GamepieceIO()}
-                : new GamepieceIO[]{ new GamepieceIOLimelight(
-                        "limelight",
-                        // 2 inches back, 2 inches right, 37 inches up, 40 degrees down from horizontal
-                        new Transform3d(Units.inchesToMeters(-2), Units.inchesToMeters(2), Units.inchesToMeters(37),
-                                new Rotation3d(0, Units.degreesToRadians(-40), 0)
-                        )
+                : new GamepieceIO[]{new GamepieceIOLimelight(
+                "limelight",
+                // 2 inches back, 2 inches right, 37 inches up, 40 degrees down from horizontal
+                new Transform3d(Units.inchesToMeters(-2), Units.inchesToMeters(2), Units.inchesToMeters(37),
+                        new Rotation3d(0, Units.degreesToRadians(-40), 0)
                 )
+        )
         };
         case SIMBOT -> new GamepieceIO[]{new GamepieceIO()};
     };
