@@ -406,6 +406,7 @@ public class Drive extends SubsystemBaseExt {
                 // If we are going towards the assist pose, use automatic control
                 if (linearMagnitude > assistMinimumMagnitude && Math.abs(directionDiff.getRadians()) < assistDirectionToleranceRad && distanceToAssist < assistMaximumDistanceMeters) {
                     Logger.recordOutput("Drive/Assist/Running", true);
+                    // TODO: integrate driver direction so it's more of a feedback (for example choreo path following) rather than full assist control
                     runMoveTo(assistPose, linearMagnitude, omegaMagnitude);
                 } else {
                     Logger.recordOutput("Drive/Assist/Running", false);
