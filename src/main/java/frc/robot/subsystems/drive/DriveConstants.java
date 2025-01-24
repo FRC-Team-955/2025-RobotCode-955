@@ -37,7 +37,8 @@ public class DriveConstants {
                 40.186,
                 PIDF.ofPD(1.5, 0),
                 PIDF.ofPD(1.5, 0),
-                PIDF.ofPD(2.1, 0.1)
+                PIDF.ofPD(5, 0),
+                PIDF.ofPD(5, 0)
         );
         case ALPHABOT -> new DriveConfig(
                 Units.inchesToMeters(2),
@@ -52,12 +53,18 @@ public class DriveConstants {
                 35.864,
                 PIDF.ofPD(1.5, 0),
                 PIDF.ofPD(1.5, 0),
-                PIDF.ofPD(2.1, 0.1)
+                PIDF.ofPD(5, 0),
+                PIDF.ofPD(5, 0)
         );
     };
 
     public static final double drivebaseRadius = Math.hypot(driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0);
     public static final double joystickMaxAngularSpeedRadPerSec = Units.degreesToRadians(315);
+    public static final double joystickDriveDeadband = 0.1;
+    public static final double assistMinimumMagnitude = joystickDriveDeadband + 0.05;
+    public static final double assistDirectionToleranceRad = Units.degreesToRadians(45);
+    public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
+
 
     /**
      * FL, FR, BL, BR
@@ -165,7 +172,8 @@ public class DriveConstants {
             double maxAngularAccelRadPerSecSquared,
             PIDF choreoFeedbackXY,
             PIDF choreoFeedbackTheta,
-            PIDF pointTowardsController
+            PIDF moveToXY,
+            PIDF moveToTheta
     ) {
     }
 

@@ -30,7 +30,9 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.drive.DriveConstants.*;
@@ -46,11 +48,9 @@ public class Drive extends SubsystemBaseExt {
         WHEEL_RADIUS_CHARACTERIZATION,
         IDLE,
         DRIVE_JOYSTICK,
-        POINT_TOWARDS,
+        DRIVE_JOYSTICK_ASSISTED,
         FOLLOW_TRAJECTORY
     }
-
-    private static final double JOYSTICK_DRIVE_DEADBAND = 0.1;
 
     private final GyroIO gyroIO = DriveConstants.gyroIO;
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
@@ -77,6 +77,10 @@ public class Drive extends SubsystemBaseExt {
     private final PIDController choreoFeedbackX = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackTheta = driveConfig.choreoFeedbackTheta().toPID();
+
+    private final PIDController moveToX = driveConfig.moveToXY().toPID();
+    private final PIDController moveToY = driveConfig.moveToXY().toPID();
+    private final PIDController moveToTheta = driveConfig.moveToTheta().toPID();
 
     private Command withGoal(Goal newGoal, Command command) {
         return new WrapperCommand(command) {
@@ -318,8 +322,21 @@ public class Drive extends SubsystemBaseExt {
         );
     }
 
+    private void runMoveTo(Pose2d pose, double linearMagnitude, double omegaMagnitude) {
+        Logger.recordOutput("Drive/MoveToSetpoint", pose);
+
+        var currentPose = robotState.getPose();
+
+        closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
+                moveToX.calculate(currentPose.getX(), pose.getX()) * linearMagnitude,
+                moveToY.calculate(currentPose.getY(), pose.getY()) * linearMagnitude,
+                moveToTheta.calculate(currentPose.getRotation().getRadians(), pose.getRotation().getRadians()) * omegaMagnitude,
+                currentPose.getRotation()
+        );
+    }
+
     private double calculateLinearMagnitude(double x, double y) {
-        var linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), JOYSTICK_DRIVE_DEADBAND);
+        var linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), joystickDriveDeadband);
         return linearMagnitude * linearMagnitude;
     }
 
@@ -327,8 +344,8 @@ public class Drive extends SubsystemBaseExt {
         return new Rotation2d(x, y);
     }
 
-    private double calculateOmega(double omega) {
-        double omegaWithDeadband = MathUtil.applyDeadband(omega, JOYSTICK_DRIVE_DEADBAND);
+    private double calculateOmegaMagnitude(double omega) {
+        double omegaWithDeadband = MathUtil.applyDeadband(omega, joystickDriveDeadband);
         return Math.copySign(omegaWithDeadband * omegaWithDeadband, omegaWithDeadband);
     }
 
@@ -344,10 +361,71 @@ public class Drive extends SubsystemBaseExt {
             runDrive(
                     calculateLinearMagnitude(x, y),
                     calculateLinearDirection(x, y),
-                    calculateOmega(omega)
+                    calculateOmegaMagnitude(omega)
             );
         });
         return withGoal(Goal.DRIVE_JOYSTICK, cmd).withName("Drive Joystick");
+    }
+
+    public Command driveJoystickAssisted(DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier, Supplier<Optional<Pose2d>> assistPoseSupplier) {
+        var cmd = run(() -> {
+            var x = xSupplier.getAsDouble();
+            var y = ySupplier.getAsDouble();
+            var omega = omegaSupplier.getAsDouble();
+
+
+            var linearMagnitude = calculateLinearMagnitude(x, y);
+            var linearDirection = calculateLinearDirection(x, y);
+            var omegaMagnitude = calculateOmegaMagnitude(omega);
+            Logger.recordOutput("Drive/Assist/JoystickDirection", linearDirection);
+
+            var optionalAssistPose = assistPoseSupplier.get();
+            if (optionalAssistPose.isPresent()) {
+                Logger.recordOutput("Drive/Assist/Present", true);
+
+                var currentPose = robotState.getPose();
+                var assistPose = optionalAssistPose.get();
+                Logger.recordOutput("Drive/Assist/Pose", assistPose);
+
+                var robotToAssist = currentPose.relativeTo(assistPose);
+                var robotToAssistDirection = calculateLinearDirection(robotToAssist.getX(), robotToAssist.getY());
+                Logger.recordOutput("Drive/Assist/RobotToAssistDirection", robotToAssistDirection);
+
+                var joystickDirectionFlipped =
+                        Util.shouldFlip()
+                                ? linearDirection.plus(new Rotation2d(Math.PI))
+                                : linearDirection;
+                Logger.recordOutput("Drive/Assist/JoystickDirectionFlipped", joystickDirectionFlipped);
+
+                var directionDiff = robotToAssistDirection.minus(joystickDirectionFlipped);
+                Logger.recordOutput("Drive/Assist/DirectionDifference", directionDiff);
+
+                var distanceToAssist = currentPose.getTranslation().getDistance(assistPose.getTranslation());
+                Logger.recordOutput("Drive/Assist/DistanceToAssist", distanceToAssist);
+
+                // If we are going towards the assist pose, use automatic control
+                if (linearMagnitude > assistMinimumMagnitude && Math.abs(directionDiff.getRadians()) < assistDirectionToleranceRad && distanceToAssist < assistMaximumDistanceMeters) {
+                    Logger.recordOutput("Drive/Assist/Running", true);
+                    runMoveTo(assistPose, linearMagnitude, omegaMagnitude);
+                } else {
+                    Logger.recordOutput("Drive/Assist/Running", false);
+                    runDrive(
+                            linearMagnitude,
+                            linearDirection,
+                            omegaMagnitude
+                    );
+                }
+            } else {
+                Logger.recordOutput("Drive/Assist/Present", false);
+                Logger.recordOutput("Drive/Assist/Running", false);
+                runDrive(
+                        linearMagnitude,
+                        linearDirection,
+                        omegaMagnitude
+                );
+            }
+        });
+        return withGoal(Goal.DRIVE_JOYSTICK_ASSISTED, cmd).withName("Drive Joystick Assisted");
     }
 
     public Command wheelRadiusCharacterization(WheelRadiusCharacterization.Direction direction) {
