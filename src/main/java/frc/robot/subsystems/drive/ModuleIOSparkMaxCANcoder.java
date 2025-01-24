@@ -48,7 +48,7 @@ import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
  * Module IO implementation for Spark Max drive motor controller, Spark Max turn motor controller,
  * and CANcoder.
  */
-public class ModuleIOAlphabot extends ModuleIO {
+public class ModuleIOSparkMaxCANcoder extends ModuleIO {
     private static final Alert turnRelativeEncoderNotReset = new Alert("One or more alpha drive modules has not successfully reset their relative turn encoder", Alert.AlertType.kError);
 
     // Hardware objects
@@ -78,7 +78,7 @@ public class ModuleIOAlphabot extends ModuleIO {
 
     private final SimpleMotorFeedforward driveFF = moduleConfig.driveGains().toSimpleFF();
 
-    public ModuleIOAlphabot(
+    public ModuleIOSparkMaxCANcoder(
             int driveCanID,
             int turnCanID,
             int cancoderCanID,

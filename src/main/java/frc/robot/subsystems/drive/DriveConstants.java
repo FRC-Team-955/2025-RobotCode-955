@@ -125,17 +125,17 @@ public class DriveConstants {
         // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
         case COMPBOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
-                new ModuleIOCompbot(10, 12, 13, 0.189),
-                new ModuleIOCompbot(7, 8, 9, 1.891),
-                new ModuleIOCompbot(1, 2, 3, -0.009),
-                new ModuleIOCompbot(5, 6, 4, 1.525),
+                new ModuleIOTalonFXSparkMaxCANcoder(10, 12, 13, 0.189),
+                new ModuleIOTalonFXSparkMaxCANcoder(7, 8, 9, 1.891),
+                new ModuleIOTalonFXSparkMaxCANcoder(1, 2, 3, -0.009),
+                new ModuleIOTalonFXSparkMaxCANcoder(5, 6, 4, 1.525),
         };
         case ALPHABOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
-                new ModuleIOAlphabot(2, 3, 1, 2.551),
-                new ModuleIOAlphabot(12, 13, 11, -0.719),
-                new ModuleIOAlphabot(4, 5, 6, 2.597),
-                new ModuleIOAlphabot(9, 10, 8, -1.316),
+                new ModuleIOSparkMaxCANcoder(2, 3, 1, 2.551),
+                new ModuleIOSparkMaxCANcoder(12, 13, 11, -0.719),
+                new ModuleIOSparkMaxCANcoder(4, 5, 6, 2.597),
+                new ModuleIOSparkMaxCANcoder(9, 10, 8, -1.316),
         };
         case SIMBOT -> new ModuleIO[]{
                 new ModuleIOSim(),
