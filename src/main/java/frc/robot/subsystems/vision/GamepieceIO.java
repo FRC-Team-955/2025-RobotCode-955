@@ -15,40 +15,23 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import org.littletonrobotics.junction.AutoLog;
 
-public class VisionIO {
+public class GamepieceIO {
     @AutoLog
-    public static class VisionIOInputs {
+    public static class GamepieceIOInputs {
         public boolean connected = false;
+        // x angle from camera, y angle from camera, translation from robot to gamepiece, whether there is a target
         public TargetObservation latestTargetObservation =
-                new TargetObservation(new Rotation2d(), new Rotation2d());
-        public PoseObservation[] poseObservations = new PoseObservation[0];
-        public int[] tagIds = new int[0];
+                new TargetObservation(new Rotation2d(), new Rotation2d(), new Translation2d(), false);
     }
 
     /**
      * Represents the angle to a simple target, not used for pose estimation.
      */
-    public record TargetObservation(Rotation2d tx, Rotation2d ty) {}
+    public record TargetObservation(Rotation2d tx, Rotation2d ty, Translation2d targetPos, boolean isPresent) {}
 
-    /**
-     * Represents a robot pose sample used for pose estimation.
-     */
-    public record PoseObservation(
-            double timestamp,
-            Pose3d pose,
-            double ambiguity,
-            int tagCount,
-            double averageTagDistance,
-            PoseObservationType type) {}
-
-    public enum PoseObservationType {
-        MEGATAG_1,
-        MEGATAG_2,
-        PHOTONVISION
-    }
-
-    public void updateInputs(VisionIOInputs inputs) {
+    public void updateInputs(GamepieceIOInputs inputs) {
     }
 }

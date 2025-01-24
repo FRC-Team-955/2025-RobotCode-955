@@ -72,8 +72,7 @@ public class VisionIOLimelight extends VisionIO {
         inputs.latestTargetObservation =
                 new TargetObservation(
                         Rotation2d.fromDegrees(txSubscriber.get()),
-                        Rotation2d.fromDegrees(tySubscriber.get()),
-                        tvSubscriber.get() == 1
+                        Rotation2d.fromDegrees(tySubscriber.get())
                 );
 
         // Update orientation for MegaTag 2
