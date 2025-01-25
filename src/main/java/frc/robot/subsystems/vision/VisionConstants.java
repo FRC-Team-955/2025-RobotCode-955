@@ -62,7 +62,9 @@ public class VisionConstants {
                 )
         )
         };
-        case SIMBOT -> new GamepieceIO[]{new GamepieceIO()};
+        case SIMBOT -> Constants.isReplay
+                ? new GamepieceIO[]{new GamepieceIO()}
+                : new GamepieceIO[]{new GamepieceIOSim()};
     };
 
     public static final VisionIO[] visionIO = switch (Constants.identity) {
