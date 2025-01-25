@@ -20,7 +20,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotState;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import frc.robot.util.SubsystemBaseExt;
@@ -204,7 +203,7 @@ public class Vision extends SubsystemBaseExt {
         }
 
         for (int cameraIndex = 0; cameraIndex < gpIo.length; cameraIndex++) {
-            Logger.recordOutput("Vision/Gampiece"+cameraIndex+"/RobotRelativePose", gamepiecePose(cameraIndex));
+            Logger.recordOutput("Vision/Gampiece" + cameraIndex + "/RobotRelativePose", gamepiecePose(cameraIndex));
         }
 
         // Log summary data

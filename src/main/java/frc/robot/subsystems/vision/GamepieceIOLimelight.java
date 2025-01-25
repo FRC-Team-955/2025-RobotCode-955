@@ -47,11 +47,11 @@ public class GamepieceIOLimelight extends GamepieceIO {
                         Rotation2d.fromDegrees(tx),
                         Rotation2d.fromDegrees(ty),
                         // TODO: check if math works
-                        new Translation2d(dist, new Rotation2d(robotToCam.getRotation().getZ()-Units.degreesToRadians(tx))),
+                        new Translation2d(dist, new Rotation2d(robotToCam.getRotation().getZ() - Units.degreesToRadians(tx))),
                         tvSubscriber.get() == 1
                 );
 
-        inputs.translation = new Pose2d(new Translation2d(dist, new Rotation2d(robotToCam.getRotation().getZ()-Units.degreesToRadians(tx))), new Rotation2d());
+        inputs.translation = new Pose2d(new Translation2d(dist, new Rotation2d(robotToCam.getRotation().getZ() - Units.degreesToRadians(tx))), new Rotation2d());
 
         NetworkTableInstance.getDefault()
                 .flush(); // Increases network traffic but recommended by Limelight
