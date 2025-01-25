@@ -311,7 +311,7 @@ public class Drive extends SubsystemBaseExt {
                 linearVelocity.getX() * driveConfig.maxLinearSpeedMetersPerSec(),
                 linearVelocity.getY() * driveConfig.maxLinearSpeedMetersPerSec(),
                 omega * joystickMaxAngularSpeedRadPerSec,
-                Util.flip(robotState.getRotation()) // Driver is alliance relative, flip
+                Util.flipIfNeeded(robotState.getRotation()) // Driver is alliance relative, flip
         );
     }
 
@@ -353,7 +353,7 @@ public class Drive extends SubsystemBaseExt {
                 0.25 * driverX,
                 0.25 * driverY,
                 0.25 * driverOmega,
-                Util.flip(currentPose.getRotation()) // Driver is alliance relative, flip
+                Util.flipIfNeeded(currentPose.getRotation()) // Driver is alliance relative, flip
         ));
     }
 
@@ -431,7 +431,8 @@ public class Drive extends SubsystemBaseExt {
                 Logger.recordOutput("Drive/Assist/RobotToAssistDirection", robotToAssistDirection);
 
                 // Flip joystick direction to match robot to assist direction
-                var joystickLinearDirectionFlipped = Util.flip(joystickLinearDirection);
+                // Joystick direction is relative to alliance wall and needs to be flipped on red alliance to match origin
+                var joystickLinearDirectionFlipped = Util.flipIfNeeded(joystickLinearDirection);
                 Logger.recordOutput("Drive/Assist/FlippedJoystickLinearDirection", joystickLinearDirectionFlipped);
 
                 // Get difference between joystick direction and assist direction

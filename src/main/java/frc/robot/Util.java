@@ -18,7 +18,7 @@ public class Util {
         return DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
     }
 
-    public static Rotation2d flip(Rotation2d rotation2d) {
+    public static Rotation2d flipIfNeeded(Rotation2d rotation2d) {
         return shouldFlip()
                 ? rotation2d.plus(new Rotation2d(Math.PI))
                 : rotation2d;
