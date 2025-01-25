@@ -36,9 +36,7 @@ public class DriveConstants {
                 12.112,
                 40.186,
                 PIDF.ofPD(1.5, 0),
-                PIDF.ofPD(1.5, 0),
-                PIDF.ofPD(5, 0),
-                PIDF.ofPD(5, 0)
+                PIDF.ofPD(1.5, 0)
         );
         case ALPHABOT -> new DriveConfig(
                 Units.inchesToMeters(2),
@@ -52,19 +50,9 @@ public class DriveConstants {
                 12.442,
                 35.864,
                 PIDF.ofPD(1.5, 0),
-                PIDF.ofPD(1.5, 0),
-                PIDF.ofPD(5, 0),
-                PIDF.ofPD(5, 0)
+                PIDF.ofPD(1.5, 0)
         );
     };
-
-    public static final double drivebaseRadius = Math.hypot(driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0);
-    public static final double joystickMaxAngularSpeedRadPerSec = Units.degreesToRadians(315);
-    public static final double joystickDriveDeadband = 0.1;
-    public static final double assistMinimumMagnitude = joystickDriveDeadband + 0.05;
-    public static final double assistDirectionToleranceRad = Units.degreesToRadians(45);
-    public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
-
 
     /**
      * FL, FR, BL, BR
@@ -160,6 +148,17 @@ public class DriveConstants {
         case SIMBOT -> new GyroIO();
     };
 
+    public static final double drivebaseRadius = Math.hypot(driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0);
+
+    public static final double joystickMaxAngularSpeedRadPerSec = Math.min(Units.degreesToRadians(315), driveConfig.maxAngularSpeedRadPerSec());
+    public static final double joystickDriveDeadband = 0.1;
+
+    public static final double assistDirectionToleranceRad = Units.degreesToRadians(50);
+    public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
+
+    public static final PIDF moveToXY = PIDF.ofPD(4, 0);
+    public static final PIDF moveToTheta = PIDF.ofPD(1.5, 0);
+
     public record DriveConfig(
             double wheelRadiusMeters,
             double trackWidthMeters, // Measured from the center of the swerve wheels
@@ -171,9 +170,7 @@ public class DriveConstants {
             double maxAngularSpeedRadPerSec,
             double maxAngularAccelRadPerSecSquared,
             PIDF choreoFeedbackXY,
-            PIDF choreoFeedbackTheta,
-            PIDF moveToXY,
-            PIDF moveToTheta
+            PIDF choreoFeedbackTheta
     ) {
     }
 
@@ -189,7 +186,6 @@ public class DriveConstants {
             int turnCurrentLimit
     ) {
     }
-
 
     private static class Mk4iGearRatios {
         public static final double L2 = (50.0 / 14.0) * (17.0 / 27.0) * (45.0 / 15.0);

@@ -113,12 +113,14 @@ public class CommandNintendoSwitchProController extends CommandXboxController {
 
     @Override
     public double getLeftX() {
-        return MathUtil.clamp(circleToSquareX(getLeftXRaw(), getLeftYRaw()), -1.0, 1.0);
+//        return MathUtil.clamp(circleToSquareX(getLeftXRaw(), getLeftYRaw()), -1.0, 1.0);
+        return MathUtil.clamp(getLeftXRaw(), -1.0, 1.0);
     }
 
     @Override
     public double getLeftY() {
-        return MathUtil.clamp(circleToSquareY(getLeftXRaw(), getLeftYRaw()), -1.0, 1.0);
+//        return MathUtil.clamp(circleToSquareY(getLeftXRaw(), getLeftYRaw()), -1.0, 1.0);
+        return MathUtil.clamp(getLeftYRaw(), -1.0, 1.0);
     }
 
     private double getRightXRaw() {
@@ -131,12 +133,14 @@ public class CommandNintendoSwitchProController extends CommandXboxController {
 
     @Override
     public double getRightX() {
-        return MathUtil.clamp(circleToSquareX(getRightXRaw(), getRightYRaw()), -1.0, 1.0);
+//        return MathUtil.clamp(circleToSquareX(getRightXRaw(), getRightYRaw()), -1.0, 1.0);
+        return MathUtil.clamp(getRightXRaw(), -1.0, 1.0);
     }
 
     @Override
     public double getRightY() {
-        return MathUtil.clamp(circleToSquareY(getRightXRaw(), getRightYRaw()), -1.0, 1.0);
+//        return MathUtil.clamp(circleToSquareY(getRightXRaw(), getRightYRaw()), -1.0, 1.0);
+        return MathUtil.clamp(getRightYRaw(), -1.0, 1.0);
     }
 
     @Override

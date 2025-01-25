@@ -61,6 +61,12 @@ public record PIDF(double p, double i, double d, double s, double v, double a, d
         return new PIDController(p, i, d);
     }
 
+    public PIDController toPIDWrapRadians() {
+        var pid = new PIDController(p, i, d);
+        pid.enableContinuousInput(-Math.PI, Math.PI);
+        return pid;
+    }
+
     public ProfiledPIDController toProfiledPID(TrapezoidProfile.Constraints constraints) {
         return new ProfiledPIDController(p, i, d, constraints);
     }

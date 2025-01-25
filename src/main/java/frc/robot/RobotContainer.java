@@ -61,11 +61,11 @@ public class RobotContainer {
     private void setDefaultCommands() {
         //noinspection SuspiciousNameCombination
         drive.setDefaultCommand(
-                drive.driveJoystickAssisted(
+                drive.driveJoystick(
                         driverController::getLeftY,
                         driverController::getLeftX,
                         () -> -driverController.getRightX(),
-                        () -> Optional.of(new Pose2d(3, 5, new Rotation2d()))
+                        () -> Optional.of(new Pose2d(5, 3, new Rotation2d(Math.PI)))
                 )
         );
     }
