@@ -320,7 +320,7 @@ public class Drive extends SubsystemBaseExt {
 
         var driverX = linearVelocity.getX() * driveConfig.maxLinearSpeedMetersPerSec();
         var driverY = linearVelocity.getY() * driveConfig.maxLinearSpeedMetersPerSec();
-        var driverOmega = omegaMagnitude * driveConfig.maxAngularSpeedRadPerSec();
+        var driverOmega = omegaMagnitude * joystickMaxAngularSpeedRadPerSec;
 
         // TODO: slow down XY based on how much rotation we need to do
 
