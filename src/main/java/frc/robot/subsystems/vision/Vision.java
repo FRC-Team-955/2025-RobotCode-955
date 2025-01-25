@@ -14,10 +14,8 @@
 package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.RobotState;
@@ -27,6 +25,7 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
@@ -77,23 +76,11 @@ public class Vision extends SubsystemBaseExt {
         return instance;
     }
 
-    /**
-     * Returns the X angle to the best target, which can be used for simple servoing with vision.
-     *
-     * @param cameraIndex The index of the camera to use.
-     */
-    public Rotation2d getTargetXVs(int cameraIndex) {
-        return vsInputs[cameraIndex].latestTargetObservation.tx();
-    }
-
-    public Rotation2d getTargetXGp(int cameraIndex) {
-        return gpInputs[cameraIndex].latestTargetObservation.tx();
-    }
-
-    public Pose2d gamepiecePose(int cameraIndex) {
-        return robotState.getPose().plus(
-                new Transform2d(gpInputs[cameraIndex].latestTargetObservation.targetPos(), new Rotation2d())
-        );
+    public Optional<Translation2d> closestGamepiece() {
+        // TODO: determine closest target in periodic instead of direction using inputs
+        return gpInputs[0].latestTargetObservation.isPresent()
+                ? Optional.of(robotState.getTranslation().plus(gpInputs[0].latestTargetObservation.targetPos()))
+                : Optional.empty();
     }
 
     @Override
@@ -203,7 +190,8 @@ public class Vision extends SubsystemBaseExt {
         }
 
         for (int cameraIndex = 0; cameraIndex < gpIo.length; cameraIndex++) {
-            Logger.recordOutput("Vision/Gampiece" + cameraIndex + "/RobotRelativePose", gamepiecePose(cameraIndex));
+            // TODO: fix
+            Logger.recordOutput("Vision/Gampiece" + cameraIndex + "/RobotRelativePose", closestGamepiece().orElse(new Translation2d()));
         }
 
         // Log summary data

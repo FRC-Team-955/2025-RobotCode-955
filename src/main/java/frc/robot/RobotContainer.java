@@ -13,8 +13,6 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.CommandNintendoSwitchProController;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
-import java.util.Optional;
-
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -65,7 +63,14 @@ public class RobotContainer {
                         driverController::getLeftY,
                         driverController::getLeftX,
                         () -> -driverController.getRightX(),
-                        () -> Optional.of(new Pose2d(5, 3, new Rotation2d(Math.PI)))
+                        () -> {
+                            var gamepiece = vision.closestGamepiece();
+                            return gamepiece.map(gamepieceTranslation -> {
+                                var relativeToRobot = gamepieceTranslation.minus(robotState.getTranslation());
+                                var toGamepiece = new Rotation2d(relativeToRobot.getX(), relativeToRobot.getY());
+                                return new Pose2d(gamepieceTranslation, Util.flip(toGamepiece));
+                            });
+                        }
                 )
         );
     }
