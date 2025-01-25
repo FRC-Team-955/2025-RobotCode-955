@@ -322,22 +322,28 @@ public class Drive extends SubsystemBaseExt {
         var driverY = linearVelocity.getY() * driveConfig.maxLinearSpeedMetersPerSec();
         var driverOmega = omegaMagnitude * driveConfig.maxAngularSpeedRadPerSec();
 
-        var assistX = moveToX.calculate(currentPose.getX(), assistPose.getX())
-                * driveConfig.maxLinearSpeedMetersPerSec()
-                * linearMagnitude;
-        var assistY = moveToY.calculate(currentPose.getY(), assistPose.getY())
-                * driveConfig.maxLinearSpeedMetersPerSec()
-                * linearMagnitude;
-        var assistOmega = moveToOmega.calculate(currentPose.getRotation().getRadians(), assistPose.getRotation().getRadians())
-                * driveConfig.maxAngularSpeedRadPerSec()
-                // If we are driving fast and not rotating, need fast rotation assist, so use that magnitude
-                * Math.max(omegaMagnitude, linearMagnitude);
+        // TODO: slow down XY based on how much rotation we need to do
 
+        var assistXRaw = moveToX.calculate(currentPose.getX(), assistPose.getX());
+        var assistX = MathUtil.clamp(assistXRaw, -1, 1) // Limit to 100% max linear speed
+                * driveConfig.maxLinearSpeedMetersPerSec()
+                * linearMagnitude; // Limit to the driver's overall linear speed
         Logger.recordOutput("Drive/Assist/PID/X", assistX);
+
+        var assistYRaw = moveToY.calculate(currentPose.getY(), assistPose.getY());
+        var assistY = MathUtil.clamp(assistYRaw, -1, 1) // Limit to 100% max linear speed
+                * driveConfig.maxLinearSpeedMetersPerSec()
+                * linearMagnitude; // Limit to the driver's overall linear speed
         Logger.recordOutput("Drive/Assist/PID/Y", assistY);
+
+        var assistOmegaRaw = moveToOmega.calculate(currentPose.getRotation().getRadians(), assistPose.getRotation().getRadians());
+        var assistOmega = MathUtil.clamp(assistOmegaRaw, -1, 1) // Limit to 100% max angular speed
+                * driveConfig.maxAngularSpeedRadPerSec()
+                // If we are driving fast and not rotating, need fast rotation assist, so limit to driver's overall linear speed
+                // Otherwise, limit to driver omega speed
+                * Math.max(omegaMagnitude, linearMagnitude);
         Logger.recordOutput("Drive/Assist/PID/Omega", assistOmega);
 
-        // TODO: slow down XY based on how much rotation we need to do
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
                 0.75 * assistX,
                 0.75 * assistY,
@@ -355,9 +361,15 @@ public class Drive extends SubsystemBaseExt {
         var currentPose = robotState.getPose();
 
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
-                moveToX.calculate(currentPose.getX(), pose.getX()) * driveConfig.maxLinearSpeedMetersPerSec(),
-                moveToY.calculate(currentPose.getY(), pose.getY()) * driveConfig.maxLinearSpeedMetersPerSec(),
-                moveToOmega.calculate(currentPose.getRotation().getRadians(), pose.getRotation().getRadians()) * driveConfig.maxAngularSpeedRadPerSec(),
+                // Limit to 100% max linear speed
+                MathUtil.clamp(moveToX.calculate(currentPose.getX(), pose.getX()), -1, 1)
+                        * driveConfig.maxLinearSpeedMetersPerSec(),
+                // Limit to 100% max linear speed
+                MathUtil.clamp(moveToY.calculate(currentPose.getY(), pose.getY()), -1, 1)
+                        * driveConfig.maxLinearSpeedMetersPerSec(),
+                // Limit to 100% max angular speed
+                MathUtil.clamp(moveToOmega.calculate(currentPose.getRotation().getRadians(), pose.getRotation().getRadians()), -1, 1)
+                        * driveConfig.maxAngularSpeedRadPerSec(),
                 currentPose.getRotation() // Move to is absolute, don't flip
         );
     }
@@ -388,6 +400,10 @@ public class Drive extends SubsystemBaseExt {
             var y = ySupplier.getAsDouble();
             var omega = omegaSupplier.getAsDouble();
 
+            Logger.recordOutput("Drive/JoystickDrive/Suppliers/X", x);
+            Logger.recordOutput("Drive/JoystickDrive/Suppliers/Y", y);
+            Logger.recordOutput("Drive/JoystickDrive/Suppliers/Omega", omega);
+
             // Calculate linear velocity and omega from joystick inputs
             var linearMagnitude = calculateLinearMagnitude(x, y);
             var joystickLinearDirection = new Rotation2d(x, y);
@@ -405,7 +421,6 @@ public class Drive extends SubsystemBaseExt {
                 Logger.recordOutput("Drive/Assist/Present", true);
 
                 var currentPose = robotState.getPose();
-                // Log the assist pose
                 var assistPose = optionalAssistPose.get();
                 Logger.recordOutput("Drive/Assist/Pose", assistPose);
 
@@ -429,8 +444,10 @@ public class Drive extends SubsystemBaseExt {
 
                 // If we are:
                 if (
-                    // - going towards the assist pose based on threshold
-                        Math.abs(directionDiff.getRadians()) < assistDirectionToleranceRad &&
+                    // - above linear joystick deadband (so we are moving linearly in some way - if we are only rotating, don't assist)
+                        (Math.abs(x) > joystickDriveDeadband || Math.abs(y) > joystickDriveDeadband) &&
+                                // - going towards the assist pose based on threshold
+                                Math.abs(directionDiff.getRadians()) < assistDirectionToleranceRad &&
                                 // - close enough to assist pose
                                 distanceToAssist < assistMaximumDistanceMeters
                 ) {
