@@ -190,7 +190,7 @@ public class Vision extends SubsystemBaseExt {
         }
 
         for (int cameraIndex = 0; cameraIndex < gpIo.length; cameraIndex++) {
-            // TODO: fix
+            // TODO: publish all gamepieces, publish as Pose3d
             Logger.recordOutput("Vision/Gampiece" + cameraIndex + "/RobotRelativePose", closestGamepiece().orElse(new Translation2d()));
         }
 
