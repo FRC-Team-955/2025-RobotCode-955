@@ -127,10 +127,10 @@ public class DriveConstants {
         };
         case ALPHABOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
-                new ModuleIOAlphabot(2, 3, 1, 2.551),
-                new ModuleIOAlphabot(12, 13, 11, -0.719),
-                new ModuleIOAlphabot(4, 5, 6, 2.597),
-                new ModuleIOAlphabot(9, 10, 8, -1.316),
+                new ModuleIOAlphabot(4, 5, 6, -2.115),
+                new ModuleIOAlphabot(2, 3, 1, -2.161),
+                new ModuleIOAlphabot(9, 10, 8, 0.255),
+                new ModuleIOAlphabot(12, 13, 11, 0.852),
         };
         case SIMBOT -> new ModuleIO[]{
                 new ModuleIOSim(),
