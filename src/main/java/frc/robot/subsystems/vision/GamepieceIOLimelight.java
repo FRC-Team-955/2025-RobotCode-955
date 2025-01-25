@@ -1,8 +1,10 @@
 package frc.robot.subsystems.vision;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -37,7 +39,7 @@ public class GamepieceIOLimelight extends GamepieceIO {
 
         double tx = txSubscriber.get();
         double ty = tySubscriber.get();
-        double dist = robotToCam.getZ() / Math.tan(ty + robotToCam.getRotation().getY());
+        double dist = robotToCam.getZ() / Math.tan(Units.degreesToRadians(-ty) - robotToCam.getRotation().getY());
 
         // Update target observation
         inputs.latestTargetObservation =
@@ -45,9 +47,11 @@ public class GamepieceIOLimelight extends GamepieceIO {
                         Rotation2d.fromDegrees(tx),
                         Rotation2d.fromDegrees(ty),
                         // TODO: check if math works
-                        new Translation2d(dist, new Rotation2d(robotToCam.getRotation().getZ() - tx)),
+                        new Translation2d(dist, new Rotation2d(robotToCam.getRotation().getZ()-Units.degreesToRadians(tx))),
                         tvSubscriber.get() == 1
                 );
+
+        inputs.translation = new Pose2d(new Translation2d(dist, new Rotation2d(robotToCam.getRotation().getZ()-Units.degreesToRadians(tx))), new Rotation2d());
 
         NetworkTableInstance.getDefault()
                 .flush(); // Increases network traffic but recommended by Limelight

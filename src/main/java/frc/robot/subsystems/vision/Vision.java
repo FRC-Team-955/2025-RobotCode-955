@@ -14,13 +14,16 @@
 package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotState;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
+import frc.robot.util.SubsystemBaseExt;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.LinkedList;
@@ -28,25 +31,41 @@ import java.util.List;
 
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
-public class Vision extends SubsystemBase {
-    private final VisionIO[] io = visionIO;
-    private final VisionIOInputsAutoLogged[] inputs;
-    private final Alert[] disconnectedAlerts;
+public class Vision extends SubsystemBaseExt {
+    private final RobotState robotState = RobotState.get();
+
+    private final VisionIO[] vsIo = visionIO;
+    private final GamepieceIO[] gpIo = gamepieceIO;
+    private final VisionIOInputsAutoLogged[] vsInputs;
+    private final GamepieceIOInputsAutoLogged[] gpInputs;
+    private final Alert[] vsDisconnectedAlerts;
+    private final Alert[] gpDisconnectedAlerts;
 
     private static Vision instance;
 
     private Vision() { // Initialize inputs
-        this.inputs = new VisionIOInputsAutoLogged[io.length];
-        for (int i = 0; i < inputs.length; i++) {
-            inputs[i] = new VisionIOInputsAutoLogged();
+        this.vsInputs = new VisionIOInputsAutoLogged[vsIo.length];
+        this.gpInputs = new GamepieceIOInputsAutoLogged[gpIo.length];
+        for (int i = 0; i < vsInputs.length; i++) {
+            vsInputs[i] = new VisionIOInputsAutoLogged();
+        }
+        for (int i = 0; i < gpInputs.length; i++) {
+            gpInputs[i] = new GamepieceIOInputsAutoLogged();
         }
 
         // Initialize disconnected alerts
-        this.disconnectedAlerts = new Alert[io.length];
-        for (int i = 0; i < inputs.length; i++) {
-            disconnectedAlerts[i] =
+        this.vsDisconnectedAlerts = new Alert[vsIo.length];
+        for (int i = 0; i < vsInputs.length; i++) {
+            vsDisconnectedAlerts[i] =
                     new Alert(
                             "Vision camera " + i + " is disconnected.", AlertType.kWarning);
+        }
+
+        this.gpDisconnectedAlerts = new Alert[gpIo.length];
+        for (int i = 0; i < gpInputs.length; i++) {
+            gpDisconnectedAlerts[i] =
+                    new Alert(
+                            "Gampiece camera " + i + " is disconnected.", AlertType.kWarning);
         }
     }
 
@@ -64,15 +83,30 @@ public class Vision extends SubsystemBase {
      *
      * @param cameraIndex The index of the camera to use.
      */
-    public Rotation2d getTargetX(int cameraIndex) {
-        return inputs[cameraIndex].latestTargetObservation.tx();
+    public Rotation2d getTargetXVs(int cameraIndex) {
+        return vsInputs[cameraIndex].latestTargetObservation.tx();
+    }
+
+    public Rotation2d getTargetXGp(int cameraIndex) {
+        return gpInputs[cameraIndex].latestTargetObservation.tx();
+    }
+
+    public Pose2d gamepiecePose(int cameraIndex) {
+        return robotState.getPose().plus(
+                new Transform2d(gpInputs[cameraIndex].latestTargetObservation.targetPos(), new Rotation2d())
+        );
     }
 
     @Override
-    public void periodic() {
-        for (int i = 0; i < io.length; i++) {
-            io[i].updateInputs(inputs[i]);
-            Logger.processInputs("Vision/Camera" + i, inputs[i]);
+    public void periodicBeforeCommands() {
+        for (int i = 0; i < vsIo.length; i++) {
+            vsIo[i].updateInputs(vsInputs[i]);
+            Logger.processInputs("Inputs/Vision/Camera" + i, vsInputs[i]);
+        }
+
+        for (int i = 0; i < gpIo.length; i++) {
+            gpIo[i].updateInputs(gpInputs[i]);
+            Logger.processInputs("Inputs/Vision/Gamepiece" + i, gpInputs[i]);
         }
 
         // Initialize logging values
@@ -82,9 +116,9 @@ public class Vision extends SubsystemBase {
         List<Pose3d> allRobotPosesRejected = new LinkedList<>();
 
         // Loop over cameras
-        for (int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
+        for (int cameraIndex = 0; cameraIndex < vsIo.length; cameraIndex++) {
             // Update disconnected alert
-            disconnectedAlerts[cameraIndex].set(!inputs[cameraIndex].connected);
+            vsDisconnectedAlerts[cameraIndex].set(!vsInputs[cameraIndex].connected);
 
             // Initialize logging values
             List<Pose3d> tagPoses = new LinkedList<>();
@@ -93,7 +127,7 @@ public class Vision extends SubsystemBase {
             List<Pose3d> robotPosesRejected = new LinkedList<>();
 
             // Add tag poses
-            for (int tagId : inputs[cameraIndex].tagIds) {
+            for (int tagId : vsInputs[cameraIndex].tagIds) {
                 var tagPose = aprilTagLayout.getTagPose(tagId);
                 if (tagPose.isPresent()) {
                     tagPoses.add(tagPose.get());
@@ -101,7 +135,7 @@ public class Vision extends SubsystemBase {
             }
 
             // Loop over pose observations
-            for (var observation : inputs[cameraIndex].poseObservations) {
+            for (var observation : vsInputs[cameraIndex].poseObservations) {
                 // Check whether to reject pose
                 boolean rejectPose =
                         observation.tagCount() == 0 // Must have at least one tag
@@ -167,6 +201,10 @@ public class Vision extends SubsystemBase {
             allRobotPoses.addAll(robotPoses);
             allRobotPosesAccepted.addAll(robotPosesAccepted);
             allRobotPosesRejected.addAll(robotPosesRejected);
+        }
+
+        for (int cameraIndex = 0; cameraIndex < gpIo.length; cameraIndex++) {
+            Logger.recordOutput("Vision/Gampiece"+cameraIndex+"/RobotRelativePose", gamepiecePose(cameraIndex));
         }
 
         // Log summary data
