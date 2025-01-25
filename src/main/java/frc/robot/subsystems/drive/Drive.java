@@ -289,7 +289,7 @@ public class Drive extends SubsystemBaseExt {
                 sample.vx + choreoFeedbackX.calculate(currentPose.getX(), sample.x),
                 sample.vy + choreoFeedbackY.calculate(currentPose.getY(), sample.y),
                 sample.omega + choreoFeedbackTheta.calculate(currentPose.getRotation().getRadians(), sample.heading),
-                currentPose.getRotation()
+                currentPose.getRotation() // Trajectories are absolute, don't flip
         );
     }
 
@@ -311,7 +311,7 @@ public class Drive extends SubsystemBaseExt {
                 linearVelocity.getX() * driveConfig.maxLinearSpeedMetersPerSec(),
                 linearVelocity.getY() * driveConfig.maxLinearSpeedMetersPerSec(),
                 omega * joystickMaxAngularSpeedRadPerSec,
-                robotState.getRotationFlipped()
+                Util.flip(robotState.getRotation()) // Driver is alliance relative, flip
         );
     }
 
@@ -335,11 +335,16 @@ public class Drive extends SubsystemBaseExt {
 
         // TODO: slow down XY based on how much rotation we need to do
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
-                0.25 * driverX + 0.75 * assistX,
-                0.25 * driverY + 0.75 * assistY,
-                0.25 * driverOmega + 0.75 * assistTheta,
-                robotState.getRotationFlipped()
-        );
+                0.75 * assistX,
+                0.75 * assistY,
+                0.75 * assistOmega,
+                currentPose.getRotation() // Move to is absolute, don't flip
+        ).plus(ChassisSpeeds.fromFieldRelativeSpeeds(
+                0.25 * driverX,
+                0.25 * driverY,
+                0.25 * driverOmega,
+                Util.flip(currentPose.getRotation()) // Driver is alliance relative, flip
+        ));
     }
 
     private void runMoveTo(Pose2d pose) {
@@ -349,7 +354,7 @@ public class Drive extends SubsystemBaseExt {
                 moveToX.calculate(currentPose.getX(), pose.getX()) * driveConfig.maxLinearSpeedMetersPerSec(),
                 moveToY.calculate(currentPose.getY(), pose.getY()) * driveConfig.maxLinearSpeedMetersPerSec(),
                 moveToTheta.calculate(currentPose.getRotation().getRadians(), pose.getRotation().getRadians()) * driveConfig.maxAngularSpeedRadPerSec(),
-                robotState.getRotationFlipped()
+                currentPose.getRotation() // Move to is absolute, don't flip
         );
     }
 

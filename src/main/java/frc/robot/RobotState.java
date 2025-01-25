@@ -75,10 +75,6 @@ public class RobotState {
         return getPose().getRotation();
     }
 
-    public Rotation2d getRotationFlipped() {
-        return Util.flip(getRotation());
-    }
-
     public void setPose(Pose2d pose) {
         poseEstimator.resetPosition(Drive.get().getRawGyroRotation(), Drive.get().getModulePositions(), pose);
     }

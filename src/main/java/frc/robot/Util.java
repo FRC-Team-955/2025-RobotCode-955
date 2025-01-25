@@ -21,8 +21,8 @@ public class Util {
 
     public static Rotation2d flip(Rotation2d rotation2d) {
         return shouldFlip()
-                ? rotation2d
-                : rotation2d.plus(new Rotation2d(Math.PI));
+                ? rotation2d.plus(new Rotation2d(Math.PI))
+                : rotation2d;
     }
 
     public static double angle(Translation2d from, Translation2d to) {

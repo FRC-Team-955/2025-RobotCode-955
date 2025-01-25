@@ -57,11 +57,14 @@ public class RobotContainer {
     }
 
     private void setDefaultCommands() {
-        //noinspection SuspiciousNameCombination
         drive.setDefaultCommand(
                 drive.driveJoystick(
-                        driverController::getLeftY,
-                        driverController::getLeftX,
+                        // https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
+                        // forward on joystick is negative y - we want positive x for forward
+                        () -> -driverController.getLeftY(),
+                        // right on joystick is positive x - we want negative y for right
+                        () -> -driverController.getLeftX(),
+                        // right on joystick is positive x - we want negative x for right (CCW is positive)
                         () -> -driverController.getRightX(),
                         () -> {
                             var gamepiece = vision.closestGamepiece();
