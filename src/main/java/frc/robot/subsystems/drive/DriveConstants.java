@@ -157,7 +157,7 @@ public class DriveConstants {
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
     public static final PIDF moveToXY = PIDF.ofPD(4, 0);
-    public static final PIDF moveToTheta = PIDF.ofPD(1.5, 0);
+    public static final PIDF moveToOmega = PIDF.ofPD(1.5, 0);
 
     public record DriveConfig(
             double wheelRadiusMeters,
@@ -170,7 +170,7 @@ public class DriveConstants {
             double maxAngularSpeedRadPerSec,
             double maxAngularAccelRadPerSecSquared,
             PIDF choreoFeedbackXY,
-            PIDF choreoFeedbackTheta
+            PIDF choreoFeedbackOmega
     ) {
     }
 

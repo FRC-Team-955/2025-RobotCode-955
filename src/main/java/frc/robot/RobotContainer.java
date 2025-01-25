@@ -2,6 +2,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -70,8 +71,14 @@ public class RobotContainer {
                             var gamepiece = vision.closestGamepiece();
                             return gamepiece.map(gamepieceTranslation -> {
                                 var relativeToRobot = gamepieceTranslation.minus(robotState.getTranslation());
-                                var toGamepiece = new Rotation2d(relativeToRobot.getX(), relativeToRobot.getY());
-                                return new Pose2d(gamepieceTranslation, Util.flip(toGamepiece));
+                                if (relativeToRobot.getNorm() < Units.feetToMeters(1)) {
+                                    // Don't try to face towards it if we are too close
+                                    return new Pose2d(gamepieceTranslation, robotState.getRotation());
+                                } else {
+                                    // Try to face towards the game piece
+                                    var toGamepiece = new Rotation2d(relativeToRobot.getX(), relativeToRobot.getY());
+                                    return new Pose2d(gamepieceTranslation, toGamepiece);
+                                }
                             });
                         }
                 )
@@ -86,7 +93,6 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
-
 
 //        // Lock to 0° when A button is held
 //        controller

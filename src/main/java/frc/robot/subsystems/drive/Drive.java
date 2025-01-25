@@ -76,11 +76,11 @@ public class Drive extends SubsystemBaseExt {
 
     private final PIDController choreoFeedbackX = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
-    private final PIDController choreoFeedbackTheta = driveConfig.choreoFeedbackTheta().toPIDWrapRadians();
+    private final PIDController choreoFeedbackOmega = driveConfig.choreoFeedbackOmega().toPIDWrapRadians();
 
     private final PIDController moveToX = moveToXY.toPID();
     private final PIDController moveToY = moveToXY.toPID();
-    private final PIDController moveToTheta = DriveConstants.moveToTheta.toPIDWrapRadians();
+    private final PIDController moveToOmega = DriveConstants.moveToOmega.toPIDWrapRadians();
 
     private Command withGoal(Goal newGoal, Command command) {
         return new WrapperCommand(command) {
@@ -288,7 +288,7 @@ public class Drive extends SubsystemBaseExt {
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
                 sample.vx + choreoFeedbackX.calculate(currentPose.getX(), sample.x),
                 sample.vy + choreoFeedbackY.calculate(currentPose.getY(), sample.y),
-                sample.omega + choreoFeedbackTheta.calculate(currentPose.getRotation().getRadians(), sample.heading),
+                sample.omega + choreoFeedbackOmega.calculate(currentPose.getRotation().getRadians(), sample.heading),
                 currentPose.getRotation() // Trajectories are absolute, don't flip
         );
     }
@@ -328,10 +328,14 @@ public class Drive extends SubsystemBaseExt {
         var assistY = moveToY.calculate(currentPose.getY(), assistPose.getY())
                 * driveConfig.maxLinearSpeedMetersPerSec()
                 * linearMagnitude;
-        var assistTheta = moveToTheta.calculate(currentPose.getRotation().getRadians(), assistPose.getRotation().getRadians())
+        var assistOmega = moveToOmega.calculate(currentPose.getRotation().getRadians(), assistPose.getRotation().getRadians())
                 * driveConfig.maxAngularSpeedRadPerSec()
-                // Minimum for assist rotation
-                * Math.max(omegaMagnitude, 0.5);
+                // If we are driving fast and not rotating, need fast rotation assist, so use that magnitude
+                * Math.max(omegaMagnitude, linearMagnitude);
+
+        Logger.recordOutput("Drive/Assist/PID/X", assistX);
+        Logger.recordOutput("Drive/Assist/PID/Y", assistY);
+        Logger.recordOutput("Drive/Assist/PID/Omega", assistOmega);
 
         // TODO: slow down XY based on how much rotation we need to do
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -353,7 +357,7 @@ public class Drive extends SubsystemBaseExt {
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
                 moveToX.calculate(currentPose.getX(), pose.getX()) * driveConfig.maxLinearSpeedMetersPerSec(),
                 moveToY.calculate(currentPose.getY(), pose.getY()) * driveConfig.maxLinearSpeedMetersPerSec(),
-                moveToTheta.calculate(currentPose.getRotation().getRadians(), pose.getRotation().getRadians()) * driveConfig.maxAngularSpeedRadPerSec(),
+                moveToOmega.calculate(currentPose.getRotation().getRadians(), pose.getRotation().getRadians()) * driveConfig.maxAngularSpeedRadPerSec(),
                 currentPose.getRotation() // Move to is absolute, don't flip
         );
     }
@@ -389,7 +393,11 @@ public class Drive extends SubsystemBaseExt {
             var joystickLinearDirection = new Rotation2d(x, y);
             var linearVelocity = calculateLinearVelocity(linearMagnitude, joystickLinearDirection);
             var omegaMagnitude = calculateOmegaMagnitude(omega);
-            Logger.recordOutput("Drive/Assist/JoystickLinearDirection", joystickLinearDirection);
+
+            Logger.recordOutput("Drive/JoystickDrive/LinearMagnitude", linearMagnitude);
+            Logger.recordOutput("Drive/JoystickDrive/LinearDirection", joystickLinearDirection);
+            Logger.recordOutput("Drive/JoystickDrive/LinearVelocity", linearVelocity);
+            Logger.recordOutput("Drive/JoystickDrive/OmegaMagnitude", omegaMagnitude);
 
             var optionalAssistPose = assistPoseSupplier.get();
             if (optionalAssistPose.isPresent()) {
@@ -401,15 +409,15 @@ public class Drive extends SubsystemBaseExt {
                 var assistPose = optionalAssistPose.get();
                 Logger.recordOutput("Drive/Assist/Pose", assistPose);
 
-                // Get the pose between robot and assist
-                var robotToAssist = currentPose.relativeTo(assistPose);
+                // Get the translation between robot and assist
+                var robotToAssist = assistPose.getTranslation().minus(currentPose.getTranslation());
                 // Calculate direction from robot to assist
                 var robotToAssistDirection = new Rotation2d(robotToAssist.getX(), robotToAssist.getY());
                 Logger.recordOutput("Drive/Assist/RobotToAssistDirection", robotToAssistDirection);
 
                 // Flip joystick direction to match robot to assist direction
                 var joystickLinearDirectionFlipped = Util.flip(joystickLinearDirection);
-                Logger.recordOutput("Drive/Assist/JoystickLinearDirectionFlipped", joystickLinearDirectionFlipped);
+                Logger.recordOutput("Drive/Assist/FlippedJoystickLinearDirection", joystickLinearDirectionFlipped);
 
                 // Get difference between joystick direction and assist direction
                 var directionDiff = robotToAssistDirection.minus(joystickLinearDirectionFlipped);
