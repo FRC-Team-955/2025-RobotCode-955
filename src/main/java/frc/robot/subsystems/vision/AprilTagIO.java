@@ -17,7 +17,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
-public class VisionIO {
+public class AprilTagIO {
     @AutoLog
     public static class VisionIOInputs {
         public boolean connected = false;

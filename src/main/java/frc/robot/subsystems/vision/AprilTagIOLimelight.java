@@ -29,7 +29,7 @@ import java.util.function.Supplier;
 /**
  * IO implementation for real Limelight hardware.
  */
-public class VisionIOLimelight extends VisionIO {
+public class AprilTagIOLimelight extends AprilTagIO {
     private final Supplier<Rotation2d> rotationSupplier;
     private final DoubleArrayPublisher orientationPublisher;
     private final IntegerPublisher piplinePublisher;
@@ -47,7 +47,7 @@ public class VisionIOLimelight extends VisionIO {
      * @param name             The configured name of the Limelight.
      * @param rotationSupplier Supplier for the current estimated rotation, used for MegaTag 2.
      */
-    public VisionIOLimelight(String name, Supplier<Rotation2d> rotationSupplier) {
+    public AprilTagIOLimelight(String name, Supplier<Rotation2d> rotationSupplier) {
         var table = NetworkTableInstance.getDefault().getTable(name);
         this.rotationSupplier = rotationSupplier;
 

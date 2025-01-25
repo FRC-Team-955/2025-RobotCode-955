@@ -28,7 +28,7 @@ import static frc.robot.subsystems.vision.VisionConstants.aprilTagLayout;
 /**
  * IO implementation for real PhotonVision hardware.
  */
-public class VisionIOPhotonVision extends VisionIO {
+public class AprilTagIOPhotonVision extends AprilTagIO {
     protected final PhotonCamera camera;
     protected final Transform3d robotToCamera;
 
@@ -38,7 +38,7 @@ public class VisionIOPhotonVision extends VisionIO {
      * @param name          The configured name of the camera.
      * @param robotToCamera The 3D position of the camera relative to the robot.
      */
-    public VisionIOPhotonVision(String name, Transform3d robotToCamera) {
+    public AprilTagIOPhotonVision(String name, Transform3d robotToCamera) {
         camera = new PhotonCamera(name);
         this.robotToCamera = robotToCamera;
     }

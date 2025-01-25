@@ -67,15 +67,15 @@ public class VisionConstants {
                 : new GamepieceIO[]{new GamepieceIOSim()};
     };
 
-    public static final VisionIO[] visionIO = switch (Constants.identity) {
+    public static final AprilTagIO[] aprilTagIO = switch (Constants.identity) {
         case COMPBOT -> Constants.isReplay
-                ? new VisionIO[]{new VisionIO(), new VisionIO()}
-                : new VisionIO[]{
-                new VisionIOPhotonVision(
+                ? new AprilTagIO[]{new AprilTagIO(), new AprilTagIO()}
+                : new AprilTagIO[]{
+                new AprilTagIOPhotonVision(
                         "camera_0",
                         new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0))
                 ),
-                new VisionIOPhotonVision(
+                new AprilTagIOPhotonVision(
                         "camera_1",
                         new Transform3d(-0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, Math.PI))
                 )
@@ -88,16 +88,16 @@ public class VisionConstants {
 //                        new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0))
 //                )
 //        };
-        case ALPHABOT -> new VisionIO[]{};
+        case ALPHABOT -> new AprilTagIO[]{};
         case SIMBOT -> Constants.isReplay
-                ? new VisionIO[]{new VisionIO(), new VisionIO()}
-                : new VisionIO[]{
-                new VisionIOPhotonVisionSim(
+                ? new AprilTagIO[]{new AprilTagIO(), new AprilTagIO()}
+                : new AprilTagIO[]{
+                new AprilTagIOPhotonVisionSim(
                         "camera_0",
                         new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0)
                         ),
                         RobotState.get()::getPose),
-                new VisionIOPhotonVisionSim(
+                new AprilTagIOPhotonVisionSim(
                         "camera_1",
                         new Transform3d(-0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, Math.PI)
                         ),

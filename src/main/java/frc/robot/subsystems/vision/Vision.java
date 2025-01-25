@@ -19,7 +19,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.RobotState;
-import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
+import frc.robot.subsystems.vision.AprilTagIO.PoseObservationType;
 import frc.robot.util.SubsystemBaseExt;
 import org.littletonrobotics.junction.Logger;
 
@@ -32,34 +32,34 @@ import static frc.robot.subsystems.vision.VisionConstants.*;
 public class Vision extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
 
-    private final VisionIO[] vsIo = visionIO;
-    private final GamepieceIO[] gpIo = gamepieceIO;
-    private final VisionIOInputsAutoLogged[] vsInputs;
+    private final AprilTagIO[] aprilTagIo = VisionConstants.aprilTagIO;
+    private final GamepieceIO[] gamepieceIo = VisionConstants.gamepieceIO;
+    private final VisionIOInputsAutoLogged[] atInputs;
     private final GamepieceIOInputsAutoLogged[] gpInputs;
-    private final Alert[] vsDisconnectedAlerts;
+    private final Alert[] atDisconnectedAlerts;
     private final Alert[] gpDisconnectedAlerts;
 
     private static Vision instance;
 
     private Vision() { // Initialize inputs
-        this.vsInputs = new VisionIOInputsAutoLogged[vsIo.length];
-        this.gpInputs = new GamepieceIOInputsAutoLogged[gpIo.length];
-        for (int i = 0; i < vsInputs.length; i++) {
-            vsInputs[i] = new VisionIOInputsAutoLogged();
+        this.atInputs = new VisionIOInputsAutoLogged[aprilTagIo.length];
+        this.gpInputs = new GamepieceIOInputsAutoLogged[gamepieceIo.length];
+        for (int i = 0; i < atInputs.length; i++) {
+            atInputs[i] = new VisionIOInputsAutoLogged();
         }
         for (int i = 0; i < gpInputs.length; i++) {
             gpInputs[i] = new GamepieceIOInputsAutoLogged();
         }
 
         // Initialize disconnected alerts
-        this.vsDisconnectedAlerts = new Alert[vsIo.length];
-        for (int i = 0; i < vsInputs.length; i++) {
-            vsDisconnectedAlerts[i] =
+        this.atDisconnectedAlerts = new Alert[aprilTagIo.length];
+        for (int i = 0; i < atInputs.length; i++) {
+            atDisconnectedAlerts[i] =
                     new Alert(
                             "Vision camera " + i + " is disconnected.", AlertType.kWarning);
         }
 
-        this.gpDisconnectedAlerts = new Alert[gpIo.length];
+        this.gpDisconnectedAlerts = new Alert[gamepieceIo.length];
         for (int i = 0; i < gpInputs.length; i++) {
             gpDisconnectedAlerts[i] =
                     new Alert(
@@ -85,13 +85,13 @@ public class Vision extends SubsystemBaseExt {
 
     @Override
     public void periodicBeforeCommands() {
-        for (int i = 0; i < vsIo.length; i++) {
-            vsIo[i].updateInputs(vsInputs[i]);
-            Logger.processInputs("Inputs/Vision/Camera" + i, vsInputs[i]);
+        for (int i = 0; i < aprilTagIo.length; i++) {
+            aprilTagIo[i].updateInputs(atInputs[i]);
+            Logger.processInputs("Inputs/Vision/Camera" + i, atInputs[i]);
         }
 
-        for (int i = 0; i < gpIo.length; i++) {
-            gpIo[i].updateInputs(gpInputs[i]);
+        for (int i = 0; i < gamepieceIo.length; i++) {
+            gamepieceIo[i].updateInputs(gpInputs[i]);
             Logger.processInputs("Inputs/Vision/Gamepiece" + i, gpInputs[i]);
         }
 
@@ -102,9 +102,9 @@ public class Vision extends SubsystemBaseExt {
         List<Pose3d> allRobotPosesRejected = new LinkedList<>();
 
         // Loop over cameras
-        for (int cameraIndex = 0; cameraIndex < vsIo.length; cameraIndex++) {
+        for (int cameraIndex = 0; cameraIndex < aprilTagIo.length; cameraIndex++) {
             // Update disconnected alert
-            vsDisconnectedAlerts[cameraIndex].set(!vsInputs[cameraIndex].connected);
+            atDisconnectedAlerts[cameraIndex].set(!atInputs[cameraIndex].connected);
 
             // Initialize logging values
             List<Pose3d> tagPoses = new LinkedList<>();
@@ -113,7 +113,7 @@ public class Vision extends SubsystemBaseExt {
             List<Pose3d> robotPosesRejected = new LinkedList<>();
 
             // Add tag poses
-            for (int tagId : vsInputs[cameraIndex].tagIds) {
+            for (int tagId : atInputs[cameraIndex].tagIds) {
                 var tagPose = aprilTagLayout.getTagPose(tagId);
                 if (tagPose.isPresent()) {
                     tagPoses.add(tagPose.get());
@@ -121,7 +121,7 @@ public class Vision extends SubsystemBaseExt {
             }
 
             // Loop over pose observations
-            for (var observation : vsInputs[cameraIndex].poseObservations) {
+            for (var observation : atInputs[cameraIndex].poseObservations) {
                 // Check whether to reject pose
                 boolean rejectPose =
                         observation.tagCount() == 0 // Must have at least one tag
@@ -189,7 +189,8 @@ public class Vision extends SubsystemBaseExt {
             allRobotPosesRejected.addAll(robotPosesRejected);
         }
 
-        for (int cameraIndex = 0; cameraIndex < gpIo.length; cameraIndex++) {
+        for (int cameraIndex = 0; cameraIndex < gamepieceIo.length; cameraIndex++) {
+            gpDisconnectedAlerts[cameraIndex].set(!gpInputs[cameraIndex].connected);
             // TODO: publish all gamepieces, publish as Pose3d
             Logger.recordOutput("Vision/Gampiece" + cameraIndex + "/RobotRelativePose", closestGamepiece().orElse(new Translation2d()));
         }
