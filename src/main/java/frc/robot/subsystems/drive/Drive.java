@@ -322,22 +322,20 @@ public class Drive extends SubsystemBaseExt {
         var driverY = linearVelocity.getY() * driveConfig.maxLinearSpeedMetersPerSec();
         var driverOmega = omegaMagnitude * joystickMaxAngularSpeedRadPerSec;
 
-        // TODO: slow down XY based on how much rotation we need to do
-
-        var assistXRaw = moveToX.calculate(currentPose.getX(), assistPose.getX());
-        var assistX = MathUtil.clamp(assistXRaw, -1, 1) // Limit to 100% max linear speed
+        var assistX = moveToX.calculate(currentPose.getX(), assistPose.getX());
+        assistX = MathUtil.clamp(assistX, -1, 1) // Limit to 100% max linear speed
                 * driveConfig.maxLinearSpeedMetersPerSec()
                 * linearMagnitude; // Limit to the driver's overall linear speed
         Logger.recordOutput("Drive/Assist/PID/X", assistX);
 
-        var assistYRaw = moveToY.calculate(currentPose.getY(), assistPose.getY());
-        var assistY = MathUtil.clamp(assistYRaw, -1, 1) // Limit to 100% max linear speed
+        var assistY = moveToY.calculate(currentPose.getY(), assistPose.getY());
+        assistY = MathUtil.clamp(assistY, -1, 1) // Limit to 100% max linear speed
                 * driveConfig.maxLinearSpeedMetersPerSec()
                 * linearMagnitude; // Limit to the driver's overall linear speed
         Logger.recordOutput("Drive/Assist/PID/Y", assistY);
 
-        var assistOmegaRaw = moveToOmega.calculate(currentPose.getRotation().getRadians(), assistPose.getRotation().getRadians());
-        var assistOmega = MathUtil.clamp(assistOmegaRaw, -1, 1) // Limit to 100% max angular speed
+        var assistOmega = moveToOmega.calculate(currentPose.getRotation().getRadians(), assistPose.getRotation().getRadians());
+        assistOmega = MathUtil.clamp(assistOmega, -1, 1) // Limit to 100% max angular speed
                 * driveConfig.maxAngularSpeedRadPerSec()
                 // If we are driving fast and not rotating, need fast rotation assist, so limit to driver's overall linear speed
                 // Otherwise, limit to driver omega speed
@@ -374,22 +372,6 @@ public class Drive extends SubsystemBaseExt {
         );
     }
 
-    private Translation2d calculateLinearVelocity(double linearMagnitude, Rotation2d linearDirection) {
-        return new Pose2d(new Translation2d(), linearDirection)
-                .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
-                .getTranslation();
-    }
-
-    private double calculateLinearMagnitude(double x, double y) {
-        var linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), joystickDriveDeadband);
-        return linearMagnitude * linearMagnitude;
-    }
-
-    private double calculateOmegaMagnitude(double omega) {
-        double omegaWithDeadband = MathUtil.applyDeadband(omega, joystickDriveDeadband);
-        return Math.copySign(omegaWithDeadband * omegaWithDeadband, omegaWithDeadband);
-    }
-
     public Command driveJoystick(DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier, Supplier<Optional<Pose2d>> assistPoseSupplier) {
         return run(() -> {
             // Reset goal from assisted every loop
@@ -405,10 +387,16 @@ public class Drive extends SubsystemBaseExt {
             Logger.recordOutput("Drive/JoystickDrive/Suppliers/Omega", omega);
 
             // Calculate linear velocity and omega from joystick inputs
-            var linearMagnitude = calculateLinearMagnitude(x, y);
+            var linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), joystickDriveDeadband);
+            linearMagnitude = linearMagnitude * linearMagnitude;
+
             var joystickLinearDirection = new Rotation2d(x, y);
-            var linearVelocity = calculateLinearVelocity(linearMagnitude, joystickLinearDirection);
-            var omegaMagnitude = calculateOmegaMagnitude(omega);
+            var linearVelocity = new Pose2d(new Translation2d(), joystickLinearDirection)
+                    .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
+                    .getTranslation();
+
+            var omegaMagnitude = MathUtil.applyDeadband(omega, joystickDriveDeadband);
+            omegaMagnitude = Math.copySign(omegaMagnitude * omegaMagnitude, omegaMagnitude);
 
             Logger.recordOutput("Drive/JoystickDrive/LinearMagnitude", linearMagnitude);
             Logger.recordOutput("Drive/JoystickDrive/LinearDirection", joystickLinearDirection);

@@ -68,7 +68,7 @@ public class RobotContainer {
                         // right on joystick is positive x - we want negative x for right (CCW is positive)
                         () -> -driverController.getRightX(),
                         () -> {
-                            var gamepiece = vision.closestGamepiece();
+                            var gamepiece = vision.getClosestGamepiece();
                             return gamepiece.map(gamepieceTranslation -> {
                                 var relativeToRobot = gamepieceTranslation.minus(robotState.getTranslation());
                                 if (relativeToRobot.getNorm() < Units.feetToMeters(1)) {

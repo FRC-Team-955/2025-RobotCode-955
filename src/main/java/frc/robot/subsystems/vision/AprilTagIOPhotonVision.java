@@ -44,7 +44,7 @@ public class AprilTagIOPhotonVision extends AprilTagIO {
     }
 
     @Override
-    public void updateInputs(VisionIOInputs inputs) {
+    public void updateInputs(AprilTagIOInputs inputs) {
         inputs.connected = camera.isConnected();
 
         // Read new camera observations

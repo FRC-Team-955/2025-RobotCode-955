@@ -1,6 +1,5 @@
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -34,8 +33,7 @@ public class GamepieceIOLimelight extends GamepieceIO {
     @Override
     public void updateInputs(GamepieceIOInputs inputs) {
         // Update connection status based on whether an update has been seen in the last 250ms
-        inputs.connected =
-                ((RobotController.getFPGATime() - latencySubscriber.getLastChange()) / 1000) < 250;
+        inputs.connected = ((RobotController.getFPGATime() - latencySubscriber.getLastChange()) / 1000) < 250;
 
         double tx = txSubscriber.get();
         double ty = tySubscriber.get();
@@ -46,13 +44,10 @@ public class GamepieceIOLimelight extends GamepieceIO {
                 new GamepieceIO.TargetObservation(
                         Rotation2d.fromDegrees(tx),
                         Rotation2d.fromDegrees(ty),
-                        new Translation2d(dist, new Rotation2d(robotToCam.getRotation().getZ() - Units.degreesToRadians(tx))),
+                        new Translation2d(dist, new Rotation2d(robotToCam.getRotation().getZ() - Units.degreesToRadians(tx))).plus(new Translation2d(robotToCam.getX(), robotToCam.getY())),
                         tvSubscriber.get() == 1
                 );
 
-        inputs.translation = new Pose2d(new Translation2d(dist, new Rotation2d(robotToCam.getRotation().getZ() - Units.degreesToRadians(tx))), new Rotation2d());
-
-        NetworkTableInstance.getDefault()
-                .flush(); // Increases network traffic but recommended by Limelight
+        NetworkTableInstance.getDefault().flush(); // Increases network traffic but recommended by Limelight
     }
 }

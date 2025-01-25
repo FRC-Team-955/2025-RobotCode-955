@@ -63,7 +63,7 @@ public class AprilTagIOLimelight extends AprilTagIO {
     }
 
     @Override
-    public void updateInputs(VisionIOInputs inputs) {
+    public void updateInputs(AprilTagIOInputs inputs) {
         // Update connection status based on whether an update has been seen in the last 250ms
         inputs.connected =
                 ((RobotController.getFPGATime() - latencySubscriber.getLastChange()) / 1000) < 250;

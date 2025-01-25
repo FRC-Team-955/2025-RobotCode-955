@@ -19,7 +19,7 @@ import org.littletonrobotics.junction.AutoLog;
 
 public class AprilTagIO {
     @AutoLog
-    public static class VisionIOInputs {
+    public static class AprilTagIOInputs {
         public boolean connected = false;
         public TargetObservation latestTargetObservation =
                 new TargetObservation(new Rotation2d(), new Rotation2d());
@@ -49,6 +49,6 @@ public class AprilTagIO {
         PHOTONVISION
     }
 
-    public void updateInputs(VisionIOInputs inputs) {
+    public void updateInputs(AprilTagIOInputs inputs) {
     }
 }

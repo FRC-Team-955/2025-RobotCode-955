@@ -13,7 +13,6 @@
 
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import org.littletonrobotics.junction.AutoLog;
@@ -23,10 +22,7 @@ public class GamepieceIO {
     public static class GamepieceIOInputs {
         public boolean connected = false;
         // x angle from camera, y angle from camera, translation from robot to gamepiece, whether there is a target
-        public TargetObservation latestTargetObservation =
-                new TargetObservation(new Rotation2d(), new Rotation2d(), new Translation2d(), false);
-        // for testing since translation2d is heatmap only
-        public Pose2d translation;
+        public TargetObservation latestTargetObservation = new TargetObservation(new Rotation2d(), new Rotation2d(), new Translation2d(), false);
     }
 
     /**

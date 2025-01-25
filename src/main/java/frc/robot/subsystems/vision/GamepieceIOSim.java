@@ -1,13 +1,12 @@
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.RobotState;
 
 public class GamepieceIOSim extends GamepieceIO {
-    RobotState robotState = RobotState.get();
+    private final RobotState robotState = RobotState.get();
 
     public GamepieceIOSim() {
     }
@@ -21,6 +20,5 @@ public class GamepieceIOSim extends GamepieceIO {
                 new Translation2d(Units.feetToMeters(27), Units.feetToMeters(13)).minus(robotState.getTranslation()),
                 true
         );
-        inputs.translation = new Pose2d(new Translation2d(Units.feetToMeters(27), Units.feetToMeters(13)).minus(robotState.getTranslation()), new Rotation2d());
     }
 }

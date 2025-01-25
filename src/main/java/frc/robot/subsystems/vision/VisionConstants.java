@@ -51,16 +51,17 @@ public class VisionConstants {
     public static final GamepieceIO[] gamepieceIO = switch (Constants.identity) {
         case COMPBOT -> Constants.isReplay
                 ? new GamepieceIO[]{new GamepieceIO()}
-                : new GamepieceIO[]{new GamepieceIOLimelight("camera_1", new Transform3d())};
+                : new GamepieceIO[]{new GamepieceIOLimelight("limelight", new Transform3d())};
         case ALPHABOT -> Constants.isReplay
                 ? new GamepieceIO[]{new GamepieceIO()}
-                : new GamepieceIO[]{new GamepieceIOLimelight(
-                "limelight",
-                // 2 inches back, 2 inches right, 37 inches up, 40 degrees down from horizontal
-                new Transform3d(Units.inchesToMeters(-2), Units.inchesToMeters(2), Units.inchesToMeters(37),
-                        new Rotation3d(0, Units.degreesToRadians(-40), 0)
+                : new GamepieceIO[]{
+                new GamepieceIOLimelight(
+                        "limelight",
+                        // 2 inches back, 2 inches right, 37 inches up, 40 degrees down from horizontal
+                        new Transform3d(Units.inchesToMeters(-2), Units.inchesToMeters(-2), Units.inchesToMeters(37),
+                                new Rotation3d(0, Units.degreesToRadians(-40), 0)
+                        )
                 )
-        )
         };
         case SIMBOT -> Constants.isReplay
                 ? new GamepieceIO[]{new GamepieceIO()}
