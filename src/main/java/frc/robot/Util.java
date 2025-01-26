@@ -1,6 +1,6 @@
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -18,8 +18,10 @@ public class Util {
         return DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
     }
 
-    public static double angle(Translation2d from, Translation2d to) {
-        return Math.atan2(from.getY() - to.getY(), from.getX() - to.getX());
+    public static Rotation2d flipIfNeeded(Rotation2d rotation2d) {
+        return shouldFlip()
+                ? rotation2d.plus(new Rotation2d(Math.PI))
+                : rotation2d;
     }
 
     /**

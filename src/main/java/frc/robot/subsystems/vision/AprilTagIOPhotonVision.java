@@ -28,7 +28,7 @@ import static frc.robot.subsystems.vision.VisionConstants.aprilTagLayout;
 /**
  * IO implementation for real PhotonVision hardware.
  */
-public class VisionIOPhotonVision extends VisionIO {
+public class AprilTagIOPhotonVision extends AprilTagIO {
     protected final PhotonCamera camera;
     protected final Transform3d robotToCamera;
 
@@ -38,13 +38,13 @@ public class VisionIOPhotonVision extends VisionIO {
      * @param name          The configured name of the camera.
      * @param robotToCamera The 3D position of the camera relative to the robot.
      */
-    public VisionIOPhotonVision(String name, Transform3d robotToCamera) {
+    public AprilTagIOPhotonVision(String name, Transform3d robotToCamera) {
         camera = new PhotonCamera(name);
         this.robotToCamera = robotToCamera;
     }
 
     @Override
-    public void updateInputs(VisionIOInputs inputs) {
+    public void updateInputs(AprilTagIOInputs inputs) {
         inputs.connected = camera.isConnected();
 
         // Read new camera observations
@@ -56,11 +56,10 @@ public class VisionIOPhotonVision extends VisionIO {
                 inputs.latestTargetObservation =
                         new TargetObservation(
                                 Rotation2d.fromDegrees(result.getBestTarget().getYaw()),
-                                Rotation2d.fromDegrees(result.getBestTarget().getPitch()),
-                                true
+                                Rotation2d.fromDegrees(result.getBestTarget().getPitch())
                         );
             } else {
-                inputs.latestTargetObservation = new TargetObservation(new Rotation2d(), new Rotation2d(), false);
+                inputs.latestTargetObservation = new TargetObservation(new Rotation2d(), new Rotation2d());
             }
 
             // Add pose observation

@@ -30,7 +30,9 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.drive.DriveConstants.*;
@@ -46,11 +48,9 @@ public class Drive extends SubsystemBaseExt {
         WHEEL_RADIUS_CHARACTERIZATION,
         IDLE,
         DRIVE_JOYSTICK,
-        POINT_TOWARDS,
+        DRIVE_JOYSTICK_ASSISTED,
         FOLLOW_TRAJECTORY
     }
-
-    private static final double JOYSTICK_DRIVE_DEADBAND = 0.1;
 
     private final GyroIO gyroIO = DriveConstants.gyroIO;
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
@@ -76,7 +76,11 @@ public class Drive extends SubsystemBaseExt {
 
     private final PIDController choreoFeedbackX = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
-    private final PIDController choreoFeedbackTheta = driveConfig.choreoFeedbackTheta().toPID();
+    private final PIDController choreoFeedbackOmega = driveConfig.choreoFeedbackOmega().toPIDWrapRadians();
+
+    private final PIDController moveToX = moveToXY.toPID();
+    private final PIDController moveToY = moveToXY.toPID();
+    private final PIDController moveToOmega = DriveConstants.moveToOmega.toPIDWrapRadians();
 
     private Command withGoal(Goal newGoal, Command command) {
         return new WrapperCommand(command) {
@@ -284,8 +288,8 @@ public class Drive extends SubsystemBaseExt {
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
                 sample.vx + choreoFeedbackX.calculate(currentPose.getX(), sample.x),
                 sample.vy + choreoFeedbackY.calculate(currentPose.getY(), sample.y),
-                sample.omega + choreoFeedbackTheta.calculate(currentPose.getRotation().getRadians(), sample.heading),
-                currentPose.getRotation()
+                sample.omega + choreoFeedbackOmega.calculate(currentPose.getRotation().getRadians(), sample.heading),
+                currentPose.getRotation() // Trajectories are absolute, don't flip
         );
     }
 
@@ -301,53 +305,155 @@ public class Drive extends SubsystemBaseExt {
         }
     }
 
-    private void runDrive(double linearMagnitude, Rotation2d linearDirection, double omega) {
-        // Calculate new linear velocity
-        Translation2d linearVelocity = new Pose2d(new Translation2d(), linearDirection)
-                .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
-                .getTranslation();
-
+    private void runDrive(Translation2d linearVelocity, double omega) {
         // Convert to field relative speeds & send command
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
                 linearVelocity.getX() * driveConfig.maxLinearSpeedMetersPerSec(),
                 linearVelocity.getY() * driveConfig.maxLinearSpeedMetersPerSec(),
                 omega * joystickMaxAngularSpeedRadPerSec,
-                Util.shouldFlip()
-                        ? robotState.getRotation()
-                        : robotState.getRotation().plus(new Rotation2d(Math.PI))
+                Util.flipIfNeeded(robotState.getRotation()) // Driver is alliance relative, flip
         );
     }
 
-    private double calculateLinearMagnitude(double x, double y) {
-        var linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), JOYSTICK_DRIVE_DEADBAND);
-        return linearMagnitude * linearMagnitude;
+    private void runDriveAssisted(Pose2d assistPose, Translation2d linearVelocity, double linearMagnitude, double omegaMagnitude) {
+        var currentPose = robotState.getPose();
+
+        var driverX = linearVelocity.getX() * driveConfig.maxLinearSpeedMetersPerSec();
+        var driverY = linearVelocity.getY() * driveConfig.maxLinearSpeedMetersPerSec();
+        var driverOmega = omegaMagnitude * joystickMaxAngularSpeedRadPerSec;
+
+        var assistX = moveToX.calculate(currentPose.getX(), assistPose.getX());
+        assistX = MathUtil.clamp(assistX, -1, 1) // Limit to 100% max linear speed
+                * driveConfig.maxLinearSpeedMetersPerSec()
+                * linearMagnitude; // Limit to the driver's overall linear speed
+        Logger.recordOutput("Drive/Assist/PID/X", assistX);
+
+        var assistY = moveToY.calculate(currentPose.getY(), assistPose.getY());
+        assistY = MathUtil.clamp(assistY, -1, 1) // Limit to 100% max linear speed
+                * driveConfig.maxLinearSpeedMetersPerSec()
+                * linearMagnitude; // Limit to the driver's overall linear speed
+        Logger.recordOutput("Drive/Assist/PID/Y", assistY);
+
+        var assistOmega = moveToOmega.calculate(currentPose.getRotation().getRadians(), assistPose.getRotation().getRadians());
+        assistOmega = MathUtil.clamp(assistOmega, -1, 1) // Limit to 100% max angular speed
+                * driveConfig.maxAngularSpeedRadPerSec()
+                // If we are driving fast and not rotating, need fast rotation assist, so limit to driver's overall linear speed
+                // Otherwise, limit to driver omega speed
+                * Math.max(omegaMagnitude, linearMagnitude);
+        Logger.recordOutput("Drive/Assist/PID/Omega", assistOmega);
+
+        closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
+                0.75 * assistX,
+                0.75 * assistY,
+                0.75 * assistOmega,
+                currentPose.getRotation() // Move to is absolute, don't flip
+        ).plus(ChassisSpeeds.fromFieldRelativeSpeeds(
+                0.25 * driverX,
+                0.25 * driverY,
+                0.25 * driverOmega,
+                Util.flipIfNeeded(currentPose.getRotation()) // Driver is alliance relative, flip
+        ));
     }
 
-    private Rotation2d calculateLinearDirection(double x, double y) {
-        return new Rotation2d(x, y);
+    private void runMoveTo(Pose2d pose) {
+        var currentPose = robotState.getPose();
+
+        closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
+                // Limit to 100% max linear speed
+                MathUtil.clamp(moveToX.calculate(currentPose.getX(), pose.getX()), -1, 1)
+                        * driveConfig.maxLinearSpeedMetersPerSec(),
+                // Limit to 100% max linear speed
+                MathUtil.clamp(moveToY.calculate(currentPose.getY(), pose.getY()), -1, 1)
+                        * driveConfig.maxLinearSpeedMetersPerSec(),
+                // Limit to 100% max angular speed
+                MathUtil.clamp(moveToOmega.calculate(currentPose.getRotation().getRadians(), pose.getRotation().getRadians()), -1, 1)
+                        * driveConfig.maxAngularSpeedRadPerSec(),
+                currentPose.getRotation() // Move to is absolute, don't flip
+        );
     }
 
-    private double calculateOmega(double omega) {
-        double omegaWithDeadband = MathUtil.applyDeadband(omega, JOYSTICK_DRIVE_DEADBAND);
-        return Math.copySign(omegaWithDeadband * omegaWithDeadband, omegaWithDeadband);
-    }
+    public Command driveJoystick(DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier, Supplier<Optional<Pose2d>> assistPoseSupplier) {
+        return run(() -> {
+            // Reset goal from assisted every loop
+            goal = Goal.DRIVE_JOYSTICK;
 
-    /**
-     * Field relative drive command using two joysticks (controlling linear and angular velocities).
-     */
-    public Command driveJoystick(DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier) {
-        var cmd = run(() -> {
+            // Joystick inputs
             var x = xSupplier.getAsDouble();
             var y = ySupplier.getAsDouble();
             var omega = omegaSupplier.getAsDouble();
 
-            runDrive(
-                    calculateLinearMagnitude(x, y),
-                    calculateLinearDirection(x, y),
-                    calculateOmega(omega)
-            );
-        });
-        return withGoal(Goal.DRIVE_JOYSTICK, cmd).withName("Drive Joystick");
+            Logger.recordOutput("Drive/JoystickDrive/Suppliers/X", x);
+            Logger.recordOutput("Drive/JoystickDrive/Suppliers/Y", y);
+            Logger.recordOutput("Drive/JoystickDrive/Suppliers/Omega", omega);
+
+            // Calculate linear velocity and omega from joystick inputs
+            var linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), joystickDriveDeadband);
+            linearMagnitude = linearMagnitude * linearMagnitude;
+
+            var joystickLinearDirection = new Rotation2d(x, y);
+            var linearVelocity = new Pose2d(new Translation2d(), joystickLinearDirection)
+                    .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
+                    .getTranslation();
+
+            var omegaMagnitude = MathUtil.applyDeadband(omega, joystickDriveDeadband);
+            omegaMagnitude = Math.copySign(omegaMagnitude * omegaMagnitude, omegaMagnitude);
+
+            Logger.recordOutput("Drive/JoystickDrive/LinearMagnitude", linearMagnitude);
+            Logger.recordOutput("Drive/JoystickDrive/LinearDirection", joystickLinearDirection);
+            Logger.recordOutput("Drive/JoystickDrive/LinearVelocity", linearVelocity);
+            Logger.recordOutput("Drive/JoystickDrive/OmegaMagnitude", omegaMagnitude);
+
+            var optionalAssistPose = assistPoseSupplier.get();
+            if (optionalAssistPose.isPresent()) {
+                // Mark assist pose as present
+                Logger.recordOutput("Drive/Assist/Present", true);
+
+                var currentPose = robotState.getPose();
+                var assistPose = optionalAssistPose.get();
+                Logger.recordOutput("Drive/Assist/Pose", assistPose);
+
+                // Get the translation between robot and assist
+                var robotToAssist = assistPose.getTranslation().minus(currentPose.getTranslation());
+                // Calculate direction from robot to assist
+                var robotToAssistDirection = new Rotation2d(robotToAssist.getX(), robotToAssist.getY());
+                Logger.recordOutput("Drive/Assist/RobotToAssistDirection", robotToAssistDirection);
+
+                // Flip joystick direction to match robot to assist direction
+                // Joystick direction is relative to alliance wall and needs to be flipped on red alliance to match origin
+                var joystickLinearDirectionFlipped = Util.flipIfNeeded(joystickLinearDirection);
+                Logger.recordOutput("Drive/Assist/FlippedJoystickLinearDirection", joystickLinearDirectionFlipped);
+
+                // Get difference between joystick direction and assist direction
+                var directionDiff = robotToAssistDirection.minus(joystickLinearDirectionFlipped);
+                Logger.recordOutput("Drive/Assist/DirectionDifference", directionDiff);
+
+                // Get distance to assist pose
+                var distanceToAssist = currentPose.getTranslation().getDistance(assistPose.getTranslation());
+                Logger.recordOutput("Drive/Assist/DistanceToAssist", distanceToAssist);
+
+                // If we are:
+                if (
+                    // - above linear joystick deadband (so we are moving linearly in some way - if we are only rotating, don't assist)
+                        (Math.abs(x) > joystickDriveDeadband || Math.abs(y) > joystickDriveDeadband) &&
+                                // - going towards the assist pose based on threshold
+                                Math.abs(directionDiff.getRadians()) < assistDirectionToleranceRad &&
+                                // - close enough to assist pose
+                                distanceToAssist < assistMaximumDistanceMeters
+                ) {
+                    // then use automatic control.
+                    Logger.recordOutput("Drive/Assist/Running", true);
+                    goal = Goal.DRIVE_JOYSTICK_ASSISTED;
+                    runDriveAssisted(assistPose, linearVelocity, linearMagnitude, omegaMagnitude);
+                } else {
+                    Logger.recordOutput("Drive/Assist/Running", false);
+                    runDrive(linearVelocity, omegaMagnitude);
+                }
+            } else {
+                Logger.recordOutput("Drive/Assist/Present", false);
+                Logger.recordOutput("Drive/Assist/Running", false);
+                runDrive(linearVelocity, omegaMagnitude);
+            }
+        }).withName("Drive Joystick");
     }
 
     public Command wheelRadiusCharacterization(WheelRadiusCharacterization.Direction direction) {

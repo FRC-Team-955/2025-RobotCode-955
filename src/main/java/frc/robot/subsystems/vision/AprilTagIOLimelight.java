@@ -29,7 +29,7 @@ import java.util.function.Supplier;
 /**
  * IO implementation for real Limelight hardware.
  */
-public class VisionIOLimelight extends VisionIO {
+public class AprilTagIOLimelight extends AprilTagIO {
     private final Supplier<Rotation2d> rotationSupplier;
     private final DoubleArrayPublisher orientationPublisher;
     private final IntegerPublisher piplinePublisher;
@@ -47,7 +47,7 @@ public class VisionIOLimelight extends VisionIO {
      * @param name             The configured name of the Limelight.
      * @param rotationSupplier Supplier for the current estimated rotation, used for MegaTag 2.
      */
-    public VisionIOLimelight(String name, Supplier<Rotation2d> rotationSupplier) {
+    public AprilTagIOLimelight(String name, Supplier<Rotation2d> rotationSupplier) {
         var table = NetworkTableInstance.getDefault().getTable(name);
         this.rotationSupplier = rotationSupplier;
 
@@ -63,7 +63,7 @@ public class VisionIOLimelight extends VisionIO {
     }
 
     @Override
-    public void updateInputs(VisionIOInputs inputs) {
+    public void updateInputs(AprilTagIOInputs inputs) {
         // Update connection status based on whether an update has been seen in the last 250ms
         inputs.connected =
                 ((RobotController.getFPGATime() - latencySubscriber.getLastChange()) / 1000) < 250;
@@ -72,8 +72,7 @@ public class VisionIOLimelight extends VisionIO {
         inputs.latestTargetObservation =
                 new TargetObservation(
                         Rotation2d.fromDegrees(txSubscriber.get()),
-                        Rotation2d.fromDegrees(tySubscriber.get()),
-                        tvSubscriber.get() == 1
+                        Rotation2d.fromDegrees(tySubscriber.get())
                 );
 
         // Update orientation for MegaTag 2

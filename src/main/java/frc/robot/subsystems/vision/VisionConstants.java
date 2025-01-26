@@ -17,6 +17,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.RobotState;
 
@@ -47,38 +48,57 @@ public class VisionConstants {
     public static double angularStdDevMegatag2Factor =
             Double.POSITIVE_INFINITY; // No rotation data available
 
-    public static final VisionIO[] visionIO = switch (Constants.identity) {
+    public static final GamepieceIO[] gamepieceIO = switch (Constants.identity) {
         case COMPBOT -> Constants.isReplay
-                ? new VisionIO[]{new VisionIO(), new VisionIO(), new VisionIO()}
-                : new VisionIO[]{
-                new VisionIOPhotonVision(
-                        "camera_0",
-                        new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0))
-                ),
-                new VisionIOPhotonVision(
-                        "camera_1",
-                        new Transform3d(-0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, Math.PI))
-                ),
-                new VisionIOLimelight("camera_2", RobotState.get()::getRotation)
-        };
+                ? new GamepieceIO[]{new GamepieceIO()}
+                : new GamepieceIO[]{new GamepieceIOLimelight("limelight", new Transform3d())};
         case ALPHABOT -> Constants.isReplay
-                ? new VisionIO[]{new VisionIO(), new VisionIO()}
-                : new VisionIO[]{
-                new VisionIOPhotonVision(
-                        "camera_0",
-                        new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0))
-                ),
-                new VisionIOLimelight("camera_2", RobotState.get()::getRotation)
+                ? new GamepieceIO[]{new GamepieceIO()}
+                : new GamepieceIO[]{
+                new GamepieceIOLimelight(
+                        "limelight",
+                        // 2 inches back, 2 inches right, 37 inches up, 40 degrees down from horizontal
+                        new Transform3d(Units.inchesToMeters(-2), Units.inchesToMeters(-2), Units.inchesToMeters(37),
+                                new Rotation3d(0, Units.degreesToRadians(-40), 0)
+                        )
+                )
         };
         case SIMBOT -> Constants.isReplay
-                ? new VisionIO[]{new VisionIO(), new VisionIO()}
-                : new VisionIO[]{
-                new VisionIOPhotonVisionSim(
+                ? new GamepieceIO[]{new GamepieceIO()}
+                : new GamepieceIO[]{new GamepieceIOSim()};
+    };
+
+    public static final AprilTagIO[] aprilTagIO = switch (Constants.identity) {
+        case COMPBOT -> Constants.isReplay
+                ? new AprilTagIO[]{new AprilTagIO(), new AprilTagIO()}
+                : new AprilTagIO[]{
+                new AprilTagIOPhotonVision(
+                        "camera_0",
+                        new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0))
+                ),
+                new AprilTagIOPhotonVision(
+                        "camera_1",
+                        new Transform3d(-0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, Math.PI))
+                )
+        };
+//        case ALPHABOT -> Constants.isReplay
+//                ? new VisionIO[]{new VisionIO()}
+//                : new VisionIO[]{
+//                new VisionIOPhotonVision(
+//                        "camera_0",
+//                        new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0))
+//                )
+//        };
+        case ALPHABOT -> new AprilTagIO[]{};
+        case SIMBOT -> Constants.isReplay
+                ? new AprilTagIO[]{new AprilTagIO(), new AprilTagIO()}
+                : new AprilTagIO[]{
+                new AprilTagIOPhotonVisionSim(
                         "camera_0",
                         new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0)
                         ),
                         RobotState.get()::getPose),
-                new VisionIOPhotonVisionSim(
+                new AprilTagIOPhotonVisionSim(
                         "camera_1",
                         new Transform3d(-0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, Math.PI)
                         ),

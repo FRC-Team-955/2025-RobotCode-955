@@ -37,7 +37,7 @@ public class ModuleIOSim extends ModuleIO {
     private boolean driveClosedLoop = false;
     private boolean turnClosedLoop = false;
     private final PIDController driveController = moduleConfig.driveGains().toPID();
-    private final PIDController turnController = moduleConfig.turnGains().toPID();
+    private final PIDController turnController = moduleConfig.turnGains().toPIDWrapRadians();
     private final SimpleMotorFeedforward driveFF = moduleConfig.driveGains().toSimpleFF();
     private double driveFFVolts = 0.0;
     private double driveAppliedVolts = 0.0;
@@ -61,9 +61,6 @@ public class ModuleIOSim extends ModuleIO {
                 ),
                 turnMotor
         );
-
-        // Enable wrapping for turn PID
-        turnController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
     @Override

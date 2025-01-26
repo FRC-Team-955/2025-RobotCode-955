@@ -1,5 +1,8 @@
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -55,12 +58,29 @@ public class RobotContainer {
     }
 
     private void setDefaultCommands() {
-        //noinspection SuspiciousNameCombination
         drive.setDefaultCommand(
                 drive.driveJoystick(
-                        driverController::getLeftY,
-                        driverController::getLeftX,
-                        () -> -driverController.getRightX()
+                        // https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
+                        // forward on joystick is negative y - we want positive x for forward
+                        () -> -driverController.getLeftY(),
+                        // right on joystick is positive x - we want negative y for right
+                        () -> -driverController.getLeftX(),
+                        // right on joystick is positive x - we want negative x for right (CCW is positive)
+                        () -> -driverController.getRightX(),
+                        () -> {
+                            var gamepiece = vision.getClosestGamepiece();
+                            return gamepiece.map(gamepieceTranslation -> {
+                                var relativeToRobot = gamepieceTranslation.minus(robotState.getTranslation());
+                                if (relativeToRobot.getNorm() < Units.feetToMeters(1)) {
+                                    // Don't try to face towards it if we are too close
+                                    return new Pose2d(gamepieceTranslation, robotState.getRotation());
+                                } else {
+                                    // Try to face towards the game piece
+                                    var toGamepiece = new Rotation2d(relativeToRobot.getX(), relativeToRobot.getY());
+                                    return new Pose2d(gamepieceTranslation, toGamepiece);
+                                }
+                            });
+                        }
                 )
         );
     }
@@ -73,7 +93,6 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
-
 
 //        // Lock to 0° when A button is held
 //        controller

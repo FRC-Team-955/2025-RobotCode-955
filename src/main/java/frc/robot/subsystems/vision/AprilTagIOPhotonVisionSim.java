@@ -26,7 +26,7 @@ import static frc.robot.subsystems.vision.VisionConstants.aprilTagLayout;
 /**
  * IO implementation for physics sim using PhotonVision simulator.
  */
-public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
+public class AprilTagIOPhotonVisionSim extends AprilTagIOPhotonVision {
     private static VisionSystemSim visionSim;
 
     private final Supplier<Pose2d> poseSupplier;
@@ -38,7 +38,7 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
      * @param name         The name of the camera.
      * @param poseSupplier Supplier for the robot pose to use in simulation.
      */
-    public VisionIOPhotonVisionSim(
+    public AprilTagIOPhotonVisionSim(
             String name, Transform3d robotToCamera, Supplier<Pose2d> poseSupplier) {
         super(name, robotToCamera);
         this.poseSupplier = poseSupplier;
@@ -56,7 +56,7 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
     }
 
     @Override
-    public void updateInputs(VisionIOInputs inputs) {
+    public void updateInputs(AprilTagIOInputs inputs) {
         visionSim.update(poseSupplier.get());
         super.updateInputs(inputs);
     }
