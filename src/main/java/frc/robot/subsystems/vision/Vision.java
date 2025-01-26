@@ -192,6 +192,9 @@ public class Vision extends SubsystemBaseExt {
         var robotTranslation = robotState.getTranslation();
         var allGamepieces = new ArrayList<Translation2d>();
         for (int cameraIndex = 0; cameraIndex < gamepieceIo.length; cameraIndex++) {
+            // Update disconnected alert
+            gpDisconnectedAlerts[cameraIndex].set(!gpInputs[cameraIndex].connected);
+
             // TODO: replace with algorithm getting closest if there is more than one targets
             var present = gpInputs[cameraIndex].latestTargetObservation.isPresent();
 
