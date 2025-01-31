@@ -39,32 +39,67 @@ public class SwerveSetpointGenerator {
     private final double wheelRadiusMeters;
     /** The force of static friction between the robot's drive wheels and the carpet */
     private final double wheelFrictionNewtons;
-    /** The maximum torque a drive module can apply without slipping the wheels */
-    public final double driveMaxTorqueWithoutSlip;
     private final double massKG;
     /** The moment of inertia of the robot, in KG*M^2 */
     public final double momentOfInertiaKGMetersSquared;
+
     /** The DCMotor representing the drive gearbox, including gear reduction */
     private final DCMotor driveMotor;
     /** The current limit of the drive motor, in Amps */
     private final double driveCurrentLimit;
     /** The amount of motor torque lost while driving. Calculated by getting the torque of the motor at the motor's max speed under load. */
     private final double driveTorqueLoss;
+    /** The maximum torque a drive module can apply without slipping the wheels */
+    public final double driveMaxTorqueWithoutSlip;
 
     private final double brownoutVoltage;
 
-    /**
-     * Create a new swerve setpoint generator
-     *
-     * @param maxSteerVelocityRadPerSec The maximum rotation velocity of a swerve module, in radians
-     *                                  per second
-     */
-    public SwerveSetpointGenerator(double maxSteerVelocityRadPerSec) {
-        this.maxSteerVelocityRadPerSec = maxSteerVelocityRadPerSec;
-        this.brownoutVoltage = RobotController.getBrownoutVoltage();
-
+    public SwerveSetpointGenerator(
+            SwerveDriveKinematics kinematics,
+            double maxSteerVelocityRadPerSec,
+            double maxDriveVelocityMetersPerSec,
+            double wheelRadiusMeters,
+            double wheelCOF,
+            double massKG,
+            double momentOfInertiaKGMetersSquared,
+            DCMotor driveMotor,
+            double driveCurrentLimit
+    ) {
+        this.kinematics = kinematics;
         moduleLocations = kinematics.getModules();
         moduleDistances = Arrays.stream(moduleLocations).mapToDouble(Translation2d::getNorm).toArray();
+        // https://github.com/mjansen4857/pathplanner/blob/10271416a7d0e6a6296cf0a6be5867af5df67c43/pathplannerlib/src/main/java/com/pathplanner/lib/config/RobotConfig.java#L101
+        forceKinematics = new SimpleMatrix(moduleLocations.length * 2, 3);
+        for (int i = 0; i < moduleLocations.length; i++) {
+            Translation2d modPosReciprocal = new Translation2d(
+                    1.0 / moduleLocations[i].getNorm(),
+                    moduleLocations[i].getAngle()
+            );
+            forceKinematics.setRow(i * 2, 0, /* Start Data */ 1, 0, -modPosReciprocal.getY());
+            forceKinematics.setRow(i * 2 + 1, 0, /* Start Data */ 0, 1, modPosReciprocal.getX());
+        }
+
+        this.maxSteerVelocityRadPerSec = maxSteerVelocityRadPerSec;
+        this.maxDriveVelocityMetersPerSec = maxDriveVelocityMetersPerSec;
+        this.wheelRadiusMeters = wheelRadiusMeters;
+        this.massKG = massKG;
+        this.momentOfInertiaKGMetersSquared = momentOfInertiaKGMetersSquared;
+        this.driveMotor = driveMotor;
+        this.driveCurrentLimit = driveCurrentLimit;
+
+        // https://github.com/mjansen4857/pathplanner/blob/10271416a7d0e6a6296cf0a6be5867af5df67c43/pathplannerlib/src/main/java/com/pathplanner/lib/config/RobotConfig.java#L98
+        this.wheelFrictionNewtons = wheelCOF * ((massKG / moduleLocations.length) * 9.8);
+        // https://github.com/mjansen4857/pathplanner/blob/10271416a7d0e6a6296cf0a6be5867af5df67c43/pathplannerlib/src/main/java/com/pathplanner/lib/config/RobotConfig.java#L99
+        this.driveMaxTorqueWithoutSlip = wheelFrictionNewtons * wheelRadiusMeters;
+        // https://github.com/mjansen4857/pathplanner/blob/10271416a7d0e6a6296cf0a6be5867af5df67c43/pathplannerlib/src/main/java/com/pathplanner/lib/config/ModuleConfig.java#L59
+        double maxDriveVelocityRadPerSec = maxDriveVelocityMetersPerSec / this.wheelRadiusMeters;
+        double maxSpeedCurrentDraw = this.driveMotor.getCurrent(maxDriveVelocityRadPerSec, 12.0);
+        this.driveTorqueLoss = Math.max(
+                this.driveMotor.getTorque(Math.min(maxSpeedCurrentDraw, this.driveCurrentLimit)),
+                0.0
+        );
+
+        this.brownoutVoltage = RobotController.getBrownoutVoltage();
     }
 
     /**
@@ -88,12 +123,12 @@ public class SwerveSetpointGenerator {
      * desiredState quickly.
      */
     public SwerveSetpoint generateSetpoint(
-            ModuleLimits limits,
+            final ModuleLimits limits,
             final SwerveSetpoint prevSetpoint,
             ChassisSpeeds desiredStateRobotRelative,
-            double dt,
-            Double inputVoltage) {
-        if (inputVoltage == null || Double.isNaN(inputVoltage)) {
+            final double dt,
+            double inputVoltage) {
+        if (Double.isNaN(inputVoltage)) {
             inputVoltage = 12.0;
         } else {
             inputVoltage = Math.max(inputVoltage, brownoutVoltage);
@@ -102,22 +137,23 @@ public class SwerveSetpointGenerator {
 
         // Limit the max velocities in desired state based on limits
         if (limits != null) {
-            Translation2d vel =
-                    new Translation2d(
-                            desiredStateRobotRelative.vxMetersPerSecond,
-                            desiredStateRobotRelative.vyMetersPerSecond);
+            Translation2d vel = new Translation2d(
+                    desiredStateRobotRelative.vxMetersPerSecond,
+                    desiredStateRobotRelative.vyMetersPerSecond
+            );
             double linearVel = vel.getNorm();
             if (linearVel > limits.maxVelocityMetersPerSec()) {
                 vel = vel.times(limits.maxVelocityMetersPerSec() / linearVel);
             }
-            desiredStateRobotRelative =
-                    new ChassisSpeeds(
-                            vel.getX(),
-                            vel.getY(),
-                            MathUtil.clamp(
-                                    desiredStateRobotRelative.omegaRadiansPerSecond,
-                                    -limits.maxAngularVelocityRadPerSec(),
-                                    limits.maxAngularVelocityRadPerSec()));
+            desiredStateRobotRelative = new ChassisSpeeds(
+                    vel.getX(),
+                    vel.getY(),
+                    MathUtil.clamp(
+                            desiredStateRobotRelative.omegaRadiansPerSecond,
+                            -limits.maxAngularVelocityRadPerSec(),
+                            limits.maxAngularVelocityRadPerSec()
+                    )
+            );
         }
 
         SwerveModuleState[] desiredModuleStates = kinematics.toSwerveModuleStates(desiredStateRobotRelative);
@@ -182,15 +218,12 @@ public class SwerveSetpointGenerator {
         // Compute the deltas between start and goal. We can then interpolate from the start state to
         // the goal state; then find the amount we can move from start towards goal in this cycle such
         // that no kinematic limit is exceeded.
-        double dx =
-                desiredStateRobotRelative.vxMetersPerSecond
-                        - prevSetpoint.robotRelativeSpeeds().vxMetersPerSecond;
-        double dy =
-                desiredStateRobotRelative.vyMetersPerSecond
-                        - prevSetpoint.robotRelativeSpeeds().vyMetersPerSecond;
-        double dtheta =
-                desiredStateRobotRelative.omegaRadiansPerSecond
-                        - prevSetpoint.robotRelativeSpeeds().omegaRadiansPerSecond;
+        double dx = desiredStateRobotRelative.vxMetersPerSecond
+                - prevSetpoint.robotRelativeSpeeds().vxMetersPerSecond;
+        double dy = desiredStateRobotRelative.vyMetersPerSecond
+                - prevSetpoint.robotRelativeSpeeds().vyMetersPerSecond;
+        double dtheta = desiredStateRobotRelative.omegaRadiansPerSecond
+                - prevSetpoint.robotRelativeSpeeds().omegaRadiansPerSecond;
 
         // 's' interpolates between start and goal. At 0, we are at prevState and at 1, we are at
         // desiredState.
@@ -221,12 +254,11 @@ public class SwerveSetpointGenerator {
                     continue;
                 }
 
-                var necessaryRotation =
-                        prevSetpoint
-                                .moduleStates()[m]
-                                .angle
-                                .unaryMinus()
-                                .rotateBy(desiredModuleStates[m].angle);
+                var necessaryRotation = prevSetpoint
+                        .moduleStates()[m]
+                        .angle
+                        .unaryMinus()
+                        .rotateBy(desiredModuleStates[m].angle);
                 if (flipHeading(necessaryRotation)) {
                     necessaryRotation = necessaryRotation.rotateBy(Rotation2d.kPi);
                 }
@@ -244,7 +276,11 @@ public class SwerveSetpointGenerator {
                             Optional.of(
                                     prevSetpoint.moduleStates()[m].angle.rotateBy(
                                             Rotation2d.fromRadians(
-                                                    Math.signum(necessaryRotation.getRadians()) * max_theta_step))));
+                                                    Math.signum(necessaryRotation.getRadians()) * max_theta_step
+                                            )
+                                    )
+                            )
+                    );
                     min_s = 0.0;
                 }
                 continue;
@@ -258,18 +294,21 @@ public class SwerveSetpointGenerator {
             // We do this by changing max_theta_step to the maximum change in heading over dt
             // that would create a large enough radius to keep the centripetal force under the
             // friction force.
-            double maxHeadingChange = (dt * wheelFrictionNewtons) / ((massKG / moduleLocations.length) * Math.abs(prevSetpoint.moduleStates()[m].speedMetersPerSecond));
+            double maxHeadingChange = (dt * wheelFrictionNewtons) / (
+                    (massKG / moduleLocations.length)
+                            * Math.abs(prevSetpoint.moduleStates()[m].speedMetersPerSecond)
+            );
             max_theta_step = Math.min(max_theta_step, maxHeadingChange);
 
-            double s =
-                    findSteeringMaxS(
-                            prev_vx[m],
-                            prev_vy[m],
-                            prev_heading[m].getRadians(),
-                            desired_vx[m],
-                            desired_vy[m],
-                            desired_heading[m].getRadians(),
-                            max_theta_step);
+            double s = findSteeringMaxS(
+                    prev_vx[m],
+                    prev_vy[m],
+                    prev_heading[m].getRadians(),
+                    desired_vx[m],
+                    desired_vy[m],
+                    desired_heading[m].getRadians(),
+                    max_theta_step
+            );
             min_s = Math.min(min_s, s);
         }
 
@@ -349,8 +388,7 @@ public class SwerveSetpointGenerator {
         }
 
         // Use kinematics to convert chassis accelerations to module accelerations
-        ChassisSpeeds chassisAccel =
-                new ChassisSpeeds(chassisAccelVec.getX(), chassisAccelVec.getY(), chassisAngularAccel);
+        ChassisSpeeds chassisAccel = new ChassisSpeeds(chassisAccelVec.getX(), chassisAccelVec.getY(), chassisAngularAccel);
         var accelStates = kinematics.toSwerveModuleStates(chassisAccel);
 
         for (int m = 0; m < moduleLocations.length; m++) {
@@ -361,21 +399,23 @@ public class SwerveSetpointGenerator {
 
             double maxVelStep = Math.abs(accelStates[m].speedMetersPerSecond * dt);
 
-            double vx_min_s =
-                    min_s == 1.0 ? desired_vx[m] : (desired_vx[m] - prev_vx[m]) * min_s + prev_vx[m];
-            double vy_min_s =
-                    min_s == 1.0 ? desired_vy[m] : (desired_vy[m] - prev_vy[m]) * min_s + prev_vy[m];
+            double vx_min_s = min_s == 1.0
+                    ? desired_vx[m]
+                    : (desired_vx[m] - prev_vx[m]) * min_s + prev_vx[m];
+            double vy_min_s = min_s == 1.0
+                    ? desired_vy[m]
+                    : (desired_vy[m] - prev_vy[m]) * min_s + prev_vy[m];
             // Find the max s for this drive wheel. Search on the interval between 0 and min_s, because we
             // already know we can't go faster than that.
             double s = findDriveMaxS(prev_vx[m], prev_vy[m], vx_min_s, vy_min_s, maxVelStep);
             min_s = Math.min(min_s, s);
         }
 
-        ChassisSpeeds retSpeeds =
-                new ChassisSpeeds(
-                        prevSetpoint.robotRelativeSpeeds().vxMetersPerSecond + min_s * dx,
-                        prevSetpoint.robotRelativeSpeeds().vyMetersPerSecond + min_s * dy,
-                        prevSetpoint.robotRelativeSpeeds().omegaRadiansPerSecond + min_s * dtheta);
+        ChassisSpeeds retSpeeds = new ChassisSpeeds(
+                prevSetpoint.robotRelativeSpeeds().vxMetersPerSecond + min_s * dx,
+                prevSetpoint.robotRelativeSpeeds().vyMetersPerSecond + min_s * dy,
+                prevSetpoint.robotRelativeSpeeds().omegaRadiansPerSecond + min_s * dtheta
+        );
         retSpeeds = ChassisSpeeds.discretize(retSpeeds, dt);
 
         double prevVelX = prevSetpoint.robotRelativeSpeeds().vxMetersPerSecond;
@@ -435,7 +475,8 @@ public class SwerveSetpointGenerator {
         return new SwerveSetpoint(
                 retSpeeds,
                 retStates,
-                new DriveFeedforwards(accelFF, linearForceFF, torqueCurrentFF, forceXFF, forceYFF));
+                new DriveFeedforwards(accelFF, linearForceFF, torqueCurrentFF, forceXFF, forceYFF)
+        );
     }
 
     /**
@@ -460,7 +501,8 @@ public class SwerveSetpointGenerator {
             SwerveSetpoint prevSetpoint,
             ChassisSpeeds desiredStateRobotRelative,
             ModuleLimits limits,
-            double dt) {
+            double dt
+    ) {
         return generateSetpoint(
                 limits,
                 prevSetpoint,
