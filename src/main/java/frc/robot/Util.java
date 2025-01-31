@@ -20,7 +20,7 @@ public class Util {
 
     public static Rotation2d flipIfNeeded(Rotation2d rotation2d) {
         return shouldFlip()
-                ? rotation2d.plus(new Rotation2d(Math.PI))
+                ? rotation2d.plus(Rotation2d.kPi)
                 : rotation2d;
     }
 
