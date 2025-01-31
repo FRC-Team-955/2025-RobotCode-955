@@ -30,42 +30,25 @@ public class SwerveSetpointGenerator {
     private final SwerveDriveKinematics kinematics;
     private final SimpleMatrix forceKinematics;
     private final Translation2d[] moduleLocations;
-    /**
-     * Distance from center of robot to each module in meters
-     */
+    /** Distance from center of robot to each module in meters */
     private final double[] moduleDistances;
 
     private final double maxSteerVelocityRadPerSec;
-    /**
-     * The max RPM that the drive motor can reach while actually driving the robot at full output.
-     */
+    /** The max RPM that the drive motor can reach while actually driving the robot at full output. */
     private final double maxDriveVelocityMetersPerSec;
     private final double wheelRadiusMeters;
-    /**
-     * The force of static friction between the robot's drive wheels and the carpet
-     */
+    /** The force of static friction between the robot's drive wheels and the carpet */
     private final double wheelFrictionNewtons;
-    /**
-     * The maximum torque a drive module can apply without slipping the wheels
-     */
+    /** The maximum torque a drive module can apply without slipping the wheels */
     public final double driveMaxTorqueWithoutSlip;
     private final double massKG;
-    /**
-     * The moment of inertia of the robot, in KG*M^2
-     */
+    /** The moment of inertia of the robot, in KG*M^2 */
     public final double momentOfInertiaKGMetersSquared;
-    /**
-     * The DCMotor representing the drive gearbox, including gear reduction
-     */
+    /** The DCMotor representing the drive gearbox, including gear reduction */
     private final DCMotor driveMotor;
-    /**
-     * The current limit of the drive motor, in Amps
-     */
+    /** The current limit of the drive motor, in Amps */
     private final double driveCurrentLimit;
-    /**
-     * The amount of motor torque lost while driving. Calculated by getting the torque of the motor at
-     * the motor's max speed under load.
-     */
+    /** The amount of motor torque lost while driving. Calculated by getting the torque of the motor at the motor's max speed under load. */
     private final double driveTorqueLoss;
 
     private final double brownoutVoltage;
@@ -100,6 +83,7 @@ public class SwerveSetpointGenerator {
      *                                  be a static nominal voltage if you do not want the setpoint generator to react to changes
      *                                  in input voltage. If the given voltage is NaN, it will be assumed to be 12v. The input
      *                                  voltage will be clamped to a minimum of the robot controller's brownout voltage.
+     *
      * @return A Setpoint object that satisfies all the kinematic/friction limits while converging to
      * desiredState quickly.
      */
@@ -468,6 +452,7 @@ public class SwerveSetpointGenerator {
      *                                  capabilities. If this is null, the generator will only limit setpoints by the robot's max
      *                                  capabilities.
      * @param dt                        The loop time.
+     *
      * @return A Setpoint object that satisfies all the kinematic/friction limits while converging to
      * desiredState quickly.
      */
@@ -496,6 +481,7 @@ public class SwerveSetpointGenerator {
      * @param desiredStateRobotRelative The desired state of motion, such as from the driver sticks or
      *                                  a path following algorithm.
      * @param dt                        The loop time.
+     *
      * @return A Setpoint object that satisfies all the kinematic/friction limits while converging to
      * desiredState quickly.
      */
@@ -515,6 +501,7 @@ public class SwerveSetpointGenerator {
      *
      * @param prevToGoal The rotation from the previous state to the goal state (i.e.
      *                   prev.inverse().rotateBy(goal)).
+     *
      * @return True if the shortest path to achieve this rotation involves flipping the drive
      * direction.
      */
@@ -653,6 +640,7 @@ public class SwerveSetpointGenerator {
      * Convert chassis forces (passed as ChassisSpeeds) to individual wheel force vectors
      *
      * @param chassisForces The linear X/Y force and torque acting on the whole robot
+     *
      * @return Array of individual wheel force vectors
      */
     public Translation2d[] chassisForcesToWheelForceVectors(ChassisSpeeds chassisForces) {
