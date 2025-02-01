@@ -106,13 +106,13 @@ public class SwerveSetpointGenerator {
      * Generate a new setpoint with explicit battery voltage. Note: Do not discretize ChassisSpeeds
      * passed into or returned from this method. This method will discretize the speeds for you.
      *
-     * @param constraints               The arbitrary constraints to respect along with the robot's max
-     *                                  capabilities. If this is null, the generator will only limit setpoints by the robot's max
-     *                                  capabilities.
      * @param prevSetpoint              The previous setpoint motion. Normally, you'd pass in the previous
      *                                  iteration setpoint instead of the actual measured/estimated kinematic state.
      * @param desiredStateRobotRelative The desired state of motion, such as from the driver sticks or
      *                                  a path following algorithm.
+     * @param constraints               The arbitrary constraints to respect along with the robot's max
+     *                                  capabilities. If this is null, the generator will only limit setpoints by the robot's max
+     *                                  capabilities.
      * @param dt                        The loop time.
      * @param inputVoltage              The input voltage of the drive motor controllers, in volts. This can also
      *                                  be a static nominal voltage if you do not want the setpoint generator to react to changes
@@ -123,10 +123,10 @@ public class SwerveSetpointGenerator {
      * desiredState quickly.
      */
     public SwerveSetpoint generateSetpoint(
-            final SwerveConstraints constraints,
             final SwerveSetpoint prevSetpoint,
             ChassisSpeeds desiredStateRobotRelative,
-            final double dt,
+            final SwerveConstraints constraints,
+            double dt,
             double inputVoltage) {
         if (Double.isNaN(inputVoltage)) {
             inputVoltage = 12.0;
@@ -498,15 +498,15 @@ public class SwerveSetpointGenerator {
      * desiredState quickly.
      */
     public SwerveSetpoint generateSetpoint(
-            SwerveSetpoint prevSetpoint,
+            final SwerveSetpoint prevSetpoint,
             ChassisSpeeds desiredStateRobotRelative,
-            SwerveConstraints constraints,
+            final SwerveConstraints constraints,
             double dt
     ) {
         return generateSetpoint(
-                constraints,
                 prevSetpoint,
                 desiredStateRobotRelative,
+                constraints,
                 dt,
                 RobotController.getInputVoltage()
         );
@@ -527,13 +527,45 @@ public class SwerveSetpointGenerator {
      * @return A Setpoint object that satisfies all the kinematic/friction limits while converging to
      * desiredState quickly.
      */
-    public SwerveSetpoint generateSetpoint(SwerveSetpoint prevSetpoint, ChassisSpeeds desiredStateRobotRelative, double dt) {
+    public SwerveSetpoint generateSetpoint(final SwerveSetpoint prevSetpoint, ChassisSpeeds desiredStateRobotRelative, double dt) {
         return generateSetpoint(
-                null,
                 prevSetpoint,
                 desiredStateRobotRelative,
+                null,
                 dt,
                 RobotController.getInputVoltage()
+        );
+    }
+
+    /**
+     * Generate a new setpoint with explicit battery voltage. Note: Do not discretize ChassisSpeeds
+     * passed into or returned from this method. This method will discretize the speeds for you.
+     *
+     * @param prevSetpoint              The previous setpoint motion. Normally, you'd pass in the previous
+     *                                  iteration setpoint instead of the actual measured/estimated kinematic state.
+     * @param desiredStateRobotRelative The desired state of motion, such as from the driver sticks or
+     *                                  a path following algorithm.
+     * @param dt                        The loop time.
+     * @param inputVoltage              The input voltage of the drive motor controllers, in volts. This can also
+     *                                  be a static nominal voltage if you do not want the setpoint generator to react to changes
+     *                                  in input voltage. If the given voltage is NaN, it will be assumed to be 12v. The input
+     *                                  voltage will be clamped to a minimum of the robot controller's brownout voltage.
+     *
+     * @return A Setpoint object that satisfies all the kinematic/friction limits while converging to
+     * desiredState quickly.
+     */
+    public SwerveSetpoint generateSetpoint(
+            final SwerveSetpoint prevSetpoint,
+            ChassisSpeeds desiredStateRobotRelative,
+            double dt,
+            double inputVoltage
+    ) {
+        return generateSetpoint(
+                prevSetpoint,
+                desiredStateRobotRelative,
+                null,
+                dt,
+                inputVoltage
         );
     }
 
