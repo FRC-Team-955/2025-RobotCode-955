@@ -128,6 +128,12 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
         return new ProfiledPIDController(kP, kI, kD, constraints);
     }
 
+    public ProfiledPIDController toProfiledPIDWrapRadians(TrapezoidProfile.Constraints constraints) {
+        var pid = new ProfiledPIDController(kP, kI, kD, constraints);
+        pid.enableContinuousInput(-Math.PI, Math.PI);
+        return pid;
+    }
+
     public SimpleMotorFeedforward toSimpleFF() {
         return new SimpleMotorFeedforward(kS, kV, kA);
     }
