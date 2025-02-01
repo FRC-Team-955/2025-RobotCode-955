@@ -24,6 +24,18 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
         return new PIDF(kP, 0, 0, kS, kV, 0, 0);
     }
 
+    public static PIDF ofPSVG(double kP, double kS, double kV, double kG) {
+        return new PIDF(kP, 0, 0, kS, kV, 0, kG);
+    }
+
+    public static PIDF ofPSVA(double kP, double kS, double kV, double kA) {
+        return new PIDF(kP, 0, 0, kS, kV, kA, 0);
+    }
+
+    public static PIDF ofPSVAG(double kP, double kS, double kV, double kA, double kG) {
+        return new PIDF(kP, 0, 0, kS, kV, kA, kG);
+    }
+
     public static PIDF ofPDS(double kP, double kD, double kS) {
         return new PIDF(kP, 0, kD, kS, 0, 0, 0);
     }
@@ -32,8 +44,16 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
         return new PIDF(kP, 0, kD, kS, kV, 0, 0);
     }
 
+    public static PIDF ofPDSVG(double kP, double kD, double kS, double kV, double kG) {
+        return new PIDF(kP, 0, kD, kS, kV, 0, kG);
+    }
+
     public static PIDF ofPDSVA(double kP, double kD, double kS, double kV, double kA) {
         return new PIDF(kP, 0, kD, kS, kV, kA, 0);
+    }
+
+    public static PIDF ofPDSVAG(double kP, double kD, double kS, double kV, double kA, double kG) {
+        return new PIDF(kP, 0, kD, kS, kV, kA, kG);
     }
 
     public static PIDF ofPIDSVA(double kP, double kI, double kD, double kS, double kV, double kA) {
