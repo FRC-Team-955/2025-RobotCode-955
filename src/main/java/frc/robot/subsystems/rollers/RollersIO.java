@@ -1,16 +1,16 @@
-package frc.robot.subsystems.coralintake;
+package frc.robot.subsystems.rollers;
 
 import frc.robot.subsystems.drive.ModuleIO;
 import org.littletonrobotics.junction.AutoLog;
 
-public class RollerIO {
+public class RollersIO {
     @AutoLog
-    public static class RollerIOInputs {
+    public static class RollersIOInputs {
         public boolean connected = false;
-        public double motorPositionRad = 0.0;
-        public double motorVelocityRadPerSec = 0.0;
-        public double motorAppliedVolts = 0.0;
-        public double motorCurrentAmps = 0.0;
+        public double positionRad = 0.0;
+        public double velocityRadPerSec = 0.0;
+        public double appliedVolts = 0.0;
+        public double currentAmps = 0.0;
     }
 
     /**

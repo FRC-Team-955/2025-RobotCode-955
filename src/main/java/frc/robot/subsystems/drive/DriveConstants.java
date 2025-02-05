@@ -1,6 +1,5 @@
 package frc.robot.subsystems.drive;
 
-import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
@@ -15,12 +14,6 @@ public class DriveConstants {
     public static final double sparkFrequencyHz = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> 250.0;
         case ALPHABOT -> 100.0;
-    };
-
-    public static final String canbusName = "phoenix";
-    public static final boolean isCANFD = switch (Constants.identity) {
-        case COMPBOT -> new CANBus(canbusName).isNetworkFD();
-        case ALPHABOT, SIMBOT -> false;
     };
 
     public static final double assistDirectionToleranceRad = Units.degreesToRadians(50);

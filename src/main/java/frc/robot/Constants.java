@@ -13,6 +13,7 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
@@ -59,5 +60,13 @@ public final class Constants {
         public static final boolean replayRunAsFastAsPossible = true;
 
         public static final boolean useNintendoSwitchProController = RobotBase.isSimulation() && System.getProperty("os.name").contains("Mac OS X");
+    }
+
+    public static final class CANivore {
+        public static final String busName = "phoenix";
+        public static final boolean isCANFD = switch (Constants.identity) {
+            case COMPBOT -> new CANBus(busName).isNetworkFD();
+            case ALPHABOT, SIMBOT -> false;
+        };
     }
 }
