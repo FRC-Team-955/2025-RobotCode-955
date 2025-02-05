@@ -25,12 +25,13 @@ public class ModuleIO {
         public double driveCurrentAmps = 0.0;
 
         public boolean turnConnected = false;
-        public boolean turnEncoderConnected = false;
-        public double turnAbsolutePositionRad = 0.0;
         public double turnPositionRad = 0.0;
         public double turnVelocityRadPerSec = 0.0;
         public double turnAppliedVolts = 0.0;
         public double turnCurrentAmps = 0.0;
+
+        public boolean turnEncoderConnected = false;
+        public double turnAbsolutePositionRad = 0.0;
 
         public double[] odometryTimestamps = new double[]{};
         public double[] odometryDrivePositionsRad = new double[]{};
