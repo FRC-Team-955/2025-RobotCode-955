@@ -32,8 +32,14 @@ public class RollersIO {
     }
 
     /**
-     * Run the motor at the specific velocity.
+     * Run the motor to the specified velocity.
      */
     public void setVelocity(double velocityRadPerSec) {
+    }
+
+    /**
+     * Run the motor to the specified rotation.
+     */
+    public void setPosition(double positionRad) {
     }
 }
