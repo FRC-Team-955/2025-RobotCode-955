@@ -23,20 +23,28 @@ public class DriveConstants {
         case ALPHABOT, SIMBOT -> false;
     };
 
+    public static final double assistDirectionToleranceRad = Units.degreesToRadians(50);
+    public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
+
+    public static final PIDF moveToXY = PIDF.ofPD(4, 0);
+    public static final PIDF moveToOmega = PIDF.ofPD(1.5, 0);
+
+    public static final boolean useSetpointGenerator = false;
+
     public static final DriveConfig driveConfig = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> new DriveConfig(
                 Units.inchesToMeters(2),
-                Units.inchesToMeters(21.75),
-                Units.inchesToMeters(21.75),
-                Units.inchesToMeters(31),
-                Units.inchesToMeters(31),
-                // from Choreo
-                4.731,
-                12.960,
-                12.112,
-                40.186,
+                Units.inchesToMeters(22.75),
+                Units.inchesToMeters(22.75),
+                Units.inchesToMeters(34.625),
+                Units.inchesToMeters(34.625),
                 PIDF.ofPD(1.5, 0),
-                PIDF.ofPD(1.5, 0)
+                PIDF.ofPD(1.5, 0),
+                4.574, // from Choreo
+                20,
+                11.580, // from Choreo
+                55.116, // from Choreo
+                Units.degreesToRadians(1080)
         );
         case ALPHABOT -> new DriveConfig(
                 Units.inchesToMeters(2),
@@ -44,13 +52,13 @@ public class DriveConstants {
                 Units.inchesToMeters(20.75),
                 Units.inchesToMeters(30),
                 Units.inchesToMeters(30),
-                // from Choreo
-                4.637,
-                12.123,
-                12.442,
-                35.864,
                 PIDF.ofPD(1.5, 0),
-                PIDF.ofPD(1.5, 0)
+                PIDF.ofPD(1.5, 0),
+                4.637, // from Choreo
+                20,
+                12.442, // from Choreo
+                31.923, // from Choreo
+                Units.degreesToRadians(1080) // not from Choreo
         );
     };
 
@@ -63,6 +71,11 @@ public class DriveConstants {
             new Translation2d(-driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0),
             new Translation2d(-driveConfig.trackWidthMeters / 2.0, -driveConfig.trackLengthMeters / 2.0)
     };
+
+    public static final double drivebaseRadius = Math.hypot(driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0);
+
+    public static final double joystickMaxAngularSpeedRadPerSec = Math.min(Units.degreesToRadians(315), driveConfig.maxAngularSpeedRadPerSec());
+    public static final double joystickDriveDeadband = 0.1;
 
     public static final ModuleConfig moduleConfig = switch (Constants.identity) {
         case COMPBOT -> new ModuleConfig(
@@ -101,7 +114,7 @@ public class DriveConstants {
         );
         case SIMBOT -> new ModuleConfig(
                 PIDF.ofPDSV(0.1, 0.0, 0.0, 0.13),
-                PIDF.ofPD(10.0, 0.0),
+                PIDF.ofPD(30.0, 0.0),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
@@ -120,17 +133,17 @@ public class DriveConstants {
         // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
         case COMPBOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
-                new ModuleIOCompbot(10, 12, 13, 0.189),
-                new ModuleIOCompbot(7, 8, 9, 1.891),
-                new ModuleIOCompbot(1, 2, 3, -0.009),
-                new ModuleIOCompbot(5, 6, 4, 1.525),
+                new ModuleIOTalonFXSparkMaxCANcoder(10, 12, 13, 0.189),
+                new ModuleIOTalonFXSparkMaxCANcoder(7, 8, 9, 1.891),
+                new ModuleIOTalonFXSparkMaxCANcoder(1, 2, 3, -0.009),
+                new ModuleIOTalonFXSparkMaxCANcoder(5, 6, 4, 1.525),
         };
         case ALPHABOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
-                new ModuleIOAlphabot(4, 5, 6, -2.115),
-                new ModuleIOAlphabot(2, 3, 1, -2.161),
-                new ModuleIOAlphabot(9, 10, 8, 0.255),
-                new ModuleIOAlphabot(12, 13, 11, 0.852),
+                new ModuleIOSparkMaxCANcoder(4, 5, 6, -2.115),
+                new ModuleIOSparkMaxCANcoder(2, 3, 1, -2.161),
+                new ModuleIOSparkMaxCANcoder(9, 10, 8, 0.255),
+                new ModuleIOSparkMaxCANcoder(12, 13, 11, 0.852),
         };
         case SIMBOT -> new ModuleIO[]{
                 new ModuleIOSim(),
@@ -148,29 +161,19 @@ public class DriveConstants {
         case SIMBOT -> new GyroIO();
     };
 
-    public static final double drivebaseRadius = Math.hypot(driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0);
-
-    public static final double joystickMaxAngularSpeedRadPerSec = Math.min(Units.degreesToRadians(315), driveConfig.maxAngularSpeedRadPerSec());
-    public static final double joystickDriveDeadband = 0.1;
-
-    public static final double assistDirectionToleranceRad = Units.degreesToRadians(50);
-    public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
-
-    public static final PIDF moveToXY = PIDF.ofPD(4, 0);
-    public static final PIDF moveToOmega = PIDF.ofPD(1.5, 0);
-
     public record DriveConfig(
             double wheelRadiusMeters,
             double trackWidthMeters, // Measured from the center of the swerve wheels
             double trackLengthMeters,
             double bumperWidthMeters,
             double bumperLengthMeters,
+            PIDF choreoFeedbackXY,
+            PIDF choreoFeedbackOmega,
             double maxLinearSpeedMetersPerSec,
             double maxLinearAccelMetersPerSecSquared,
             double maxAngularSpeedRadPerSec,
             double maxAngularAccelRadPerSecSquared,
-            PIDF choreoFeedbackXY,
-            PIDF choreoFeedbackOmega
+            double maxTurnVelocityRadPerSec
     ) {
     }
 

@@ -76,7 +76,7 @@ public class RobotState {
     }
 
     public void setPose(Pose2d pose) {
-        poseEstimator.resetPosition(Drive.get().getRawGyroRotation(), Drive.get().getModulePositions(), pose);
+        poseEstimator.resetPosition(Drive.get().getRawGyroRotation(), Drive.get().getMeasuredModulePositions(), pose);
     }
 
     public Command setPose(Supplier<Pose2d> pose) {

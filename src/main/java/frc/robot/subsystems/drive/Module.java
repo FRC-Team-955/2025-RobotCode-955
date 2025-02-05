@@ -73,12 +73,21 @@ public class Module {
     /**
      * Runs the module with the specified setpoint state. Mutates the state to optimize it.
      */
-    public void runSetpoint(SwerveModuleState state) {
+    public void runSetpointOptimized(SwerveModuleState state) {
         // Optimize velocity setpoint
         var currentAngle = new Rotation2d(inputs.turnPositionRad);
         state.optimize(currentAngle);
         state.cosineScale(currentAngle);
 
+        // Apply setpoints
+        io.setDriveVelocity(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
+        io.setTurnPosition(state.angle.getRadians());
+    }
+
+    /**
+     * Runs the module with the specified setpoint state.
+     */
+    public void runSetpointUnoptimized(SwerveModuleState state) {
         // Apply setpoints
         io.setDriveVelocity(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
         io.setTurnPosition(state.angle.getRadians());

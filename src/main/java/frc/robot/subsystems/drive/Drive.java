@@ -23,6 +23,9 @@ import frc.robot.Constants;
 import frc.robot.RobotState;
 import frc.robot.Util;
 import frc.robot.util.SubsystemBaseExt;
+import frc.robot.util.swerve.ModuleLimits;
+import frc.robot.util.swerve.SwerveSetpoint;
+import frc.robot.util.swerve.SwerveSetpointGenerator;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -68,7 +71,12 @@ public class Drive extends SubsystemBaseExt {
     @Getter
     private Rotation2d rawGyroRotation = new Rotation2d();
 
+    private final SwerveSetpointGenerator setpointGenerator = new SwerveSetpointGenerator(robotState.getKinematics());
+    /** If null, it will be set to the measured ChassisSpeeds and module states when the setpoint generator starts to be used */
+    private SwerveSetpoint prevSetpoint = null;
+
     public final SysIdRoutine sysId;
+
     private final Alert gyroDisconnectedAlert = new Alert("Disconnected gyro, using kinematics as fallback.", Alert.AlertType.kError);
 
     private Goal goal = Goal.IDLE;
@@ -104,7 +112,8 @@ public class Drive extends SubsystemBaseExt {
     }
 
     private Drive() {
-        for (int i = 0; i < 4; i++) {
+        // Array is current four nulls, so length works just fine
+        for (int i = 0; i < modules.length; i++) {
             modules[i] = new Module(moduleIO[i], i);
         }
 
@@ -118,8 +127,8 @@ public class Drive extends SubsystemBaseExt {
         sysId = Util.sysIdRoutine(
                 "Drive",
                 (voltage) -> {
-                    for (int i = 0; i < 4; i++) {
-                        modules[i].runCharacterization(voltage.in(Volts));
+                    for (var module : modules) {
+                        module.runCharacterization(voltage.in(Volts));
                     }
                 },
                 () -> goal = Goal.CHARACTERIZATION,
@@ -151,9 +160,9 @@ public class Drive extends SubsystemBaseExt {
         int sampleCount = sampleTimestamps.length;
         for (int i = 0; i < sampleCount; i++) {
             // Read wheel positions and deltas from each module
-            SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
-            SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
-            for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
+            SwerveModulePosition[] modulePositions = new SwerveModulePosition[modules.length];
+            SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[modules.length];
+            for (int moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
                 modulePositions[moduleIndex] = modules[moduleIndex].getOdometryPositions()[i];
                 moduleDeltas[moduleIndex] = new SwerveModulePosition(
                         modulePositions[moduleIndex].distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
@@ -187,39 +196,101 @@ public class Drive extends SubsystemBaseExt {
         // Stop moving when idle or disabled
         if (goal == Goal.IDLE || DriverStation.isDisabled()) {
             Logger.recordOutput("Drive/ClosedLoop", false);
+            prevSetpoint = null;
+
             for (var module : modules) {
                 module.stop();
             }
-            Logger.recordOutput("Drive/ModuleStates/Setpoints", new SwerveModuleState[]{});
-            Logger.recordOutput("Drive/ModuleStates/SetpointsOptimized", new SwerveModuleState[]{});
+
+            Logger.recordOutput("Drive/ChassisSpeeds/Setpoint", new ChassisSpeeds());
+            Logger.recordOutput(
+                    "Drive/ModuleStates/Setpoints",
+                    new SwerveModuleState(),
+                    new SwerveModuleState(),
+                    new SwerveModuleState(),
+                    new SwerveModuleState()
+            );
+            Logger.recordOutput(
+                    "Drive/ModuleStates/SetpointsOptimized",
+                    new SwerveModuleState(),
+                    new SwerveModuleState(),
+                    new SwerveModuleState(),
+                    new SwerveModuleState()
+            );
         }
         // Closed loop control
         else if (goal != Goal.CHARACTERIZATION && closedLoopSetpoint != null) {
             Logger.recordOutput("Drive/ClosedLoop", true);
             Logger.recordOutput("Drive/ChassisSpeeds/Setpoint", closedLoopSetpoint);
 
-            // Calculate module setpoints
-            ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(closedLoopSetpoint, 0.02);
-            SwerveModuleState[] setpointStates = robotState.getKinematics().toSwerveModuleStates(discreteSpeeds);
-            if (disableDriving.get()) {
-                for (int i = 0; i < 4; i++) {
-                    setpointStates[i].speedMetersPerSecond = 0.0;
+            if (useSetpointGenerator && !disableDriving.get() && (goal == Goal.DRIVE_JOYSTICK || goal == Goal.DRIVE_JOYSTICK_ASSISTED)) {
+                Logger.recordOutput("Drive/SetpointGenerator", true);
+
+                Logger.recordOutput(
+                        "Drive/ModuleStates/Setpoints",
+                        // DON'T DO ANYTHING WITH THIS. SETPOINT GENERATOR SHOULD NOT GET A DISCRETIZED SETPOINT
+                        robotState.getKinematics().toSwerveModuleStates(
+                                ChassisSpeeds.discretize(closedLoopSetpoint, 0.02)
+                        )
+                );
+
+                if (prevSetpoint == null) {
+                    // Reset to current chassis speeds and module states
+                    prevSetpoint = new SwerveSetpoint(
+                            getMeasuredChassisSpeeds(),
+                            getMeasuredModuleStates()
+                    );
                 }
+
+                prevSetpoint = setpointGenerator.generateSetpoint(
+                        new ModuleLimits(
+                                driveConfig.maxLinearSpeedMetersPerSec(),
+                                driveConfig.maxLinearAccelMetersPerSecSquared(),
+                                driveConfig.maxTurnVelocityRadPerSec()
+                        ),
+                        prevSetpoint,
+                        closedLoopSetpoint, // THIS SHOULD NOT BE DISCRETIZED
+                        0.02
+                );
+                var setpointStates = prevSetpoint.moduleStates();
+
+                // Send setpoints to modules
+                for (int i = 0; i < modules.length; i++) {
+                    modules[i].runSetpointUnoptimized(setpointStates[i]);
+                }
+
+                // Log setpoint states
+                Logger.recordOutput("Drive/ModuleStates/SetpointsOptimized", setpointStates);
+                Logger.recordOutput("Drive/ChassisSpeeds/SetpointOptimized", prevSetpoint.chassisSpeeds());
             } else {
-                SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, driveConfig.maxLinearSpeedMetersPerSec());
-            }
-            Logger.recordOutput("Drive/ModuleStates/Setpoints", setpointStates);
+                Logger.recordOutput("Drive/SetpointGenerator", false);
 
-            // Send setpoints to modules
-            for (int i = 0; i < 4; i++) {
-                // The module set setpointStates[i] to the optimized setpoint, useful for logging
-                modules[i].runSetpoint(setpointStates[i]);
-            }
+                // Calculate module setpoints
+                ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(closedLoopSetpoint, 0.02);
+                SwerveModuleState[] setpointStates = robotState.getKinematics().toSwerveModuleStates(discreteSpeeds);
+                if (disableDriving.get()) {
+                    for (int i = 0; i < modules.length; i++) {
+                        setpointStates[i].speedMetersPerSecond = 0.0;
+                    }
+                } else {
+                    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, driveConfig.maxLinearSpeedMetersPerSec());
+                }
 
-            // Log setpoint states
-            Logger.recordOutput("Drive/ModuleStates/SetpointsOptimized", setpointStates);
+                Logger.recordOutput("Drive/ModuleStates/Setpoints", setpointStates);
+
+                // Send setpoints to modules
+                for (int i = 0; i < modules.length; i++) {
+                    // The module sets setpointStates[i] to the optimized setpoint, useful for logging
+                    modules[i].runSetpointOptimized(setpointStates[i]);
+                }
+
+                // Log setpoint states
+                Logger.recordOutput("Drive/ModuleStates/SetpointsOptimized", setpointStates);
+                Logger.recordOutput("Drive/ChassisSpeeds/SetpointOptimized", robotState.getKinematics().toChassisSpeeds(setpointStates));
+            }
         } else {
             Logger.recordOutput("Drive/ClosedLoop", false);
+            prevSetpoint = null;
         }
 
         // Run module closed loop control
@@ -233,8 +304,8 @@ public class Drive extends SubsystemBaseExt {
      * return to their normal orientations the next time a nonzero velocity is requested.
      */
     private void stopWithX() {
-        Rotation2d[] headings = new Rotation2d[4];
-        for (int i = 0; i < 4; i++) {
+        Rotation2d[] headings = new Rotation2d[modules.length];
+        for (int i = 0; i < modules.length; i++) {
             headings[i] = moduleTranslations[i].getAngle();
         }
         // Why does this work? See SwerveDriveKinematics.toModuleStates
@@ -244,16 +315,16 @@ public class Drive extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Drive/ChassisSpeeds/Measured")
     private ChassisSpeeds getMeasuredChassisSpeeds() {
-        return robotState.getKinematics().toChassisSpeeds(getModuleStates());
+        return robotState.getKinematics().toChassisSpeeds(getMeasuredModuleStates());
     }
 
     /**
      * Returns the module states (turn angles and drive velocities) for all of the modules.
      */
     @AutoLogOutput(key = "Drive/ModuleStates/Measured")
-    private SwerveModuleState[] getModuleStates() {
-        SwerveModuleState[] states = new SwerveModuleState[4];
-        for (int i = 0; i < 4; i++) {
+    private SwerveModuleState[] getMeasuredModuleStates() {
+        SwerveModuleState[] states = new SwerveModuleState[modules.length];
+        for (int i = 0; i < modules.length; i++) {
             states[i] = modules[i].getState();
         }
         return states;
@@ -262,9 +333,9 @@ public class Drive extends SubsystemBaseExt {
     /**
      * Returns the module positions (turn angles and drive positions) for all of the modules.
      */
-    public SwerveModulePosition[] getModulePositions() {
-        SwerveModulePosition[] states = new SwerveModulePosition[4];
-        for (int i = 0; i < 4; i++) {
+    public SwerveModulePosition[] getMeasuredModulePositions() {
+        SwerveModulePosition[] states = new SwerveModulePosition[modules.length];
+        for (int i = 0; i < modules.length; i++) {
             states[i] = modules[i].getPosition();
         }
         return states;
@@ -512,12 +583,12 @@ public class Drive extends SubsystemBaseExt {
             lastGyroYawRads = rawGyroRotation.getRadians();
             double averageWheelPosition = 0.0;
             double[] wheelPositions = getWheelRadiusCharacterizationPositions();
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < modules.length; i++) {
                 averageWheelPosition += Math.abs(wheelPositions[i] - startWheelPositions[i]);
             }
-            averageWheelPosition /= 4.0;
+            averageWheelPosition /= modules.length;
 
-            currentEffectiveWheelRadius = (accumGyroYawRads * DriveConstants.drivebaseRadius) / averageWheelPosition;
+            currentEffectiveWheelRadius = (accumGyroYawRads * drivebaseRadius) / averageWheelPosition;
             Logger.recordOutput("Drive/RadiusCharacterization/DrivePosition", averageWheelPosition);
             Logger.recordOutput("Drive/RadiusCharacterization/AccumGyroYawRads", accumGyroYawRads);
             Logger.recordOutput(
