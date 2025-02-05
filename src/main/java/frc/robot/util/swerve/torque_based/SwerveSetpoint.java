@@ -1,6 +1,6 @@
 // https://github.com/mjansen4857/pathplanner/blob/main/pathplannerlib/src/main/java/com/pathplanner/lib/util/swerve/SwerveSetpoint.java
 
-package frc.robot.util.swerve;
+package frc.robot.util.swerve.pathplanner;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;

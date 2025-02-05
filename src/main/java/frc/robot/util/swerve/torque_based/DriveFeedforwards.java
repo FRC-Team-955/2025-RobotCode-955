@@ -1,6 +1,6 @@
 // https://github.com/mjansen4857/pathplanner/blob/main/pathplannerlib/src/main/java/com/pathplanner/lib/util/DriveFeedforwards.java
 
-package frc.robot.util.swerve;
+package frc.robot.util.swerve.pathplanner;
 
 import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.math.MathUtil;
@@ -34,6 +34,7 @@ public record DriveFeedforwards(
      * Create drive feedforwards consisting of all zeros
      *
      * @param numModules Number of drive modules
+     *
      * @return Zero feedforwards
      */
     public static DriveFeedforwards zeros(int numModules) {

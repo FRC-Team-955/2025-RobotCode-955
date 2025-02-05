@@ -1,6 +1,6 @@
 // https://github.com/mjansen4857/pathplanner/blob/main/pathplannerlib/src/main/java/com/pathplanner/lib/util/swerve/SwerveSetpointGenerator.java
 
-package frc.robot.util.swerve;
+package frc.robot.util.swerve.pathplanner;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -17,6 +17,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static frc.robot.Util.epsilonEquals;
+import static frc.robot.Util.greaterThanEpsilon;
+
 /**
  * Swerve setpoint generator based on a version created by FRC team 254.
  *
@@ -25,8 +28,6 @@ import java.util.Optional;
  * forces acting on a module's wheel from exceeding the force of friction.
  */
 public class SwerveSetpointGenerator {
-    private static final double kEpsilon = 1E-6;
-
     private final SwerveDriveKinematics kinematics;
     private final SimpleMatrix forceKinematics;
     private final Translation2d[] moduleLocations;
@@ -212,7 +213,7 @@ public class SwerveSetpointGenerator {
                 && !epsilonEquals(desiredStateRobotRelative, new ChassisSpeeds())) {
             // It will (likely) be faster to stop the robot, rotate the modules in place to the complement
             // of the desired angle, and accelerate again.
-            return generateSetpoint(constraints, prevSetpoint, new ChassisSpeeds(), dt, inputVoltage);
+            return generateSetpoint(prevSetpoint, new ChassisSpeeds(), constraints, dt, inputVoltage);
         }
 
         // Compute the deltas between start and goal. We can then interpolate from the start state to
@@ -294,10 +295,9 @@ public class SwerveSetpointGenerator {
             // We do this by changing max_theta_step to the maximum change in heading over dt
             // that would create a large enough radius to keep the centripetal force under the
             // friction force.
-            double maxHeadingChange = (dt * wheelFrictionNewtons) / (
-                    (massKG / moduleLocations.length)
-                            * Math.abs(prevSetpoint.moduleStates()[m].speedMetersPerSecond)
-            );
+            double maxHeadingChange =
+                    (dt * wheelFrictionNewtons)
+                            / ((massKG / moduleLocations.length) * Math.abs(prevSetpoint.moduleStates()[m].speedMetersPerSecond));
             max_theta_step = Math.min(max_theta_step, maxHeadingChange);
 
             double s = findSteeringMaxS(
@@ -440,7 +440,7 @@ public class SwerveSetpointGenerator {
         for (int m = 0; m < moduleLocations.length; m++) {
             double wheelForceDist = wheelForces[m].getNorm();
             double appliedForce =
-                    wheelForceDist > kEpsilon
+                    greaterThanEpsilon(wheelForceDist)
                             ? wheelForceDist * wheelForces[m].getAngle().minus(retStates[m].angle).getCos()
                             : 0.0;
             double wheelTorque = appliedForce * wheelRadiusMeters;
@@ -692,20 +692,6 @@ public class SwerveSetpointGenerator {
         // Since we passed the initial max_vel_step check, a solution should exist,
         // but if no solution was found anyway, just don't limit movement
         return 1.0;
-    }
-
-    private static boolean epsilonEquals(double a, double b, double epsilon) {
-        return (a - epsilon <= b) && (a + epsilon >= b);
-    }
-
-    private static boolean epsilonEquals(double a, double b) {
-        return epsilonEquals(a, b, kEpsilon);
-    }
-
-    private static boolean epsilonEquals(ChassisSpeeds s1, ChassisSpeeds s2) {
-        return epsilonEquals(s1.vxMetersPerSecond, s2.vxMetersPerSecond)
-                && epsilonEquals(s1.vyMetersPerSecond, s2.vyMetersPerSecond)
-                && epsilonEquals(s1.omegaRadiansPerSecond, s2.omegaRadiansPerSecond);
     }
 
     // https://github.com/mjansen4857/pathplanner/blob/10271416a7d0e6a6296cf0a6be5867af5df67c43/pathplannerlib/src/main/java/com/pathplanner/lib/config/RobotConfig.java#L227

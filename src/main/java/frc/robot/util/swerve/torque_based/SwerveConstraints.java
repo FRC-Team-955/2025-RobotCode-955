@@ -1,6 +1,6 @@
 // https://github.com/mjansen4857/pathplanner/blob/main/pathplannerlib/src/main/java/com/pathplanner/lib/path/PathConstraints.java
 
-package frc.robot.util.swerve;
+package frc.robot.util.swerve.pathplanner;
 
 
 /**
