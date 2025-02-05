@@ -112,7 +112,7 @@ public class Drive extends SubsystemBaseExt {
     }
 
     private Drive() {
-        // Array is current four nulls, so length works just fine
+        // Array is currently four nulls, so length works just fine
         for (int i = 0; i < modules.length; i++) {
             modules[i] = new Module(moduleIO[i], i);
         }

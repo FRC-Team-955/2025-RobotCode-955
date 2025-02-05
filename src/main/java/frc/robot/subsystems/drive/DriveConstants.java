@@ -26,10 +26,11 @@ public class DriveConstants {
     public static final double assistDirectionToleranceRad = Units.degreesToRadians(50);
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
+    // Ranges: -1 to 1, where 1 is the maximum speed
     public static final PIDF moveToXY = PIDF.ofPD(4, 0);
     public static final PIDF moveToOmega = PIDF.ofPD(1.5, 0);
 
-    public static final boolean useSetpointGenerator = false;
+    public static final boolean useSetpointGenerator = true;
 
     public static final DriveConfig driveConfig = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> new DriveConfig(
