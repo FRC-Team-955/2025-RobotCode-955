@@ -1,0 +1,318 @@
+{
+  "hubs": [
+    {
+      "x": 0,
+      "y": 25,
+      "width": 1920,
+      "height": 1055,
+      "state": {
+        "sidebar": {
+          "width": 383,
+          "expanded": [
+            "/RealOutputs",
+            "/RealOutputs/Vision",
+            "/RealOutputs/RobotState",
+            "/RealOutputs/Vision/Summary",
+            "/RealOutputs/Vision/Camera1",
+            "/RealOutputs/Vision/Camera0",
+            "/RealOutputs/RobotState/Pose",
+            "/RealOutputs/Logger",
+            "/RealOutputs/LoggedRobot",
+            "/RealOutputs/Drive",
+            "/RealOutputs/Drive/MoveToSetpoint",
+            "/RealOutputs/Drive/ModuleStates",
+            "/RealOutputs/Drive/Assist/RobotToAssistDirection",
+            "/RealOutputs/Drive/Assist/Pose",
+            "/RealOutputs/Drive/Assist/JoystickDirectionFlipped",
+            "/RealOutputs/Drive/Assist/JoystickDirection",
+            "/RealOutputs/Drive/Assist/DirectionDifference",
+            "/Inputs",
+            "/Vision",
+            "/Vision/Gamepiece0",
+            "/Vision/Gamepiece0/LatestTargetObservation",
+            "/RealOutputs/Vision/Gampiece0",
+            "/RealOutputs/Drive/Assist/JoystickLinearDirection",
+            "/RealOutputs/Drive/Assist/JoystickLinearDirectionFlipped",
+            "/RealOutputs/Assist",
+            "/RealOutputs/Drive/JoystickDrive/LinearDirection",
+            "/RealOutputs/Drive/Assist/FlippedJoystickLinearDirection",
+            "/RealOutputs/Drive/Assist/PID",
+            "/RealOutputs/Drive/JoystickDrive/Suppliers",
+            "/RealOutputs/Drive/JoystickDrive/LinearVelocity",
+            "/RealOutputs/Vision/Gamepiece0",
+            "/RealOutputs/Vision/Summary/ClosestGamepiece",
+            "/RealOutputs/Vision/Gamepiece0/ClosestPose",
+            "/RealOutputs/Vision/Summary/ClosestGamepiece/Pose",
+            "/RealOutputs/Vision/Gamepiece0/ClosestPose/translation",
+            "/RealOutputs/Vision/Summary/ClosestGamepiece/Pose/translation",
+            "/RealOutputs/Drive/ChassisSpeeds",
+            "/RealOutputs/Drive/ModuleStates/Setpoints/0",
+            "/RealOutputs/Drive/ModuleStates/Setpoints/0/angle",
+            "/Inputs/Drive",
+            "/Inputs/Drive/Module0",
+            "/Inputs/Drive/Module3",
+            "/RealOutputs/Drive/ModuleStates/Setpoints",
+            "/RealOutputs/Drive/ChassisSpeeds/Setpoint",
+            "/RealOutputs/Drive/JoystickDrive",
+            "/RealOutputs/Drive/Assist",
+            "/RealOutputs/Drive/ModuleStates/SetpointsOptimized",
+            "/RealOutputs/Drive/ModuleStates/SetpointsOptimized/0",
+            "/RealOutputs/Drive/ModuleStates/SetpointsOptimized/0/angle",
+            "/RealOutputs/Drive/ChassisSpeeds/Measured"
+          ]
+        },
+        "tabs": {
+          "selected": 3,
+          "tabs": [
+            {
+              "type": 0,
+              "title": "",
+              "controller": null,
+              "controllerUUID": "qj0x19otgfx9ie54wbjacqwujjml12hu",
+              "renderer": "#/",
+              "controlsHeight": 0
+            },
+            {
+              "type": 2,
+              "title": "Odometry",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "/RealOutputs/RobotState/Pose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {}
+                  }
+                ],
+                "game": "2025 Field",
+                "bumpers": "auto",
+                "origin": "blue",
+                "orientation": 0,
+                "size": 30
+              },
+              "controllerUUID": "sdg56uvg5hcg7g4akbohq2iunqkdj0so",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
+              "title": "Line Graph",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "/Inputs/Drive/Module0/TurnPositionRad",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Drive/ModuleStates/SetpointsOptimized/0/angle/value",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#e5b31b",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [],
+                "discreteSources": [],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "rightUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "g7klqce0xhqdn5cqg24o77o0kwg8z9gr",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 3,
+              "title": "3D Field",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "/RealOutputs/RobotState/Pose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "Crab Bot"
+                    }
+                  },
+                  {
+                    "type": "swerveStates",
+                    "logKey": "/RealOutputs/Drive/ModuleStates/Measured",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "arrangement": "0,1,2,3"
+                    }
+                  },
+                  {
+                    "type": "swerveStates",
+                    "logKey": "/RealOutputs/Drive/ModuleStates/SetpointsOptimized",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#0000ff",
+                      "arrangement": "0,1,2,3"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "/RealOutputs/Drive/Assist/Pose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "Crab Bot",
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "/RealOutputs/Vision/Summary/ClosestGamepiece/Pose",
+                    "logType": "Pose3d",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
+                    }
+                  }
+                ],
+                "game": "2025 Field",
+                "origin": "blue"
+              },
+              "controllerUUID": "9rze3pds5b8u1nxoisw2jmjaxfeawu7t",
+              "renderer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  -2.593575120490634,
+                  22.843708107261907,
+                  0.5733483788222931
+                ],
+                "cameraTarget": [
+                  2.030020073559059,
+                  2.280936127815281,
+                  0.6104599562852551
+                ]
+              },
+              "controlsHeight": 200
+            },
+            {
+              "type": 9,
+              "title": "Swerve",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "states",
+                    "logKey": "/RealOutputs/Drive/ModuleStates/Measured",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "arrangement": "0,1,2,3"
+                    }
+                  },
+                  {
+                    "type": "chassisSpeeds",
+                    "logKey": "/RealOutputs/Drive/ChassisSpeeds/Measured",
+                    "logType": "ChassisSpeeds",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff00ff"
+                    }
+                  },
+                  {
+                    "type": "chassisSpeeds",
+                    "logKey": "/RealOutputs/Drive/ChassisSpeeds/Setpoint",
+                    "logType": "ChassisSpeeds",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ffff"
+                    }
+                  },
+                  {
+                    "type": "rotation",
+                    "logKey": "/RealOutputs/RobotState/Pose/rotation",
+                    "logType": "Rotation2d",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "chassisSpeeds",
+                    "logKey": "/RealOutputs/Drive/ChassisSpeeds/SetpointOptimized",
+                    "logType": "ChassisSpeeds",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff8c00"
+                    }
+                  },
+                  {
+                    "type": "states",
+                    "logKey": "/RealOutputs/Drive/ModuleStates/Setpoints",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "arrangement": "0,1,2,3"
+                    }
+                  },
+                  {
+                    "type": "states",
+                    "logKey": "/RealOutputs/Drive/ModuleStates/Setpoints",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#0000ff",
+                      "arrangement": "0,1,2,3"
+                    }
+                  }
+                ],
+                "maxSpeed": 5,
+                "sizeX": 0.65,
+                "sizeY": 0.65,
+                "orientation": 1
+              },
+              "controllerUUID": "q3znq7y9vkf00r3pgz045k9weadxdw31",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 8,
+              "title": "Joysticks",
+              "controller": [
+                "Nintendo Switch Pro Controller",
+                "None",
+                "None",
+                "None",
+                "None",
+                "None"
+              ],
+              "controllerUUID": "s7nsmnvp5wr9tls3p1h2zonb8ck1h872",
+              "renderer": null,
+              "controlsHeight": 85
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "satellites": [],
+  "version": "4.1.1"
+}
