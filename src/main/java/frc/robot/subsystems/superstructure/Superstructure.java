@@ -39,4 +39,15 @@ public class Superstructure extends SubsystemBaseExt {
 
         return instance;
     }
+
+    @Override
+    public void periodicBeforeCommands() {
+        io.updateInputs(inputs);
+        Logger.processInputs("Inputs/Superstructure", inputs);
+    }
+
+    @Override
+    public void periodicAfterCommands() {
+
+    }
 }

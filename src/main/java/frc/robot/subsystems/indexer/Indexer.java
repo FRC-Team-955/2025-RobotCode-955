@@ -20,7 +20,7 @@ public class Indexer extends SubsystemBaseExt {
     private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 
     private RollersGoal rollersGoal = RollersGoal.IDLE;
-    private double rollersSetpointRadPerSec;
+    private Double rollersSetpointRadPerSec;
 
     private static Indexer instance;
 
@@ -31,5 +31,16 @@ public class Indexer extends SubsystemBaseExt {
             }
 
         return instance;
+    }
+
+    @Override
+    public void periodicBeforeCommands() {
+        rollersIO.updateInputs(rollersInputs);
+        Logger.processInputs("Inputs/Indexer/Rollers", rollersInputs);
+    }
+
+    @Override
+    public void periodicAfterCommands() {
+
     }
 }

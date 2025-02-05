@@ -16,23 +16,23 @@ public class RollersIO {
     /**
      * Updates the set of loggable inputs.
      */
-    public void updateInputs(ModuleIO.ModuleIOInputs inputs) {
+    public void updateInputs(RollersIOInputs inputs) {
     }
 
     /**
-     * Enable or disable brake mode on the drive motor.
+     * Enable or disable brake mode on the motor.
      */
     public void setBrakeMode(boolean enable) {
     }
 
     /**
-     * Run the drive motor at the specified open loop value.
+     * Run the motor at the specified open loop value.
      */
     public void setOpenLoop(double output) {
     }
 
     /**
-     * Run the turn motor to the specified rotation.
+     * Run the motor at the specific velocity.
      */
     public void setVelocity(double velocityRadPerSec) {
     }

@@ -8,18 +8,18 @@ import lombok.RequiredArgsConstructor;
 public class EndEffector extends SubsystemBaseExt {
     @RequiredArgsConstructor
     public enum RollersGoal {
-        CHARACTERIZATION(0), // specially handled in periodic
-        IDLE(0),
-        FORWARD(1);
+        CHARACTERIZATION(() -> null),
+        IDLE(() -> 0),
+        FORWARD(() -> 1);
 
-        private final double setpointRadPerSec;
+        private final Supplier<Double> setpointRadPerSec;
     }
 
     private static final RollersIO rollersIO;
     private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 
     private RollersGoal rollersGoal = RollersGoal.IDLE;
-    private double rollersSetpointRadPerSec;
+    private Double rollersSetpointRadPerSec;
 
     private static EndEffector instance;
 
@@ -30,5 +30,23 @@ public class EndEffector extends SubsystemBaseExt {
             }
 
         return instance;
+    }
+
+    @Override
+    public void periodicBeforeCommands() {
+        rollersIO.updateInputs(rollersInputs);
+        Logger.processInputs("Inputs/EndEffector/Rollers", rollersInputs);
+    }
+
+    @Override
+    public void periodicAfterCommands() {
+        Logger.recordOutput("EndEffector/Rollers/Goal", rollersGoal);
+        rollersSetpointRadPerSec = rollersGoal.setpointRadPerSec.get();
+
+        if (rollersSetpointRadPerSec != null) {
+            Logger.recordOutput("EndEffector/Rollers/ClosedLoop", true);
+        } else {
+            Logger.recordOutput("EndEffector/Rollers/ClosedLoop", false);
+        }
     }
 }

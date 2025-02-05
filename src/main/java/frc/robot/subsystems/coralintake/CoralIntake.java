@@ -9,7 +9,13 @@ import lombok.RequiredArgsConstructor;
 import static frc.robot.subsystems.coralintake.CoralIntakeConstants.pivotConfig;
 
 public class CoralIntake extends SubsystemBaseExt {
+    @RequiredArgsConstructor
     public enum PivotGoal {
+        CHARACTERIZATION(0), // specially handled in periodic
+        STOW(0),
+        INTAKE(1);
+
+        private final double setpointRad;
     }
 
     @RequiredArgsConstructor
@@ -26,13 +32,13 @@ public class CoralIntake extends SubsystemBaseExt {
     private static final PivotIOInputsAutoLogged pivotInputs = new PivotIOInputsAutoLogged();
 
     private PivotGoal pivotGoal = PivotGoal.IDLE;
-    private double pivotSetpointRad;
+    private Double pivotSetpointRad;
 
     private static final RollersIO rollersIO;
     private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 
     private RollersGoal rollersGoal = RollersGoal.IDLE;
-    private double rollersSetpointRadPerSec;
+    private Double rollersSetpointRadPerSec;
 
     private static CoralIntake instance;
 
@@ -55,5 +61,19 @@ public class CoralIntake extends SubsystemBaseExt {
 
     public boolean atPivotGoal() {
         return Math.abs(pivotSetpointRad - pivotInputs.positionRad) <= pivotConfig.setpointToleranceRad();
+    }
+
+    @Override
+    public void periodicBeforeCommands() {
+        pivotIO.updateInputs(pivotInputs);
+        Logger.processInputs("Inputs/CoralIntake/Pivot", pivotInputs);
+
+        rollersIO.updateInputs(rollersInputs);
+        Logger.processInputs("Inputs/CoralIntake/Rollers", rollersInputs);
+    }
+
+    @Override
+    public void periodicAfterCommands() {
+
     }
 }
