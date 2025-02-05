@@ -41,7 +41,7 @@ import static frc.robot.util.PhoenixUtil.tryUntilOk;
  *
  * <p>Device configuration and other behaviors not exposed by TunerConstants can be customized here.
  */
-public class ModuleIOTalonFX extends ModuleIO {
+public class ModuleIOTalonFXCANcoder extends ModuleIO {
     private static final SwerveModuleConstants.ClosedLoopOutputType steerClosedLoopOutput = SwerveModuleConstants.ClosedLoopOutputType.Voltage;
     // The closed-loop output type to use for the drive motors;
     // This affects the PID/FF gains for the drive motors
@@ -90,7 +90,7 @@ public class ModuleIOTalonFX extends ModuleIO {
     private final Debouncer turnConnectedDebounce = new Debouncer(0.5);
     private final Debouncer turnEncoderConnectedDebounce = new Debouncer(0.5);
 
-    public ModuleIOTalonFX(
+    public ModuleIOTalonFXCANcoder(
             int driveCanID,
             int turnCanID,
             int cancoderCanID,
