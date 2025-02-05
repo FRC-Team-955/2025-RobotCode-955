@@ -1,6 +1,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -14,13 +15,15 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class Util {
+    private static final double epsilon = 1E-6;
+
     public static boolean shouldFlip() {
         return DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
     }
 
     public static Rotation2d flipIfNeeded(Rotation2d rotation2d) {
         return shouldFlip()
-                ? rotation2d.plus(new Rotation2d(Math.PI))
+                ? rotation2d.plus(Rotation2d.kPi)
                 : rotation2d;
     }
 
@@ -103,5 +106,19 @@ public class Util {
         } else {
             DriverStation.reportError(msg, false);
         }
+    }
+
+    public static boolean epsilonEquals(double a, double b) {
+        return (a - epsilon <= b) && (a + epsilon >= b);
+    }
+
+    public static boolean epsilonEquals(ChassisSpeeds s1, ChassisSpeeds s2) {
+        return epsilonEquals(s1.vxMetersPerSecond, s2.vxMetersPerSecond)
+                && epsilonEquals(s1.vyMetersPerSecond, s2.vyMetersPerSecond)
+                && epsilonEquals(s1.omegaRadiansPerSecond, s2.omegaRadiansPerSecond);
+    }
+
+    public static boolean greaterThanEpsilon(double a) {
+        return a > epsilon;
     }
 }
