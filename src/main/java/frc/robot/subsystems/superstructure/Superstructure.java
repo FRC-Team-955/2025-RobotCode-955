@@ -1,5 +1,10 @@
 package frc.robot.subsystems.superstructure;
 
+import frc.robot.RobotState;
+import frc.robot.subsystems.coralintake.CoralIntake;
+import frc.robot.subsystems.drive.Drive;
+import frc.robot.util.SubsystemBaseExt;
+
 public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
     private final Drive drive = Drive.get();
