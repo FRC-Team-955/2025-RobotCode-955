@@ -3,10 +3,12 @@ package frc.robot.subsystems.coralintake;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.*;
+import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
@@ -57,7 +59,7 @@ public class PivotIOTalonFX extends PivotIO {
             double absoluteEncoderOffsetRad
     ) {
         driveTalon = new TalonFX(driveCanID);
-        encoder = new DutyCycleEncoder(encoderID, 2*Math.PI, absoluteEncoderOffsetRad);
+        encoder = new DutyCycleEncoder(encoderID, 2 * Math.PI, absoluteEncoderOffsetRad);
 
         // Configure turn motor
         motorConfig = new TalonFXConfiguration();
@@ -97,11 +99,11 @@ public class PivotIOTalonFX extends PivotIO {
 
         // Update drive inputs
         inputs.connected = driveConnectedDebounce.calculate(driveStatus.isOK());
-        inputs.motorPositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
-        inputs.motorVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
-        inputs.motorAppliedVolts = driveAppliedVolts.getValueAsDouble();
-        inputs.motorCurrentAmps = driveCurrent.getValueAsDouble();
-        inputs.encoderConnected = turnEncoderConnectedDebounce.calculate(encoder.isConnected());
+        inputs.positionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
+        inputs.velocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
+        inputs.appliedVolts = driveAppliedVolts.getValueAsDouble();
+        inputs.currentAmps = driveCurrent.getValueAsDouble();
+        inputs.absoluteEncoderConnected = turnEncoderConnectedDebounce.calculate(encoder.isConnected());
         inputs.absolutePositionRad = encoder.get();
     }
 

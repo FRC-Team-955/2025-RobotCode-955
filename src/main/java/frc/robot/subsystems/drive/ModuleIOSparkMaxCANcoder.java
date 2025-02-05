@@ -242,7 +242,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
 
         // Turn cancoder
         var turnEncoderStatus = BaseStatusSignal.refreshAll(turnAbsolutePosition);
-        inputs.turnEncoderConnected = turnEncoderConnectedDebounce.calculate(turnEncoderStatus.isOK());
+        inputs.turnAbsoluteEncoderConnected = turnEncoderConnectedDebounce.calculate(turnEncoderStatus.isOK());
         inputs.turnAbsolutePositionRad = Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble());
 
         // Update odometry inputs

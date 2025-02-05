@@ -30,7 +30,7 @@ public class ModuleIO {
         public double turnAppliedVolts = 0.0;
         public double turnCurrentAmps = 0.0;
 
-        public boolean turnEncoderConnected = false;
+        public boolean turnAbsoluteEncoderConnected = false;
         public double turnAbsolutePositionRad = 0.0;
 
         public double[] odometryTimestamps = new double[]{};

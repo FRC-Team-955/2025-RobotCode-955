@@ -92,7 +92,7 @@ public class ModuleIOSim extends ModuleIO {
 
         // Update turn inputs
         inputs.turnConnected = true;
-        inputs.turnEncoderConnected = true;
+        inputs.turnAbsoluteEncoderConnected = true;
         inputs.turnAbsolutePositionRad = turnSim.getAngularPositionRad();
         inputs.turnPositionRad = turnSim.getAngularPositionRad();
         inputs.turnVelocityRadPerSec = turnSim.getAngularVelocityRadPerSec();

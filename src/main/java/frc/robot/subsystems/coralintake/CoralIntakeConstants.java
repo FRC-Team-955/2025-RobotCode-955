@@ -9,7 +9,8 @@ public class CoralIntakeConstants {
             25,
             false,
             // TODO: Figure this out
-            false
+            false,
+            0 // TODO
     );
 
 
@@ -17,7 +18,8 @@ public class CoralIntakeConstants {
             PIDF motorGains,
             double motorGearRatio,
             boolean motorInverted,
-            boolean encoderInverted
+            boolean encoderInverted,
+            double setpointToleranceRad
     ) {
     }
 }
