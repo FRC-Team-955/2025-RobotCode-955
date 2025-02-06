@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package frc.robot.util;
+package frc.robot.util.commands;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -16,7 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
 
-public class SteppableCommandGroup extends Command {
+// package-private
+class SteppableCommandGroup extends Command {
     private final Trigger forwardTrigger;
     private final Trigger reverseTrigger;
     private final List<Command> commands = new ArrayList<>();
@@ -28,7 +29,10 @@ public class SteppableCommandGroup extends Command {
     private InterruptionBehavior interruptionBehavior = InterruptionBehavior.kCancelIncoming;
 
     public SteppableCommandGroup(
-            Trigger forwardTrigger, Trigger reverseTrigger, Command... commands) {
+        Trigger forwardTrigger, 
+        Trigger reverseTrigger, 
+        Command... commands
+    ) {
         this.forwardTrigger = forwardTrigger;
         this.reverseTrigger = reverseTrigger;
         addCommands(commands);

@@ -125,10 +125,4 @@ public class Util {
     public static boolean greaterThanEpsilon(double a) {
         return a > epsilon;
     }
-
-    public static Command waitUntil(BooleanSupplier supplier, SubsystemBase requirements...) {
-        var cmd = Commands.waitUntil(supplier);
-        cmd.addRequirements(requirements);
-        return cmd;
-    }
 }

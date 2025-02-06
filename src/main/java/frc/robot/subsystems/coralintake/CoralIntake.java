@@ -108,6 +108,16 @@ public class CoralIntake extends SubsystemBaseExt {
     }
 
     public Command waitUntilAtPivotGoal() {
-        return Util.waitUntil(this::atPivotGoal, this);
+        return waitUntil(this::atPivotGoal);
+    }
+
+    public Command setGoalsAndWaitUntilAtPivotGoal(PivotGoal pivotGoal, RollersGoal rollersGoal) {
+        return runOnceAndWaitUntil(
+            () -> {
+                this.pivotGoal = pivotGoal;
+                this.rollersGoal = rollersGoal;
+            },
+            this::atPivotGoal
+        );
     }
 }

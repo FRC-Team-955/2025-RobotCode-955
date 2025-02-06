@@ -83,7 +83,11 @@ public class Elevator extends SubsystemBaseExt {
     }
 
     public Command waitUntilAtGoal() {
-        return Util.waitUntil(this::atGoal, this);
+        return waitUntil(this::atGoal);
+    }
+
+    public Command setGoalAndWaitUntilAtGoal(Goal goal) {
+        return runOnceAndWaitUntil(() -> this.goal = goal, this::atGoal);
     }
 
     @AutoLogOutput(key = "Elevator/PositionMeters")
