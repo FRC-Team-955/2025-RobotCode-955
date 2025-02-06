@@ -20,6 +20,7 @@ public class CoralIntake extends SubsystemBaseExt {
         STOW(() -> 0),
         INTAKE(() -> 1);
 
+        /** Should be constant for every loop cycle */
         private final DoubleSupplier setpointRad;
     }
 
@@ -38,7 +39,6 @@ public class CoralIntake extends SubsystemBaseExt {
 
     @Getter
     private PivotGoal pivotGoal = PivotGoal.STOW;
-    private Double pivotSetpointRad;
 
     private static final RollersIO rollersIO;
     private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
@@ -74,12 +74,11 @@ public class CoralIntake extends SubsystemBaseExt {
         ////////////// PIVOT //////////////
         Logger.recordOutput("CoralIntake/Pivot/Goal", pivotGoal);
         if (pivotGoal.setpointRad != null) {
-            pivotSetpointRad = pivotGoal.setpointRad.getAsDouble();
+            var pivotSetpointRad = pivotGoal.setpointRad.getAsDouble();
             pivotIO.setPosition(pivotSetpointRad);
             Logger.recordOutput("CoralIntake/Pivot/ClosedLoop", true);
             Logger.recordOutput("CoralIntake/Pivot/SetpointRad", pivotSetpointRad);
         } else {
-            pivotSetpointRad = null;
             Logger.recordOutput("CoralIntake/Pivot/ClosedLoop", false);
         }
 
@@ -103,8 +102,8 @@ public class CoralIntake extends SubsystemBaseExt {
     }
 
     private boolean atPivotGoal() {
-        // if pivotSetpointRad is null, will be false and won't crash
-        return pivotSetpointRad != null && Math.abs(pivotSetpointRad - pivotInputs.positionRad) <= pivotConfig.setpointToleranceRad();
+        // if pivotGoal.setpointRad is null, will be false and won't crash
+        return pivotGoal.setpointRad != null && Math.abs(pivotGoal.setpointRad.getAsDouble() - pivotInputs.positionRad) <= pivotConfig.setpointToleranceRad();
     }
 
     public Command waitUntilAtPivotGoal() {

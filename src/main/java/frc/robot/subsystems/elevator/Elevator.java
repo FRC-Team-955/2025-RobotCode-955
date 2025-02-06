@@ -24,6 +24,7 @@ public class Elevator extends SubsystemBaseExt {
         DESCORE_L2(() -> 0),
         DESCORE_L3(() -> 0);
 
+        /** Should be constant for every loop cycle */
         private final DoubleSupplier setpointMeters;
     }
 
@@ -32,7 +33,6 @@ public class Elevator extends SubsystemBaseExt {
 
     @Getter
     private Goal goal = Goal.STOW;
-    private Double setpointRad;
 
     private static Elevator instance;
 
@@ -59,7 +59,7 @@ public class Elevator extends SubsystemBaseExt {
         ////////////// PIVOT //////////////
         Logger.recordOutput("Elevator/Goal", goal);
         if (goal.setpointMeters != null) {
-            setpointRad = goal.setpointMeters.getAsDouble();
+            var setpointRad = metersToRad(goal.setpointMeters.getAsDouble());
             var maxVelocityRadPerSec = getPositionMeters() > hardStopHeightMeters
                     ? metersToRad(maxVelocityAboveHardStopMetersPerSecond)
                     : metersToRad(maxVelocityBelowHardStopMetersPerSecond);
@@ -79,7 +79,8 @@ public class Elevator extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Elevator/AtGoal")
     private boolean atGoal() {
-        return Math.abs(setpointRad - inputs.positionRad) <= setpointToleranceRad;
+        // if goal.setpointMeters is null, will be false and won't crash
+        return goal.setpointMeters != null && Math.abs(metersToRad(goal.setpointMeters.get()) - inputs.positionRad) <= setpointToleranceRad;
     }
 
     public Command waitUntilAtGoal() {
@@ -93,5 +94,10 @@ public class Elevator extends SubsystemBaseExt {
     @AutoLogOutput(key = "Elevator/PositionMeters")
     public double getPositionMeters() {
         return radToMeters(inputs.positionRad);
+    }
+
+    @AutoLogOutput(key = "Elevator/VelocityMetersPerSec")
+    public double getVelocityMetersPerSec() {
+        return radToMeters(inputs.velocityRadPerSec);
     }
 }
