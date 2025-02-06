@@ -88,6 +88,7 @@ public class Elevator extends SubsystemBaseExt {
         return cmd;
     }
 
+    @AutoLogOutput(key = "Elevator/PositionMeters")
     public double getPositionMeters() {
         return radToMeters(inputs.positionRad);
     }
