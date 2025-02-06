@@ -22,11 +22,13 @@ public class Superstructure extends SubsystemBaseExt {
     private final EndEffector endEffector = EndEffector.get();
 
     public enum Goal {
-        CHARACTERIZATION,
         IDLE,
 
         INTAKE_CORAL_WAIT_PIVOT,
         INTAKE_CORAL_INTAKING,
+        INTAKE_CORAL_INDEXING_PIVOT_DOWN,
+        INTAKE_CORAL_INDEXING_PIVOT_UP,
+        INTAKE_CORAL_DONE,
         
         SCORE_CORAL;
     }
@@ -77,15 +79,18 @@ public class Superstructure extends SubsystemBaseExt {
     }
 
     public Command waitUntilIntakeTriggered() {
-        return waitUntil(() -> inputs.intakeRangeMeters <= inputs.intakeRangeConnected);
+        // This should not require the superstructure because we don't want to conflict with setGoal
+        return Commands.waitUntil(() -> inputs.intakeRangeMeters <= inputs.intakeRangeConnected);
     }
 
     public Command waitUntilIndexerTriggered() {
-        return waitUntil(() -> inputs.indexerBeamBreakTriggered);
+        // This should not require the superstructure because we don't want to conflict with setGoal
+        return Commands.waitUntil(() -> inputs.indexerBeamBreakTriggered);
     }
 
     public Command waitUntilEndEffectorTriggered() {
-        return waitUntil(() -> inputs.endEffectorBeamBreakTriggered);
+        // This should not require the superstructure because we don't want to conflict with setGoal
+        return Commands.waitUntil(() -> inputs.endEffectorBeamBreakTriggered);
     }
 
     public Command idle() {
@@ -121,19 +126,29 @@ public class Superstructure extends SubsystemBaseExt {
             ),
             waitUntilIntakeTriggered(),
             // Branch off into an uncancelable sequence to prevent indexing being messed up
-            // Proxy won't work (?) because the outer seqence could be cancellable?
-            // TODO: test this part
-            CommandsExt.schedule(Commands.sequence(
-                Commands.race(
-                    Commands.waitSeconds(1),
-                    waitUntilIndexerTriggered()
-                ),
-                Commands.parallel(
-                    coralIntake.setGoals(CoralIntake.PivotGoal.STOW, CoralIntake.RollersGoal.IDLE),
-                    waitUntilIndexerTriggered()
-                ),
-                indexer.setGoals(Indexer.RollersGoal.IDLE)
-            ).withInterruptBehavior(InterruptionBehavor.kCancelIncoming))
+            CommandsExt.schedule(
+                Commands.sequence(
+                    // Wait at least a small amount of time, or until we are done indexing to bring the intake up
+                    Commands.parallel(
+                        setGoal(Goal.INTAKE_CORAL_INDEXING_PIVOT_DOWN),
+                        Commands.race(
+                            Commands.waitSeconds(0.25),
+                            waitUntilIndexerTriggered()
+                        )
+                    ),
+                    Commands.parallel(
+                        setGoal(Goal.INTAKE_CORAL_INDEXING_PIVOT_UP),
+                        coralIntake.setGoals(CoralIntake.PivotGoal.STOW, CoralIntake.RollersGoal.IDLE),
+                        waitUntilIndexerTriggered()
+                    ),
+                    Commands.parallel(
+                        // Log that we finished for one loop cycle
+                        // Will be cleared the next cycle since default command kicks in
+                        setGoal(Goal.INTAKE_CORAL_DONE),
+                        indexer.setGoals(Indexer.RollersGoal.IDLE)
+                    )
+                ).withInterruptBehavior(InterruptionBehavor.kCancelIncoming)
+            )
         );
     }
 }
