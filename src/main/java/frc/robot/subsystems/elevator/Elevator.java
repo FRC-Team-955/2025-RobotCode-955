@@ -1,7 +1,7 @@
 package frc.robot.subsystems.elevator;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Util;
 import frc.robot.util.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -83,9 +83,7 @@ public class Elevator extends SubsystemBaseExt {
     }
 
     public Command waitUntilAtGoal() {
-        var cmd = Commands.waitUntil(this::atGoal);
-        cmd.addRequirements(this);
-        return cmd;
+        return Util.waitUntil(this::atGoal, this);
     }
 
     @AutoLogOutput(key = "Elevator/PositionMeters")

@@ -1,6 +1,7 @@
 package frc.robot.subsystems.coralintake;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Util;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
 import frc.robot.util.SubsystemBaseExt;
@@ -101,8 +102,12 @@ public class CoralIntake extends SubsystemBaseExt {
         });
     }
 
-    public boolean atPivotGoal() {
+    private boolean atPivotGoal() {
         // if pivotSetpointRad is null, will be false and won't crash
         return pivotSetpointRad != null && Math.abs(pivotSetpointRad - pivotInputs.positionRad) <= pivotConfig.setpointToleranceRad();
+    }
+
+    public Command waitUntilAtPivotGoal() {
+        return Util.waitUntil(this::atPivotGoal, this);
     }
 }
