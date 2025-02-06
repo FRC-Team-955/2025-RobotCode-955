@@ -24,11 +24,11 @@ public class Superstructure extends SubsystemBaseExt {
     public enum Goal {
         CHARACTERIZATION,
         IDLE,
-        INTAKE_CORAL,
-        SCORE_CORAL_L1,
-        SCORE_CORAL_L2,
-        SCORE_CORAL_L3,
-        SCORE_CORAL_L4
+
+        INTAKE_CORAL_WAIT_PIVOT,
+        INTAKE_CORAL_INTAKING,
+        
+        SCORE_CORAL;
     }
 
     private final SuperstructureIO io = SuperstructureConstants.io;
@@ -37,14 +37,18 @@ public class Superstructure extends SubsystemBaseExt {
     @Getter
     private Goal goal = Goal.IDLE;
 
-    private Command withGoal(Goal newGoal, Command command) {
+    private Command withGoal(Goal goal, Command command) {
         return new WrapperCommand(command) {
             @Override
             public void initialize() {
-                goal = newGoal;
+                this.goal = goal;
                 super.initialize();
             }
         };
+    }
+
+    private Command setGoal(Goal goal) {
+        return runOnce(() -> this.goal = goal);
     }
 
     private static Superstructure instance;
@@ -72,23 +76,64 @@ public class Superstructure extends SubsystemBaseExt {
         Logger.recordOutput("Superstructure/Goal", goal);
     }
 
-    public Command idle() {
-        return withGoal(
-                Goal.IDLE,
-                Commands.sequence(
-                        Commands.parallel(
-                                coralIntake.setGoals(CoralIntake.PivotGoal.STOW, CoralIntake.RollersGoal.IDLE),
-                                elevator.setGoal(Elevator.Goal.STOW),
-                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                                indexer.setGoal(Indexer.RollersGoal.IDLE)
-                        ),
-                        Commands.idle(this) // other requirements given implicitly in .parallel
-                )
-        );
+    public Command waitUntilIntakeTriggered() {
+        return waitUntil(() -> inputs.intakeRangeMeters <= inputs.intakeRangeConnected);
     }
 
-    public Command intake() {
-        // TODO: after we have sensed that coral is in the system, prevent driver from messing things up - making the rest of the command uncancelable
-        return null;
+    public Command waitUntilIndexerTriggered() {
+        return waitUntil(() -> inputs.indexerBeamBreakTriggered);
+    }
+
+    public Command waitUntilEndEffectorTriggered() {
+        return waitUntil(() -> inputs.endEffectorBeamBreakTriggered);
+    }
+
+    public Command idle() {
+        return setGoal(Goal.IDLE).andThen(Commands.idle());
+    }
+
+    public Command coralIntakeIdle() {
+        return coralIntake.setGoals(CoralIntake.PivotGoal.STOW, CoralIntake.RollersGoal.IDLE).andThen(Commands.idle());
+    }
+
+    public Command indexerIdle() {
+        return indexer.setGoal(Indexer.RollersGoal.IDLE).andThen(Commands.idle());
+    }
+
+    public Command elevatorIdle() {
+        return elevator.setGoal(Elevator.Goal.STOW).andThen(Commands.idle());
+    }
+
+    public Command endEffectorIdle() {
+        return endEffector.setGoal(EndEffector.RollersGoal.IDLE).andThen(Commands.idle());
+    }
+
+    public Command coralIntake() {
+        return Commands.sequence(
+            Commands.parallel(
+                setGoal(Goal.INTAKE_CORAL_WAIT_PIVOT),
+                coralIntake.setGoalsAndWaitUntilAtPivotGoal(CoralIntake.PivotGoal.INTAKE, CoralIntake.RollersGoal.IDLE)
+            ),
+            Commands.parallel(
+                setGoal(Goal.INTAKE_CORAL_INTAKING),
+                coralIntake.setGoals(CoralIntake.PivotGoal.INTAKE, CoralIntake.RollersGoal.INTAKE),
+                indexer.setGoals(Indexer.RollersGoal.INDEX)
+            ),
+            waitUntilIntakeTriggered(),
+            // Branch off into an uncancelable sequence to prevent indexing being messed up
+            // Proxy won't work (?) because the outer seqence could be cancellable?
+            // TODO: test this part
+            CommandsExt.schedule(Commands.sequence(
+                Commands.race(
+                    Commands.waitSeconds(1),
+                    waitUntilIndexerTriggered()
+                ),
+                Commands.parallel(
+                    coralIntake.setGoals(CoralIntake.PivotGoal.STOW, CoralIntake.RollersGoal.IDLE),
+                    waitUntilIndexerTriggered()
+                ),
+                indexer.setGoals(Indexer.RollersGoal.IDLE)
+            ).withInterruptBehavior(InterruptionBehavor.kCancelIncoming))
+        );
     }
 }

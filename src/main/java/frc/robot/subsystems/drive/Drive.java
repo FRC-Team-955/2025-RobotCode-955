@@ -104,11 +104,11 @@ public class Drive extends SubsystemBaseExt {
     private final PIDController moveToY = moveToXY.toPID();
     private final PIDController moveToOmega = DriveConstants.moveToOmega.toPIDWrapRadians();
 
-    private Command withGoal(Goal newGoal, Command command) {
+    private Command withGoal(Goal goal, Command command) {
         return new WrapperCommand(command) {
             @Override
             public void initialize() {
-                goal = newGoal;
+                this.goal = goal;
                 super.initialize();
             }
         };

@@ -6,7 +6,7 @@ public class SuperstructureIO {
     @AutoLog
     public static class SuperstructureIOInputs {
         public boolean intakeRangeConnected = false;
-        public double intakeRangeMeters = 0.0;
+        public double intakeRangeMeters = Double.MAX_VALUE;
 
         public boolean indexerBeamBreakConnected = false;
         /** If triggered is true, the beam is broken */

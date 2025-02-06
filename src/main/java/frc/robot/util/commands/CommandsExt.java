@@ -20,4 +20,8 @@ public class CommandsExt {
     ) {
         return new RunOnceWaitUntilRequirements(initialize, isFinished, requirements);
     }
+
+    public static Command schedule(Command... commands) {
+        return new ScheduleCommand(commands);
+    }
 }
