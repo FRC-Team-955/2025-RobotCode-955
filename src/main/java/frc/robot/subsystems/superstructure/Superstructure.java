@@ -69,7 +69,7 @@ public class Superstructure extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
-
+        Logger.recordOutput("Superstructure/Goal", goal);
     }
 
     public Command idle() {
