@@ -24,6 +24,7 @@ public class DriveConstants {
     public static final PIDF moveToOmega = PIDF.ofPD(1.5, 0);
 
     public static final boolean useSetpointGenerator = true;
+    public static final boolean disableDriving = false;
 
     public static final DriveConfig driveConfig = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> new DriveConfig(

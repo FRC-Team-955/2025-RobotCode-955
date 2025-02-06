@@ -4,8 +4,10 @@ import frc.robot.util.PIDF;
 
 public record RollersConfig(
         boolean inverted,
+        boolean brakeMode,
         int currentLimit,
         double gearRatio,
-        PIDF gains
+        PIDF positionGains,
+        PIDF velocityGains
 ) {
 }

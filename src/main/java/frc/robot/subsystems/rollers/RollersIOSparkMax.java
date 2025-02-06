@@ -8,12 +8,10 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
-import frc.robot.subsystems.drive.DriveConstants;
 
 import java.util.function.DoubleSupplier;
 
 import static frc.robot.util.SparkUtil.*;
-import static frc.robot.util.SparkUtil.tryUntilOkAsync;
 
 public class RollersIOSparkMax extends RollersIO {
 
@@ -28,7 +26,7 @@ public class RollersIOSparkMax extends RollersIO {
     // Connection debouncers
     private final Debouncer connectedDebounce = new Debouncer(0.5);
 
-    private final SimpleMotorFeedforward feedforward;
+    private final SimpleMotorFeedforward velocityFeedforward;
 
     public RollersIOSparkMax(
             int canID,
@@ -38,7 +36,7 @@ public class RollersIOSparkMax extends RollersIO {
         encoder = motor.getEncoder();
         controller = motor.getClosedLoopController();
 
-        feedforward = rollersConfig.gains().toSimpleFF();
+        velocityFeedforward = rollersConfig.velocityGains().toSimpleFF();
 
         // Configure drive motor
         config = new SparkMaxConfig();
@@ -56,7 +54,8 @@ public class RollersIOSparkMax extends RollersIO {
         config
                 .closedLoop
                 .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder);
-        rollersConfig.gains().applySpark(config.closedLoop);
+        rollersConfig.positionGains().applySpark(config.closedLoop, ClosedLoopSlot.kSlot0); // position = slot0
+        rollersConfig.velocityGains().applySpark(config.closedLoop, ClosedLoopSlot.kSlot1); // velocity = slot1
         tryUntilOk(5, () -> motor.configure(
                 config,
                 SparkBase.ResetMode.kResetSafeParameters,
@@ -97,11 +96,11 @@ public class RollersIOSparkMax extends RollersIO {
 
     @Override
     public void setVelocity(double velocityRadPerSec) {
-        var ffVolts = feedforward.calculate(velocityRadPerSec);
+        var ffVolts = velocityFeedforward.calculate(velocityRadPerSec);
         controller.setReference(
                 velocityRadPerSec,
                 SparkBase.ControlType.kVelocity,
-                ClosedLoopSlot.kSlot0,
+                ClosedLoopSlot.kSlot1,  // velocity = slot1
                 ffVolts,
                 SparkClosedLoopController.ArbFFUnits.kVoltage
         );
@@ -110,6 +109,10 @@ public class RollersIOSparkMax extends RollersIO {
     @Override
     public void setPosition(double positionRad) {
         double setpoint = MathUtil.inputModulus(positionRad, 0.0, 2 * Math.PI);
-        controller.setReference(setpoint, SparkBase.ControlType.kPosition);
+        controller.setReference(
+                setpoint,
+                SparkBase.ControlType.kPosition,
+                ClosedLoopSlot.kSlot0 // position = slot0
+        );
     }
 }

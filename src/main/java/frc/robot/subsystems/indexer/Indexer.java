@@ -1,26 +1,31 @@
 package frc.robot.subsystems.indexer;
 
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
 import frc.robot.util.SubsystemBaseExt;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.littletonrobotics.junction.Logger;
+
+import java.util.function.DoubleSupplier;
 
 public class Indexer extends SubsystemBaseExt {
     @RequiredArgsConstructor
     public enum RollersGoal {
-        CHARACTERIZATION(0), // specially handled in periodic
-        IDLE(0),
-        INDEX(1),
-        EJECT(-1);
+        CHARACTERIZATION(null),
+        IDLE(() -> 0),
+        INDEX(() -> 1),
+        EJECT(() -> -1);
 
-        private final double setpointRadPerSec;
+        private final DoubleSupplier setpointRadPerSec;
     }
 
-    private static final RollersIO rollersIO;
+    private static final RollersIO rollersIO = IndexerConstants.rollersIO;
     private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 
+    @Getter
     private RollersGoal rollersGoal = RollersGoal.IDLE;
-    private Double rollersSetpointRadPerSec;
 
     private static Indexer instance;
 
@@ -33,6 +38,9 @@ public class Indexer extends SubsystemBaseExt {
         return instance;
     }
 
+    private Indexer() {
+    }
+
     @Override
     public void periodicBeforeCommands() {
         rollersIO.updateInputs(rollersInputs);
@@ -41,6 +49,19 @@ public class Indexer extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
+        ////////////// ROLLERS //////////////
+        Logger.recordOutput("Indexer/Rollers/Goal", rollersGoal);
+        if (rollersGoal.setpointRadPerSec != null) {
+            var rollersSetpointRadPerSec = rollersGoal.setpointRadPerSec.getAsDouble();
+            rollersIO.setVelocity(rollersSetpointRadPerSec);
+            Logger.recordOutput("Indexer/Rollers/ClosedLoop", true);
+            Logger.recordOutput("Indexer/Rollers/SetpointRadPerSec", rollersSetpointRadPerSec);
+        } else {
+            Logger.recordOutput("Indexer/Rollers/ClosedLoop", false);
+        }
+    }
 
+    public Command setGoal(RollersGoal rollersGoal) {
+        return runOnce(() -> this.rollersGoal = rollersGoal);
     }
 }

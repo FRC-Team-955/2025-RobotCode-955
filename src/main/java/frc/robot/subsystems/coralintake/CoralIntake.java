@@ -4,41 +4,46 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
 import frc.robot.util.SubsystemBaseExt;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.littletonrobotics.junction.Logger;
+
+import java.util.function.DoubleSupplier;
 
 import static frc.robot.subsystems.coralintake.CoralIntakeConstants.pivotConfig;
 
 public class CoralIntake extends SubsystemBaseExt {
     @RequiredArgsConstructor
     public enum PivotGoal {
-        CHARACTERIZATION(0), // specially handled in periodic
-        STOW(0),
-        INTAKE(1);
+        CHARACTERIZATION(null),
+        STOW(() -> 0),
+        INTAKE(() -> 1);
 
-        private final double setpointRad;
+        private final DoubleSupplier setpointRad;
     }
 
     @RequiredArgsConstructor
     public enum RollersGoal {
-        CHARACTERIZATION(0), // specially handled in periodic
-        IDLE(0),
-        INTAKE(1),
-        EJECT(-1);
+        CHARACTERIZATION(null),
+        IDLE(() -> 0),
+        INTAKE(() -> 1),
+        EJECT(() -> -1);
 
-        private final double setpointRadPerSec;
+        private final DoubleSupplier setpointRadPerSec;
     }
 
     private static final PivotIO pivotIO;
     private static final PivotIOInputsAutoLogged pivotInputs = new PivotIOInputsAutoLogged();
 
-    private PivotGoal pivotGoal = PivotGoal.IDLE;
+    @Getter
+    private PivotGoal pivotGoal = PivotGoal.STOW;
     private Double pivotSetpointRad;
 
     private static final RollersIO rollersIO;
     private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 
+    @Getter
     private RollersGoal rollersGoal = RollersGoal.IDLE;
-    private Double rollersSetpointRadPerSec;
 
     private static CoralIntake instance;
 
@@ -51,16 +56,7 @@ public class CoralIntake extends SubsystemBaseExt {
         return instance;
     }
 
-    public Command setPivotGoal(PivotGoal pivotGoal) {
-        return runOnce(() -> this.pivotGoal = pivotGoal);
-    }
-
-    public Command setRollersGoal(RollersGoal rollersGoal) {
-        return runOnce(() -> this.rollersGoal = rollersGoal);
-    }
-
-    public boolean atPivotGoal() {
-        return Math.abs(pivotSetpointRad - pivotInputs.positionRad) <= pivotConfig.setpointToleranceRad();
+    private CoralIntake() {
     }
 
     @Override
@@ -74,6 +70,39 @@ public class CoralIntake extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
+        ////////////// PIVOT //////////////
+        Logger.recordOutput("CoralIntake/Pivot/Goal", pivotGoal);
+        if (pivotGoal.setpointRad != null) {
+            pivotSetpointRad = pivotGoal.setpointRad.getAsDouble();
+            pivotIO.setPosition(pivotSetpointRad);
+            Logger.recordOutput("CoralIntake/Pivot/ClosedLoop", true);
+            Logger.recordOutput("CoralIntake/Pivot/SetpointRad", pivotSetpointRad);
+        } else {
+            pivotSetpointRad = null;
+            Logger.recordOutput("CoralIntake/Pivot/ClosedLoop", false);
+        }
 
+        ////////////// ROLLERS //////////////
+        Logger.recordOutput("CoralIntake/Rollers/Goal", rollersGoal);
+        if (rollersGoal.setpointRadPerSec != null) {
+            var rollersSetpointRadPerSec = rollersGoal.setpointRadPerSec.getAsDouble();
+            rollersIO.setVelocity(rollersSetpointRadPerSec);
+            Logger.recordOutput("CoralIntake/Rollers/ClosedLoop", true);
+            Logger.recordOutput("CoralIntake/Rollers/SetpointRadPerSec", rollersSetpointRadPerSec);
+        } else {
+            Logger.recordOutput("CoralIntake/Rollers/ClosedLoop", false);
+        }
+    }
+
+    public Command setGoals(PivotGoal pivotGoal, RollersGoal rollersGoal) {
+        return runOnce(() -> {
+            this.pivotGoal = pivotGoal;
+            this.rollersGoal = rollersGoal;
+        });
+    }
+
+    public boolean atPivotGoal() {
+        // if pivotSetpointRad is null, will be false and won't crash
+        return pivotSetpointRad != null && Math.abs(pivotSetpointRad - pivotInputs.positionRad) <= pivotConfig.setpointToleranceRad();
     }
 }

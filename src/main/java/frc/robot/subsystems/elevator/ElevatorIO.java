@@ -1,28 +1,25 @@
-package frc.robot.subsystems.coralintake;
+package frc.robot.subsystems.elevator;
 
 import org.littletonrobotics.junction.AutoLog;
 
-public class PivotIO {
+public class ElevatorIO {
     @AutoLog
-    public static class PivotIOInputs {
+    public static class ElevatorIOInputs {
         public boolean connected = false;
         public double positionRad = 0.0;
         public double velocityRadPerSec = 0.0;
         public double appliedVolts = 0.0;
         public double currentAmps = 0.0;
 
-        public boolean absoluteEncoderConnected = false;
-        public double absolutePositionRad = 0.0;
+        public boolean limitSwitchConnected = false;
+        public boolean limitSwitchTriggered = false;
+    }
+
+    public void updateInputs(ElevatorIOInputs inputs) {
     }
 
     /**
-     * Updates the set of loggable inputs.
-     */
-    public void updateInputs(PivotIOInputs inputs) {
-    }
-
-    /**
-     * Enable or disable brake mode on the motor.
+     * Enable or disable brake mode on the drive motor.
      */
     public void setBrakeMode(boolean enable) {
     }
@@ -34,8 +31,8 @@ public class PivotIO {
     }
 
     /**
-     * Run the motor to the specified rotation.
+     * Run the motor to the specified rotation with the specified maximum velocity.
      */
-    public void setPosition(double positionRad) {
+    public void setPosition(double positionRad, double maxVelocityRadPerSec) {
     }
 }

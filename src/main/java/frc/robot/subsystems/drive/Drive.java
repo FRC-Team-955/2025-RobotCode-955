@@ -39,20 +39,33 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.drive.DriveConstants.*;
-import static frc.robot.subsystems.drive.DriveDashboard.disableDriving;
 import static frc.robot.subsystems.drive.PhoenixOdometryThread.phoenixLock;
 import static frc.robot.subsystems.drive.SparkOdometryThread.sparkLock;
 
 public class Drive extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
 
+    @RequiredArgsConstructor
     public enum Goal {
-        CHARACTERIZATION,
-        WHEEL_RADIUS_CHARACTERIZATION,
-        IDLE,
-        DRIVE_JOYSTICK,
-        DRIVE_JOYSTICK_ASSISTED,
-        FOLLOW_TRAJECTORY
+        CHARACTERIZATION(ControlMode.OPEN_LOOP),
+        WHEEL_RADIUS_CHARACTERIZATION(ControlMode.CLOSED_LOOP_DIRECT),
+        IDLE(ControlMode.STOP),
+        DRIVE_JOYSTICK(ControlMode.CLOSED_LOOP_OPTIMIZED),
+        DRIVE_JOYSTICK_ASSISTED(ControlMode.CLOSED_LOOP_OPTIMIZED),
+        FOLLOW_TRAJECTORY(ControlMode.CLOSED_LOOP_DIRECT);
+
+        public final ControlMode controlMode;
+    }
+
+    public enum ControlMode {
+        /** Open loop; no closed loop control will happen */
+        OPEN_LOOP,
+        /** ChassisSpeeds will be optimized with the setpoint generator (unless disabled) before being fed to modules */
+        CLOSED_LOOP_OPTIMIZED,
+        /** ChassisSpeeds will be directly fed to modules */
+        CLOSED_LOOP_DIRECT,
+        /** All modules will stop */
+        STOP;
     }
 
     private final GyroIO gyroIO = DriveConstants.gyroIO;
@@ -79,6 +92,7 @@ public class Drive extends SubsystemBaseExt {
 
     private final Alert gyroDisconnectedAlert = new Alert("Disconnected gyro, using kinematics as fallback.", Alert.AlertType.kError);
 
+    @Getter
     private Goal goal = Goal.IDLE;
     private ChassisSpeeds closedLoopSetpoint;
 
@@ -194,41 +208,30 @@ public class Drive extends SubsystemBaseExt {
         Logger.recordOutput("Drive/Goal", goal);
 
         // Stop moving when idle or disabled
-        if (goal == Goal.IDLE || DriverStation.isDisabled()) {
+        if (goal.controlMode == ControlMode.STOP || DriverStation.isDisabled()) {
             Logger.recordOutput("Drive/ClosedLoop", false);
             prevSetpoint = null;
 
             for (var module : modules) {
                 module.stop();
             }
-
-            Logger.recordOutput("Drive/ChassisSpeeds/Setpoint", new ChassisSpeeds());
-            Logger.recordOutput(
-                    "Drive/ModuleStates/Setpoints",
-                    new SwerveModuleState(),
-                    new SwerveModuleState(),
-                    new SwerveModuleState(),
-                    new SwerveModuleState()
-            );
-            Logger.recordOutput(
-                    "Drive/ModuleStates/SetpointsOptimized",
-                    new SwerveModuleState(),
-                    new SwerveModuleState(),
-                    new SwerveModuleState(),
-                    new SwerveModuleState()
-            );
         }
         // Closed loop control
-        else if (goal != Goal.CHARACTERIZATION && closedLoopSetpoint != null) {
+        else if ((goal.controlMode == ControlMode.CLOSED_LOOP_DIRECT
+                || goal.controlMode == ControlMode.CLOSED_LOOP_OPTIMIZED
+        )
+                && closedLoopSetpoint != null
+        ) {
             Logger.recordOutput("Drive/ClosedLoop", true);
             Logger.recordOutput("Drive/ChassisSpeeds/Setpoint", closedLoopSetpoint);
 
-            if (useSetpointGenerator && !disableDriving.get() && (goal == Goal.DRIVE_JOYSTICK || goal == Goal.DRIVE_JOYSTICK_ASSISTED)) {
+            if (useSetpointGenerator && !disableDriving && goal.controlMode == ControlMode.CLOSED_LOOP_OPTIMIZED) {
                 Logger.recordOutput("Drive/SetpointGenerator", true);
 
                 Logger.recordOutput(
                         "Drive/ModuleStates/Setpoints",
                         // DON'T DO ANYTHING WITH THIS. SETPOINT GENERATOR SHOULD NOT GET A DISCRETIZED SETPOINT
+                        // Only for logging
                         robotState.getKinematics().toSwerveModuleStates(
                                 ChassisSpeeds.discretize(closedLoopSetpoint, 0.02)
                         )
@@ -268,7 +271,7 @@ public class Drive extends SubsystemBaseExt {
                 // Calculate module setpoints
                 ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(closedLoopSetpoint, 0.02);
                 SwerveModuleState[] setpointStates = robotState.getKinematics().toSwerveModuleStates(discreteSpeeds);
-                if (disableDriving.get()) {
+                if (disableDriving) {
                     for (int i = 0; i < modules.length; i++) {
                         setpointStates[i].speedMetersPerSecond = 0.0;
                     }

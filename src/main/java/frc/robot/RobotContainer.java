@@ -9,7 +9,13 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.factories.auto.TestAuto;
+import frc.robot.subsystems.coralintake.CoralIntake;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.endeffector.EndEffector;
+import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.leds.LEDs;
+import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.CommandNintendoSwitchProController;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -31,8 +37,15 @@ public class RobotContainer {
     private final RobotState robotState = RobotState.get();
 
     /* Subsystems */
+    // Note: order does matter
     private final Drive drive = Drive.get();
     private final Vision vision = Vision.get();
+    private final CoralIntake coralIntake = CoralIntake.get();
+    private final Indexer indexer = Indexer.get();
+    private final Elevator elevator = Elevator.get();
+    private final EndEffector endEffector = EndEffector.get();
+    private final Superstructure superstructure = Superstructure.get();
+    private final LEDs leds = LEDs.get();
 
     public RobotContainer() {
         addAutos();
@@ -83,6 +96,8 @@ public class RobotContainer {
                         }
                 )
         );
+
+        superstructure.setDefaultCommand(superstructure.idle());
     }
 
     /**

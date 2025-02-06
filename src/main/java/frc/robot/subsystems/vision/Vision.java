@@ -47,6 +47,15 @@ public class Vision extends SubsystemBaseExt {
 
     private static Vision instance;
 
+    public static Vision get() {
+        if (instance == null)
+            synchronized (Vision.class) {
+                instance = new Vision();
+            }
+
+        return instance;
+    }
+
     private Vision() {
         // Initialize inputs
         this.atInputs = new AprilTagIOInputsAutoLogged[aprilTagIo.length];
@@ -72,15 +81,6 @@ public class Vision extends SubsystemBaseExt {
                     new Alert(
                             "Gampiece camera " + i + " is disconnected.", AlertType.kWarning);
         }
-    }
-
-    public static Vision get() {
-        if (instance == null)
-            synchronized (Vision.class) {
-                instance = new Vision();
-            }
-
-        return instance;
     }
 
     @Override

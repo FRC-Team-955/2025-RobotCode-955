@@ -2,6 +2,7 @@ package frc.robot.subsystems.coralintake;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
@@ -64,7 +65,7 @@ public class PivotIOTalonFX extends PivotIO {
         // Configure turn motor
         motorConfig = new TalonFXConfiguration();
         motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        motorConfig.Slot0 = pivotConfig.motorGains().toPhoenix();
+        motorConfig.Slot0 = Slot0Configs.from(pivotConfig.motorGains().toPhoenix());
         motorConfig.TorqueCurrent.PeakForwardTorqueCurrent = pivotConfig.currentLimit();
         motorConfig.TorqueCurrent.PeakReverseTorqueCurrent = pivotConfig.currentLimit();
         motorConfig.CurrentLimits.StatorCurrentLimit = pivotConfig.currentLimit();
