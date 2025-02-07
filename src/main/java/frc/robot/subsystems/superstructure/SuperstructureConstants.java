@@ -1,8 +1,8 @@
 package frc.robot.subsystems.superstructure;
 
 public class SuperstructureConstants {
-    protected static final SuperstructureIO io = null;
+    protected static final SuperstructureIO io = new SuperstructureIO();
 
     /** Range for the intake sensor to be triggered */
-    public static final intakeRangeTriggerMeters = 1;
+    public static final double intakeRangeTriggerMeters = 1;
 }

@@ -120,6 +120,8 @@ public class DriveConstants {
         );
     };
 
+    // IO layers should go at the bottom in case they reference constants that aren't yet initialized
+    
     public static final ModuleIO[] moduleIO = Constants.isReplay
             ? new ModuleIO[]{new ModuleIO(), new ModuleIO(), new ModuleIO(), new ModuleIO()}
             : switch (Constants.identity) {

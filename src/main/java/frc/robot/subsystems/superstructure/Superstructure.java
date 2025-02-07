@@ -9,9 +9,12 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.indexer.Indexer;
-import frc.robot.util.SubsystemBaseExt;
+import frc.robot.util.commands.CommandsExt;
+import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
+
+import static frc.robot.subsystems.superstructure.SuperstructureConstants.intakeRangeTriggerMeters;
 
 public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
@@ -29,7 +32,7 @@ public class Superstructure extends SubsystemBaseExt {
         INTAKE_CORAL_INDEXING_PIVOT_DOWN,
         INTAKE_CORAL_INDEXING_PIVOT_UP,
         INTAKE_CORAL_DONE,
-        
+
         SCORE_CORAL;
     }
 
@@ -43,7 +46,7 @@ public class Superstructure extends SubsystemBaseExt {
         return new WrapperCommand(command) {
             @Override
             public void initialize() {
-                this.goal = goal;
+                Superstructure.this.goal = goal;
                 super.initialize();
             }
         };
@@ -71,6 +74,7 @@ public class Superstructure extends SubsystemBaseExt {
     public void periodicBeforeCommands() {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Superstructure", inputs);
+        // TODO: alerts for everything - not just superstructure
     }
 
     @Override
@@ -80,7 +84,7 @@ public class Superstructure extends SubsystemBaseExt {
 
     public Command waitUntilIntakeTriggered() {
         // This should not require the superstructure because we don't want to conflict with setGoal
-        return Commands.waitUntil(() -> inputs.intakeRangeMeters <= inputs.intakeRangeConnected);
+        return Commands.waitUntil(() -> inputs.intakeRangeMeters <= intakeRangeTriggerMeters);
     }
 
     public Command waitUntilIndexerTriggered() {
@@ -115,40 +119,40 @@ public class Superstructure extends SubsystemBaseExt {
 
     public Command coralIntake() {
         return Commands.sequence(
-            Commands.parallel(
-                setGoal(Goal.INTAKE_CORAL_WAIT_PIVOT),
-                coralIntake.setGoalsAndWaitUntilAtPivotGoal(CoralIntake.PivotGoal.INTAKE, CoralIntake.RollersGoal.IDLE)
-            ),
-            Commands.parallel(
-                setGoal(Goal.INTAKE_CORAL_INTAKING),
-                coralIntake.setGoals(CoralIntake.PivotGoal.INTAKE, CoralIntake.RollersGoal.INTAKE),
-                indexer.setGoals(Indexer.RollersGoal.INDEX)
-            ),
-            waitUntilIntakeTriggered(),
-            // Branch off into an uncancelable sequence to prevent indexing being messed up
-            CommandsExt.schedule(
-                Commands.sequence(
-                    // Wait at least a small amount of time, or until we are done indexing to bring the intake up
-                    Commands.parallel(
-                        setGoal(Goal.INTAKE_CORAL_INDEXING_PIVOT_DOWN),
-                        Commands.race(
-                            Commands.waitSeconds(0.25),
-                            waitUntilIndexerTriggered()
-                        )
-                    ),
-                    Commands.parallel(
-                        setGoal(Goal.INTAKE_CORAL_INDEXING_PIVOT_UP),
-                        coralIntake.setGoals(CoralIntake.PivotGoal.STOW, CoralIntake.RollersGoal.IDLE),
-                        waitUntilIndexerTriggered()
-                    ),
-                    Commands.parallel(
-                        // Log that we finished for one loop cycle
-                        // Will be cleared the next cycle since default command kicks in
-                        setGoal(Goal.INTAKE_CORAL_DONE),
-                        indexer.setGoals(Indexer.RollersGoal.IDLE)
-                    )
-                ).withInterruptBehavior(InterruptionBehavor.kCancelIncoming)
-            )
+                Commands.parallel(
+                        setGoal(Goal.INTAKE_CORAL_WAIT_PIVOT),
+                        coralIntake.setGoalsAndWaitUntilAtPivotGoal(CoralIntake.PivotGoal.INTAKE, CoralIntake.RollersGoal.IDLE)
+                ),
+                Commands.parallel(
+                        setGoal(Goal.INTAKE_CORAL_INTAKING),
+                        coralIntake.setGoals(CoralIntake.PivotGoal.INTAKE, CoralIntake.RollersGoal.INTAKE),
+                        indexer.setGoal(Indexer.RollersGoal.INDEX)
+                ),
+                waitUntilIntakeTriggered(),
+                // Branch off into an uncancelable sequence to prevent indexing being messed up
+                CommandsExt.schedule(
+                        Commands.sequence(
+                                // Wait at least a small amount of time, or until we are done indexing to bring the intake up
+                                Commands.parallel(
+                                        setGoal(Goal.INTAKE_CORAL_INDEXING_PIVOT_DOWN),
+                                        Commands.race(
+                                                Commands.waitSeconds(0.25),
+                                                waitUntilIndexerTriggered()
+                                        )
+                                ),
+                                Commands.parallel(
+                                        setGoal(Goal.INTAKE_CORAL_INDEXING_PIVOT_UP),
+                                        coralIntake.setGoals(CoralIntake.PivotGoal.STOW, CoralIntake.RollersGoal.IDLE),
+                                        waitUntilIndexerTriggered()
+                                ),
+                                Commands.parallel(
+                                        // Log that we finished for one loop cycle
+                                        // Will be cleared the next cycle since default command kicks in
+                                        setGoal(Goal.INTAKE_CORAL_DONE),
+                                        indexer.setGoal(Indexer.RollersGoal.IDLE)
+                                )
+                        ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                )
         );
     }
 }

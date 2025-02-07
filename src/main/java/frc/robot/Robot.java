@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.util.SubsystemBaseExt;
+import frc.robot.util.subsystem.SubsystemBaseExt;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -90,12 +90,15 @@ public class Robot extends LoggedRobot {
                 Logger.addDataReceiver(new NT4Publisher());
             }
             case REPLAY -> {
-                setUseTiming(!Constants.Simulation.replayRunAsFastAsPossible); // Run as fast as possible
                 String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
                 Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
                 Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
-                if (!Constants.Simulation.replayRunAsFastAsPossible)
+                if (Constants.Simulation.replayRunAsFastAsPossible) {
+                    setUseTiming(false); // Run as fast as possible
+                } else {
+                    setUseTiming(true); // Run at normal speed
                     Logger.addDataReceiver(new NT4Publisher()); // Log to NetworkTables if we are replaying in real time
+                }
             }
         }
 

@@ -1,9 +1,24 @@
-// Copyright (c) 2024 FRC 6328
-// http://github.com/Mechanical-Advantage
+// MIT License
 //
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file at
-// the root directory of this project.
+// Copyright (c) 2024 FRC 6328
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 package frc.robot.util.commands;
 
@@ -16,8 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
 
-// package-private
-class SteppableCommandGroup extends Command {
+/* package-private */ class SteppableCommandGroup extends Command {
     private final Trigger forwardTrigger;
     private final Trigger reverseTrigger;
     private final List<Command> commands = new ArrayList<>();
@@ -29,9 +43,9 @@ class SteppableCommandGroup extends Command {
     private InterruptionBehavior interruptionBehavior = InterruptionBehavior.kCancelIncoming;
 
     public SteppableCommandGroup(
-        Trigger forwardTrigger, 
-        Trigger reverseTrigger, 
-        Command... commands
+            Trigger forwardTrigger,
+            Trigger reverseTrigger,
+            Command... commands
     ) {
         this.forwardTrigger = forwardTrigger;
         this.reverseTrigger = reverseTrigger;

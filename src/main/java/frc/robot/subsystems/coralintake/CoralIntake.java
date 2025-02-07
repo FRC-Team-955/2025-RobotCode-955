@@ -1,10 +1,9 @@
 package frc.robot.subsystems.coralintake;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Util;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
-import frc.robot.util.SubsystemBaseExt;
+import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;
@@ -34,13 +33,13 @@ public class CoralIntake extends SubsystemBaseExt {
         private final DoubleSupplier setpointRadPerSec;
     }
 
-    private static final PivotIO pivotIO;
+    private static final PivotIO pivotIO = new PivotIO();
     private static final PivotIOInputsAutoLogged pivotInputs = new PivotIOInputsAutoLogged();
 
     @Getter
     private PivotGoal pivotGoal = PivotGoal.STOW;
 
-    private static final RollersIO rollersIO;
+    private static final RollersIO rollersIO = new RollersIO();
     private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 
     @Getter
@@ -112,11 +111,11 @@ public class CoralIntake extends SubsystemBaseExt {
 
     public Command setGoalsAndWaitUntilAtPivotGoal(PivotGoal pivotGoal, RollersGoal rollersGoal) {
         return runOnceAndWaitUntil(
-            () -> {
-                this.pivotGoal = pivotGoal;
-                this.rollersGoal = rollersGoal;
-            },
-            this::atPivotGoal
+                () -> {
+                    this.pivotGoal = pivotGoal;
+                    this.rollersGoal = rollersGoal;
+                },
+                this::atPivotGoal
         );
     }
 }

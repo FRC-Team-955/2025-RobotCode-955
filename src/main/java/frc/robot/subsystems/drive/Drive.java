@@ -22,7 +22,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.RobotState;
 import frc.robot.Util;
-import frc.robot.util.SubsystemBaseExt;
+import frc.robot.util.subsystem.SubsystemBaseExt;
 import frc.robot.util.swerve.ModuleLimits;
 import frc.robot.util.swerve.SwerveSetpoint;
 import frc.robot.util.swerve.SwerveSetpointGenerator;
@@ -108,7 +108,7 @@ public class Drive extends SubsystemBaseExt {
         return new WrapperCommand(command) {
             @Override
             public void initialize() {
-                this.goal = goal;
+                Drive.this.goal = goal;
                 super.initialize();
             }
         };

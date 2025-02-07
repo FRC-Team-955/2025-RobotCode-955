@@ -3,7 +3,7 @@ package frc.robot.subsystems.endeffector;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
-import frc.robot.util.SubsystemBaseExt;
+import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;

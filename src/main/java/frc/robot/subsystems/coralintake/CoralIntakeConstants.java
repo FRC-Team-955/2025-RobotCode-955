@@ -10,7 +10,8 @@ public class CoralIntakeConstants {
             false,
             // TODO: Figure this out
             false,
-            0 // TODO
+            0, // TODO
+            0
     );
 
 
@@ -19,7 +20,8 @@ public class CoralIntakeConstants {
             double motorGearRatio,
             boolean motorInverted,
             boolean encoderInverted,
-            double setpointToleranceRad
+            double setpointToleranceRad,
+            double currentLimit
     ) {
     }
 }

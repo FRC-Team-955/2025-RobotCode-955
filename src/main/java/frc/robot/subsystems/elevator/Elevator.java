@@ -1,8 +1,10 @@
 package frc.robot.subsystems.elevator;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Util;
-import frc.robot.util.SubsystemBaseExt;
+import frc.robot.util.characterization.FeedforwardCharacterization;
+import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -10,17 +12,18 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
 
+import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
 public class Elevator extends SubsystemBaseExt {
     @RequiredArgsConstructor
     public enum Goal {
         CHARACTERIZATION(null),
-        STOW(() -> 0),
+        STOW(() -> 1),
         SCORE_L1(() -> 0),
         SCORE_L2(() -> 0),
         SCORE_L3(() -> 0),
-        SCORE_L4(() -> 0),
+        SCORE_L4(() -> 3),
         DESCORE_L2(() -> 0),
         DESCORE_L3(() -> 0);
 
@@ -34,6 +37,8 @@ public class Elevator extends SubsystemBaseExt {
     @Getter
     private Goal goal = Goal.STOW;
 
+    public final SysIdRoutine sysId;
+
     private static Elevator instance;
 
     public static Elevator get() {
@@ -46,6 +51,12 @@ public class Elevator extends SubsystemBaseExt {
     }
 
     private Elevator() {
+        sysId = Util.sysIdRoutine(
+                "Elevator",
+                (voltage) -> io.setOpenLoop(voltage.in(Volts)),
+                () -> goal = Goal.CHARACTERIZATION,
+                this
+        );
     }
 
     @Override
@@ -59,16 +70,19 @@ public class Elevator extends SubsystemBaseExt {
         ////////////// PIVOT //////////////
         Logger.recordOutput("Elevator/Goal", goal);
         if (goal.setpointMeters != null) {
-            var setpointRad = metersToRad(goal.setpointMeters.getAsDouble());
-            var maxVelocityRadPerSec = getPositionMeters() > hardStopHeightMeters
-                    ? metersToRad(maxVelocityAboveHardStopMetersPerSecond)
-                    : metersToRad(maxVelocityBelowHardStopMetersPerSecond);
-            io.setPosition(setpointRad, maxVelocityRadPerSec);
+            var setpointMeters = goal.setpointMeters.getAsDouble();
+            var setpointRad = metersToRad(setpointMeters);
+            var maxVelocityRadPerSecond = metersToRad(maxVelocityMetersPerSecond);
+//            var maxVelocityRadPerSec = getPositionMeters() > hardStopHeightMeters
+//                    ? metersToRad(maxVelocityAboveHardStopMetersPerSecond)
+//                    : metersToRad(maxVelocityBelowHardStopMetersPerSecond);
+            io.setPosition(setpointRad, maxVelocityRadPerSecond);
             Logger.recordOutput("Elevator/ClosedLoop", true);
-            Logger.recordOutput("Elevator/SetpointRad", setpointRad);
-            Logger.recordOutput("Elevator/MaxVelocityRadPerSec", maxVelocityRadPerSec);
+            Logger.recordOutput("Elevator/Setpoint/PositionMeters", setpointMeters);
+            Logger.recordOutput("Elevator/Constraints/MaxVelocityMetersPerSec", maxVelocityMetersPerSecond);
+            Logger.recordOutput("Elevator/Setpoint/PositionRad", setpointRad);
+            Logger.recordOutput("Elevator/Constraints/MaxVelocityRadPerSec", maxVelocityRadPerSecond);
         } else {
-            setpointRad = null;
             Logger.recordOutput("Elevator/ClosedLoop", false);
         }
     }
@@ -80,7 +94,7 @@ public class Elevator extends SubsystemBaseExt {
     @AutoLogOutput(key = "Elevator/AtGoal")
     private boolean atGoal() {
         // if goal.setpointMeters is null, will be false and won't crash
-        return goal.setpointMeters != null && Math.abs(metersToRad(goal.setpointMeters.get()) - inputs.positionRad) <= setpointToleranceRad;
+        return goal.setpointMeters != null && Math.abs(metersToRad(goal.setpointMeters.getAsDouble()) - inputs.positionRad) <= setpointToleranceRad;
     }
 
     public Command waitUntilAtGoal() {
@@ -91,13 +105,22 @@ public class Elevator extends SubsystemBaseExt {
         return runOnceAndWaitUntil(() -> this.goal = goal, this::atGoal);
     }
 
-    @AutoLogOutput(key = "Elevator/PositionMeters")
+    @AutoLogOutput(key = "Elevator/Measurement/PositionMeters")
     public double getPositionMeters() {
         return radToMeters(inputs.positionRad);
     }
 
-    @AutoLogOutput(key = "Elevator/VelocityMetersPerSec")
+    @AutoLogOutput(key = "Elevator/Measurement/VelocityMetersPerSec")
     public double getVelocityMetersPerSec() {
         return radToMeters(inputs.velocityRadPerSec);
+    }
+
+    public Command gravityCharacterization() {
+        return setGoal(Goal.CHARACTERIZATION)
+                .andThen(new FeedforwardCharacterization(
+                        io::setOpenLoop,
+                        () -> inputs.velocityRadPerSec,
+                        this
+                ));
     }
 }

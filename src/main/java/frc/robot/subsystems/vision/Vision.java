@@ -21,7 +21,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.RobotState;
 import frc.robot.subsystems.vision.AprilTagIO.PoseObservationType;
-import frc.robot.util.SubsystemBaseExt;
+import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
 
@@ -92,7 +92,7 @@ public class Vision extends SubsystemBaseExt {
 
         for (int i = 0; i < gamepieceIo.length; i++) {
             gamepieceIo[i].updateInputs(gpInputs[i]);
-            Logger.processInputs("Inputs/Vision/Gamepiece" + i, gpInputs[i]);
+//            Logger.processInputs("Inputs/Vision/Gamepiece" + i, gpInputs[i]);
         }
 
         // Initialize logging values

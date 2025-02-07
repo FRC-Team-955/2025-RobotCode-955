@@ -6,6 +6,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.factories.auto.TestAuto;
@@ -58,6 +59,8 @@ public class RobotContainer {
         final var factory = drive.createAutoFactory();
 
         autoChooser.addDefaultOption("Test Auto", TestAuto.get(factory.newRoutine("Test Auto")));
+
+        autoChooser.addOption("Characterization", Commands.deferredProxy(characterizationChooser::get));
     }
 
     private void addCharacterizations() {
@@ -68,6 +71,14 @@ public class RobotContainer {
         characterizationChooser.addOption("Drive SysId (Quasistatic Reverse)", drive.sysId.quasistatic(SysIdRoutine.Direction.kReverse));
         characterizationChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysId.dynamic(SysIdRoutine.Direction.kForward));
         characterizationChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysId.dynamic(SysIdRoutine.Direction.kReverse));
+
+        ////////////////////// DRIVE //////////////////////
+
+        characterizationChooser.addOption("Elevator SysId (Quasistatic Forward)", elevator.sysId.quasistatic(SysIdRoutine.Direction.kForward));
+        characterizationChooser.addOption("Elevator SysId (Quasistatic Reverse)", elevator.sysId.quasistatic(SysIdRoutine.Direction.kReverse));
+        characterizationChooser.addOption("Elevator SysId (Dynamic Forward)", elevator.sysId.dynamic(SysIdRoutine.Direction.kForward));
+        characterizationChooser.addOption("Elevator SysId (Dynamic Reverse)", elevator.sysId.dynamic(SysIdRoutine.Direction.kReverse));
+//        characterizationChooser.addOption("Elevator Gravity", elevator.gravityCharacterization());
     }
 
     private void setDefaultCommands() {
@@ -112,6 +123,9 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
+
+        driverController.a().onTrue(elevator.setGoal(Elevator.Goal.STOW).andThen(Commands.idle()));
+        driverController.b().onTrue(elevator.setGoal(Elevator.Goal.SCORE_L4).andThen(Commands.idle()));
 
 //        // Lock to 0° when A button is held
 //        controller

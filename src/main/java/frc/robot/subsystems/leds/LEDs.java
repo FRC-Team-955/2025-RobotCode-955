@@ -1,6 +1,6 @@
 package frc.robot.subsystems.leds;
 
-import frc.robot.util.SubsystemBaseExt;
+import frc.robot.util.subsystem.SubsystemBaseExt;
 import org.littletonrobotics.junction.Logger;
 
 public class LEDs extends SubsystemBaseExt {
