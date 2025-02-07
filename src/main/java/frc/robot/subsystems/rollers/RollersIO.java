@@ -1,6 +1,5 @@
 package frc.robot.subsystems.rollers;
 
-import frc.robot.subsystems.drive.ModuleIO;
 import org.littletonrobotics.junction.AutoLog;
 
 public class RollersIO {

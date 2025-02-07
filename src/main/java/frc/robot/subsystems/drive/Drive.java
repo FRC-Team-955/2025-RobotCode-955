@@ -65,7 +65,7 @@ public class Drive extends SubsystemBaseExt {
         /** ChassisSpeeds will be directly fed to modules */
         CLOSED_LOOP_DIRECT,
         /** All modules will stop */
-        STOP;
+        STOP
     }
 
     private final GyroIO gyroIO = DriveConstants.gyroIO;

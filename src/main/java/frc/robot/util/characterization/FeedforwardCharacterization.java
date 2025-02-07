@@ -96,9 +96,9 @@ public class FeedforwardCharacterization extends Command {
 
             System.out.println("Feedforward Characterization Results:");
             System.out.println("\tCount=" + velocityData.size());
-            System.out.println(String.format("\tR2=%.5f", regression.R2()));
-            System.out.println(String.format("\tkS=%.5f", regression.beta(0)));
-            System.out.println(String.format("\tkV=%.5f", regression.beta(1)));
+            System.out.printf("\tR2=%.5f%n", regression.R2());
+            System.out.printf("\tkS=%.5f%n", regression.beta(0));
+            System.out.printf("\tkV=%.5f%n", regression.beta(1));
         }
     }
 }

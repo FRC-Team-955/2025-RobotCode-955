@@ -85,7 +85,7 @@ public class StaticGravityCharacterization extends Command {
 
             System.out.println("Static Gravity Characterization Results:");
             System.out.println("\tCount=" + data.size());
-            System.out.println(String.format("\tkG=%.5f", voltageAtZero));
+            System.out.printf("\tkG=%.5f%n", voltageAtZero);
         }
     }
 

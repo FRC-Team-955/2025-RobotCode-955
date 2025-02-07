@@ -33,7 +33,7 @@ public class Superstructure extends SubsystemBaseExt {
         INTAKE_CORAL_INDEXING_PIVOT_UP,
         INTAKE_CORAL_DONE,
 
-        SCORE_CORAL;
+        SCORE_CORAL
     }
 
     private final SuperstructureIO io = SuperstructureConstants.io;
