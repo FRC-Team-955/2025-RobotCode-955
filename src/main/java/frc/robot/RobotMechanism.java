@@ -108,19 +108,16 @@ public class RobotMechanism {
     }
 
     public class CoralIntake {
-        private static final double x = 0.5 + Units.inchesToMeters(10);
-        private static final double y = Units.inchesToMeters(4);
-
-        public final LoggedMechanismRoot2d root = mechanism.getRoot("coralIntake", x, y);
+        public final LoggedMechanismRoot2d root = mechanism.getRoot("coralIntake", 0, 0);
         public final LoggedMechanismLigament2d ligament = root.append(new LoggedMechanismLigament2d(
                 "ligament",
-                Units.inchesToMeters(20),
-                90,
-                10,
+                Units.inchesToMeters(7), // width, x
+                0,
+                35, // height, y
                 new Color8Bit(Color.kGreen)
         ));
 
-        public final LoggedMechanismRoot2d rangeRoot = mechanism.getRoot("coralIntake_range", x + Units.inchesToMeters(8), y + Units.inchesToMeters(3));
+        public final LoggedMechanismRoot2d rangeRoot = mechanism.getRoot("coralIntake_range", 0.5 + Units.inchesToMeters(18), Units.inchesToMeters(7));
         public final LoggedMechanismLigament2d rangeLigament = rangeRoot.append(new LoggedMechanismLigament2d(
                 "coralIntake_range",
                 Units.inchesToMeters(1),

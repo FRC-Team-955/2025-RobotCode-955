@@ -14,6 +14,7 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 
 import static frc.robot.subsystems.coralintake.CoralIntakeConstants.pivotConfig;
+import static frc.robot.subsystems.coralintake.CoralIntakeConstants.pivotLengthMeters;
 
 public class CoralIntake extends SubsystemBaseExt {
     private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
@@ -72,7 +73,10 @@ public class CoralIntake extends SubsystemBaseExt {
         rollersIO.updateInputs(rollersInputs);
         Logger.processInputs("Inputs/CoralIntake/Rollers", rollersInputs);
 
-        robotMechanism.coralIntake.ligament.setAngle(Units.radiansToDegrees(pivotInputs.positionRad));
+        robotMechanism.coralIntake.root.setPosition(
+                0.5 + Units.inchesToMeters(4) + pivotLengthMeters * Math.cos(pivotInputs.positionRad),
+                Units.inchesToMeters(5.5) + pivotLengthMeters * Math.sin(pivotInputs.positionRad)
+        );
     }
 
     @Override

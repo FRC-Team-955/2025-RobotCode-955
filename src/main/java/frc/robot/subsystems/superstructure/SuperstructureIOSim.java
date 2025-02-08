@@ -28,7 +28,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
             // Width of the intake
             Meters.of(driveConfig.trackWidthMeters()),
             // The extension length of the intake beyond the robot's frame (when activated)
-            Inches.of(15),
+            Inches.of(10),
             IntakeSimulation.IntakeSide.FRONT,
             1
     );

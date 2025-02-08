@@ -9,6 +9,8 @@ import frc.robot.subsystems.rollers.RollersIOSim;
 import frc.robot.util.PIDF;
 
 public class CoralIntakeConstants {
+    public static final double pivotLengthMeters = Units.inchesToMeters(16);
+
     protected static final RollersIO rollersIo = Constants.isReplay
             ? new RollersIO()
             : switch (Constants.identity) {
