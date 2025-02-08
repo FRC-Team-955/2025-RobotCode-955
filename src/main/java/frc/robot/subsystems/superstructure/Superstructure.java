@@ -1,8 +1,11 @@
 package frc.robot.subsystems.superstructure;
 
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
+import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
 import frc.robot.subsystems.coralintake.CoralIntake;
 import frc.robot.subsystems.drive.Drive;
@@ -18,6 +21,7 @@ import static frc.robot.subsystems.superstructure.SuperstructureConstants.intake
 
 public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
+    private final RobotMechanism robotMechanism = robotState.getMechanism();
     private final Drive drive = Drive.get();
     private final CoralIntake coralIntake = CoralIntake.get();
     private final Indexer indexer = Indexer.get();
@@ -75,6 +79,17 @@ public class Superstructure extends SubsystemBaseExt {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Superstructure", inputs);
         // TODO: alerts for everything - not just superstructure
+
+        robotMechanism.endEffector.beamBreakLigament.setColor(
+                inputs.endEffectorBeamBreakTriggered
+                        ? new Color8Bit(Color.kGreen)
+                        : new Color8Bit(Color.kRed)
+        );
+        robotMechanism.indexer.beamBreakLigament.setColor(
+                inputs.indexerBeamBreakTriggered
+                        ? new Color8Bit(Color.kGreen)
+                        : new Color8Bit(Color.kRed)
+        );
     }
 
     @Override

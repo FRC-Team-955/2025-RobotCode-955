@@ -15,11 +15,12 @@ public class RobotMechanism {
 
     public final Elevator elevator = new Elevator();
     public final EndEffector endEffector = new EndEffector();
+    public final Indexer indexer = new Indexer();
 
     public class Elevator {
-        public final LoggedMechanismRoot2d stage1Root = mechanism.getRoot("elevatorStage1", 0, 0);
-        public final LoggedMechanismRoot2d stage2Root = mechanism.getRoot("elevatorStage2", 0, 0);
-        public final LoggedMechanismRoot2d stage3Root = mechanism.getRoot("elevatorStage3", 0, 0);
+        public final LoggedMechanismRoot2d stage1Root = mechanism.getRoot("elevator_stage1", 0, 0);
+        public final LoggedMechanismRoot2d stage2Root = mechanism.getRoot("elevator_stage2", 0, 0);
+        public final LoggedMechanismRoot2d stage3Root = mechanism.getRoot("elevator_stage3", 0, 0);
 
         private Elevator() {
             var baseRoot = mechanism
@@ -58,14 +59,50 @@ public class RobotMechanism {
     public class EndEffector {
         public final LoggedMechanismRoot2d root = mechanism.getRoot("endEffector", 0, 0);
         public final LoggedMechanismLigament2d ligament = root.append(new LoggedMechanismLigament2d(
-                "endEffector",
+                "ligament",
                 Units.inchesToMeters(10),
                 90,
                 10,
                 new Color8Bit(Color.kOrange)
         ));
 
+        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot("endEffector_beamBreak", 0, 0);
+        public final LoggedMechanismLigament2d beamBreakLigament = beamBreakRoot.append(new LoggedMechanismLigament2d(
+                "beamBreak",
+                Units.inchesToMeters(1),
+                0,
+                11,
+                new Color8Bit(Color.kRed)
+        ));
+
         private EndEffector() {
+        }
+    }
+
+    public class Indexer {
+        private static final double indexerX = 0.5 + Units.inchesToMeters(-12.2);
+        private static final double indexerY = Units.inchesToMeters(6);
+        private static final double indexerAngle = 13.815;
+
+        public final LoggedMechanismRoot2d root = mechanism.getRoot("indexer", indexerX, indexerY + 0.065);
+        public final LoggedMechanismLigament2d ligament = root.append(new LoggedMechanismLigament2d(
+                "ligament",
+                Units.inchesToMeters(14.75),
+                indexerAngle,
+                10,
+                new Color8Bit(Color.kBlue)
+        ));
+
+        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot("indexer_beamBreak", indexerX + Units.inchesToMeters(9.5), indexerY + Units.inchesToMeters(5));
+        public final LoggedMechanismLigament2d beamBreakLigament = beamBreakRoot.append(new LoggedMechanismLigament2d(
+                "indexer_beamBreak",
+                Units.inchesToMeters(1),
+                indexerAngle,
+                11,
+                new Color8Bit(Color.kRed)
+        ));
+
+        private Indexer() {
         }
     }
 }

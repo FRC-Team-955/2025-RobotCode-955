@@ -21,7 +21,7 @@ import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
 public class Elevator extends SubsystemBaseExt {
-    private final RobotMechanism mechanism = RobotState.get().getMechanism();
+    private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
 
     @RequiredArgsConstructor
     public enum Goal {
@@ -86,15 +86,21 @@ public class Elevator extends SubsystemBaseExt {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Elevator", inputs);
 
-        mechanism.elevator.stage1Root.setPosition(0.5 + Units.inchesToMeters(7) - 0.04, Units.inchesToMeters(2.85) + getPositionMeters() / 3);
-        mechanism.elevator.stage2Root.setPosition(0.5 + Units.inchesToMeters(7) - 0.02, Units.inchesToMeters(3.85) + getPositionMeters() / 3 * 2);
-        mechanism.elevator.stage3Root.setPosition(0.5 + Units.inchesToMeters(7), Units.inchesToMeters(4.85) + getPositionMeters());
-        mechanism.endEffector.root.setPosition(0.5 + Units.inchesToMeters(10), Units.inchesToMeters(4.85) + getPositionMeters());
-        mechanism.endEffector.ligament.setAngle(MathUtil.clamp(
+        robotMechanism.elevator.stage1Root.setPosition(0.5 + Units.inchesToMeters(7) - 0.04, Units.inchesToMeters(2.85) + getPositionMeters() / 3);
+        robotMechanism.elevator.stage2Root.setPosition(0.5 + Units.inchesToMeters(7) - 0.02, Units.inchesToMeters(3.85) + getPositionMeters() / 3 * 2);
+        robotMechanism.elevator.stage3Root.setPosition(0.5 + Units.inchesToMeters(7), Units.inchesToMeters(4.85) + getPositionMeters());
+
+        var endEffectorX = 0.5 + Units.inchesToMeters(10);
+        var endEffectorY = Units.inchesToMeters(4.85) + getPositionMeters();
+        var endEffectorAngle = MathUtil.clamp(
                 // After 5 inches, interpolate to 40 degrees finishing at 7.25 inches
                 90 - (40 / Units.inchesToMeters(2.25) * (getPositionMeters() - Units.inchesToMeters(5))),
                 50, 90
-        ));
+        );
+        robotMechanism.endEffector.root.setPosition(endEffectorX, endEffectorY);
+        robotMechanism.endEffector.ligament.setAngle(endEffectorAngle);
+        robotMechanism.endEffector.beamBreakRoot.setPosition(endEffectorX + Units.inchesToMeters(1), endEffectorY + Units.inchesToMeters(5.25));
+        robotMechanism.endEffector.ligament.setAngle(endEffectorAngle);
     }
 
     @Override
