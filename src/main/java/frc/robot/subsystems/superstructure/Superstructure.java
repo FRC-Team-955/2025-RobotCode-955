@@ -221,15 +221,17 @@ public class Superstructure extends SubsystemBaseExt {
                                 ),
                                 Commands.waitUntil(forwardTrigger),
                                 // Don't allow canceling
-                                Commands.sequence(
-                                        Commands.parallel(
-                                                setGoal(Goal.SCORE_CORAL_SCORING),
-                                                endEffector.setGoal(EndEffector.RollersGoal.SCORE),
-                                                waitUntilEndEffectorNotTriggered()
-                                        ),
-                                        // Wait for coral to settle
-                                        Commands.waitSeconds(0.75)
-                                ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                                CommandsExt.schedule(
+                                        Commands.sequence(
+                                                Commands.parallel(
+                                                        setGoal(Goal.SCORE_CORAL_SCORING),
+                                                        endEffector.setGoal(EndEffector.RollersGoal.SCORE),
+                                                        waitUntilEndEffectorNotTriggered()
+                                                ),
+                                                // Wait for coral to settle
+                                                Commands.waitSeconds(0.75)
+                                        ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                                )
                         )
                 )
         );
