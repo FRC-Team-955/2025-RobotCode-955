@@ -31,8 +31,9 @@ public class ElevatorIO {
     }
 
     /**
-     * Run the motor to the specified rotation with the specified maximum velocity.
+     * Run the motor to the specified position.
+     * Should use feedback to go to the specified position and use feedforward to go to the specified velocity
      */
-    public void setPosition(double positionRad, double maxVelocityRadPerSec) {
+    public void setClosedLoop(double positionRad, double velocityRadPerSec) {
     }
 }

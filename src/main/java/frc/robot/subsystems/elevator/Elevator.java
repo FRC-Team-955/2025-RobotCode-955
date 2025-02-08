@@ -1,5 +1,6 @@
 package frc.robot.subsystems.elevator;
 
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Util;
@@ -37,6 +38,21 @@ public class Elevator extends SubsystemBaseExt {
     @Getter
     private Goal goal = Goal.STOW;
 
+    /** NOTE: UNITS IN METERS! */
+    private final TrapezoidProfile profileFullVelocity = new TrapezoidProfile(
+            new TrapezoidProfile.Constraints(
+                    maxVelocityMetersPerSecond,
+                    maxAccelerationMetersPerSecondSquared
+            )
+    );
+    private final TrapezoidProfile profileGentleVelocity = new TrapezoidProfile(
+            new TrapezoidProfile.Constraints(
+                    gentleMaxVelocityMetersPerSecond,
+                    maxAccelerationMetersPerSecondSquared
+            )
+    );
+    private TrapezoidProfile.State previousState = new TrapezoidProfile.State();
+
     public final SysIdRoutine sysId;
 
     private static Elevator instance;
@@ -71,17 +87,27 @@ public class Elevator extends SubsystemBaseExt {
         Logger.recordOutput("Elevator/Goal", goal);
         if (goal.setpointMeters != null) {
             var setpointMeters = goal.setpointMeters.getAsDouble();
-            var setpointRad = metersToRad(setpointMeters);
-            var maxVelocityRadPerSecond = metersToRad(maxVelocityMetersPerSecond);
-//            var maxVelocityRadPerSec = getPositionMeters() > hardStopHeightMeters
-//                    ? metersToRad(maxVelocityAboveHardStopMetersPerSecond)
-//                    : metersToRad(maxVelocityBelowHardStopMetersPerSecond);
-            io.setPosition(setpointRad, maxVelocityRadPerSecond);
+
+            var shouldUseGentleProfile = false;
+            //noinspection ConstantValue
+            var profile = shouldUseGentleProfile
+                    ? profileGentleVelocity
+                    : profileFullVelocity;
+            previousState = profile.calculate(
+                    0.02,
+                    previousState, // TODO: should we measure the current state instead of assuming previous is where we are currently at?
+                    new TrapezoidProfile.State(setpointMeters, 0)
+            );
+
+            var setpointPositionRad = metersToRad(previousState.position);
+            var setpointVelocityRadPerSec = metersToRad(previousState.velocity);
+            io.setClosedLoop(setpointPositionRad, setpointVelocityRadPerSec);
+
             Logger.recordOutput("Elevator/ClosedLoop", true);
-            Logger.recordOutput("Elevator/Setpoint/PositionMeters", setpointMeters);
-            Logger.recordOutput("Elevator/Constraints/MaxVelocityMetersPerSec", maxVelocityMetersPerSecond);
-            Logger.recordOutput("Elevator/Setpoint/PositionRad", setpointRad);
-            Logger.recordOutput("Elevator/Constraints/MaxVelocityRadPerSec", maxVelocityRadPerSecond);
+            Logger.recordOutput("Elevator/UsingGentleProfile", shouldUseGentleProfile);
+
+            Logger.recordOutput("Elevator/Setpoint/PositionMeters", previousState.position);
+            Logger.recordOutput("Elevator/Setpoint/VelocityMetersPerSec", previousState.velocity);
         } else {
             Logger.recordOutput("Elevator/ClosedLoop", false);
         }
