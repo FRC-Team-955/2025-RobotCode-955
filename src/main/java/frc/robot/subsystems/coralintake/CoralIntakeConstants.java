@@ -7,7 +7,8 @@ import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOSim;
 import frc.robot.util.PIDF;
 
-public class CoralIntakeConstants {protected static final RollersIO rollersIo = Constants.isReplay
+public class CoralIntakeConstants {
+    protected static final RollersIO rollersIo = Constants.isReplay
             ? new RollersIO()
             : switch (Constants.identity) {
         case COMPBOT -> null;
@@ -36,7 +37,7 @@ public class CoralIntakeConstants {protected static final RollersIO rollersIo = 
             40
     );
 
-    
+
     protected static final PivotIO pivotIo = Constants.isReplay
             ? new PivotIO()
             : switch (Constants.identity) {

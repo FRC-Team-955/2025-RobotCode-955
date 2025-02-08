@@ -1,8 +1,6 @@
 package frc.robot.subsystems.coralintake;
 
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
@@ -12,8 +10,6 @@ import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
-import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 
 import java.util.function.DoubleSupplier;
 
@@ -76,7 +72,7 @@ public class CoralIntake extends SubsystemBaseExt {
         rollersIO.updateInputs(rollersInputs);
         Logger.processInputs("Inputs/CoralIntake/Rollers", rollersInputs);
 
-        robotMechanism.pivot.pivotLigament.setAngle(180-Units.radiansToDegrees(pivotInputs.positionRad));
+        robotMechanism.pivot.pivotLigament.setAngle(180 - Units.radiansToDegrees(pivotInputs.positionRad));
     }
 
     @Override

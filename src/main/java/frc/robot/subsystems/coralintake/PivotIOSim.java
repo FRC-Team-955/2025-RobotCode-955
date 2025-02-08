@@ -19,15 +19,15 @@ public class PivotIOSim extends PivotIO {
         // If we need to test different geometries, we can put this in coralintakeconstants
         // TODO: Figure out
         motorSim = new SingleJointedArmSim(
-            DCMotor.getKrakenX60(1),
-            CoralIntakeConstants.pivotConfig.motorGearRatio(),
-            Units.lbsToKilograms(Units.inchesToMeters(Units.inchesToMeters(429.942))),
-            Units.inchesToMeters(20),
-            0.12833586,
-            1.353,
-            true,
-            1.353,
-            0.004, 0.004
+                DCMotor.getKrakenX60(1),
+                CoralIntakeConstants.pivotConfig.motorGearRatio(),
+                Units.lbsToKilograms(Units.inchesToMeters(Units.inchesToMeters(429.942))),
+                Units.inchesToMeters(20),
+                0.12833586,
+                1.353,
+                true,
+                1.353,
+                0.004, 0.004
         );
         pid = pidf.toPID();
         ff = pidf.toArmFF();

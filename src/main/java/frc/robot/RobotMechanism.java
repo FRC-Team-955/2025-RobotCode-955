@@ -19,14 +19,14 @@ public class RobotMechanism {
     public final Pivot pivot = new Pivot();
 
     public class Pivot {
-        public final LoggedMechanismRoot2d pivotRoot = mechanism.getRoot("intake", 0.5-Units.inchesToMeters(10), Units.inchesToMeters(4));
+        public final LoggedMechanismRoot2d pivotRoot = mechanism.getRoot("intake", 0.5 - Units.inchesToMeters(10), Units.inchesToMeters(4));
         // TODO: Figure out
         public final LoggedMechanismLigament2d pivotLigament = pivotRoot.append(new LoggedMechanismLigament2d(
-            "intake",
-            Units.inchesToMeters(20),
-            90,
-            10,
-            new Color8Bit(Color.kOrange)
+                "intake",
+                Units.inchesToMeters(20),
+                90,
+                10,
+                new Color8Bit(Color.kOrange)
         ));
     }
 
