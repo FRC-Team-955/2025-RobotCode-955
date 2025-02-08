@@ -5,11 +5,17 @@ import org.littletonrobotics.junction.AutoLog;
 public class ElevatorIO {
     @AutoLog
     public static class ElevatorIOInputs {
-        public boolean connected = false;
-        public double positionRad = 0.0;
-        public double velocityRadPerSec = 0.0;
-        public double appliedVolts = 0.0;
-        public double currentAmps = 0.0;
+        public boolean leaderConnected = false;
+        public double leaderPositionRad = 0.0;
+        public double leaderVelocityRadPerSec = 0.0;
+        public double leaderAppliedVolts = 0.0;
+        public double leaderCurrentAmps = 0.0;
+
+        public boolean followerConnected = false;
+        public double followerPositionRad = 0.0;
+        public double followerVelocityRadPerSec = 0.0;
+        public double followerAppliedVolts = 0.0;
+        public double followerCurrentAmps = 0.0;
 
         public boolean limitSwitchConnected = false;
         public boolean limitSwitchTriggered = false;

@@ -146,7 +146,7 @@ public class Elevator extends SubsystemBaseExt {
     @AutoLogOutput(key = "Elevator/AtGoal")
     private boolean atGoal() {
         // if goal.setpointMeters is null, will be false and won't crash
-        return goal.setpointMeters != null && Math.abs(metersToRad(goal.setpointMeters.getAsDouble()) - inputs.positionRad) <= setpointToleranceRad;
+        return goal.setpointMeters != null && Math.abs(metersToRad(goal.setpointMeters.getAsDouble()) - inputs.leaderPositionRad) <= setpointToleranceRad;
     }
 
     public Command waitUntilAtGoal() {
@@ -159,19 +159,19 @@ public class Elevator extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Elevator/Measurement/PositionMeters")
     public double getPositionMeters() {
-        return radToMeters(inputs.positionRad);
+        return radToMeters(inputs.leaderPositionRad);
     }
 
     @AutoLogOutput(key = "Elevator/Measurement/VelocityMetersPerSec")
     public double getVelocityMetersPerSec() {
-        return radToMeters(inputs.velocityRadPerSec);
+        return radToMeters(inputs.leaderVelocityRadPerSec);
     }
 
-    public Command gravityCharacterization() {
+    public Command feedforwardCharacterization() {
         return setGoal(Goal.CHARACTERIZATION)
                 .andThen(new FeedforwardCharacterization(
                         io::setOpenLoop,
-                        () -> inputs.velocityRadPerSec,
+                        () -> inputs.leaderVelocityRadPerSec,
                         this
                 ));
     }
