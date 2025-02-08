@@ -4,6 +4,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
@@ -54,6 +55,9 @@ public class ElevatorIOSim extends ElevatorIO {
         inputs.velocityRadPerSec = metersToRad(sim.getVelocityMetersPerSecond());
         inputs.appliedVolts = appliedVolts;
         inputs.currentAmps = Math.abs(sim.getCurrentDrawAmps());
+
+        inputs.limitSwitchConnected = true;
+        inputs.limitSwitchTriggered = sim.getPositionMeters() < Units.inchesToMeters(1);
     }
 
     @Override
@@ -67,5 +71,10 @@ public class ElevatorIOSim extends ElevatorIO {
         closedLoop = true;
         setpointPositionRad = positionRad;
         setpointVelocityRadPerSec = velocityRadPerSec;
+    }
+
+    @Override
+    public void setEncoder(double positionRad) {
+        sim.setState(radToMeters(positionRad), sim.getVelocityMetersPerSecond());
     }
 }

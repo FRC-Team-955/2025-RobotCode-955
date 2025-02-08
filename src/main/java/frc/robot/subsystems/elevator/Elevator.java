@@ -41,6 +41,9 @@ public class Elevator extends SubsystemBaseExt {
     @Getter
     private Goal goal = Goal.STOW;
 
+    @AutoLogOutput(key = "Elevator/HasZeroed")
+    private boolean hasZeroed = false;
+
     private static final ElevatorIO io = ElevatorConstants.io;
     private static final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
 
@@ -86,6 +89,8 @@ public class Elevator extends SubsystemBaseExt {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Elevator", inputs);
 
+        // TODO: connected and has zeroed alerts
+
         robotMechanism.elevator.stage1Root.setPosition(middleOfRobot - Units.inchesToMeters(7) + 0.04, Units.inchesToMeters(2.85) + getPositionMeters() / 3);
         robotMechanism.elevator.stage2Root.setPosition(middleOfRobot - Units.inchesToMeters(7) + 0.02, Units.inchesToMeters(3.85) + getPositionMeters() / 3 * 2);
         robotMechanism.elevator.stage3Root.setPosition(middleOfRobot - Units.inchesToMeters(7), Units.inchesToMeters(4.85) + getPositionMeters());
@@ -99,7 +104,6 @@ public class Elevator extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
-        ////////////// PIVOT //////////////
         Logger.recordOutput("Elevator/Goal", goal);
         if (goal.setpointMeters != null) {
             var setpointMeters = goal.setpointMeters.getAsDouble();
@@ -111,8 +115,8 @@ public class Elevator extends SubsystemBaseExt {
                     : profileFullVelocity;
             previousState = profile.calculate(
                     0.02,
-                    new TrapezoidProfile.State(getPositionMeters(), getVelocityMetersPerSec()),
 //                    previousState,
+                    new TrapezoidProfile.State(getPositionMeters(), getVelocityMetersPerSec()),
                     new TrapezoidProfile.State(setpointMeters, 0)
             );
 
@@ -127,6 +131,11 @@ public class Elevator extends SubsystemBaseExt {
             Logger.recordOutput("Elevator/Setpoint/VelocityMetersPerSec", previousState.velocity);
         } else {
             Logger.recordOutput("Elevator/ClosedLoop", false);
+        }
+
+        if (!hasZeroed && inputs.limitSwitchTriggered) {
+            io.setEncoder(0);
+            hasZeroed = true;
         }
     }
 

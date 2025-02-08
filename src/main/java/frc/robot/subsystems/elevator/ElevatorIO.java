@@ -36,4 +36,8 @@ public class ElevatorIO {
      */
     public void setClosedLoop(double positionRad, double velocityRadPerSec) {
     }
+
+    /** Set the encoder of the elevator to the specified position. Used for zeroing */
+    public void setEncoder(double positionRad) {
+    }
 }
