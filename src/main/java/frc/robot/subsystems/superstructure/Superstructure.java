@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
 import frc.robot.subsystems.coralintake.CoralIntake;
@@ -189,38 +190,47 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
-    public Command scoreCoral() {
+    public Command scoreCoralManual(Trigger forwardTrigger, Trigger cancelTrigger) {
         return CommandsExt.onlyIf(
                 () -> inputs.indexerBeamBreakTriggered || inputs.endEffectorBeamBreakTriggered,
-                Commands.sequence(
-                        CommandsExt.onlyIf(
-                                () -> !inputs.endEffectorBeamBreakTriggered,
+                CommandsExt.cancelOnTrigger(
+                        cancelTrigger,
+                        Commands.sequence(
+                                CommandsExt.onlyIf(
+                                        () -> !inputs.endEffectorBeamBreakTriggered,
+                                        // Don't allow canceling (proxy needed)
+                                        // TODO: remove when auto handoff added, make uncancelable
+                                        Commands.sequence(
+                                                Commands.parallel(
+                                                        setGoal(Goal.HANDOFF_CORAL),
+                                                        indexer.setGoal(Indexer.RollersGoal.HANDOFF),
+                                                        endEffector.setGoal(EndEffector.RollersGoal.HANDOFF),
+                                                        waitUntilEndEffectorTriggered()
+                                                ),
+                                                // TODO: move forward X radians
+                                                Commands.sequence(
+                                                        indexer.setGoal(Indexer.RollersGoal.IDLE),
+                                                        endEffector.setGoal(EndEffector.RollersGoal.IDLE)
+                                                )
+                                        )
+                                ),
+                                Commands.parallel(
+                                        setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
+                                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                        elevator.setGoalAndWaitUntilAtGoal(Elevator.Goal.SCORE_L4)
+                                ),
+                                Commands.waitUntil(forwardTrigger),
+                                // Don't allow canceling
                                 Commands.sequence(
                                         Commands.parallel(
-                                                setGoal(Goal.HANDOFF_CORAL),
-                                                indexer.setGoal(Indexer.RollersGoal.HANDOFF),
-                                                endEffector.setGoal(EndEffector.RollersGoal.HANDOFF),
-                                                waitUntilEndEffectorTriggered()
+                                                setGoal(Goal.SCORE_CORAL_SCORING),
+                                                endEffector.setGoal(EndEffector.RollersGoal.SCORE),
+                                                waitUntilEndEffectorNotTriggered()
                                         ),
-                                        // TODO: move forward X radians
-                                        Commands.sequence(
-                                                indexer.setGoal(Indexer.RollersGoal.IDLE),
-                                                endEffector.setGoal(EndEffector.RollersGoal.IDLE)
-                                        )
-                                )
-                        ),
-                        Commands.parallel(
-                                setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
-                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                                elevator.setGoalAndWaitUntilAtGoal(Elevator.Goal.SCORE_L4)
-                        ),
-                        Commands.parallel(
-                                setGoal(Goal.SCORE_CORAL_SCORING),
-                                endEffector.setGoal(EndEffector.RollersGoal.SCORE),
-                                waitUntilEndEffectorNotTriggered()
-                        ),
-                        // Wait for coral to settle
-                        Commands.waitSeconds(0.75)
+                                        // Wait for coral to settle
+                                        Commands.waitSeconds(0.75)
+                                ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                        )
                 )
         );
     }

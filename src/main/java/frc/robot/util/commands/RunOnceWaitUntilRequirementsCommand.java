@@ -7,11 +7,11 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import java.util.function.BooleanSupplier;
 
 /** Combination of Commands.runOnce and WaitUntilRequirements */
-/* package-private */ class RunOnceWaitUntilRequirements extends Command {
+/* package-private */ class RunOnceWaitUntilRequirementsCommand extends Command {
     private final Runnable initialize;
     private final BooleanSupplier isFinished;
 
-    public RunOnceWaitUntilRequirements(
+    public RunOnceWaitUntilRequirementsCommand(
             Runnable initialize,
             BooleanSupplier isFinished,
             Subsystem... requirements

@@ -125,7 +125,11 @@ public class RobotContainer {
         driverController.y().onTrue(robotState.resetRotation());
 
         driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
-        driverController.leftTrigger().toggleOnTrue(superstructure.scoreCoral());
+
+        driverController.leftTrigger().onTrue(superstructure.scoreCoralManual(
+                driverController.leftTrigger(),
+                driverController.leftBumper()
+        ));
 
 //        // Lock to 0° when A button is held
 //        controller
