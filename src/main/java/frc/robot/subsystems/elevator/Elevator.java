@@ -3,10 +3,9 @@ package frc.robot.subsystems.elevator;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
 import frc.robot.Util;
 import frc.robot.util.characterization.FeedforwardCharacterization;
@@ -15,8 +14,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
-import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 
 import java.util.function.DoubleSupplier;
 
@@ -24,19 +21,7 @@ import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
 public class Elevator extends SubsystemBaseExt {
-    private final RobotState robotState = RobotState.get();
-
-    private final LoggedMechanismRoot2d stage1Root = robotState.getMechanism2d().getRoot("elevatorStage1", 0, 0);
-    private final LoggedMechanismRoot2d stage2Root = robotState.getMechanism2d().getRoot("elevatorStage2", 0, 0);
-    private final LoggedMechanismRoot2d stage3Root = robotState.getMechanism2d().getRoot("elevatorStage3", 0, 0);
-    private final LoggedMechanismRoot2d endEffectorRoot = robotState.getMechanism2d().getRoot("endEffector", 0, 0);
-    private final LoggedMechanismLigament2d endEffectorLigament = endEffectorRoot.append(new LoggedMechanismLigament2d(
-            "endEffector",
-            Units.inchesToMeters(10),
-            90,
-            10,
-            new Color8Bit(Color.kOrange)
-    ));
+    private final RobotMechanism mechanism = RobotState.get().getMechanism();
 
     @RequiredArgsConstructor
     public enum Goal {
@@ -94,37 +79,6 @@ public class Elevator extends SubsystemBaseExt {
                 () -> goal = Goal.CHARACTERIZATION,
                 this
         );
-
-        var baseRoot = robotState.getMechanism2d()
-                .getRoot("elevatorBase", 0.5 + Units.inchesToMeters(7) - 0.06, Units.inchesToMeters(1.85));
-        baseRoot.append(new LoggedMechanismLigament2d(
-                "base",
-                Units.inchesToMeters(33.2),
-                90,
-                13,
-                new Color8Bit(new Color(0.2, 0.2, 0.2))
-        ));
-        stage1Root.append(new LoggedMechanismLigament2d(
-                "stage1",
-                Units.inchesToMeters(32.5),
-                90,
-                12,
-                new Color8Bit(new Color(0.3, 0.3, 0.3))
-        ));
-        stage2Root.append(new LoggedMechanismLigament2d(
-                "stage2",
-                Units.inchesToMeters(32),
-                90,
-                11,
-                new Color8Bit(new Color(0.4, 0.4, 0.4))
-        ));
-        stage3Root.append(new LoggedMechanismLigament2d(
-                "stage3",
-                Units.inchesToMeters(7),
-                90,
-                10,
-                new Color8Bit(new Color(0.5, 0.5, 0.5))
-        ));
     }
 
     @Override
@@ -132,11 +86,11 @@ public class Elevator extends SubsystemBaseExt {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Elevator", inputs);
 
-        stage1Root.setPosition(0.5 + Units.inchesToMeters(7) - 0.04, Units.inchesToMeters(2.85) + getPositionMeters() / 3);
-        stage2Root.setPosition(0.5 + Units.inchesToMeters(7) - 0.02, Units.inchesToMeters(3.85) + getPositionMeters() / 3 * 2);
-        stage3Root.setPosition(0.5 + Units.inchesToMeters(7), Units.inchesToMeters(4.85) + getPositionMeters());
-        endEffectorRoot.setPosition(0.5 + Units.inchesToMeters(10), Units.inchesToMeters(4.85) + getPositionMeters());
-        endEffectorLigament.setAngle(MathUtil.clamp(
+        mechanism.elevator.stage1Root.setPosition(0.5 + Units.inchesToMeters(7) - 0.04, Units.inchesToMeters(2.85) + getPositionMeters() / 3);
+        mechanism.elevator.stage2Root.setPosition(0.5 + Units.inchesToMeters(7) - 0.02, Units.inchesToMeters(3.85) + getPositionMeters() / 3 * 2);
+        mechanism.elevator.stage3Root.setPosition(0.5 + Units.inchesToMeters(7), Units.inchesToMeters(4.85) + getPositionMeters());
+        mechanism.endEffector.root.setPosition(0.5 + Units.inchesToMeters(10), Units.inchesToMeters(4.85) + getPositionMeters());
+        mechanism.endEffector.ligament.setAngle(MathUtil.clamp(
                 // After 5 inches, interpolate to 40 degrees finishing at 7.25 inches
                 90 - (40 / Units.inchesToMeters(2.25) * (getPositionMeters() - Units.inchesToMeters(5))),
                 50, 90

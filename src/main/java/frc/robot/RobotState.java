@@ -9,15 +9,12 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 
 import java.util.function.Supplier;
 
@@ -36,8 +33,7 @@ public class RobotState {
             new Pose2d());
 
     @Getter
-    @AutoLogOutput(key = "RobotState/Mechanism")
-    private final LoggedMechanism2d mechanism2d = new LoggedMechanism2d(1, 3, new Color8Bit(Color.kBlack));
+    private final RobotMechanism mechanism = new RobotMechanism();
 
     private static RobotState instance;
 

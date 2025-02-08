@@ -18,7 +18,9 @@ public class ElevatorIOSim extends ElevatorIO {
             0,
             Units.inchesToMeters(66.622),
             true,
-            0
+            0,
+            0.0001, // position
+            0 // velocity, maybe
     );
 
     private final ElevatorFeedforward feedforward = gains.toElevatorFF();
