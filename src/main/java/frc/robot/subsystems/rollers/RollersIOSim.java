@@ -8,8 +8,8 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 public class RollersIOSim extends RollersIO {
     private final DCMotorSim motorSim;
-    private PIDController positionPid;
-    private PIDController velocityPid;
+    private final PIDController positionPid;
+    private final PIDController velocityPid;
 
     private double appliedVolts;
     private boolean closedLoop = true;
@@ -52,13 +52,14 @@ public class RollersIOSim extends RollersIO {
             } else {
                 appliedVolts = velocityPid.calculate(motorSim.getAngularVelocityRadPerSec()) + ffVolts;
             }
-            motorSim.setInputVoltage(appliedVolts);
         }
+
+        motorSim.setInputVoltage(appliedVolts);
 
         motorSim.update(0.02);
 
         inputs.connected = true;
-        inputs.positionRad = 0.0;
+        inputs.positionRad = motorSim.getAngularPositionRad();
         inputs.velocityRadPerSec = motorSim.getAngularVelocityRadPerSec();
         inputs.appliedVolts = appliedVolts;
         inputs.currentAmps = Math.abs(motorSim.getCurrentDrawAmps());
@@ -67,7 +68,6 @@ public class RollersIOSim extends RollersIO {
     @Override
     public void setOpenLoop(double output) {
         appliedVolts = output;
-        motorSim.setInputVoltage(appliedVolts);
         closedLoop = false;
     }
 

@@ -62,10 +62,12 @@ public class PivotIOTalonFX extends PivotIO {
         driveTalon = new TalonFX(driveCanID);
         encoder = new DutyCycleEncoder(encoderID, 2 * Math.PI, absoluteEncoderOffsetRad);
 
-        // Configure turn motor
+        // Configure pivot motor
         motorConfig = new TalonFXConfiguration();
         motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         motorConfig.Slot0 = Slot0Configs.from(pivotConfig.motorGains().toPhoenix());
+        motorConfig.Feedback.SensorToMechanismRatio = pivotConfig.motorGearRatio();
+        motorConfig.Feedback.FeedbackRotorOffset = Units.radiansToRotations(encoder.get());
         motorConfig.TorqueCurrent.PeakForwardTorqueCurrent = pivotConfig.currentLimit();
         motorConfig.TorqueCurrent.PeakReverseTorqueCurrent = pivotConfig.currentLimit();
         motorConfig.CurrentLimits.StatorCurrentLimit = pivotConfig.currentLimit();
