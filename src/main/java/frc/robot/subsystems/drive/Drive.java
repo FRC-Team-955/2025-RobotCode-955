@@ -67,6 +67,20 @@ public class Drive extends SubsystemBaseExt {
         STOP
     }
 
+    @Getter
+    private Goal goal = Goal.IDLE;
+    private ChassisSpeeds closedLoopSetpoint;
+
+    private Command withGoal(Goal goal, Command command) {
+        return new WrapperCommand(command) {
+            @Override
+            public void initialize() {
+                Drive.this.goal = goal;
+                super.initialize();
+            }
+        };
+    }
+
     private final GyroIO gyroIO = DriveConstants.gyroIO;
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
 
@@ -91,10 +105,6 @@ public class Drive extends SubsystemBaseExt {
 
     private final Alert gyroDisconnectedAlert = new Alert("Disconnected gyro, using kinematics as fallback.", Alert.AlertType.kError);
 
-    @Getter
-    private Goal goal = Goal.IDLE;
-    private ChassisSpeeds closedLoopSetpoint;
-
     private final PIDController choreoFeedbackX = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackOmega = driveConfig.choreoFeedbackOmega().toPIDWrapRadians();
@@ -102,16 +112,6 @@ public class Drive extends SubsystemBaseExt {
     private final PIDController moveToX = moveToXY.toPID();
     private final PIDController moveToY = moveToXY.toPID();
     private final PIDController moveToOmega = DriveConstants.moveToOmega.toPIDWrapRadians();
-
-    private Command withGoal(Goal goal, Command command) {
-        return new WrapperCommand(command) {
-            @Override
-            public void initialize() {
-                Drive.this.goal = goal;
-                super.initialize();
-            }
-        };
-    }
 
     private static Drive instance;
 

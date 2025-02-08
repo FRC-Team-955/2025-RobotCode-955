@@ -1,6 +1,11 @@
 package frc.robot.subsystems.endeffector;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.RobotMechanism;
+import frc.robot.RobotState;
+import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
 import frc.robot.util.subsystem.SubsystemBaseExt;
@@ -11,20 +16,24 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 
 public class EndEffector extends SubsystemBaseExt {
+    private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
+    private final Elevator elevator = Elevator.get();
+
     @RequiredArgsConstructor
     public enum RollersGoal {
         CHARACTERIZATION(null),
         IDLE(() -> 0),
-        FORWARD(() -> 1);
+        HANDOFF(() -> 1),
+        SCORE(() -> 1);
 
         private final DoubleSupplier setpointRadPerSec;
     }
 
-    private static final RollersIO rollersIO = EndEffectorConstants.rollersIO;
-    private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
-
     @Getter
     private RollersGoal rollersGoal = RollersGoal.IDLE;
+
+    private static final RollersIO rollersIO = EndEffectorConstants.rollersIO;
+    private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 
     private static EndEffector instance;
 
@@ -44,6 +53,9 @@ public class EndEffector extends SubsystemBaseExt {
     public void periodicBeforeCommands() {
         rollersIO.updateInputs(rollersInputs);
         Logger.processInputs("Inputs/EndEffector/Rollers", rollersInputs);
+
+        robotMechanism.endEffector.ligament.setAngle(getAngleDegrees());
+        robotMechanism.endEffector.ligament.setAngle(getAngleDegrees());
     }
 
     @Override
@@ -62,5 +74,13 @@ public class EndEffector extends SubsystemBaseExt {
 
     public Command setGoal(RollersGoal rollersGoal) {
         return runOnce(() -> this.rollersGoal = rollersGoal);
+    }
+
+    public double getAngleDegrees() {
+        return MathUtil.clamp(
+                // After 5 inches, interpolate to 40 degrees finishing at 7.25 inches
+                90 - (40 / Units.inchesToMeters(2.25) * (elevator.getPositionMeters() - Units.inchesToMeters(5))),
+                50, 90
+        );
     }
 }

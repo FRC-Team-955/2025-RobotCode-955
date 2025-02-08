@@ -1,6 +1,5 @@
 package frc.robot.subsystems.elevator;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -30,7 +29,7 @@ public class Elevator extends SubsystemBaseExt {
         SCORE_L1(() -> 0),
         SCORE_L2(() -> 0),
         SCORE_L3(() -> 0),
-        SCORE_L4(() -> 1.6),
+        SCORE_L4(() -> 1.69),
         DESCORE_L2(() -> 0),
         DESCORE_L3(() -> 0);
 
@@ -38,11 +37,11 @@ public class Elevator extends SubsystemBaseExt {
         private final DoubleSupplier setpointMeters;
     }
 
-    private static final ElevatorIO io = ElevatorConstants.io;
-    private static final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
-
     @Getter
     private Goal goal = Goal.STOW;
+
+    private static final ElevatorIO io = ElevatorConstants.io;
+    private static final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
 
     /** NOTE: UNITS IN METERS! */
     private final TrapezoidProfile profileFullVelocity = new TrapezoidProfile(
@@ -92,15 +91,8 @@ public class Elevator extends SubsystemBaseExt {
 
         var endEffectorX = 0.5 + Units.inchesToMeters(10);
         var endEffectorY = Units.inchesToMeters(4.85) + getPositionMeters();
-        var endEffectorAngle = MathUtil.clamp(
-                // After 5 inches, interpolate to 40 degrees finishing at 7.25 inches
-                90 - (40 / Units.inchesToMeters(2.25) * (getPositionMeters() - Units.inchesToMeters(5))),
-                50, 90
-        );
         robotMechanism.endEffector.root.setPosition(endEffectorX, endEffectorY);
-        robotMechanism.endEffector.ligament.setAngle(endEffectorAngle);
         robotMechanism.endEffector.beamBreakRoot.setPosition(endEffectorX + Units.inchesToMeters(1), endEffectorY + Units.inchesToMeters(5.25));
-        robotMechanism.endEffector.ligament.setAngle(endEffectorAngle);
     }
 
     @Override

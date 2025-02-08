@@ -1,6 +1,7 @@
 package frc.robot.util.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -30,5 +31,9 @@ public class CommandsExt {
 
     public static Command schedule(Command... commands) {
         return new ScheduleCommand(commands);
+    }
+
+    public static Command onlyIf(BooleanSupplier condition, Command onTrue) {
+        return Commands.either(onTrue, Commands.none(), condition);
     }
 }

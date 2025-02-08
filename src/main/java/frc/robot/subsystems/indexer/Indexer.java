@@ -16,16 +16,17 @@ public class Indexer extends SubsystemBaseExt {
         CHARACTERIZATION(null),
         IDLE(() -> 0),
         INDEX(() -> 1),
+        HANDOFF(() -> 1),
         EJECT(() -> -1);
 
         private final DoubleSupplier setpointRadPerSec;
     }
 
-    private static final RollersIO rollersIO = IndexerConstants.rollersIO;
-    private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
-
     @Getter
     private RollersGoal rollersGoal = RollersGoal.IDLE;
+
+    private static final RollersIO rollersIO = IndexerConstants.rollersIO;
+    private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 
     private static Indexer instance;
 

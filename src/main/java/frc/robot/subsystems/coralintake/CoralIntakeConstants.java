@@ -1,6 +1,7 @@
 package frc.robot.subsystems.coralintake;
 
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.subsystems.rollers.RollersConfig;
 import frc.robot.subsystems.rollers.RollersIO;
@@ -33,7 +34,7 @@ public class CoralIntakeConstants {
             false,
             // TODO: Figure this out
             false,
-            0, // TODO
+            Units.degreesToRadians(10), // TODO
             40
     );
 

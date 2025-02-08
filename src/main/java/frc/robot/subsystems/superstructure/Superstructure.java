@@ -37,14 +37,18 @@ public class Superstructure extends SubsystemBaseExt {
         INTAKE_CORAL_INDEXING_PIVOT_UP,
         INTAKE_CORAL_DONE,
 
-        SCORE_CORAL
-    }
+        HANDOFF_CORAL,
 
-    private final SuperstructureIO io = SuperstructureConstants.io;
-    private final SuperstructureIOInputsAutoLogged inputs = new SuperstructureIOInputsAutoLogged();
+        SCORE_CORAL_WAIT_ELEVATOR,
+        SCORE_CORAL_SCORING,
+        SCORE_CORAL_DONE
+    }
 
     @Getter
     private Goal goal = Goal.IDLE;
+
+    private final SuperstructureIO io = SuperstructureConstants.io;
+    private final SuperstructureIOInputsAutoLogged inputs = new SuperstructureIOInputsAutoLogged();
 
     private Command withGoal(Goal goal, Command command) {
         return new WrapperCommand(command) {
@@ -81,7 +85,7 @@ public class Superstructure extends SubsystemBaseExt {
         // TODO: alerts for everything - not just superstructure
 
         robotMechanism.coralIntake.rangeLigament.setColor(
-                inputs.intakeRangeMeters <= intakeRangeTriggerMeters
+                intakeRangeTriggered()
                         ? new Color8Bit(Color.kGreen)
                         : new Color8Bit(Color.kRed)
         );
@@ -102,9 +106,13 @@ public class Superstructure extends SubsystemBaseExt {
         Logger.recordOutput("Superstructure/Goal", goal);
     }
 
+    private boolean intakeRangeTriggered() {
+        return inputs.intakeRangeMeters <= intakeRangeTriggerMeters;
+    }
+
     public Command waitUntilIntakeTriggered() {
         // This should not require the superstructure because we don't want to conflict with setGoal
-        return Commands.waitUntil(() -> inputs.intakeRangeMeters <= intakeRangeTriggerMeters);
+        return Commands.waitUntil(this::intakeRangeTriggered);
     }
 
     public Command waitUntilIndexerTriggered() {
@@ -115,6 +123,11 @@ public class Superstructure extends SubsystemBaseExt {
     public Command waitUntilEndEffectorTriggered() {
         // This should not require the superstructure because we don't want to conflict with setGoal
         return Commands.waitUntil(() -> inputs.endEffectorBeamBreakTriggered);
+    }
+
+    public Command waitUntilEndEffectorNotTriggered() {
+        // This should not require the superstructure because we don't want to conflict with setGoal
+        return Commands.waitUntil(() -> !inputs.endEffectorBeamBreakTriggered);
     }
 
     public Command idle() {
@@ -172,6 +185,42 @@ public class Superstructure extends SubsystemBaseExt {
                                         indexer.setGoal(Indexer.RollersGoal.IDLE)
                                 )
                         ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                )
+        );
+    }
+
+    public Command coralScore() {
+        return CommandsExt.onlyIf(
+                () -> inputs.indexerBeamBreakTriggered || inputs.endEffectorBeamBreakTriggered,
+                Commands.sequence(
+                        CommandsExt.onlyIf(
+                                () -> !inputs.endEffectorBeamBreakTriggered,
+                                Commands.sequence(
+                                        Commands.parallel(
+                                                setGoal(Goal.HANDOFF_CORAL),
+                                                indexer.setGoal(Indexer.RollersGoal.HANDOFF),
+                                                endEffector.setGoal(EndEffector.RollersGoal.HANDOFF),
+                                                waitUntilEndEffectorTriggered()
+                                        ),
+                                        // TODO: move forward X radians
+                                        Commands.sequence(
+                                                indexer.setGoal(Indexer.RollersGoal.IDLE),
+                                                endEffector.setGoal(EndEffector.RollersGoal.IDLE)
+                                        )
+                                )
+                        ),
+                        Commands.parallel(
+                                setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
+                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                elevator.setGoalAndWaitUntilAtGoal(Elevator.Goal.SCORE_L4)
+                        ),
+                        Commands.parallel(
+                                setGoal(Goal.SCORE_CORAL_SCORING),
+                                endEffector.setGoal(EndEffector.RollersGoal.SCORE),
+                                waitUntilEndEffectorNotTriggered()
+                        ),
+                        // Wait for coral to settle
+                        Commands.waitSeconds(0.75)
                 )
         );
     }

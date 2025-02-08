@@ -28,6 +28,12 @@ public class CoralIntake extends SubsystemBaseExt {
         private final DoubleSupplier setpointRad;
     }
 
+    @Getter
+    private PivotGoal pivotGoal = PivotGoal.STOW;
+
+    private static final PivotIO pivotIO = CoralIntakeConstants.pivotIo;
+    private static final PivotIOInputsAutoLogged pivotInputs = new PivotIOInputsAutoLogged();
+
     @RequiredArgsConstructor
     public enum RollersGoal {
         CHARACTERIZATION(null),
@@ -38,17 +44,11 @@ public class CoralIntake extends SubsystemBaseExt {
         private final DoubleSupplier setpointRadPerSec;
     }
 
-    private static final PivotIO pivotIO = CoralIntakeConstants.pivotIo;
-    private static final PivotIOInputsAutoLogged pivotInputs = new PivotIOInputsAutoLogged();
-
     @Getter
-    private PivotGoal pivotGoal = PivotGoal.STOW;
+    private RollersGoal rollersGoal = RollersGoal.IDLE;
 
     private static final RollersIO rollersIO = CoralIntakeConstants.rollersIo;
     private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
-
-    @Getter
-    private RollersGoal rollersGoal = RollersGoal.IDLE;
 
     private static CoralIntake instance;
 
