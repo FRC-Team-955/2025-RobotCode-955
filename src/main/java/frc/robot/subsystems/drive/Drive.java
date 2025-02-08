@@ -51,6 +51,7 @@ public class Drive extends SubsystemBaseExt {
         IDLE(ControlMode.STOP),
         DRIVE_JOYSTICK(ControlMode.CLOSED_LOOP_OPTIMIZED),
         DRIVE_JOYSTICK_ASSISTED(ControlMode.CLOSED_LOOP_OPTIMIZED),
+        MOVE_TO(ControlMode.CLOSED_LOOP_OPTIMIZED),
         FOLLOW_TRAJECTORY(ControlMode.CLOSED_LOOP_DIRECT);
 
         public final ControlMode controlMode;
@@ -442,6 +443,13 @@ public class Drive extends SubsystemBaseExt {
                         * driveConfig.maxAngularSpeedRadPerSec(),
                 currentPose.getRotation() // Move to is absolute, don't flip
         );
+    }
+
+    public Command moveTo(Supplier<Pose2d> poseSupplier) {
+        return withGoal(
+                Goal.MOVE_TO,
+                run(() -> runMoveTo(poseSupplier.get()))
+        ).withName("Drive Move To");
     }
 
     public Command driveJoystick(DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier, Supplier<Optional<Pose2d>> assistPoseSupplier) {
