@@ -123,7 +123,7 @@ public class PivotIOTalonFX extends PivotIO {
     }
 
     @Override
-    public void setPosition(double positionRad) {
+    public void setClosedLoop(double positionRad) {
         double positionRot = Units.radiansToRotations(positionRad);
         driveTalon.setControl(switch (driveClosedLoopOutput) {
             case Voltage -> positionVoltageRequest.withPosition(positionRot);

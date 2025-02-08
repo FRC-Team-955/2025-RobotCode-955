@@ -74,7 +74,7 @@ public class CoralIntake extends SubsystemBaseExt {
         Logger.recordOutput("CoralIntake/Pivot/Goal", pivotGoal);
         if (pivotGoal.setpointRad != null) {
             var pivotSetpointRad = pivotGoal.setpointRad.getAsDouble();
-            pivotIO.setPosition(pivotSetpointRad);
+            pivotIO.setClosedLoop(pivotSetpointRad);
             Logger.recordOutput("CoralIntake/Pivot/ClosedLoop", true);
             Logger.recordOutput("CoralIntake/Pivot/SetpointRad", pivotSetpointRad);
         } else {

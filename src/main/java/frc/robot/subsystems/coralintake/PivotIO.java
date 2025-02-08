@@ -36,6 +36,6 @@ public class PivotIO {
     /**
      * Run the motor to the specified rotation.
      */
-    public void setPosition(double positionRad) {
+    public void setClosedLoop(double positionRad) {
     }
 }
