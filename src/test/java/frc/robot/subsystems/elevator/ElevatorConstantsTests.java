@@ -11,7 +11,7 @@ class ElevatorConstantsTests {
 
     @Test
     void radToMetersTest() {
-        var distancePerStagePerRotation = Units.inchesToMeters(1.5) * 2 * Math.PI;
+        var distancePerStagePerRotation = Units.inchesToMeters(0.75) * 2 * Math.PI;
         for (int rotations = 0; rotations < 10; rotations++) {
             assertEquals(rotations * distancePerStagePerRotation * 3, radToMeters(Units.rotationsToRadians(rotations)), delta);
         }

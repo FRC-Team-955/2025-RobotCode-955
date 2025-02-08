@@ -3,7 +3,10 @@ package frc.robot.subsystems.drive;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
+import frc.robot.RobotState;
 import frc.robot.Util;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.util.PIDF;
 
 public class DriveConstants {
@@ -25,6 +28,14 @@ public class DriveConstants {
 
     public static final boolean useSetpointGenerator = true;
     public static final boolean disableDriving = false;
+
+    // Slow to 30% speed when elevator is at max height
+    private static final double percentSlowdown = 0.7;
+
+    // Scales speed/acceleration based on elevator height
+    public static double getSpeedScalar() {
+        return 1 - percentSlowdown * Elevator.get().getPositionMeters() / 1.69;
+    }
 
     public static final DriveConfig driveConfig = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> new DriveConfig(

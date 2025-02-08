@@ -245,9 +245,9 @@ public class Drive extends SubsystemBaseExt {
 
                 prevSetpoint = setpointGenerator.generateSetpoint(
                         new ModuleLimits(
-                                driveConfig.maxLinearSpeedMetersPerSec(),
-                                driveConfig.maxLinearAccelMetersPerSecSquared(),
-                                driveConfig.maxTurnVelocityRadPerSec()
+                                getSpeedScalar() * driveConfig.maxLinearSpeedMetersPerSec(),
+                                getSpeedScalar() * driveConfig.maxLinearAccelMetersPerSecSquared(),
+                                getSpeedScalar() * driveConfig.maxTurnVelocityRadPerSec()
                         ),
                         prevSetpoint,
                         closedLoopSetpoint, // THIS SHOULD NOT BE DISCRETIZED
