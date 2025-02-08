@@ -11,8 +11,8 @@ public class ElevatorConstants {
         case SIMBOT, ALPHABOT -> PIDF.ofPDSVAG(0.1, 0.0, 0, 0.06, 0.018, 2.9296);
     };
 
-    public static final double maxVelocityMetersPerSecond = 2;
-    public static final double maxAccelerationMetersPerSecondSquared = 10;
+    public static final double maxVelocityMetersPerSecond = 5;
+    public static final double maxAccelerationMetersPerSecondSquared = 15;
 
     public static final double gearRatio = 3;
     private static final double sprocketRadiusMeters = Units.inchesToMeters(0.75);
