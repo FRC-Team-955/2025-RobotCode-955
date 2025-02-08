@@ -150,7 +150,7 @@ public class Superstructure extends SubsystemBaseExt {
         return endEffector.setGoal(EndEffector.RollersGoal.IDLE).andThen(Commands.idle());
     }
 
-    public Command coralIntake() {
+    public Command intakeCoral() {
         return Commands.sequence(
                 Commands.parallel(
                         setGoal(Goal.INTAKE_CORAL_WAIT_PIVOT),
@@ -189,7 +189,7 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
-    public Command coralScore() {
+    public Command scoreCoral() {
         return CommandsExt.onlyIf(
                 () -> inputs.indexerBeamBreakTriggered || inputs.endEffectorBeamBreakTriggered,
                 Commands.sequence(

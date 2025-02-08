@@ -27,8 +27,11 @@ public class RobotMechanism {
         public final LoggedMechanismRoot2d stage3Root = mechanism.getRoot("elevator_stage3", 0, 0);
 
         private Elevator() {
-            var baseRoot = mechanism
-                    .getRoot("elevatorBase", middleOfRobot - Units.inchesToMeters(7) + 0.06, Units.inchesToMeters(1.85));
+            var baseRoot = mechanism.getRoot(
+                    "elevatorBase",
+                    middleOfRobot - Units.inchesToMeters(7) + 0.06,
+                    Units.inchesToMeters(1.85)
+            );
             baseRoot.append(new LoggedMechanismLigament2d(
                     "base",
                     Units.inchesToMeters(33.2),
@@ -79,6 +82,15 @@ public class RobotMechanism {
                 new Color8Bit(Color.kRed)
         ));
 
+        public final LoggedMechanismRoot2d topRollersRoot = mechanism.getRoot("endEffector_topRollers", 0, 0);
+        public final LoggedMechanismLigament2d topRollersLigament = topRollersRoot.append(new LoggedMechanismLigament2d(
+                "endEffector_topRollers",
+                Units.inchesToMeters(1),
+                0,
+                12,
+                new Color8Bit(Color.kOrange)
+        ));
+
         private EndEffector() {
         }
     }
@@ -90,13 +102,30 @@ public class RobotMechanism {
 
         public final LoggedMechanismRoot2d root = mechanism.getRoot("indexer", x, y + 0.065);
 
-        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot("indexer_beamBreak", x - Units.inchesToMeters(9.5), y + Units.inchesToMeters(5));
+        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot(
+                "indexer_beamBreak",
+                x - Units.inchesToMeters(9.5),
+                y + Units.inchesToMeters(5)
+        );
         public final LoggedMechanismLigament2d beamBreakLigament = beamBreakRoot.append(new LoggedMechanismLigament2d(
                 "indexer_beamBreak",
                 Units.inchesToMeters(1),
                 angle,
                 11,
                 new Color8Bit(Color.kRed)
+        ));
+
+        public final LoggedMechanismRoot2d rollersRoot = mechanism.getRoot(
+                "indexer_rollers",
+                x - Units.inchesToMeters(5),
+                y + Units.inchesToMeters(7)
+        );
+        public final LoggedMechanismLigament2d rollersLigament = rollersRoot.append(new LoggedMechanismLigament2d(
+                "indexer_rollers",
+                Units.inchesToMeters(1),
+                0,
+                12,
+                new Color8Bit(Color.kOrange)
         ));
 
         private Indexer() {
@@ -120,7 +149,11 @@ public class RobotMechanism {
                 new Color8Bit(Color.kGreen)
         ));
 
-        public final LoggedMechanismRoot2d rangeRoot = mechanism.getRoot("coralIntake_range", middleOfRobot + Units.inchesToMeters(18), Units.inchesToMeters(7));
+        public final LoggedMechanismRoot2d rangeRoot = mechanism.getRoot(
+                "coralIntake_range",
+                middleOfRobot + Units.inchesToMeters(18),
+                Units.inchesToMeters(7)
+        );
         public final LoggedMechanismLigament2d rangeLigament = rangeRoot.append(new LoggedMechanismLigament2d(
                 "coralIntake_range",
                 Units.inchesToMeters(1),
@@ -129,7 +162,11 @@ public class RobotMechanism {
                 new Color8Bit(Color.kRed)
         ));
 
-        public final LoggedMechanismRoot2d topRollersRoot = mechanism.getRoot("coralIntake_topRollers", middleOfRobot + Units.inchesToMeters(23), Units.inchesToMeters(7));
+        public final LoggedMechanismRoot2d topRollersRoot = mechanism.getRoot(
+                "coralIntake_topRollers",
+                middleOfRobot + Units.inchesToMeters(23),
+                Units.inchesToMeters(7)
+        );
         public final LoggedMechanismLigament2d topRollersLigament = topRollersRoot.append(new LoggedMechanismLigament2d(
                 "coralIntake_topRollers",
                 Units.inchesToMeters(1),

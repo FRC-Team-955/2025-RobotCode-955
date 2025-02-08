@@ -1,6 +1,9 @@
 package frc.robot.subsystems.indexer;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.RobotMechanism;
+import frc.robot.RobotState;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
 import frc.robot.util.subsystem.SubsystemBaseExt;
@@ -11,6 +14,8 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 
 public class Indexer extends SubsystemBaseExt {
+    private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
+
     @RequiredArgsConstructor
     public enum RollersGoal {
         CHARACTERIZATION(null),
@@ -46,6 +51,9 @@ public class Indexer extends SubsystemBaseExt {
     public void periodicBeforeCommands() {
         rollersIO.updateInputs(rollersInputs);
         Logger.processInputs("Inputs/Indexer/Rollers", rollersInputs);
+
+        // side rollers are reversed relative to motor
+        robotMechanism.indexer.rollersLigament.setAngle(Units.radiansToDegrees(-rollersInputs.positionRad));
     }
 
     @Override

@@ -56,6 +56,8 @@ public class EndEffector extends SubsystemBaseExt {
 
         robotMechanism.endEffector.ligament.setAngle(getAngleDegrees());
         robotMechanism.endEffector.ligament.setAngle(getAngleDegrees());
+        // top rollers are reversed relative to motor
+        robotMechanism.endEffector.topRollersLigament.setAngle(Units.radiansToDegrees(-rollersInputs.positionRad));
     }
 
     @Override
