@@ -21,11 +21,11 @@ public class RollersIOSim extends RollersIO {
     // If using SysID values, kA and kV are the gains returned from SysID, in volts/(rad/sec) or volts/(rad/sec^2)
     public RollersIOSim(RollersConfig config, DCMotor motor, double kV, double kA) {
         motorSim = new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(kV, kA),
-            motor,
-            0.004
+                LinearSystemId.createDCMotorSystem(kV, kA),
+                motor,
+                0.004
         );
-        
+
         velocityFeedforward = config.velocityGains().toSimpleFF();
         positionPid = config.positionGains().toPID();
         velocityPid = config.velocityGains().toPID();
@@ -34,9 +34,9 @@ public class RollersIOSim extends RollersIO {
     // If using physical values, JKgMetersSquared is the moment of inertia J of the flywheel
     public RollersIOSim(RollersConfig config, double JKgMetersSquared, DCMotor motor) {
         motorSim = new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(motor, JKgMetersSquared, config.gearRatio()),
-            motor,
-            0.004, 0.004
+                LinearSystemId.createDCMotorSystem(motor, JKgMetersSquared, config.gearRatio()),
+                motor,
+                0.004
         );
 
         velocityFeedforward = config.velocityGains().toSimpleFF();
@@ -75,7 +75,7 @@ public class RollersIOSim extends RollersIO {
     public void setPosition(double positionRad) {
         positionControl = true;
         positionPid.setSetpoint(positionRad);
-    } 
+    }
 
     @Override
     public void setVelocity(double velocityRadPerSec) {

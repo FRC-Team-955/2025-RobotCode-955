@@ -104,24 +104,24 @@ public class DriveConstants {
                 true,
                 false,
                 false,
-                50,
+                60,
                 20
         );
         case SIMBOT -> new ModuleConfig(
-                PIDF.ofPDSV(0.1, 0.0, 0.0, 0.13),
-                PIDF.ofPD(30.0, 0.0),
+                PIDF.ofPDSV(0.05, 0.0, 0.0, 0.15),
+                PIDF.ofPD(8.0, 0.0),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
                 false,
                 false,
-                0,
-                0
+                120,
+                20
         );
     };
 
     // IO layers should go at the bottom in case they reference constants that aren't yet initialized
-    
+
     public static final ModuleIO[] moduleIO = Constants.isReplay
             ? new ModuleIO[]{new ModuleIO(), new ModuleIO(), new ModuleIO(), new ModuleIO()}
             : switch (Constants.identity) {
@@ -143,10 +143,10 @@ public class DriveConstants {
                 new ModuleIOSparkMaxCANcoder(12, 13, 11, 0.852),
         };
         case SIMBOT -> new ModuleIO[]{
-                new ModuleIOSim(),
-                new ModuleIOSim(),
-                new ModuleIOSim(),
-                new ModuleIOSim()
+                new ModuleIOSim(0),
+                new ModuleIOSim(1),
+                new ModuleIOSim(2),
+                new ModuleIOSim(3)
         };
     };
 
@@ -155,7 +155,7 @@ public class DriveConstants {
             : switch (Constants.identity) {
         case COMPBOT -> new GyroIOPigeon2(11);
         case ALPHABOT -> new GyroIOPigeon2(7);
-        case SIMBOT -> new GyroIO();
+        case SIMBOT -> new GyroIOSim();
     };
 
     public record DriveConfig(

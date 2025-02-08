@@ -19,7 +19,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants;
 import frc.robot.RobotState;
 import frc.robot.Util;
 import frc.robot.util.subsystem.SubsystemBaseExt;
@@ -166,11 +165,10 @@ public class Drive extends SubsystemBaseExt {
         sparkLock.unlock();
 
         // Update gyro alert
-        gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.mode != Constants.Mode.SIM);
+        gyroDisconnectedAlert.set(!gyroInputs.connected);
 
         // Odometry
-        double[] sampleTimestamps =
-                modules[0].getOdometryTimestamps(); // All signals are sampled together
+        double[] sampleTimestamps = modules[0].getOdometryTimestamps(); // All signals are sampled together
         int sampleCount = sampleTimestamps.length;
         for (int i = 0; i < sampleCount; i++) {
             // Read wheel positions and deltas from each module

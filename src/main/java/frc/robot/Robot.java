@@ -19,7 +19,9 @@ import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.util.subsystem.SubsystemBaseExt;
+import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -231,9 +233,44 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void simulationInit() {
+        SimulatedArena.getInstance().resetFieldForAuto();
+        RobotState.get().setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
     }
+
+    private boolean SIMULATION_ONLY_hasResetPoseOnAutonomousEnable = false;
 
     @Override
     public void simulationPeriodic() {
+        SimulatedArena.getInstance().simulationPeriodic();
+
+        if (DriverStation.isAutonomousEnabled()) {
+            var pose = RobotState.get().getPose();
+            // Scuffed hack to reset apply odometry reset at the start of auto
+            if (!SIMULATION_ONLY_hasResetPoseOnAutonomousEnable &&
+                    pose.getTranslation().getDistance(
+                            ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose().getTranslation()
+                    ) >= 0.5
+            ) {
+                ModuleIOSim.driveSimulation.setSimulationWorldPose(pose);
+                SIMULATION_ONLY_hasResetPoseOnAutonomousEnable = true;
+            } else {
+                RobotState.get().setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
+            }
+        } else {
+            RobotState.get().setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
+            if (SIMULATION_ONLY_hasResetPoseOnAutonomousEnable) {
+                SIMULATION_ONLY_hasResetPoseOnAutonomousEnable = false;
+            }
+        }
+
+        Logger.recordOutput("FieldSimulation/RobotPosition", ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
+        Logger.recordOutput(
+                "FieldSimulation/Algae",
+                SimulatedArena.getInstance().getGamePiecesArrayByType("Algae")
+        );
+        Logger.recordOutput(
+                "FieldSimulation/Coral",
+                SimulatedArena.getInstance().getGamePiecesArrayByType("Coral")
+        );
     }
 }
