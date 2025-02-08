@@ -80,13 +80,18 @@ public class Superstructure extends SubsystemBaseExt {
         Logger.processInputs("Inputs/Superstructure", inputs);
         // TODO: alerts for everything - not just superstructure
 
-        robotMechanism.endEffector.beamBreakLigament.setColor(
-                inputs.endEffectorBeamBreakTriggered
+        robotMechanism.coralIntake.rangeLigament.setColor(
+                inputs.intakeRangeMeters <= intakeRangeTriggerMeters
                         ? new Color8Bit(Color.kGreen)
                         : new Color8Bit(Color.kRed)
         );
         robotMechanism.indexer.beamBreakLigament.setColor(
                 inputs.indexerBeamBreakTriggered
+                        ? new Color8Bit(Color.kGreen)
+                        : new Color8Bit(Color.kRed)
+        );
+        robotMechanism.endEffector.beamBreakLigament.setColor(
+                inputs.endEffectorBeamBreakTriggered
                         ? new Color8Bit(Color.kGreen)
                         : new Color8Bit(Color.kRed)
         );
