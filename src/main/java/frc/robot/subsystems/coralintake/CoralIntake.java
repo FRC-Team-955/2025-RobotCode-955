@@ -4,6 +4,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
@@ -19,17 +20,7 @@ import java.util.function.DoubleSupplier;
 import static frc.robot.subsystems.coralintake.CoralIntakeConstants.pivotConfig;
 
 public class CoralIntake extends SubsystemBaseExt {
-    private final RobotState robotState = RobotState.get();
-
-    private final LoggedMechanismRoot2d pivotRoot = robotState.getMechanism2d().getRoot("intake", 0.5-Units.inchesToMeters(10), Units.inchesToMeters(4));
-    // TODO: Figure out
-    private final LoggedMechanismLigament2d pivotLigament = pivotRoot.append(new LoggedMechanismLigament2d(
-        "intake",
-        Units.inchesToMeters(20),
-        90,
-        10,
-        new Color8Bit(Color.kOrange)
-    ));
+    private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
 
     @RequiredArgsConstructor
     public enum PivotGoal {
@@ -85,7 +76,7 @@ public class CoralIntake extends SubsystemBaseExt {
         rollersIO.updateInputs(rollersInputs);
         Logger.processInputs("Inputs/CoralIntake/Rollers", rollersInputs);
 
-        pivotLigament.setAngle(180-Units.radiansToDegrees(pivotInputs.positionRad));
+        robotMechanism.pivot.pivotLigament.setAngle(180-Units.radiansToDegrees(pivotInputs.positionRad));
     }
 
     @Override
