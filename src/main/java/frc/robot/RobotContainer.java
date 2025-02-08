@@ -11,6 +11,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.factories.auto.TestAuto;
 import frc.robot.subsystems.coralintake.CoralIntake;
+import frc.robot.subsystems.coralintake.CoralIntake.PivotGoal;
+import frc.robot.subsystems.coralintake.CoralIntake.RollersGoal;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
@@ -126,6 +128,9 @@ public class RobotContainer {
 
         driverController.a().onTrue(elevator.setGoal(Elevator.Goal.STOW).andThen(Commands.idle()));
         driverController.b().onTrue(elevator.setGoal(Elevator.Goal.SCORE_L4).andThen(Commands.idle()));
+
+        driverController.x().onTrue(coralIntake.setGoals(PivotGoal.INTAKE, RollersGoal.INTAKE).andThen(Commands.idle()));
+        driverController.x().onFalse(coralIntake.setGoals(PivotGoal.STOW, RollersGoal.IDLE).andThen(Commands.idle()));
 
 //        // Lock to 0° when A button is held
 //        controller

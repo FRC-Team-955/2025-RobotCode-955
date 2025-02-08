@@ -36,7 +36,7 @@ public class RollersIOSim extends RollersIO {
         motorSim = new DCMotorSim(
             LinearSystemId.createDCMotorSystem(motor, JKgMetersSquared, config.gearRatio()),
             motor,
-            0.004
+            0.004, 0.004
         );
 
         velocityFeedforward = config.velocityGains().toSimpleFF();

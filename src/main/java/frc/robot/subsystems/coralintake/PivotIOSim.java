@@ -3,7 +3,9 @@ package frc.robot.subsystems.coralintake;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import frc.robot.util.PIDF;
 
 public class PivotIOSim extends PivotIO {
     private final SingleJointedArmSim motorSim;
@@ -13,21 +15,22 @@ public class PivotIOSim extends PivotIO {
     private boolean closedLoop = true;
     private double appliedVolts;
 
-    public PivotIOSim(DCMotor motor, PIDController pid, ArmFeedforward ff) {
+    public PivotIOSim(PIDF pidf) {
         // If we need to test different geometries, we can put this in coralintakeconstants
+        // TODO: Figure out
         motorSim = new SingleJointedArmSim(
-            motor,
+            DCMotor.getKrakenX60(1),
             CoralIntakeConstants.pivotConfig.motorGearRatio(),
-            0,
-            0,
-            0,
-            0,
+            Units.lbsToKilograms(Units.inchesToMeters(Units.inchesToMeters(429.942))),
+            Units.inchesToMeters(20),
+            0.12833586,
+            1.353,
             true,
-            0,
-            0.004
+            1.353,
+            0.004, 0.004
         );
-        this.pid = pid;
-        this.ff = ff;
+        pid = pidf.toPID();
+        ff = pidf.toArmFF();
     }
 
     @Override

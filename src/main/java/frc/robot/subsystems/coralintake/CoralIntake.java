@@ -1,23 +1,41 @@
 package frc.robot.subsystems.coralintake;
 
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.RobotState;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
+import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 
 import java.util.function.DoubleSupplier;
 
 import static frc.robot.subsystems.coralintake.CoralIntakeConstants.pivotConfig;
 
 public class CoralIntake extends SubsystemBaseExt {
+    private final RobotState robotState = RobotState.get();
+
+    private final LoggedMechanismRoot2d pivotRoot = robotState.getMechanism2d().getRoot("intake", 0.5-Units.inchesToMeters(10), Units.inchesToMeters(4));
+    // TODO: Figure out
+    private final LoggedMechanismLigament2d pivotLigament = pivotRoot.append(new LoggedMechanismLigament2d(
+        "intake",
+        Units.inchesToMeters(20),
+        90,
+        10,
+        new Color8Bit(Color.kOrange)
+    ));
+
     @RequiredArgsConstructor
     public enum PivotGoal {
         CHARACTERIZATION(null),
-        STOW(() -> 0),
-        INTAKE(() -> 1);
+        STOW(() -> 1.353),
+        INTAKE(() -> 0.12833586);
 
         /** Should be constant for every loop cycle */
         private final DoubleSupplier setpointRad;
@@ -33,13 +51,13 @@ public class CoralIntake extends SubsystemBaseExt {
         private final DoubleSupplier setpointRadPerSec;
     }
 
-    private static final PivotIO pivotIO = new PivotIO();
+    private static final PivotIO pivotIO = CoralIntakeConstants.pivotIo;
     private static final PivotIOInputsAutoLogged pivotInputs = new PivotIOInputsAutoLogged();
 
     @Getter
     private PivotGoal pivotGoal = PivotGoal.STOW;
 
-    private static final RollersIO rollersIO = new RollersIO();
+    private static final RollersIO rollersIO = CoralIntakeConstants.rollersIo;
     private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 
     @Getter
@@ -66,6 +84,8 @@ public class CoralIntake extends SubsystemBaseExt {
 
         rollersIO.updateInputs(rollersInputs);
         Logger.processInputs("Inputs/CoralIntake/Rollers", rollersInputs);
+
+        pivotLigament.setAngle(180-Units.radiansToDegrees(pivotInputs.positionRad));
     }
 
     @Override
