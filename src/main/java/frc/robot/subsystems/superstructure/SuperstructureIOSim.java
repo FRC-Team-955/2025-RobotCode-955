@@ -29,7 +29,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
             Meters.of(driveConfig.trackWidthMeters()),
             // The extension length of the intake beyond the robot's frame (when activated)
             Inches.of(15),
-            IntakeSimulation.IntakeSide.BACK,
+            IntakeSimulation.IntakeSide.FRONT,
             1
     );
 
@@ -77,12 +77,12 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 }
                 var interp = MathUtil.clamp(sinceCoralIntaked.get() / indexTime, 0, 1);
                 coralRobotRelative = new Transform3d(
-                        -Units.inchesToMeters(20) + Units.inchesToMeters(15) * interp,
+                        Units.inchesToMeters(20) - Units.inchesToMeters(15) * interp,
                         0,
                         Units.inchesToMeters(7) + Units.inchesToMeters(4) * interp,
                         new Rotation3d(
                                 0,
-                                Units.degreesToRadians(-30),
+                                Units.degreesToRadians(30),
                                 MathUtil.clamp(
                                         Units.degreesToRadians(80) - Units.degreesToRadians(90) * interp,
                                         0,
@@ -97,10 +97,10 @@ public class SuperstructureIOSim extends SuperstructureIO {
                     sinceStartedHandoff.restart();
                 }
                 coralRobotRelative = new Transform3d(
-                        -Units.inchesToMeters(5),
+                        Units.inchesToMeters(5),
                         0,
                         Units.inchesToMeters(11),
-                        new Rotation3d(0, Units.degreesToRadians(-13), 0)
+                        new Rotation3d(0, Units.degreesToRadians(13), 0)
                 );
             }
             case HANDING_OFF -> {
@@ -109,29 +109,30 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 }
                 var interp = MathUtil.clamp(sinceStartedHandoff.get() / handoffTime, 0, 1);
                 coralRobotRelative = new Transform3d(
-                        -Units.inchesToMeters(5) + Units.inchesToMeters(9) * interp,
+                        Units.inchesToMeters(5) - Units.inchesToMeters(9) * interp,
                         0,
                         Units.inchesToMeters(11) + Units.inchesToMeters(1) * interp,
-                        new Rotation3d(0, Units.degreesToRadians(-7), 0)
+                        new Rotation3d(0, Units.degreesToRadians(7), 0)
                 );
             }
             case IN_END_EFFECTOR -> {
                 var angle = Units.degreesToRadians(-endEffector.getAngleDegrees() - 90);
-                var coralOffsetX = Units.inchesToMeters(8.5) + Units.inchesToMeters(6) * Math.tan(angle);
-                var coralOffsetZ = Units.inchesToMeters(13.5) + elevator.getPositionMeters() - Units.inchesToMeters(4) * Math.tan(angle);
+                var coralOffsetX = Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angle);
+                // TODO: fix the trig, it doesn't actually work but is good enough for sim
+                var coralOffsetZ = Units.inchesToMeters(13.5) + elevator.getPositionMeters() + Units.inchesToMeters(4) * Math.tan(angle);
                 if (endEffector.getRollersGoal() == EndEffector.RollersGoal.SCORE) {
                     coralState = CoralState.NO_CORAL;
                     SimulatedArena.getInstance()
                             .addGamePieceProjectile(new ReefscapeCoralOnFly(
                                     pose.getTranslation(),
-                                    new Translation2d(coralOffsetX + Units.inchesToMeters(2), 0),
+                                    new Translation2d(coralOffsetX - Units.inchesToMeters(2), 0),
                                     ModuleIOSim.driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
                                     pose.getRotation(),
                                     // The height at which the coral is ejected
                                     Meters.of(coralOffsetZ + Units.inchesToMeters(2)),
                                     // The initial speed of the coral
-                                    MetersPerSecond.of(1),
-                                    Degrees.of(-65)
+                                    MetersPerSecond.of(-1),
+                                    Degrees.of(65)
                             ));
                 } else {
                     coralRobotRelative = new Transform3d(

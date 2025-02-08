@@ -79,8 +79,8 @@ public class EndEffector extends SubsystemBaseExt {
     public double getAngleDegrees() {
         return MathUtil.clamp(
                 // After 5 inches, interpolate to 40 degrees finishing at 7.25 inches
-                90 - (40 / Units.inchesToMeters(2.25) * (elevator.getPositionMeters() - Units.inchesToMeters(5))),
-                50, 90
+                90 + (40 / Units.inchesToMeters(2.25) * (elevator.getPositionMeters() - Units.inchesToMeters(5))),
+                90, 130
         );
     }
 }

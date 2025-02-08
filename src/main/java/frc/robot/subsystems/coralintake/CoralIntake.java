@@ -72,7 +72,7 @@ public class CoralIntake extends SubsystemBaseExt {
         rollersIO.updateInputs(rollersInputs);
         Logger.processInputs("Inputs/CoralIntake/Rollers", rollersInputs);
 
-        robotMechanism.coralIntake.ligament.setAngle(180 - Units.radiansToDegrees(pivotInputs.positionRad));
+        robotMechanism.coralIntake.ligament.setAngle(Units.radiansToDegrees(pivotInputs.positionRad));
     }
 
     @Override

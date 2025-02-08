@@ -25,7 +25,7 @@ public class RobotMechanism {
 
         private Elevator() {
             var baseRoot = mechanism
-                    .getRoot("elevatorBase", 0.5 + Units.inchesToMeters(7) - 0.06, Units.inchesToMeters(1.85));
+                    .getRoot("elevatorBase", 0.5 - Units.inchesToMeters(7) + 0.06, Units.inchesToMeters(1.85));
             baseRoot.append(new LoggedMechanismLigament2d(
                     "base",
                     Units.inchesToMeters(33.2),
@@ -81,9 +81,9 @@ public class RobotMechanism {
     }
 
     public class Indexer {
-        private static final double x = 0.5 + Units.inchesToMeters(-12.2);
+        private static final double x = 0.5 + Units.inchesToMeters(12.2);
         private static final double y = Units.inchesToMeters(6);
-        private static final double angle = 13.815;
+        private static final double angle = 180 - 13.815;
 
         public final LoggedMechanismRoot2d root = mechanism.getRoot("indexer", x, y + 0.065);
         public final LoggedMechanismLigament2d ligament = root.append(new LoggedMechanismLigament2d(
@@ -94,7 +94,7 @@ public class RobotMechanism {
                 new Color8Bit(Color.kBlue)
         ));
 
-        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot("indexer_beamBreak", x + Units.inchesToMeters(9.5), y + Units.inchesToMeters(5));
+        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot("indexer_beamBreak", x - Units.inchesToMeters(9.5), y + Units.inchesToMeters(5));
         public final LoggedMechanismLigament2d beamBreakLigament = beamBreakRoot.append(new LoggedMechanismLigament2d(
                 "indexer_beamBreak",
                 Units.inchesToMeters(1),
@@ -108,7 +108,7 @@ public class RobotMechanism {
     }
 
     public class CoralIntake {
-        private static final double x = 0.5 - Units.inchesToMeters(10);
+        private static final double x = 0.5 + Units.inchesToMeters(10);
         private static final double y = Units.inchesToMeters(4);
 
         public final LoggedMechanismRoot2d root = mechanism.getRoot("coralIntake", x, y);
@@ -120,11 +120,11 @@ public class RobotMechanism {
                 new Color8Bit(Color.kGreen)
         ));
 
-        public final LoggedMechanismRoot2d rangeRoot = mechanism.getRoot("coralIntake_range", x - Units.inchesToMeters(8), y + Units.inchesToMeters(3));
+        public final LoggedMechanismRoot2d rangeRoot = mechanism.getRoot("coralIntake_range", x + Units.inchesToMeters(8), y + Units.inchesToMeters(3));
         public final LoggedMechanismLigament2d rangeLigament = rangeRoot.append(new LoggedMechanismLigament2d(
                 "coralIntake_range",
                 Units.inchesToMeters(1),
-                45,
+                135,
                 11,
                 new Color8Bit(Color.kRed)
         ));
