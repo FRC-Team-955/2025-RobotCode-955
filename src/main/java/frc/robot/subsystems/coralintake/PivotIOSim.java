@@ -27,7 +27,7 @@ public class PivotIOSim extends PivotIO {
                 1.353,
                 true,
                 1.353,
-                0.004, 0.004
+                0.002, 0.002
         );
         pid = pidf.toPID();
         ff = pidf.toArmFF();

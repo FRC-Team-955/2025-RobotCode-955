@@ -13,6 +13,7 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
 
+import static frc.robot.RobotMechanism.middleOfRobot;
 import static frc.robot.subsystems.coralintake.CoralIntakeConstants.pivotConfig;
 import static frc.robot.subsystems.coralintake.CoralIntakeConstants.pivotLengthMeters;
 
@@ -39,8 +40,8 @@ public class CoralIntake extends SubsystemBaseExt {
     public enum RollersGoal {
         CHARACTERIZATION(null),
         IDLE(() -> 0),
-        INTAKE(() -> 1),
-        EJECT(() -> -1);
+        INTAKE(() -> Units.rotationsPerMinuteToRadiansPerSecond(-200)),
+        EJECT(() -> 1);
 
         private final DoubleSupplier setpointRadPerSec;
     }
@@ -74,7 +75,7 @@ public class CoralIntake extends SubsystemBaseExt {
         Logger.processInputs("Inputs/CoralIntake/Rollers", rollersInputs);
 
         robotMechanism.coralIntake.root.setPosition(
-                0.5 + Units.inchesToMeters(4) + pivotLengthMeters * Math.cos(pivotInputs.positionRad),
+                middleOfRobot + Units.inchesToMeters(6.5) + pivotLengthMeters * Math.cos(pivotInputs.positionRad),
                 Units.inchesToMeters(5.5) + pivotLengthMeters * Math.sin(pivotInputs.positionRad)
         );
     }

@@ -17,6 +17,7 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.units.Units.Volts;
+import static frc.robot.RobotMechanism.middleOfRobot;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
 public class Elevator extends SubsystemBaseExt {
@@ -85,11 +86,11 @@ public class Elevator extends SubsystemBaseExt {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Elevator", inputs);
 
-        robotMechanism.elevator.stage1Root.setPosition(0.5 - Units.inchesToMeters(7) + 0.04, Units.inchesToMeters(2.85) + getPositionMeters() / 3);
-        robotMechanism.elevator.stage2Root.setPosition(0.5 - Units.inchesToMeters(7) + 0.02, Units.inchesToMeters(3.85) + getPositionMeters() / 3 * 2);
-        robotMechanism.elevator.stage3Root.setPosition(0.5 - Units.inchesToMeters(7), Units.inchesToMeters(4.85) + getPositionMeters());
+        robotMechanism.elevator.stage1Root.setPosition(middleOfRobot - Units.inchesToMeters(7) + 0.04, Units.inchesToMeters(2.85) + getPositionMeters() / 3);
+        robotMechanism.elevator.stage2Root.setPosition(middleOfRobot - Units.inchesToMeters(7) + 0.02, Units.inchesToMeters(3.85) + getPositionMeters() / 3 * 2);
+        robotMechanism.elevator.stage3Root.setPosition(middleOfRobot - Units.inchesToMeters(7), Units.inchesToMeters(4.85) + getPositionMeters());
 
-        var endEffectorX = 0.5 - Units.inchesToMeters(10);
+        var endEffectorX = middleOfRobot - Units.inchesToMeters(10);
         var endEffectorY = Units.inchesToMeters(4.85) + getPositionMeters();
         robotMechanism.endEffector.root.setPosition(endEffectorX, endEffectorY);
         robotMechanism.endEffector.beamBreakRoot.setPosition(endEffectorX - Units.inchesToMeters(1), endEffectorY + Units.inchesToMeters(5.25));
