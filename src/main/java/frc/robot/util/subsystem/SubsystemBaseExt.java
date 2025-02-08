@@ -8,6 +8,11 @@ public abstract class SubsystemBaseExt extends SubsystemBase implements Subsyste
         Robot.registerExtendedSubsystem(this);
     }
 
+    public SubsystemBaseExt(String name) {
+        super(name);
+        Robot.registerExtendedSubsystem(this);
+    }
+
     @Override
     // did you know you can have final methods in java? neither did I
     public final void periodic() {

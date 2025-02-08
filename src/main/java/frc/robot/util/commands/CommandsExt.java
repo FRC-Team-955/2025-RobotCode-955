@@ -1,24 +1,12 @@
 package frc.robot.util.commands;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ScheduleCommand;
-import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.*;
 
 import java.util.function.BooleanSupplier;
 
 public class CommandsExt {
-    public static Command steppable(
-            Trigger forwardTrigger,
-            Trigger reverseTrigger,
-            Command... commands
-    ) {
-        return new SteppableCommandGroup(forwardTrigger, reverseTrigger, commands);
-    }
-
     public static Command waitUntilRequirements(BooleanSupplier isFinished, Subsystem... requirements) {
-        return new WaitUntilRequirements(isFinished, requirements);
+        return new WaitUntilRequirementsCommand(isFinished, requirements);
     }
 
     public static Command runOnceAndWaitUntil(
@@ -26,7 +14,7 @@ public class CommandsExt {
             BooleanSupplier isFinished,
             Subsystem... requirements
     ) {
-        return new RunOnceWaitUntilRequirements(initialize, isFinished, requirements);
+        return new RunOnceWaitUntilRequirementsCommand(initialize, isFinished, requirements);
     }
 
     public static Command schedule(Command... commands) {
@@ -35,5 +23,14 @@ public class CommandsExt {
 
     public static Command onlyIf(BooleanSupplier condition, Command onTrue) {
         return Commands.either(onTrue, Commands.none(), condition);
+    }
+
+    public static Command cancelOnTrigger(BooleanSupplier cancelCondition, Command command) {
+        return new WrapperCommand(command) {
+            @Override
+            public boolean isFinished() {
+                return cancelCondition.getAsBoolean() || super.isFinished();
+            }
+        };
     }
 }

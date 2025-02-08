@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
  * See {@link GoalBasedCommandRunner} for a version of this that will automatically cancel the
  * current command if the goal is changed.
  */
-public class CommandRunner<T> extends SubsystemBase {
+public class CommandRunner extends SubsystemBase {
     public CommandRunner(String name) {
         super(name);
     }
