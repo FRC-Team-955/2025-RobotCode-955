@@ -124,10 +124,8 @@ public class RobotContainer {
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
 
-        driverController.b().onTrue(elevator.setGoal(Elevator.Goal.SCORE_L4).andThen(Commands.idle()));
-
-        driverController.rightTrigger().whileTrue(superstructure.coralIntake());
-        driverController.leftTrigger().toggleOnTrue(superstructure.coralScore());
+        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
+        driverController.leftTrigger().toggleOnTrue(superstructure.scoreCoral());
 
 //        // Lock to 0° when A button is held
 //        controller
