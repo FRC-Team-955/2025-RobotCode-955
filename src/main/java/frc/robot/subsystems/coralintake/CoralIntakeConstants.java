@@ -6,7 +6,7 @@ public class CoralIntakeConstants {
     public static final PivotConfig pivotConfig = new PivotConfig(
             // TODO: Tune PID
             PIDF.ofPIDSVAG(1, 0.0, 0.0, 0, 0, 0, 0),
-            25,
+            60,
             false,
             // TODO: Figure this out
             false,

@@ -5,7 +5,6 @@ import com.revrobotics.spark.*;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
 
@@ -108,9 +107,8 @@ public class RollersIOSparkMax extends RollersIO {
 
     @Override
     public void setPosition(double positionRad) {
-        double setpoint = MathUtil.inputModulus(positionRad, 0.0, 2 * Math.PI);
         controller.setReference(
-                setpoint,
+                positionRad,
                 SparkBase.ControlType.kPosition,
                 ClosedLoopSlot.kSlot0 // position = slot0
         );
