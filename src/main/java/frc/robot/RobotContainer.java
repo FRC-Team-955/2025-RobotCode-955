@@ -127,7 +127,7 @@ public class RobotContainer {
         driverController.b().onTrue(elevator.setGoal(Elevator.Goal.SCORE_L4).andThen(Commands.idle()));
 
         driverController.rightTrigger().whileTrue(superstructure.coralIntake());
-        driverController.leftTrigger().onTrue(superstructure.coralScore());
+        driverController.leftTrigger().toggleOnTrue(superstructure.coralScore());
 
 //        // Lock to 0° when A button is held
 //        controller
