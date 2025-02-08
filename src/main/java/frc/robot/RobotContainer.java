@@ -49,6 +49,7 @@ public class RobotContainer {
     private final LEDs leds = LEDs.get();
 
     public RobotContainer() {
+        robotState.afterSubsystemsInitialized();
         addAutos();
         addCharacterizations();
         setDefaultCommands();

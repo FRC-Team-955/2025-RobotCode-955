@@ -4,7 +4,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
@@ -16,7 +15,7 @@ public class ElevatorIOSim extends ElevatorIO {
             6.8,
             drumRadiusMeters,
             0,
-            Units.inchesToMeters(66.622),
+            maxHeightMeters,
             true,
             0,
             0.0001, // position
