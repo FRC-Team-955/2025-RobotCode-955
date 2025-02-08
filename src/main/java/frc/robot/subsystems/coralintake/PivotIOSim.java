@@ -13,11 +13,11 @@ public class PivotIOSim extends PivotIO {
     private boolean closedLoop = true;
     private double appliedVolts;
 
-    public PivotIOSim(DCMotor motor, ArmFeedforward ff) {
+    public PivotIOSim(DCMotor motor, PIDController pid, ArmFeedforward ff) {
         // If we need to test different geometries, we can put this in coralintakeconstants
         motorSim = new SingleJointedArmSim(
             motor,
-            CoralIntakeConstants.pivotConfigSim.motorGearRatio(),
+            CoralIntakeConstants.pivotConfig.motorGearRatio(),
             0,
             0,
             0,
@@ -26,7 +26,7 @@ public class PivotIOSim extends PivotIO {
             0,
             0.004
         );
-        pid = CoralIntakeConstants.pivotConfigSim.motorGains().toPID();
+        this.pid = pid;
         this.ff = ff;
     }
 

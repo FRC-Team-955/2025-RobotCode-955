@@ -11,9 +11,8 @@ public class CoralIntakeConstants {
             // TODO: Figure this out
             false,
             0, // TODO
-            0
+            40
     );
-
 
     public record PivotConfig(
             PIDF motorGains,
