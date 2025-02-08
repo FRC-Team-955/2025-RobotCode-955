@@ -45,7 +45,7 @@ public class CoralIntakeConstants {
             ? new PivotIO()
             : switch (Constants.identity) {
         case COMPBOT -> null;
-        case SIMBOT, ALPHABOT -> new PivotIOSim(PIDF.ofPSVA(3, 0, 0, 1));
+        case SIMBOT, ALPHABOT -> new PivotIOSim(PIDF.ofPSVAG(5, 0, 0.5, 1, 0.5));
     };
 
     public record PivotConfig(

@@ -111,7 +111,8 @@ public class Elevator extends SubsystemBaseExt {
                     : profileFullVelocity;
             previousState = profile.calculate(
                     0.02,
-                    previousState, // TODO: should we measure the current state instead of assuming previous is where we are currently at?
+                    new TrapezoidProfile.State(getPositionMeters(), getVelocityMetersPerSec()),
+//                    previousState,
                     new TrapezoidProfile.State(setpointMeters, 0)
             );
 
