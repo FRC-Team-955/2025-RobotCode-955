@@ -129,6 +129,15 @@ public class RobotMechanism {
                 new Color8Bit(Color.kRed)
         ));
 
+        public final LoggedMechanismRoot2d topRollersRoot = mechanism.getRoot("coralIntake_topRollers", middleOfRobot + Units.inchesToMeters(23), Units.inchesToMeters(7));
+        public final LoggedMechanismLigament2d topRollersLigament = topRollersRoot.append(new LoggedMechanismLigament2d(
+                "coralIntake_topRollers",
+                Units.inchesToMeters(1),
+                0,
+                12,
+                new Color8Bit(Color.kOrange)
+        ));
+
         private CoralIntake() {
         }
     }

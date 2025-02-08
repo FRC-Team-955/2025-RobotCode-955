@@ -78,6 +78,7 @@ public class CoralIntake extends SubsystemBaseExt {
                 middleOfRobot + Units.inchesToMeters(6.5) + pivotLengthMeters * Math.cos(pivotInputs.positionRad),
                 Units.inchesToMeters(5.5) + pivotLengthMeters * Math.sin(pivotInputs.positionRad)
         );
+        robotMechanism.coralIntake.topRollersLigament.setAngle(Units.radiansToDegrees(rollersInputs.positionRad));
     }
 
     @Override
