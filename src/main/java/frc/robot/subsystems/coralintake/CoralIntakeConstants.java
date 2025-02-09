@@ -10,6 +10,9 @@ import frc.robot.util.PIDF;
 
 public class CoralIntakeConstants {
     public static final double pivotLengthMeters = Units.inchesToMeters(16);
+    public static final double pivotSetpointToleranceRad = Units.degreesToRadians(15);
+    public static final double pivotMaxVelocityRadPerSec = Units.degreesToRadians(500);
+    public static final double pivotMaxAccelerationRadPerSecSquared = Units.degreesToRadians(1500);
 
     protected static final RollersIO rollersIo = Constants.isReplay
             ? new RollersIO()
@@ -29,31 +32,38 @@ public class CoralIntakeConstants {
         );
     };
 
-    public static final PivotConfig pivotConfig = new PivotConfig(
-            // TODO: Tune PID
-            PIDF.ofPIDSVAG(1, 0.0, 0.0, 0, 0, 0, 0),
-            60,
-            false,
-            // TODO: Figure this out
-            false,
-            Units.degreesToRadians(10), // TODO
-            40
-    );
-
+    public static final PivotConfig pivotConfig = switch (Constants.identity) {
+        case COMPBOT -> new PivotConfig(
+                // TODO: Tune PID
+                PIDF.ofPIDSVAG(1, 0.0, 0.0, 0, 0, 0, 0),
+                60,
+                false,
+                // TODO: Figure this out
+                false,
+                40
+        );
+        case SIMBOT, ALPHABOT -> new PivotConfig(
+                PIDF.ofPSVAG(0.2, 0, 1.2, 1.2, 0.1),
+                60,
+                false,
+                // TODO: Figure this out
+                false,
+                40
+        );
+    };
 
     protected static final PivotIO pivotIo = Constants.isReplay
             ? new PivotIO()
             : switch (Constants.identity) {
         case COMPBOT -> null;
-        case SIMBOT, ALPHABOT -> new PivotIOSim(PIDF.ofPSVAG(5, 0, 0.5, 1, 0.5));
+        case SIMBOT, ALPHABOT -> new PivotIOSim();
     };
 
     public record PivotConfig(
-            PIDF motorGains,
+            PIDF gains,
             double motorGearRatio,
             boolean motorInverted,
             boolean encoderInverted,
-            double setpointToleranceRad,
             double currentLimit
     ) {
     }

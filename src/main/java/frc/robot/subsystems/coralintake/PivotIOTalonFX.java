@@ -65,7 +65,7 @@ public class PivotIOTalonFX extends PivotIO {
         // Configure pivot motor
         motorConfig = new TalonFXConfiguration();
         motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        motorConfig.Slot0 = Slot0Configs.from(pivotConfig.motorGains().toPhoenix());
+        motorConfig.Slot0 = Slot0Configs.from(pivotConfig.gains().toPhoenix());
         motorConfig.Feedback.SensorToMechanismRatio = pivotConfig.motorGearRatio();
         motorConfig.Feedback.FeedbackRotorOffset = Units.radiansToRotations(encoder.get());
         motorConfig.TorqueCurrent.PeakForwardTorqueCurrent = pivotConfig.currentLimit();
