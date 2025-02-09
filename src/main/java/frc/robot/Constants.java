@@ -15,6 +15,10 @@ package frc.robot;
 
 import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.util.controller.CommandSteamInputController;
+
+import java.util.function.Function;
 
 /**
  * This class defines the runtime mode used by AdvantageKit. The mode is always "real" when running
@@ -61,7 +65,14 @@ public final class Constants {
          */
         public static final boolean replayRunAsFastAsPossible = true;
 
-        public static final boolean useNintendoSwitchProController = RobotBase.isSimulation() && System.getProperty("os.name").contains("Mac OS X");
+        public static final Function<Integer, CommandXboxController> simController = (port) -> {
+            if (System.getProperty("os.name").contains("Mac OS X")) {
+                return new CommandSteamInputController(port);
+//                return new CommandNintendoSwitchProController(port);
+            }
+
+            return new CommandXboxController(port);
+        };
     }
 
     public static final class CANivore {
