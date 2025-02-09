@@ -127,8 +127,9 @@ public class RobotContainer {
 
         driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
 
-        driverController.leftTrigger().onTrue(superstructure.scoreCoralManual(
-                driverController.leftTrigger(),
+        driverController.leftTrigger().toggleOnTrue(superstructure.autoAlignAndScore(
+                0,
+                true,
                 driverController.leftBumper()
         ));
 

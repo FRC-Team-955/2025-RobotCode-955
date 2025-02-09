@@ -424,6 +424,7 @@ public class Drive extends SubsystemBaseExt {
     }
 
     private void runMoveTo(Pose2d pose) {
+        Logger.recordOutput("TargetPose", pose);
         var currentPose = robotState.getPose();
 
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(

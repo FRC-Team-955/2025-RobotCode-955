@@ -1,13 +1,13 @@
 package frc.robot.subsystems.superstructure;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.RobotMechanism;
-import frc.robot.RobotState;
+import frc.robot.*;
 import frc.robot.subsystems.coralintake.CoralIntake;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
@@ -18,6 +18,9 @@ import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.function.Supplier;
+
+import static frc.robot.FieldLocations.*;
 import static frc.robot.subsystems.superstructure.SuperstructureConstants.intakeRangeTriggerMeters;
 
 public class Superstructure extends SubsystemBaseExt {
@@ -104,6 +107,16 @@ public class Superstructure extends SubsystemBaseExt {
     @Override
     public void periodicAfterCommands() {
         Logger.recordOutput("Superstructure/Goal", goal);
+//        Logger.recordOutput("Superstructure/AprilTagPose6", FieldLocations.getAprilTagPose(6));
+//        Logger.recordOutput("Superstructure/AprilTagPoseAdjusted", FieldLocations.getAprilTagPoseAdjusted(0));
+//        Logger.recordOutput("Superstructure/PrimaryAlignPose", FieldLocations.getPrimaryAlignPose(0));
+        Logger.recordOutput("Superstructure/AtPrimaryPose", FieldLocations.getDistance(robotState.getPose(), FieldLocations.getPrimaryAlignPose(0)));
+        Logger.recordOutput("Superstructure/AtSecondaryPose", getDistance(robotState.getPose(), getSecondaryAlignPose(0, true)) < secondaryAlignToleranceMeters
+                && Math.abs(getAngle(robotState.getPose(), getSecondaryAlignPose(0, true)).getRadians()) < secondaryAlignToleranceRad
+        );
+//        Logger.recordOutput("Superstructure/SecondaryAlignPose", FieldLocations.getSecondaryAlignPose(0, true));
+//        Logger.recordOutput("Superstructure/FinalAlignPose", FieldLocations.getFinalAlignPose(0, true));
+        Logger.recordOutput("Superstructure/Alignable", FieldLocations.alignable(0, robotState.getPose()));
     }
 
     private boolean intakeRangeTriggered() {
@@ -128,6 +141,30 @@ public class Superstructure extends SubsystemBaseExt {
     public Command waitUntilEndEffectorNotTriggered() {
         // This should not require the superstructure because we don't want to conflict with setGoal
         return Commands.waitUntil(() -> !inputs.endEffectorBeamBreakTriggered);
+    }
+
+    public Command waitUntilAtPrimaryPosition(int reefSide) {
+        // This should not require the superstructure because we don't want to conflict with setGoal
+        return Commands.waitUntil(
+                () -> getDistance(robotState.getPose(), getPrimaryAlignPose(reefSide)) < primaryAlignToleranceMeters
+                    && Math.abs(getAngle(robotState.getPose(), getPrimaryAlignPose(reefSide)).getRadians()) < primaryAlignToleranceRad
+        );
+    }
+
+    public Command waitUntilAtSecondaryPosition(int reefSide, boolean alignLeft) {
+        // This should not require the superstructure because we don't want to conflict with setGoal
+        return Commands.waitUntil(
+                () -> getDistance(robotState.getPose(), getSecondaryAlignPose(reefSide, alignLeft)) < secondaryAlignToleranceMeters
+                        && Math.abs(getAngle(robotState.getPose(), getSecondaryAlignPose(reefSide, alignLeft)).getRadians()) < secondaryAlignToleranceRad
+        );
+    }
+
+    public Command waitUntilAtFinalPosition(int reefSide, boolean alignLeft) {
+        // This should not require the superstructure because we don't want to conflict with setGoal
+        return Commands.waitUntil(
+                () -> getDistance(robotState.getPose(), getFinalAlignPose(reefSide, alignLeft)) < finalAlignToleranceMeters
+                        && Math.abs(getAngle(robotState.getPose(), getFinalAlignPose(reefSide, alignLeft)).getRadians()) < finalAlignToleranceRad
+        );
     }
 
     public Command idle() {
@@ -218,6 +255,54 @@ public class Superstructure extends SubsystemBaseExt {
                                                 // Wait for coral to settle
                                                 Commands.waitSeconds(0.75)
                                         ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                                )
+                        )
+                )
+        );
+    }
+
+    public Command autoAlignAndScore(int reefSide, boolean alignLeft, Trigger cancelTrigger) {
+        return CommandsExt.onlyIf(
+                // Only run if you have coral and are in front of your reef side
+                () -> (inputs.endEffectorBeamBreakTriggered)
+                        && alignable(reefSide, RobotState.get().getPose()),
+                CommandsExt.cancelOnTrigger(
+                        cancelTrigger,
+                        Commands.sequence(
+                                // Drive to primary position and intake
+                                Commands.race(
+                                        drive.moveTo(() -> getPrimaryAlignPose(reefSide)),
+                                        waitUntilAtPrimaryPosition(reefSide)
+                                ),
+                                // Drive to secondary position while raising elevator
+                                Commands.race(
+                                        drive.moveTo(() -> getSecondaryAlignPose(reefSide, alignLeft)),
+                                        Commands.parallel(
+                                                setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
+                                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                                elevator.setGoalAndWaitUntilAtGoal(Elevator.Goal.SCORE_L4),
+                                                waitUntilAtSecondaryPosition(reefSide, alignLeft)
+                                        )
+                                ),
+                                // Drive to final position and score
+                                Commands.race(
+                                        drive.moveTo(() -> getFinalAlignPose(reefSide, alignLeft)),
+                                        waitUntilAtFinalPosition(reefSide, alignLeft)
+                                ),
+                                // don't allow cancelling
+                                CommandsExt.schedule(
+                                        Commands.race(
+                                                drive.moveTo(() -> getFinalAlignPose(reefSide, alignLeft)),
+                                                Commands.sequence(
+                                                        Commands.parallel(
+                                                                setGoal(Goal.SCORE_CORAL_SCORING),
+                                                                endEffector.setGoal(EndEffector.RollersGoal.SCORE),
+                                                                waitUntilEndEffectorNotTriggered()
+                                                        ),
+                                                        // Wait for coral to settle
+                                                        Commands.waitSeconds(0.75)
+                                                ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                                        )
                                 )
                         )
                 )
