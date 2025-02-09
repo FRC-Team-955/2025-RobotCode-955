@@ -21,6 +21,8 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.CommandNintendoSwitchProController;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
+import java.util.Optional;
+
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -93,6 +95,8 @@ public class RobotContainer {
                         // right on joystick is positive x - we want negative x for right (CCW is positive)
                         () -> -driverController.getRightX(),
                         () -> {
+                            if (coralIntake.getRollersGoal() != CoralIntake.RollersGoal.INTAKE)
+                                return Optional.empty();
                             var gamepiece = vision.getClosestGamepiece();
                             return gamepiece.map(gamepieceTranslation -> {
                                 var relativeToRobot = gamepieceTranslation.minus(robotState.getTranslation());
