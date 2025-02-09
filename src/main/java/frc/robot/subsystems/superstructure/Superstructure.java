@@ -34,11 +34,10 @@ public class Superstructure extends SubsystemBaseExt {
 
         INTAKE_CORAL_WAIT_PIVOT,
         INTAKE_CORAL_INTAKING,
-        INTAKE_CORAL_INDEXING_PIVOT_DOWN,
-        INTAKE_CORAL_INDEXING_PIVOT_UP,
-        INTAKE_CORAL_DONE,
-
-        HANDOFF_CORAL,
+        INDEXING_PIVOT_DOWN,
+        INDEXING_PIVOT_UP,
+        HANDOFF_WAIT_ELEVATOR,
+        HANDOFF_HANDING_OFF,
 
         SCORE_CORAL_WAIT_ELEVATOR,
         SCORE_CORAL_SCORING,
@@ -168,23 +167,29 @@ public class Superstructure extends SubsystemBaseExt {
                         Commands.sequence(
                                 // Wait at least a small amount of time, or until we are done indexing to bring the intake up
                                 Commands.parallel(
-                                        setGoal(Goal.INTAKE_CORAL_INDEXING_PIVOT_DOWN),
+                                        setGoal(Goal.INDEXING_PIVOT_DOWN),
                                         Commands.race(
                                                 Commands.waitSeconds(0.25),
                                                 waitUntilIndexerTriggered()
                                         )
                                 ),
                                 Commands.parallel(
-                                        setGoal(Goal.INTAKE_CORAL_INDEXING_PIVOT_UP),
+                                        setGoal(Goal.INDEXING_PIVOT_UP),
                                         coralIntake.setGoals(CoralIntake.PivotGoal.STOW, CoralIntake.RollersGoal.IDLE),
                                         waitUntilIndexerTriggered()
                                 ),
                                 Commands.parallel(
-                                        // Log that we finished for one loop cycle
-                                        // Will be cleared the next cycle since default command kicks in
-                                        setGoal(Goal.INTAKE_CORAL_DONE),
-                                        indexer.setGoal(Indexer.RollersGoal.IDLE)
+                                        setGoal(Goal.HANDOFF_WAIT_ELEVATOR),
+                                        indexer.setGoal(Indexer.RollersGoal.IDLE),
+                                        elevator.setGoalAndWaitUntilAtGoal(Elevator.Goal.STOW)
+                                ),
+                                Commands.parallel(
+                                        setGoal(Goal.HANDOFF_HANDING_OFF),
+                                        indexer.setGoal(Indexer.RollersGoal.HANDOFF),
+                                        endEffector.setGoal(EndEffector.RollersGoal.HANDOFF),
+                                        waitUntilEndEffectorTriggered()
                                 )
+                                // TODO: move forward X radians
                         ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
                 )
         );
@@ -192,28 +197,10 @@ public class Superstructure extends SubsystemBaseExt {
 
     public Command scoreCoralManual(Trigger forwardTrigger, Trigger cancelTrigger) {
         return CommandsExt.onlyIf(
-                () -> inputs.indexerBeamBreakTriggered || inputs.endEffectorBeamBreakTriggered,
+                () -> inputs.endEffectorBeamBreakTriggered,
                 CommandsExt.cancelOnTrigger(
                         cancelTrigger,
                         Commands.sequence(
-                                CommandsExt.onlyIf(
-                                        () -> !inputs.endEffectorBeamBreakTriggered,
-                                        // Don't allow canceling (proxy needed)
-                                        // TODO: remove when auto handoff added, make uncancelable
-                                        Commands.sequence(
-                                                Commands.parallel(
-                                                        setGoal(Goal.HANDOFF_CORAL),
-                                                        indexer.setGoal(Indexer.RollersGoal.HANDOFF),
-                                                        endEffector.setGoal(EndEffector.RollersGoal.HANDOFF),
-                                                        waitUntilEndEffectorTriggered()
-                                                ),
-                                                // TODO: move forward X radians
-                                                Commands.sequence(
-                                                        indexer.setGoal(Indexer.RollersGoal.IDLE),
-                                                        endEffector.setGoal(EndEffector.RollersGoal.IDLE)
-                                                )
-                                        )
-                                ),
                                 Commands.parallel(
                                         setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
                                         endEffector.setGoal(EndEffector.RollersGoal.IDLE),
