@@ -41,6 +41,9 @@ public class Elevator extends SubsystemBaseExt {
     @Getter
     private Goal goal = Goal.STOW;
 
+    @AutoLogOutput(key = "Elevator/HasZeroed")
+    private boolean hasZeroed = false;
+
     private static final ElevatorIO io = ElevatorConstants.io;
     private static final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
 
@@ -86,6 +89,8 @@ public class Elevator extends SubsystemBaseExt {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Elevator", inputs);
 
+        // TODO: connected and has zeroed alerts
+
         robotMechanism.elevator.stage1Root.setPosition(middleOfRobot - Units.inchesToMeters(7) + 0.04, Units.inchesToMeters(2.85) + getPositionMeters() / 3);
         robotMechanism.elevator.stage2Root.setPosition(middleOfRobot - Units.inchesToMeters(7) + 0.02, Units.inchesToMeters(3.85) + getPositionMeters() / 3 * 2);
         robotMechanism.elevator.stage3Root.setPosition(middleOfRobot - Units.inchesToMeters(7), Units.inchesToMeters(4.85) + getPositionMeters());
@@ -99,7 +104,6 @@ public class Elevator extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
-        ////////////// PIVOT //////////////
         Logger.recordOutput("Elevator/Goal", goal);
         if (goal.setpointMeters != null) {
             var setpointMeters = goal.setpointMeters.getAsDouble();
@@ -111,7 +115,8 @@ public class Elevator extends SubsystemBaseExt {
                     : profileFullVelocity;
             previousState = profile.calculate(
                     0.02,
-                    previousState, // TODO: should we measure the current state instead of assuming previous is where we are currently at?
+//                    previousState,
+                    new TrapezoidProfile.State(getPositionMeters(), getVelocityMetersPerSec()),
                     new TrapezoidProfile.State(setpointMeters, 0)
             );
 
@@ -127,6 +132,11 @@ public class Elevator extends SubsystemBaseExt {
         } else {
             Logger.recordOutput("Elevator/ClosedLoop", false);
         }
+
+        if (!hasZeroed && inputs.limitSwitchTriggered) {
+            io.setEncoder(0);
+            hasZeroed = true;
+        }
     }
 
     public Command setGoal(Goal goal) {
@@ -136,7 +146,7 @@ public class Elevator extends SubsystemBaseExt {
     @AutoLogOutput(key = "Elevator/AtGoal")
     private boolean atGoal() {
         // if goal.setpointMeters is null, will be false and won't crash
-        return goal.setpointMeters != null && Math.abs(metersToRad(goal.setpointMeters.getAsDouble()) - inputs.positionRad) <= setpointToleranceRad;
+        return goal.setpointMeters != null && Math.abs(metersToRad(goal.setpointMeters.getAsDouble()) - inputs.leaderPositionRad) <= setpointToleranceRad;
     }
 
     public Command waitUntilAtGoal() {
@@ -149,19 +159,19 @@ public class Elevator extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Elevator/Measurement/PositionMeters")
     public double getPositionMeters() {
-        return radToMeters(inputs.positionRad);
+        return radToMeters(inputs.leaderPositionRad);
     }
 
     @AutoLogOutput(key = "Elevator/Measurement/VelocityMetersPerSec")
     public double getVelocityMetersPerSec() {
-        return radToMeters(inputs.velocityRadPerSec);
+        return radToMeters(inputs.leaderVelocityRadPerSec);
     }
 
-    public Command gravityCharacterization() {
+    public Command feedforwardCharacterization() {
         return setGoal(Goal.CHARACTERIZATION)
                 .andThen(new FeedforwardCharacterization(
                         io::setOpenLoop,
-                        () -> inputs.velocityRadPerSec,
+                        () -> inputs.leaderVelocityRadPerSec,
                         this
                 ));
     }

@@ -16,7 +16,7 @@ public class ElevatorIOSim extends ElevatorIO {
             6.8,
             drumRadiusMeters,
             0,
-            Units.inchesToMeters(66.622),
+            maxHeightMeters,
             true,
             0,
             0.0001, // position
@@ -50,11 +50,20 @@ public class ElevatorIOSim extends ElevatorIO {
         sim.setInputVoltage(MathUtil.clamp(appliedVolts, -12.0, 12.0));
         sim.update(0.02);
 
-        inputs.connected = true;
-        inputs.positionRad = metersToRad(sim.getPositionMeters());
-        inputs.velocityRadPerSec = metersToRad(sim.getVelocityMetersPerSecond());
-        inputs.appliedVolts = appliedVolts;
-        inputs.currentAmps = Math.abs(sim.getCurrentDrawAmps());
+        inputs.leaderConnected = true;
+        inputs.leaderPositionRad = metersToRad(sim.getPositionMeters());
+        inputs.leaderVelocityRadPerSec = metersToRad(sim.getVelocityMetersPerSecond());
+        inputs.leaderAppliedVolts = appliedVolts;
+        inputs.leaderCurrentAmps = Math.abs(sim.getCurrentDrawAmps());
+
+        inputs.followerConnected = true;
+        inputs.followerPositionRad = inputs.leaderPositionRad;
+        inputs.followerVelocityRadPerSec = inputs.leaderVelocityRadPerSec;
+        inputs.followerAppliedVolts = inputs.leaderAppliedVolts;
+        inputs.followerCurrentAmps = inputs.leaderCurrentAmps;
+
+        inputs.limitSwitchConnected = true;
+        inputs.limitSwitchTriggered = sim.getPositionMeters() < Units.inchesToMeters(1);
     }
 
     @Override
@@ -68,5 +77,10 @@ public class ElevatorIOSim extends ElevatorIO {
         closedLoop = true;
         setpointPositionRad = positionRad;
         setpointVelocityRadPerSec = velocityRadPerSec;
+    }
+
+    @Override
+    public void setEncoder(double positionRad) {
+        sim.setState(radToMeters(positionRad), sim.getVelocityMetersPerSecond());
     }
 }

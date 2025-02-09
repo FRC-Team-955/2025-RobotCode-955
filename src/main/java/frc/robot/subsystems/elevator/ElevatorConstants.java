@@ -17,6 +17,7 @@ public class ElevatorConstants {
     public static final double gearRatio = 3;
     private static final double sprocketRadiusMeters = Units.inchesToMeters(0.75);
     public static final double drumRadiusMeters = sprocketRadiusMeters * 3; // 3 stages
+    public static final double maxHeightMeters = Units.inchesToMeters(66.622);
 
     //    public static final double hardstopHeightMeters = 1;
     public static final double gentleMaxVelocityMetersPerSecond = maxVelocityMetersPerSecond / 2;

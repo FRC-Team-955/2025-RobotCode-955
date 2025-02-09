@@ -22,7 +22,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotState;
 import frc.robot.Util;
 import frc.robot.util.subsystem.SubsystemBaseExt;
-import frc.robot.util.swerve.ModuleLimits;
 import frc.robot.util.swerve.SwerveSetpoint;
 import frc.robot.util.swerve.SwerveSetpointGenerator;
 import lombok.Getter;
@@ -245,11 +244,7 @@ public class Drive extends SubsystemBaseExt {
                 }
 
                 prevSetpoint = setpointGenerator.generateSetpoint(
-                        new ModuleLimits(
-                                getSpeedScalar() * driveConfig.maxLinearSpeedMetersPerSec(),
-                                getSpeedScalar() * driveConfig.maxLinearAccelMetersPerSecSquared(),
-                                getSpeedScalar() * driveConfig.maxTurnVelocityRadPerSec()
-                        ),
+                        robotState.getModuleLimits(),
                         prevSetpoint,
                         closedLoopSetpoint, // THIS SHOULD NOT BE DISCRETIZED
                         0.02
