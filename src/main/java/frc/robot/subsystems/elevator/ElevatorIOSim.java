@@ -37,6 +37,7 @@ public class ElevatorIOSim extends ElevatorIO {
         // Run closed-loop control
         if (closedLoop) {
             var pid = pidController.calculate(metersToRad(sim.getPositionMeters()), setpointPositionRad);
+            // TODO: doesn't seem rignt
             var ff = feedforward.calculateWithVelocities(
                     metersToRad(sim.getVelocityMetersPerSecond()),
                     setpointVelocityRadPerSec

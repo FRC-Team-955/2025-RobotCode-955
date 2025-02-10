@@ -42,7 +42,8 @@ public class ElevatorConstants {
     protected static final ElevatorIO io = Constants.isReplay
             ? new ElevatorIO()
             : switch (Constants.identity) {
-        case COMPBOT -> null;
+        // TODO: find ids
+        case COMPBOT -> new ElevatorIOSparkMax(0, 0, 0, false);
         case SIMBOT, ALPHABOT -> new ElevatorIOSim();
     };
 }
