@@ -57,9 +57,21 @@ public class RobotState {
 
     /* Subsystems */
     private Elevator elevator;
+    private Drive drive;
 
     public void afterSubsystemsInitialized() {
         elevator = Elevator.get();
+        drive = Drive.get();
+    }
+
+    public double getChassisVelocity() {
+        return Math.sqrt(
+                Math.pow(drive.getMeasuredChassisSpeeds().vxMetersPerSecond, 2) +
+                        Math.pow(drive.getMeasuredChassisSpeeds().vyMetersPerSecond, 2));
+    }
+
+    public double getChassisAngularVelocity() {
+        return drive.getMeasuredChassisSpeeds().omegaRadiansPerSecond;
     }
 
     public void applyOdometryUpdate(

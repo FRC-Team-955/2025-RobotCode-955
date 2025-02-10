@@ -19,7 +19,11 @@ import frc.robot.subsystems.leds.LEDs;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.CommandNintendoSwitchProController;
+import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
+
+import java.util.Optional;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -47,6 +51,7 @@ public class RobotContainer {
     private final EndEffector endEffector = EndEffector.get();
     private final Superstructure superstructure = Superstructure.get();
     private final LEDs leds = LEDs.get();
+    private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
 
     public RobotContainer() {
         robotState.afterSubsystemsInitialized();
@@ -125,11 +130,11 @@ public class RobotContainer {
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
 
-        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
+        driverController.x().whileTrue(superstructure.intakeCoral());
 
-        driverController.leftTrigger().toggleOnTrue(superstructure.autoAlignAndScore(
-                0,
-                true,
+        driverController.a().toggleOnTrue(superstructure.autoAlignAndScore(
+                operatorDashboard::getSide,
+                operatorDashboard::getLeftSide,
                 driverController.leftBumper()
         ));
 

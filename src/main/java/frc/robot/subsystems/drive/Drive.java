@@ -311,7 +311,7 @@ public class Drive extends SubsystemBaseExt {
     }
 
     @AutoLogOutput(key = "Drive/ChassisSpeeds/Measured")
-    private ChassisSpeeds getMeasuredChassisSpeeds() {
+    public ChassisSpeeds getMeasuredChassisSpeeds() {
         return robotState.getKinematics().toChassisSpeeds(getMeasuredModuleStates());
     }
 

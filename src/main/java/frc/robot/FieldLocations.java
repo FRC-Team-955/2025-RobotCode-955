@@ -35,8 +35,10 @@ public class FieldLocations {
     public static final double secondaryAlignToleranceRad = 0.08;
     // very little tolerance - 2 cm, 2 deg
     // TODO: Verify we're actually good enough for this accuracy
-    public static final double finalAlignToleranceMeters = 0.02;
+    public static final double finalAlignToleranceMeters = 0.04;
     public static final double finalAlignToleranceRad = 0.03;
+    public static final double finalAlignToleranceMetersPerSecond = 0.04;
+    public static final double finalAlignToleranceRadPerSecond = 0.03;
 
     public static Rotation2d getAngle(Pose2d initialPose, Pose2d finalPose) {
         return finalPose.getRotation().minus(initialPose.getRotation());

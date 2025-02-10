@@ -21,8 +21,8 @@ public class PivotIOSim extends PivotIO {
         motorSim = new SingleJointedArmSim(
                 DCMotor.getKrakenX60(1),
                 CoralIntakeConstants.pivotConfig.motorGearRatio(),
-                Units.lbsToKilograms(Units.inchesToMeters(Units.inchesToMeters(429.942))),
-                Units.inchesToMeters(20),
+                0.1456967969+Units.lbsToKilograms(15.522)*Math.pow(Units.inchesToMeters(17.0502529), 2),
+                Units.inchesToMeters(17.0502529),
                 0.12833586,
                 1.353,
                 true,
