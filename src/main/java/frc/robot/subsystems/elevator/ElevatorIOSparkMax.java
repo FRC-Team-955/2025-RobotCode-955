@@ -65,8 +65,8 @@ public class ElevatorIOSparkMax extends ElevatorIO {
                 .voltageCompensation(12.0);
         leadConfig
                 .encoder
-                .positionConversionFactor(2 * Math.PI) // Rotor Rotations -> Rotor Radians
-                .velocityConversionFactor((2 * Math.PI ) / 60.0) // Rotor RPM -> Rotor Rad/Sec
+                .positionConversionFactor(2 * Math.PI / gearRatio) // Rotor Rotations -> Drum Radians
+                .velocityConversionFactor((2 * Math.PI ) / 60.0 / gearRatio) // Rotor RPM -> Drum Rad/Sec
                 .uvwMeasurementPeriod(10)
                 .uvwAverageDepth(2);
 
