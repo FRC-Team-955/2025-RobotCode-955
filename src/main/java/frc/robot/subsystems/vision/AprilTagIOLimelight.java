@@ -69,8 +69,8 @@ public class AprilTagIOLimelight extends AprilTagIO {
                 ((RobotController.getFPGATime() - latencySubscriber.getLastChange()) / 1000) < 250;
 
         // Update target observation
-        inputs.latestTargetObservation =
-                new TargetObservation(
+        inputs.latestAprilTagTargetObservation =
+                new AprilTagTargetObservation(
                         Rotation2d.fromDegrees(txSubscriber.get()),
                         Rotation2d.fromDegrees(tySubscriber.get())
                 );

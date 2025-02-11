@@ -21,8 +21,7 @@ public class AprilTagIO {
     @AutoLog
     public static class AprilTagIOInputs {
         public boolean connected = false;
-        public TargetObservation latestTargetObservation =
-                new TargetObservation(new Rotation2d(), new Rotation2d());
+        public AprilTagTargetObservation latestAprilTagTargetObservation = new AprilTagTargetObservation(new Rotation2d(), new Rotation2d());
         public PoseObservation[] poseObservations = new PoseObservation[0];
         public int[] tagIds = new int[0];
     }
@@ -30,7 +29,7 @@ public class AprilTagIO {
     /**
      * Represents the angle to a simple target, not used for pose estimation.
      */
-    public record TargetObservation(Rotation2d tx, Rotation2d ty) {}
+    public record AprilTagTargetObservation(Rotation2d tx, Rotation2d ty) {}
 
     /**
      * Represents a robot pose sample used for pose estimation.

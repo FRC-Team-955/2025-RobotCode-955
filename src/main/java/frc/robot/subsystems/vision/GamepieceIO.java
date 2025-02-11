@@ -22,13 +22,14 @@ public class GamepieceIO {
     public static class GamepieceIOInputs {
         public boolean connected = false;
         // x angle from camera, y angle from camera, translation from robot to gamepiece, whether there is a target
-        public TargetObservation latestTargetObservation = new TargetObservation(new Rotation2d(), new Rotation2d(), new Translation2d(), false);
+        public GamepieceTargetObservation latestGamepieceTargetObservation = new GamepieceTargetObservation(new Rotation2d(), new Rotation2d(), new Translation2d(), false);
     }
 
     /**
      * Represents the angle to a simple target, not used for pose estimation.
      */
-    public record TargetObservation(Rotation2d tx, Rotation2d ty, Translation2d targetPos, boolean isPresent) {}
+    public record GamepieceTargetObservation(Rotation2d tx, Rotation2d ty, Translation2d targetPos,
+                                             boolean isPresent) {}
 
     public void updateInputs(GamepieceIOInputs inputs) {
     }

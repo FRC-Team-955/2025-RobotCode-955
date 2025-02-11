@@ -14,7 +14,7 @@ public class GamepieceIOSim extends GamepieceIO {
     @Override
     public void updateInputs(GamepieceIO.GamepieceIOInputs inputs) {
         inputs.connected = true;
-        inputs.latestTargetObservation = new TargetObservation(
+        inputs.latestGamepieceTargetObservation = new GamepieceTargetObservation(
                 new Rotation2d(0),
                 new Rotation2d(0),
                 new Translation2d(Units.feetToMeters(27), Units.feetToMeters(13)).minus(robotState.getTranslation()),

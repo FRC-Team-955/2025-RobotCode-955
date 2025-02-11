@@ -21,7 +21,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 
-import static frc.robot.subsystems.coralintake.CoralIntakeConstants.pivotConfig;
+import static frc.robot.subsystems.coralintake.CoralIntakeConstants.*;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 public class PivotIOTalonFX extends PivotIO {
@@ -30,7 +30,7 @@ public class PivotIOTalonFX extends PivotIO {
     private static final SwerveModuleConstants.ClosedLoopOutputType driveClosedLoopOutput = SwerveModuleConstants.ClosedLoopOutputType.Voltage;
 
     // Hardware objects
-    private final TalonFX driveTalon;
+    private final TalonFX talon;
     private final DutyCycleEncoder encoder;
 
     private final TalonFXConfiguration motorConfig;
@@ -45,10 +45,10 @@ public class PivotIOTalonFX extends PivotIO {
             new PositionTorqueCurrentFOC(0.0);
 
     // Inputs from drive motor
-    private final StatusSignal<Angle> drivePosition;
-    private final StatusSignal<AngularVelocity> driveVelocity;
-    private final StatusSignal<Voltage> driveAppliedVolts;
-    private final StatusSignal<Current> driveCurrent;
+    private final StatusSignal<Angle> position;
+    private final StatusSignal<AngularVelocity> velocity;
+    private final StatusSignal<Voltage> appliedVolts;
+    private final StatusSignal<Current> current;
 
     // Connection debouncers
     private final Debouncer driveConnectedDebounce = new Debouncer(0.5);
@@ -59,7 +59,7 @@ public class PivotIOTalonFX extends PivotIO {
             int encoderID,
             double absoluteEncoderOffsetRad
     ) {
-        driveTalon = new TalonFX(driveCanID);
+        talon = new TalonFX(driveCanID);
         encoder = new DutyCycleEncoder(encoderID, 2 * Math.PI, absoluteEncoderOffsetRad);
 
         // Configure pivot motor
@@ -72,40 +72,40 @@ public class PivotIOTalonFX extends PivotIO {
         motorConfig.TorqueCurrent.PeakReverseTorqueCurrent = pivotConfig.currentLimit();
         motorConfig.CurrentLimits.StatorCurrentLimit = pivotConfig.currentLimit();
         motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        motorConfig.MotionMagic.MotionMagicCruiseVelocity = 100.0;
-        motorConfig.MotionMagic.MotionMagicAcceleration = 1000.0;
-        motorConfig.MotionMagic.MotionMagicExpo_kV = 0.12;
-        motorConfig.MotionMagic.MotionMagicExpo_kA = 0.1;
+        motorConfig.MotionMagic.MotionMagicCruiseVelocity = Units.radiansToRotations(pivotMaxVelocityRadPerSec);
+        motorConfig.MotionMagic.MotionMagicAcceleration = Units.radiansToRotations(pivotMaxAccelerationRadPerSecSquared);
+        motorConfig.MotionMagic.MotionMagicExpo_kV = 0.12; // TODO: should be from gains?
+        motorConfig.MotionMagic.MotionMagicExpo_kA = 0.1; // TODO: should be from gains?
         motorConfig.ClosedLoopGeneral.ContinuousWrap = false;
         motorConfig.MotorOutput.Inverted =
                 pivotConfig.motorInverted()
                         ? InvertedValue.Clockwise_Positive
                         : InvertedValue.CounterClockwise_Positive;
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(motorConfig, 0.25));
+        tryUntilOk(5, () -> talon.getConfigurator().apply(motorConfig, 0.25));
 
         // Configure encoder
         encoder.setInverted(pivotConfig.encoderInverted());
 
         // Create drive status signals
-        drivePosition = driveTalon.getPosition();
-        driveVelocity = driveTalon.getVelocity();
-        driveAppliedVolts = driveTalon.getMotorVoltage();
-        driveCurrent = driveTalon.getStatorCurrent();
+        position = talon.getPosition();
+        velocity = talon.getVelocity();
+        appliedVolts = talon.getMotorVoltage();
+        current = talon.getStatorCurrent();
 
-        ParentDevice.optimizeBusUtilizationForAll(driveTalon);
+        ParentDevice.optimizeBusUtilizationForAll(talon);
     }
 
     @Override
     public void updateInputs(PivotIO.PivotIOInputs inputs) {
         // Refresh all signals
-        var driveStatus = BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrent);
+        var driveStatus = BaseStatusSignal.refreshAll(position, velocity, appliedVolts, current);
 
         // Update drive inputs
         inputs.connected = driveConnectedDebounce.calculate(driveStatus.isOK());
-        inputs.positionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
-        inputs.velocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
-        inputs.appliedVolts = driveAppliedVolts.getValueAsDouble();
-        inputs.currentAmps = driveCurrent.getValueAsDouble();
+        inputs.positionRad = Units.rotationsToRadians(position.getValueAsDouble());
+        inputs.velocityRadPerSec = Units.rotationsToRadians(velocity.getValueAsDouble());
+        inputs.appliedVolts = appliedVolts.getValueAsDouble();
+        inputs.currentAmps = current.getValueAsDouble();
         inputs.absoluteEncoderConnected = turnEncoderConnectedDebounce.calculate(encoder.isConnected());
         inputs.absolutePositionRad = encoder.get();
     }
@@ -113,12 +113,12 @@ public class PivotIOTalonFX extends PivotIO {
     @Override
     public void setBrakeMode(boolean enable) {
         motorConfig.MotorOutput.NeutralMode = enable ? NeutralModeValue.Brake : NeutralModeValue.Coast;
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(motorConfig, 0.25));
+        tryUntilOk(5, () -> talon.getConfigurator().apply(motorConfig, 0.25));
     }
 
     @Override
     public void setOpenLoop(double output) {
-        driveTalon.setControl(switch (driveClosedLoopOutput) {
+        talon.setControl(switch (driveClosedLoopOutput) {
             case Voltage -> voltageRequest.withOutput(output);
             case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
         });
@@ -127,7 +127,7 @@ public class PivotIOTalonFX extends PivotIO {
     @Override
     public void setClosedLoop(double positionRad) {
         double positionRot = Units.radiansToRotations(positionRad);
-        driveTalon.setControl(switch (driveClosedLoopOutput) {
+        talon.setControl(switch (driveClosedLoopOutput) {
             case Voltage -> positionVoltageRequest.withPosition(positionRot);
             case TorqueCurrentFOC -> positionTorqueCurrentRequest.withPosition(positionRot);
         });
