@@ -138,10 +138,10 @@ public class CommandSteamInputController extends CommandXboxController {
     public enum Axis {
         LeftStickX(0),
         LeftStickY(1),
-        RightStickX(3),
-        RightStickY(4),
+        RightStickX(4),
+        RightStickY(5),
         LeftTrigger(2),
-        RightTrigger(5);
+        RightTrigger(3);
 
         public final int value;
 
