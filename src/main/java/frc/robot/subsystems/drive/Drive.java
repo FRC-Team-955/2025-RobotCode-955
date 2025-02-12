@@ -19,11 +19,9 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants;
 import frc.robot.RobotState;
 import frc.robot.Util;
-import frc.robot.util.SubsystemBaseExt;
-import frc.robot.util.swerve.ModuleLimits;
+import frc.robot.util.subsystem.SubsystemBaseExt;
 import frc.robot.util.swerve.SwerveSetpoint;
 import frc.robot.util.swerve.SwerveSetpointGenerator;
 import lombok.Getter;
@@ -39,20 +37,48 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.drive.DriveConstants.*;
-import static frc.robot.subsystems.drive.DriveDashboard.disableDriving;
 import static frc.robot.subsystems.drive.PhoenixOdometryThread.phoenixLock;
 import static frc.robot.subsystems.drive.SparkOdometryThread.sparkLock;
 
 public class Drive extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
 
+    @RequiredArgsConstructor
     public enum Goal {
-        CHARACTERIZATION,
-        WHEEL_RADIUS_CHARACTERIZATION,
-        IDLE,
-        DRIVE_JOYSTICK,
-        DRIVE_JOYSTICK_ASSISTED,
-        FOLLOW_TRAJECTORY
+        CHARACTERIZATION(ControlMode.OPEN_LOOP),
+        WHEEL_RADIUS_CHARACTERIZATION(ControlMode.CLOSED_LOOP_DIRECT),
+        IDLE(ControlMode.STOP),
+        DRIVE_JOYSTICK(ControlMode.CLOSED_LOOP_OPTIMIZED),
+        DRIVE_JOYSTICK_ASSISTED(ControlMode.CLOSED_LOOP_OPTIMIZED),
+        MOVE_TO(ControlMode.CLOSED_LOOP_OPTIMIZED),
+        FOLLOW_TRAJECTORY(ControlMode.CLOSED_LOOP_DIRECT);
+
+        public final ControlMode controlMode;
+    }
+
+    public enum ControlMode {
+        /** Open loop; no closed loop control will happen */
+        OPEN_LOOP,
+        /** ChassisSpeeds will be optimized with the setpoint generator (unless disabled) before being fed to modules */
+        CLOSED_LOOP_OPTIMIZED,
+        /** ChassisSpeeds will be directly fed to modules */
+        CLOSED_LOOP_DIRECT,
+        /** All modules will stop */
+        STOP
+    }
+
+    @Getter
+    private Goal goal = Goal.IDLE;
+    private ChassisSpeeds closedLoopSetpoint;
+
+    private Command withGoal(Goal goal, Command command) {
+        return new WrapperCommand(command) {
+            @Override
+            public void initialize() {
+                Drive.this.goal = goal;
+                super.initialize();
+            }
+        };
     }
 
     private final GyroIO gyroIO = DriveConstants.gyroIO;
@@ -79,9 +105,6 @@ public class Drive extends SubsystemBaseExt {
 
     private final Alert gyroDisconnectedAlert = new Alert("Disconnected gyro, using kinematics as fallback.", Alert.AlertType.kError);
 
-    private Goal goal = Goal.IDLE;
-    private ChassisSpeeds closedLoopSetpoint;
-
     private final PIDController choreoFeedbackX = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackOmega = driveConfig.choreoFeedbackOmega().toPIDWrapRadians();
@@ -89,16 +112,6 @@ public class Drive extends SubsystemBaseExt {
     private final PIDController moveToX = moveToXY.toPID();
     private final PIDController moveToY = moveToXY.toPID();
     private final PIDController moveToOmega = DriveConstants.moveToOmega.toPIDWrapRadians();
-
-    private Command withGoal(Goal newGoal, Command command) {
-        return new WrapperCommand(command) {
-            @Override
-            public void initialize() {
-                goal = newGoal;
-                super.initialize();
-            }
-        };
-    }
 
     private static Drive instance;
 
@@ -152,11 +165,10 @@ public class Drive extends SubsystemBaseExt {
         sparkLock.unlock();
 
         // Update gyro alert
-        gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.mode != Constants.Mode.SIM);
+        gyroDisconnectedAlert.set(!gyroInputs.connected);
 
         // Odometry
-        double[] sampleTimestamps =
-                modules[0].getOdometryTimestamps(); // All signals are sampled together
+        double[] sampleTimestamps = modules[0].getOdometryTimestamps(); // All signals are sampled together
         int sampleCount = sampleTimestamps.length;
         for (int i = 0; i < sampleCount; i++) {
             // Read wheel positions and deltas from each module
@@ -194,41 +206,30 @@ public class Drive extends SubsystemBaseExt {
         Logger.recordOutput("Drive/Goal", goal);
 
         // Stop moving when idle or disabled
-        if (goal == Goal.IDLE || DriverStation.isDisabled()) {
+        if (goal.controlMode == ControlMode.STOP || DriverStation.isDisabled()) {
             Logger.recordOutput("Drive/ClosedLoop", false);
             prevSetpoint = null;
 
             for (var module : modules) {
                 module.stop();
             }
-
-            Logger.recordOutput("Drive/ChassisSpeeds/Setpoint", new ChassisSpeeds());
-            Logger.recordOutput(
-                    "Drive/ModuleStates/Setpoints",
-                    new SwerveModuleState(),
-                    new SwerveModuleState(),
-                    new SwerveModuleState(),
-                    new SwerveModuleState()
-            );
-            Logger.recordOutput(
-                    "Drive/ModuleStates/SetpointsOptimized",
-                    new SwerveModuleState(),
-                    new SwerveModuleState(),
-                    new SwerveModuleState(),
-                    new SwerveModuleState()
-            );
         }
         // Closed loop control
-        else if (goal != Goal.CHARACTERIZATION && closedLoopSetpoint != null) {
+        else if ((goal.controlMode == ControlMode.CLOSED_LOOP_DIRECT
+                || goal.controlMode == ControlMode.CLOSED_LOOP_OPTIMIZED
+        )
+                && closedLoopSetpoint != null
+        ) {
             Logger.recordOutput("Drive/ClosedLoop", true);
             Logger.recordOutput("Drive/ChassisSpeeds/Setpoint", closedLoopSetpoint);
 
-            if (useSetpointGenerator && !disableDriving.get() && (goal == Goal.DRIVE_JOYSTICK || goal == Goal.DRIVE_JOYSTICK_ASSISTED)) {
+            if (useSetpointGenerator && !disableDriving && goal.controlMode == ControlMode.CLOSED_LOOP_OPTIMIZED) {
                 Logger.recordOutput("Drive/SetpointGenerator", true);
 
                 Logger.recordOutput(
                         "Drive/ModuleStates/Setpoints",
                         // DON'T DO ANYTHING WITH THIS. SETPOINT GENERATOR SHOULD NOT GET A DISCRETIZED SETPOINT
+                        // Only for logging
                         robotState.getKinematics().toSwerveModuleStates(
                                 ChassisSpeeds.discretize(closedLoopSetpoint, 0.02)
                         )
@@ -243,11 +244,7 @@ public class Drive extends SubsystemBaseExt {
                 }
 
                 prevSetpoint = setpointGenerator.generateSetpoint(
-                        new ModuleLimits(
-                                driveConfig.maxLinearSpeedMetersPerSec(),
-                                driveConfig.maxLinearAccelMetersPerSecSquared(),
-                                driveConfig.maxTurnVelocityRadPerSec()
-                        ),
+                        robotState.getModuleLimits(),
                         prevSetpoint,
                         closedLoopSetpoint, // THIS SHOULD NOT BE DISCRETIZED
                         0.02
@@ -268,7 +265,7 @@ public class Drive extends SubsystemBaseExt {
                 // Calculate module setpoints
                 ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(closedLoopSetpoint, 0.02);
                 SwerveModuleState[] setpointStates = robotState.getKinematics().toSwerveModuleStates(discreteSpeeds);
-                if (disableDriving.get()) {
+                if (disableDriving) {
                     for (int i = 0; i < modules.length; i++) {
                         setpointStates[i].speedMetersPerSecond = 0.0;
                     }
@@ -441,6 +438,13 @@ public class Drive extends SubsystemBaseExt {
                         * driveConfig.maxAngularSpeedRadPerSec(),
                 currentPose.getRotation() // Move to is absolute, don't flip
         );
+    }
+
+    public Command moveTo(Supplier<Pose2d> poseSupplier) {
+        return withGoal(
+                Goal.MOVE_TO,
+                run(() -> runMoveTo(poseSupplier.get()))
+        ).withName("Drive Move To");
     }
 
     public Command driveJoystick(DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier, Supplier<Optional<Pose2d>> assistPoseSupplier) {

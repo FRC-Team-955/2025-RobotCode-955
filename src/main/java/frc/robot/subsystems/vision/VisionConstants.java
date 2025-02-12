@@ -23,8 +23,7 @@ import frc.robot.RobotState;
 
 public class VisionConstants {
     // AprilTag layout
-    public static AprilTagFieldLayout aprilTagLayout =
-            AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+    public static AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
     // Basic filtering thresholds
     public static double maxAmbiguity = 0.3;
@@ -45,8 +44,7 @@ public class VisionConstants {
 
     // Multipliers to apply for MegaTag 2 observations
     public static double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
-    public static double angularStdDevMegatag2Factor =
-            Double.POSITIVE_INFINITY; // No rotation data available
+    public static double angularStdDevMegatag2Factor = Double.POSITIVE_INFINITY; // No rotation data available
 
     public static final GamepieceIO[] gamepieceIO = switch (Constants.identity) {
         case COMPBOT -> Constants.isReplay

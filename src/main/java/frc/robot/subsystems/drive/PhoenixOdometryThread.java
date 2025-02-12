@@ -17,6 +17,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.RobotController;
+import frc.robot.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -122,7 +123,7 @@ public class PhoenixOdometryThread extends Thread {
             // Wait for updates from all signals
             signalsLock.lock();
             try {
-                if (DriveConstants.isCANFD && phoenixSignals.length > 0) {
+                if (Constants.CANivore.isCANFD && phoenixSignals.length > 0) {
                     BaseStatusSignal.waitForAll(2.0 / DriveConstants.phoenixFrequencyHz, phoenixSignals);
                 } else {
                     // "waitForAll" does not support blocking on multiple signals with a bus

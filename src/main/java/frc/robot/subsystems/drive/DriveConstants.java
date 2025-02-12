@@ -1,6 +1,5 @@
 package frc.robot.subsystems.drive;
 
-import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
@@ -17,12 +16,6 @@ public class DriveConstants {
         case ALPHABOT -> 100.0;
     };
 
-    public static final String canbusName = "phoenix";
-    public static final boolean isCANFD = switch (Constants.identity) {
-        case COMPBOT -> new CANBus(canbusName).isNetworkFD();
-        case ALPHABOT, SIMBOT -> false;
-    };
-
     public static final double assistDirectionToleranceRad = Units.degreesToRadians(50);
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
@@ -31,6 +24,10 @@ public class DriveConstants {
     public static final PIDF moveToOmega = PIDF.ofPD(1.5, 0);
 
     public static final boolean useSetpointGenerator = true;
+    public static final boolean disableDriving = false;
+
+    // Slow to 30% speed when elevator is at max height
+    public static final double elevatorSlowdownScalar = 0.7;
 
     public static final DriveConfig driveConfig = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> new DriveConfig(
@@ -110,21 +107,23 @@ public class DriveConstants {
                 true,
                 false,
                 false,
-                50,
+                60,
                 20
         );
         case SIMBOT -> new ModuleConfig(
-                PIDF.ofPDSV(0.1, 0.0, 0.0, 0.13),
-                PIDF.ofPD(30.0, 0.0),
+                PIDF.ofPDSV(0.05, 0.0, 0.0, 0.15),
+                PIDF.ofPD(8.0, 0.0),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
                 false,
                 false,
-                0,
-                0
+                120,
+                20
         );
     };
+
+    // IO layers should go at the bottom in case they reference constants that aren't yet initialized
 
     public static final ModuleIO[] moduleIO = Constants.isReplay
             ? new ModuleIO[]{new ModuleIO(), new ModuleIO(), new ModuleIO(), new ModuleIO()}
@@ -147,10 +146,10 @@ public class DriveConstants {
                 new ModuleIOSparkMaxCANcoder(12, 13, 11, 0.852),
         };
         case SIMBOT -> new ModuleIO[]{
-                new ModuleIOSim(),
-                new ModuleIOSim(),
-                new ModuleIOSim(),
-                new ModuleIOSim()
+                new ModuleIOSim(0),
+                new ModuleIOSim(1),
+                new ModuleIOSim(2),
+                new ModuleIOSim(3)
         };
     };
 
@@ -159,7 +158,7 @@ public class DriveConstants {
             : switch (Constants.identity) {
         case COMPBOT -> new GyroIOPigeon2(11);
         case ALPHABOT -> new GyroIOPigeon2(7);
-        case SIMBOT -> new GyroIO();
+        case SIMBOT -> new GyroIOSim();
     };
 
     public record DriveConfig(
@@ -174,7 +173,7 @@ public class DriveConstants {
             double maxLinearAccelMetersPerSecSquared,
             double maxAngularSpeedRadPerSec,
             double maxAngularAccelRadPerSecSquared,
-            double maxTurnVelocityRadPerSec
+            double maxTurnVelocityRadPerSec // Maximum velocity of the turn motor
     ) {
     }
 

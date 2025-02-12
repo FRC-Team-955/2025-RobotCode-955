@@ -53,13 +53,13 @@ public class AprilTagIOPhotonVision extends AprilTagIO {
         for (var result : camera.getAllUnreadResults()) {
             // Update latest target observation
             if (result.hasTargets()) {
-                inputs.latestTargetObservation =
-                        new TargetObservation(
+                inputs.latestAprilTagTargetObservation =
+                        new AprilTagTargetObservation(
                                 Rotation2d.fromDegrees(result.getBestTarget().getYaw()),
                                 Rotation2d.fromDegrees(result.getBestTarget().getPitch())
                         );
             } else {
-                inputs.latestTargetObservation = new TargetObservation(new Rotation2d(), new Rotation2d());
+                inputs.latestAprilTagTargetObservation = new AprilTagTargetObservation(new Rotation2d(), new Rotation2d());
             }
 
             // Add pose observation

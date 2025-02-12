@@ -16,6 +16,7 @@ package frc.robot.subsystems.drive;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -103,7 +104,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         // Configure drive motor
         driveConfig = new TalonFXConfiguration();
         driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        driveConfig.Slot0 = moduleConfig.driveGains().toPhoenix();
+        driveConfig.Slot0 = Slot0Configs.from(moduleConfig.driveGains().toPhoenix());
         driveConfig.Feedback.SensorToMechanismRatio = moduleConfig.driveGearRatio();
         driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = moduleConfig.driveCurrentLimit();
         driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = moduleConfig.driveCurrentLimit();
@@ -119,7 +120,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         // Configure turn motor
         turnConfig = new TalonFXConfiguration();
         turnConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        turnConfig.Slot0 = moduleConfig.turnGains().toPhoenix(StaticFeedforwardSignValue.UseClosedLoopSign);
+        turnConfig.Slot0 = Slot0Configs.from(moduleConfig.turnGains().toPhoenix(StaticFeedforwardSignValue.UseClosedLoopSign));
         turnConfig.Feedback.FeedbackRemoteSensorID = cancoderCanID;
         turnConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
         turnConfig.Feedback.RotorToSensorRatio = moduleConfig.turnGearRatio();
@@ -198,7 +199,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
 
         // Update turn inputs
         inputs.turnConnected = turnConnectedDebounce.calculate(turnStatus.isOK());
-        inputs.turnEncoderConnected = turnEncoderConnectedDebounce.calculate(turnEncoderStatus.isOK());
+        inputs.turnAbsoluteEncoderConnected = turnEncoderConnectedDebounce.calculate(turnEncoderStatus.isOK());
         inputs.turnAbsolutePositionRad = Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble());
         inputs.turnPositionRad = Units.rotationsToRadians(turnPosition.getValueAsDouble());
         inputs.turnVelocityRadPerSec = Units.rotationsToRadians(turnVelocity.getValueAsDouble());

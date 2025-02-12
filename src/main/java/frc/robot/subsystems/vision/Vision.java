@@ -21,7 +21,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.RobotState;
 import frc.robot.subsystems.vision.AprilTagIO.PoseObservationType;
-import frc.robot.util.SubsystemBaseExt;
+import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
 
@@ -46,6 +46,15 @@ public class Vision extends SubsystemBaseExt {
     private Optional<Translation2d> closestGamepiece = Optional.empty();
 
     private static Vision instance;
+
+    public static Vision get() {
+        if (instance == null)
+            synchronized (Vision.class) {
+                instance = new Vision();
+            }
+
+        return instance;
+    }
 
     private Vision() {
         // Initialize inputs
@@ -72,15 +81,6 @@ public class Vision extends SubsystemBaseExt {
                     new Alert(
                             "Gampiece camera " + i + " is disconnected.", AlertType.kWarning);
         }
-    }
-
-    public static Vision get() {
-        if (instance == null)
-            synchronized (Vision.class) {
-                instance = new Vision();
-            }
-
-        return instance;
     }
 
     @Override
@@ -196,12 +196,12 @@ public class Vision extends SubsystemBaseExt {
             gpDisconnectedAlerts[cameraIndex].set(!gpInputs[cameraIndex].connected);
 
             // TODO: replace with algorithm getting closest if there is more than one targets
-            var present = gpInputs[cameraIndex].latestTargetObservation.isPresent();
+            var present = gpInputs[cameraIndex].latestGamepieceTargetObservation.isPresent();
 
             Logger.recordOutput("Vision/Gamepiece" + cameraIndex + "/TargetPresent", present);
 
             if (present) {
-                var closestTarget = gpInputs[cameraIndex].latestTargetObservation.targetPos();
+                var closestTarget = gpInputs[cameraIndex].latestGamepieceTargetObservation.targetPos();
                 var closestTargetAbsolute = robotTranslation.plus(closestTarget);
 
                 Logger.recordOutput(

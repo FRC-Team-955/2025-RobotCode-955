@@ -40,8 +40,8 @@ public class GamepieceIOLimelight extends GamepieceIO {
         double dist = robotToCam.getZ() / Math.tan(Units.degreesToRadians(-ty) - robotToCam.getRotation().getY());
 
         // Update target observation
-        inputs.latestTargetObservation =
-                new GamepieceIO.TargetObservation(
+        inputs.latestGamepieceTargetObservation =
+                new GamepieceTargetObservation(
                         Rotation2d.fromDegrees(tx),
                         Rotation2d.fromDegrees(ty),
                         new Translation2d(dist, new Rotation2d(robotToCam.getRotation().getZ() - Units.degreesToRadians(tx))).plus(new Translation2d(robotToCam.getX(), robotToCam.getY())),

@@ -16,11 +16,21 @@ package frc.robot.subsystems.drive;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.COTS;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
+import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.ironmaple.simulation.motorsims.SimulatedMotorController;
 
+import java.util.Arrays;
+
+import static edu.wpi.first.units.Units.*;
+import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
 import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
 
 /**
@@ -28,11 +38,34 @@ import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
  * constants from Phoenix. Simulation is always based on voltage control.
  */
 public class ModuleIOSim extends ModuleIO {
-    private static final DCMotor driveMotor = DCMotor.getKrakenX60Foc(1);
-    private static final DCMotor turnMotor = DCMotor.getKrakenX60Foc(1);
+    public static final SwerveDriveSimulation driveSimulation = new SwerveDriveSimulation(
+            // Specify Configuration
+            DriveTrainSimulationConfig.Default()
+                    // Specify gyro type (for realistic gyro drifting and error simulation)
+                    .withGyro(COTS.ofPigeon2())
+                    // Specify swerve module (for realistic swerve dynamics)
+                    .withSwerveModule(COTS.ofMark4(
+                            DCMotor.getKrakenX60(1),
+                            DCMotor.getNEO(1),
+                            COTS.WHEELS.DEFAULT_NEOPRENE_TREAD.cof,
+                            2 // L2 Gear ratio
+                    ))
+                    // Configures the track length and track width (spacing between swerve modules)
+                    .withTrackLengthTrackWidth(Meters.of(driveConfig.trackLengthMeters()), Meters.of(driveConfig.trackWidthMeters()))
+                    // Configures the bumper size (dimensions of the robot bumper)
+                    .withBumperSize(Meters.of(driveConfig.bumperLengthMeters()), Meters.of(driveConfig.bumperWidthMeters()))
+                    .withRobotMass(Pounds.of(125)),
+            // Specify starting pose
+            new Pose2d(3, 3, new Rotation2d())
+    );
 
-    private final DCMotorSim driveSim;
-    private final DCMotorSim turnSim;
+    static {
+        SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation);
+    }
+
+    private final SwerveModuleSimulation moduleSimulation;
+    private final SimulatedMotorController.GenericMotorController driveMotor;
+    private final SimulatedMotorController.GenericMotorController turnMotor;
 
     private boolean driveClosedLoop = false;
     private boolean turnClosedLoop = false;
@@ -43,66 +76,58 @@ public class ModuleIOSim extends ModuleIO {
     private double driveAppliedVolts = 0.0;
     private double turnAppliedVolts = 0.0;
 
-    public ModuleIOSim() {
-        // Create drive and turn sim models
-        driveSim = new DCMotorSim(
-                LinearSystemId.createDCMotorSystem(
-                        driveMotor,
-                        0.004,
-                        moduleConfig.driveGearRatio()
-                ),
-                driveMotor
-        );
-        turnSim = new DCMotorSim(
-                LinearSystemId.createDCMotorSystem(
-                        turnMotor,
-                        0.025,
-                        moduleConfig.turnGearRatio()
-                ),
-                turnMotor
-        );
+    public ModuleIOSim(int index) {
+        moduleSimulation = driveSimulation.getModules()[index];
+
+        driveMotor = moduleSimulation
+                .useGenericMotorControllerForDrive()
+                .withCurrentLimit(Amps.of(moduleConfig.driveCurrentLimit()));
+        turnMotor = moduleSimulation
+                .useGenericControllerForSteer()
+                .withCurrentLimit(Amps.of(moduleConfig.turnCurrentLimit()));
     }
 
     @Override
     public void updateInputs(ModuleIOInputs inputs) {
         // Run closed-loop control
         if (driveClosedLoop) {
-            driveAppliedVolts = driveFFVolts + driveController.calculate(driveSim.getAngularVelocityRadPerSec());
+            driveAppliedVolts = driveFFVolts + driveController.calculate(moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond));
         } else {
             driveController.reset();
         }
         if (turnClosedLoop) {
-            turnAppliedVolts = turnController.calculate(turnSim.getAngularPositionRad());
+            turnAppliedVolts = turnController.calculate(moduleSimulation.getSteerAbsoluteFacing().getRadians());
         } else {
             turnController.reset();
         }
 
         // Update simulation state
-        driveSim.setInputVoltage(MathUtil.clamp(driveAppliedVolts, -12.0, 12.0));
-        turnSim.setInputVoltage(MathUtil.clamp(turnAppliedVolts, -12.0, 12.0));
-        driveSim.update(0.02);
-        turnSim.update(0.02);
+        driveMotor.requestVoltage(Volts.of(MathUtil.clamp(driveAppliedVolts, -12.0, 12.0)));
+        turnMotor.requestVoltage(Volts.of(MathUtil.clamp(turnAppliedVolts, -12.0, 12.0)));
 
         // Update drive inputs
         inputs.driveConnected = true;
-        inputs.drivePositionRad = driveSim.getAngularPositionRad();
-        inputs.driveVelocityRadPerSec = driveSim.getAngularVelocityRadPerSec();
+        inputs.drivePositionRad = moduleSimulation.getDriveWheelFinalPosition().in(Radians);
+        inputs.driveVelocityRadPerSec = moduleSimulation.getDriveWheelFinalSpeed().in(RadiansPerSecond);
         inputs.driveAppliedVolts = driveAppliedVolts;
-        inputs.driveCurrentAmps = Math.abs(driveSim.getCurrentDrawAmps());
+        inputs.driveCurrentAmps = Math.abs(moduleSimulation.getDriveMotorStatorCurrent().in(Amps));
 
         // Update turn inputs
         inputs.turnConnected = true;
-        inputs.turnEncoderConnected = true;
-        inputs.turnAbsolutePositionRad = turnSim.getAngularPositionRad();
-        inputs.turnPositionRad = turnSim.getAngularPositionRad();
-        inputs.turnVelocityRadPerSec = turnSim.getAngularVelocityRadPerSec();
+        inputs.turnAbsoluteEncoderConnected = true;
+        inputs.turnPositionRad = moduleSimulation.getSteerAbsoluteFacing().getRadians();
+        inputs.turnVelocityRadPerSec = moduleSimulation.getSteerAbsoluteEncoderSpeed().in(RadiansPerSecond);
         inputs.turnAppliedVolts = turnAppliedVolts;
-        inputs.turnCurrentAmps = Math.abs(turnSim.getCurrentDrawAmps());
+        inputs.turnCurrentAmps = Math.abs(moduleSimulation.getSteerMotorStatorCurrent().in(Amps));
 
-        // Update odometry inputs (50Hz because high-frequency odometry in sim doesn't matter)
-        inputs.odometryTimestamps = new double[]{Timer.getFPGATimestamp()};
-        inputs.odometryDrivePositionsRad = new double[]{inputs.drivePositionRad};
-        inputs.odometryTurnPositionsRad = new double[]{inputs.turnPositionRad};
+        // Update odometry inputs
+        inputs.odometryTimestamps = getSimulationOdometryTimeStamps();
+        inputs.odometryDrivePositionsRad = Arrays.stream(moduleSimulation.getCachedDriveWheelFinalPositions())
+                .mapToDouble(angle -> angle.in(Radians))
+                .toArray();
+        inputs.odometryTurnPositionsRad = Arrays.stream(moduleSimulation.getCachedSteerAbsolutePositions())
+                .mapToDouble(Rotation2d::getRadians)
+                .toArray();
     }
 
     @Override
@@ -128,5 +153,16 @@ public class ModuleIOSim extends ModuleIO {
     public void setTurnPosition(double positionRad) {
         turnClosedLoop = true;
         turnController.setSetpoint(positionRad);
+    }
+
+    protected static double[] getSimulationOdometryTimeStamps() {
+        final double[] odometryTimeStamps = new double[SimulatedArena.getSimulationSubTicksIn1Period()];
+        for (int i = 0; i < odometryTimeStamps.length; i++) {
+            odometryTimeStamps[i] = Timer.getTimestamp()
+                    - 0.02
+                    + i * SimulatedArena.getSimulationDt().in(Seconds);
+        }
+
+        return odometryTimeStamps;
     }
 }

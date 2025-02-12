@@ -13,10 +13,15 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorConstants;
+import frc.robot.util.swerve.ModuleLimits;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 
 import java.util.function.Supplier;
+
+import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
 
 public class RobotState {
     @Getter
@@ -32,6 +37,9 @@ public class RobotState {
             },
             new Pose2d());
 
+    @Getter
+    private final RobotMechanism mechanism = new RobotMechanism();
+
     private static RobotState instance;
 
     public static RobotState get() {
@@ -44,6 +52,13 @@ public class RobotState {
     }
 
     private RobotState() {
+    }
+
+    /* Subsystems */
+    private Elevator elevator;
+
+    public void afterSubsystemsInitialized() {
+        elevator = Elevator.get();
     }
 
     public void applyOdometryUpdate(
@@ -87,5 +102,14 @@ public class RobotState {
 
     public Command resetRotation() {
         return setPose(() -> new Pose2d(getTranslation(), new Rotation2d()));
+    }
+
+    public ModuleLimits getModuleLimits() {
+        var scalar = 1 - DriveConstants.elevatorSlowdownScalar * elevator.getPositionMeters() / ElevatorConstants.maxHeightMeters;
+        return new ModuleLimits(
+                driveConfig.maxLinearSpeedMetersPerSec() * scalar,
+                driveConfig.maxLinearAccelMetersPerSecSquared() * scalar,
+                driveConfig.maxTurnVelocityRadPerSec()
+        );
     }
 }

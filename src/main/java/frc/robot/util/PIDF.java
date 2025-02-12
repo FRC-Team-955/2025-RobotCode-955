@@ -1,8 +1,9 @@
 package frc.robot.util;
 
-import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.SlotConfigs;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import edu.wpi.first.math.controller.*;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -64,12 +65,12 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
         return new PIDF(kP, kI, kD, kS, kV, kA, kG);
     }
 
-    public void applySpark(ClosedLoopConfig config) {
-        config.pidf(kP, kI, kD, 0);
+    public void applySpark(ClosedLoopConfig config, ClosedLoopSlot slot) {
+        config.pidf(kP, kI, kD, 0, slot);
     }
 
-    public Slot0Configs toPhoenix() {
-        return new Slot0Configs()
+    public SlotConfigs toPhoenix() {
+        return new SlotConfigs()
                 .withKP(kP)
                 .withKI(kI)
                 .withKD(kD)
@@ -78,8 +79,8 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
                 .withKA(kA);
     }
 
-    public Slot0Configs toPhoenix(StaticFeedforwardSignValue staticFeedforwardSign) {
-        return new Slot0Configs()
+    public SlotConfigs toPhoenix(StaticFeedforwardSignValue staticFeedforwardSign) {
+        return new SlotConfigs()
                 .withKP(kP)
                 .withKI(kI)
                 .withKD(kD)
@@ -89,8 +90,8 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
                 .withStaticFeedforwardSign(staticFeedforwardSign);
     }
 
-    public Slot0Configs toPhoenixWithGravity(GravityTypeValue gravityType) {
-        return new Slot0Configs()
+    public SlotConfigs toPhoenixWithGravity(GravityTypeValue gravityType) {
+        return new SlotConfigs()
                 .withKP(kP)
                 .withKI(kI)
                 .withKD(kD)
@@ -101,8 +102,8 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
                 .withGravityType(gravityType);
     }
 
-    public Slot0Configs toPhoenixWithGravity(GravityTypeValue gravityType, StaticFeedforwardSignValue staticFeedforwardSign) {
-        return new Slot0Configs()
+    public SlotConfigs toPhoenixWithGravity(GravityTypeValue gravityType, StaticFeedforwardSignValue staticFeedforwardSign) {
+        return new SlotConfigs()
                 .withKP(kP)
                 .withKI(kI)
                 .withKD(kD)

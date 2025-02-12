@@ -108,7 +108,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
         driveConfig
                 .closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder);
-        moduleConfig.driveGains().applySpark(driveConfig.closedLoop);
+        moduleConfig.driveGains().applySpark(driveConfig.closedLoop, ClosedLoopSlot.kSlot0);
         driveConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
@@ -143,7 +143,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .positionWrappingEnabled(true)
                 .positionWrappingInputRange(0.0, 2 * Math.PI);
-        moduleConfig.turnGains().applySpark(turnConfig.closedLoop);
+        moduleConfig.turnGains().applySpark(turnConfig.closedLoop, ClosedLoopSlot.kSlot0);
         turnConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
@@ -242,7 +242,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
 
         // Turn cancoder
         var turnEncoderStatus = BaseStatusSignal.refreshAll(turnAbsolutePosition);
-        inputs.turnEncoderConnected = turnEncoderConnectedDebounce.calculate(turnEncoderStatus.isOK());
+        inputs.turnAbsoluteEncoderConnected = turnEncoderConnectedDebounce.calculate(turnEncoderStatus.isOK());
         inputs.turnAbsolutePositionRad = Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble());
 
         // Update odometry inputs
