@@ -92,7 +92,7 @@ public class Vision extends SubsystemBaseExt {
 
         for (int i = 0; i < gamepieceIo.length; i++) {
             gamepieceIo[i].updateInputs(gpInputs[i]);
-//            Logger.processInputs("Inputs/Vision/Gamepiece" + i, gpInputs[i]);
+            Logger.processInputs("Inputs/Vision/Gamepiece" + i, gpInputs[i]);
         }
 
         // Initialize logging values
@@ -196,12 +196,12 @@ public class Vision extends SubsystemBaseExt {
             gpDisconnectedAlerts[cameraIndex].set(!gpInputs[cameraIndex].connected);
 
             // TODO: replace with algorithm getting closest if there is more than one targets
-            var present = gpInputs[cameraIndex].latestTargetObservation.isPresent();
+            var present = gpInputs[cameraIndex].latestGamepieceTargetObservation.isPresent();
 
             Logger.recordOutput("Vision/Gamepiece" + cameraIndex + "/TargetPresent", present);
 
             if (present) {
-                var closestTarget = gpInputs[cameraIndex].latestTargetObservation.targetPos();
+                var closestTarget = gpInputs[cameraIndex].latestGamepieceTargetObservation.targetPos();
                 var closestTargetAbsolute = robotTranslation.plus(closestTarget);
 
                 Logger.recordOutput(

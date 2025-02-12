@@ -1,16 +1,33 @@
 package frc.robot.subsystems.coralintake;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
-import frc.robot.util.PIDF;
+import org.littletonrobotics.junction.Logger;
+
+import static frc.robot.subsystems.coralintake.CoralIntakeConstants.*;
 
 public class PivotIOSim extends PivotIO {
-    private final SingleJointedArmSim motorSim;
-    private final PIDController pid;
-    private final ArmFeedforward ff;
+    private final SingleJointedArmSim armSim = new SingleJointedArmSim(
+            DCMotor.getKrakenX60(1),
+            pivotConfig.motorGearRatio(),
+            Units.lbsToKilograms(Units.inchesToMeters(Units.inchesToMeters(429.942))),
+            Units.inchesToMeters(20),
+            0.12833586,
+            1.353,
+            true,
+            1.353,
+            0.00001, // position
+            0.00001 // velocity, probably
+    );
+    private final ProfiledPIDController pid = pivotConfig.gains().toProfiledPID(new TrapezoidProfile.Constraints(
+            pivotMaxVelocityRadPerSec,
+            pivotMaxAccelerationRadPerSecSquared
+    ));
+    private final ArmFeedforward ff = pivotConfig.gains().toArmFF();
 
     private boolean closedLoop = true;
     private double appliedVolts;
@@ -36,18 +53,22 @@ public class PivotIOSim extends PivotIO {
     @Override
     public void updateInputs(PivotIOInputs inputs) {
         if (closedLoop) {
-            appliedVolts = pid.calculate(motorSim.getAngleRads()) + ff.calculate(motorSim.getAngleRads(), motorSim.getVelocityRadPerSec());
+            appliedVolts = pid.calculate(armSim.getAngleRads())
+                    + ff.calculate(armSim.getAngleRads(), pid.getSetpoint().velocity);
+            Logger.recordOutput("CoralIntake/Pivot/SetpointVelocityRadPerSec", pid.getSetpoint().velocity);
+        } else {
+            pid.reset(new TrapezoidProfile.State(armSim.getAngleRads(), armSim.getVelocityRadPerSec()));
         }
 
-        motorSim.setInputVoltage(appliedVolts);
+        armSim.setInputVoltage(appliedVolts);
 
-        motorSim.update(0.02);
+        armSim.update(0.02);
 
         inputs.connected = true;
-        inputs.positionRad = motorSim.getAngleRads();
-        inputs.velocityRadPerSec = motorSim.getVelocityRadPerSec();
+        inputs.positionRad = armSim.getAngleRads();
+        inputs.velocityRadPerSec = armSim.getVelocityRadPerSec();
         inputs.appliedVolts = appliedVolts;
-        inputs.currentAmps = Math.abs(motorSim.getCurrentDrawAmps());
+        inputs.currentAmps = Math.abs(armSim.getCurrentDrawAmps());
     }
 
     @Override
@@ -59,6 +80,6 @@ public class PivotIOSim extends PivotIO {
     @Override
     public void setClosedLoop(double positionRad) {
         closedLoop = true;
-        pid.setSetpoint(positionRad);
+        pid.setGoal(new TrapezoidProfile.State(positionRad, 0));
     }
 }

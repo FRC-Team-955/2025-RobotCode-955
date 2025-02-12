@@ -14,8 +14,8 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 
 import static frc.robot.RobotMechanism.middleOfRobot;
-import static frc.robot.subsystems.coralintake.CoralIntakeConstants.pivotConfig;
 import static frc.robot.subsystems.coralintake.CoralIntakeConstants.pivotLengthMeters;
+import static frc.robot.subsystems.coralintake.CoralIntakeConstants.pivotSetpointToleranceRad;
 
 public class CoralIntake extends SubsystemBaseExt {
     private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
@@ -115,7 +115,7 @@ public class CoralIntake extends SubsystemBaseExt {
 
     private boolean atPivotGoal() {
         // if pivotGoal.setpointRad is null, will be false and won't crash
-        return pivotGoal.setpointRad != null && Math.abs(pivotGoal.setpointRad.getAsDouble() - pivotInputs.positionRad) <= pivotConfig.setpointToleranceRad();
+        return pivotGoal.setpointRad != null && Math.abs(pivotGoal.setpointRad.getAsDouble() - pivotInputs.positionRad) <= pivotSetpointToleranceRad;
     }
 
     public Command waitUntilAtPivotGoal() {

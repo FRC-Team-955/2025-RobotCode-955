@@ -108,8 +108,9 @@ public class Elevator extends SubsystemBaseExt {
         if (goal.setpointMeters != null) {
             var setpointMeters = goal.setpointMeters.getAsDouble();
 
-            var shouldUseGentleProfile = false;
-            //noinspection ConstantValue
+            boolean shouldUseGentleProfile = inputs.leaderVelocityRadPerSec < 0.01 // If we are going down
+                    // If we are below the hardstop slowdown zone
+                    && getPositionMeters() < hardstopSlowdownMeters;
             var profile = shouldUseGentleProfile
                     ? profileGentleVelocity
                     : profileFullVelocity;

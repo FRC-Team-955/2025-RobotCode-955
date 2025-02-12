@@ -20,7 +20,7 @@ public class ElevatorIOSim extends ElevatorIO {
             true,
             0,
             0.0001, // position
-            0 // velocity, maybe
+            0.0001 // velocity, maybe
     );
 
     private final ElevatorFeedforward feedforward = gains.toElevatorFF();

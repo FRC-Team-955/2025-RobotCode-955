@@ -24,7 +24,6 @@ import java.util.function.Supplier;
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
 
 public class RobotState {
-
     @Getter
     private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(DriveConstants.moduleTranslations);
     private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(

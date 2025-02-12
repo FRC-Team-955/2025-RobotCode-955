@@ -8,6 +8,9 @@ import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 
+import static frc.robot.subsystems.elevator.ElevatorConstants.hardstopMeters;
+import static frc.robot.subsystems.elevator.ElevatorConstants.hardstopSlowdownMeters;
+
 /** Holds the Mechanism2d and all roots and ligaments that visualizes the robot state */
 public class RobotMechanism {
     /** Middle of the robot in the mechanism */
@@ -39,6 +42,7 @@ public class RobotMechanism {
                     13,
                     new Color8Bit(new Color(0.2, 0.2, 0.2))
             ));
+
             stage1Root.append(new LoggedMechanismLigament2d(
                     "stage1",
                     Units.inchesToMeters(32.5),
@@ -46,6 +50,7 @@ public class RobotMechanism {
                     12,
                     new Color8Bit(new Color(0.3, 0.3, 0.3))
             ));
+
             stage2Root.append(new LoggedMechanismLigament2d(
                     "stage2",
                     Units.inchesToMeters(32),
@@ -53,12 +58,31 @@ public class RobotMechanism {
                     11,
                     new Color8Bit(new Color(0.4, 0.4, 0.4))
             ));
+
             stage3Root.append(new LoggedMechanismLigament2d(
                     "stage3",
                     Units.inchesToMeters(7),
                     90,
                     10,
                     new Color8Bit(new Color(0.5, 0.5, 0.5))
+            ));
+
+            var hardstopRoot = mechanism.getRoot("elevator_hardstop", middleOfRobot - Units.inchesToMeters(15), Units.inchesToMeters(2.85) + hardstopMeters);
+            hardstopRoot.append(new LoggedMechanismLigament2d(
+                    "hardstop",
+                    Units.inchesToMeters(1),
+                    90,
+                    11,
+                    new Color8Bit(Color.kGray)
+            ));
+
+            var hardstopSlowdownRoot = mechanism.getRoot("elevator_hardstopSlowdown", middleOfRobot - Units.inchesToMeters(15), Units.inchesToMeters(2.85) + hardstopSlowdownMeters);
+            hardstopSlowdownRoot.append(new LoggedMechanismLigament2d(
+                    "hardstopSlowdown",
+                    Units.inchesToMeters(1),
+                    90,
+                    11,
+                    new Color8Bit(Color.kYellow)
             ));
         }
     }
