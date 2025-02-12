@@ -7,9 +7,13 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Alert;
 import frc.robot.util.SparkUtil;
+import org.littletonrobotics.junction.Logger;
+
+import java.util.ArrayList;
 
 public class SparkCANcoderHelper {
     private static final Alert turnRelativeEncoderNotReset = new Alert("One or more drive modules has not successfully reset their relative turn encoder", Alert.AlertType.kError);
+    private static final ArrayList<Integer> resetFailedCANcoderIDs = new ArrayList<>();
 
     public static void resetTurnSpark(
             RelativeEncoder turnEncoder,
@@ -45,6 +49,8 @@ public class SparkCANcoderHelper {
         }
         if (!successful) {
             System.out.printf("Drive module with cancoder ID %d GAVE UP setting initial position of turn relative encoder%n", cancoderCanID);
+            resetFailedCANcoderIDs.add(cancoderCanID);
+            Logger.recordOutput("Drive/SparkResetFailedCANcoderIDs", resetFailedCANcoderIDs.stream().mapToInt((val) -> val).toArray());
             turnRelativeEncoderNotReset.set(true);
         }
     }
