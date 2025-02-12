@@ -19,9 +19,15 @@ import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.leds.LEDs;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import java.util.Optional;
+
+import java.util.Optional;
+
+import static frc.robot.Constants.mode;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -132,13 +138,27 @@ public class RobotContainer {
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
 
-        driverController.x().whileTrue(superstructure.intakeCoral());
+        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
 
-        driverController.a().toggleOnTrue(superstructure.autoAlignAndScore(
+        driverController.leftTrigger().toggleOnTrue(superstructure.autoAlignAndScore(
                 operatorDashboard::getSide,
                 operatorDashboard::getLeftSide,
+                operatorDashboard::getElevatorLevel,
                 driverController.leftBumper()
         ));
+
+        if (mode == Constants.Mode.SIM) {
+            driverController.x().onTrue(Commands.runOnce( () ->
+                    SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(
+                            new Pose2d(Units.inchesToMeters(650), Units.inchesToMeters(30), new Rotation2d(Math.random() * 2 * Math.PI))
+                    ))
+            ));
+            driverController.y().onTrue(Commands.runOnce( () ->
+                    SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(
+                            new Pose2d(Units.inchesToMeters(650), Units.inchesToMeters(285), new Rotation2d(Math.random() * 2 * Math.PI))
+                    ))
+            ));
+        }
 
 //        // Lock to 0° when A button is held
 //        controller

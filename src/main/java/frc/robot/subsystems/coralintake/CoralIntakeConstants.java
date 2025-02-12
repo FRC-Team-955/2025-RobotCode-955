@@ -43,7 +43,7 @@ public class CoralIntakeConstants {
                 40
         );
         case SIMBOT, ALPHABOT -> new PivotConfig(
-                PIDF.ofPSVAG(0.2, 0, 1.2, 1.2, 0.1),
+                PIDF.ofPSVAG(0.2, 0, 1.2, 1.2, 1.2),
                 60,
                 false,
                 // TODO: Figure this out

@@ -221,7 +221,7 @@ public class Superstructure extends SubsystemBaseExt {
                                 Commands.parallel(
                                         setGoal(Goal.HANDOFF_WAIT_ELEVATOR),
                                         indexer.setGoal(Indexer.RollersGoal.IDLE),
-                                        elevator.setGoalAndWaitUntilAtGoal(Elevator.Goal.STOW)
+                                        elevator.setGoalAndWaitUntilAtGoal(() -> Elevator.Goal.STOW)
                                 ),
                                 Commands.parallel(
                                         setGoal(Goal.HANDOFF_HANDING_OFF),
@@ -244,7 +244,7 @@ public class Superstructure extends SubsystemBaseExt {
                                 Commands.parallel(
                                         setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
                                         endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                                        elevator.setGoalAndWaitUntilAtGoal(Elevator.Goal.SCORE_L4)
+                                        elevator.setGoalAndWaitUntilAtGoal(() -> Elevator.Goal.SCORE_L4)
                                 ),
                                 Commands.waitUntil(forwardTrigger),
                                 // Don't allow canceling
@@ -264,7 +264,12 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
-    public Command autoAlignAndScore(Supplier<Integer> reefSideSupplier, Supplier<Boolean> alignLeftSupplier, Trigger cancelTrigger) {
+    public Command autoAlignAndScore(
+            Supplier<Integer> reefSideSupplier,
+            Supplier<Boolean> alignLeftSupplier,
+            Supplier<Elevator.Goal> elevatorGoalSupplier,
+            Trigger cancelTrigger
+    ) {
         return CommandsExt.onlyIf(
                 // Only run if you have coral and are in front of your reef side
                 () -> (inputs.endEffectorBeamBreakTriggered)
@@ -283,7 +288,7 @@ public class Superstructure extends SubsystemBaseExt {
                                         Commands.parallel(
                                                 setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
                                                 endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                                                elevator.setGoalAndWaitUntilAtGoal(Elevator.Goal.SCORE_L4),
+                                                elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier),
                                                 waitUntilAtSecondaryPosition(reefSideSupplier, alignLeftSupplier)
                                         )
                                 ),

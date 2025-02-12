@@ -15,6 +15,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.RobotMechanism.middleOfRobot;
@@ -27,9 +28,9 @@ public class Elevator extends SubsystemBaseExt {
     public enum Goal {
         CHARACTERIZATION(null),
         STOW(() -> 0),
-        SCORE_L1(() -> 0),
-        SCORE_L2(() -> 0),
-        SCORE_L3(() -> 0),
+        SCORE_L1(() -> 1.69 - Units.inchesToMeters(54)),
+        SCORE_L2(() -> 1.69 - Units.inchesToMeters(40.125)),
+        SCORE_L3(() -> 1.69 - Units.inchesToMeters(24.375)),
         SCORE_L4(() -> 1.69),
         DESCORE_L2(() -> 0),
         DESCORE_L3(() -> 0);
@@ -154,8 +155,8 @@ public class Elevator extends SubsystemBaseExt {
         return waitUntil(this::atGoal);
     }
 
-    public Command setGoalAndWaitUntilAtGoal(Goal goal) {
-        return runOnceAndWaitUntil(() -> this.goal = goal, this::atGoal);
+    public Command setGoalAndWaitUntilAtGoal(Supplier<Goal> goal) {
+        return runOnceAndWaitUntil(() -> this.goal = goal.get(), this::atGoal);
     }
 
     @AutoLogOutput(key = "Elevator/Measurement/PositionMeters")

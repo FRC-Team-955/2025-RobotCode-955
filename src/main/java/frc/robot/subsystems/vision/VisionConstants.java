@@ -47,9 +47,12 @@ public class VisionConstants {
     public static double angularStdDevMegatag2Factor = Double.POSITIVE_INFINITY; // No rotation data available
 
     public static final GamepieceIO[] gamepieceIO = switch (Constants.identity) {
+        /*
         case COMPBOT -> Constants.isReplay
                 ? new GamepieceIO[]{new GamepieceIO()}
                 : new GamepieceIO[]{new GamepieceIOLimelight("limelight", new Transform3d())};
+         */
+        case COMPBOT -> new GamepieceIO[]{};
         case ALPHABOT -> Constants.isReplay
                 ? new GamepieceIO[]{new GamepieceIO()}
                 : new GamepieceIO[]{
