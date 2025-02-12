@@ -203,6 +203,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
             System.out.printf("Drive module with cancoder ID %d GAVE UP setting initial position of turn relative encoder%n", cancoderCanID);
             turnRelativeEncoderNotReset.set(true);
         }
+        // TODO: ModuleIOCommon
 
         // Create odometry queues
         timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
