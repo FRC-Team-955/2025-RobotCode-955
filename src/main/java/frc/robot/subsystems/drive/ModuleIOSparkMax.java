@@ -185,12 +185,15 @@ public class ModuleIOSparkMax extends ModuleIO {
         inputs.turnConnected = turnConnectedDebounce.calculate(!sparkStickyFault);
 
         // Update odometry inputs
-        inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+        inputs.odometryDriveTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryDrivePositionsRad = drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
+
+        inputs.odometryTurnTimestamps = inputs.odometryDriveTimestamps;
         inputs.odometryTurnPositionsRad =
                 turnPositionQueue.stream()
                         .mapToDouble((Double value) -> value - absoluteEncoderOffsetRad)
                         .toArray();
+
         timestampQueue.clear();
         drivePositionQueue.clear();
         turnPositionQueue.clear();

@@ -17,6 +17,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
@@ -35,7 +36,6 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj.Alert;
 import frc.robot.util.PhoenixUtil;
 import frc.robot.util.SparkUtil;
 
@@ -49,8 +49,6 @@ import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
  * and CANcoder.
  */
 public class ModuleIOSparkMaxCANcoder extends ModuleIO {
-    private static final Alert turnRelativeEncoderNotReset = new Alert("One or more alpha drive modules has not successfully reset their relative turn encoder", Alert.AlertType.kError);
-
     // Hardware objects
     private final SparkMax driveSpark;
     private final SparkMax turnSpark;
@@ -171,39 +169,9 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
         turnAbsolutePosition = cancoder.getAbsolutePosition();
 
         BaseStatusSignal.setUpdateFrequencyForAll(50.0, turnAbsolutePosition);
+        ParentDevice.optimizeBusUtilizationForAll(cancoder);
 
-        // Reset turn spark
-        // Not the prettiest but doing it now is better than in updateInputs
-        try {
-            // Wait for cancoder status signal to use new offset
-            // TODO: do this better
-            Thread.sleep(500);
-        } catch (InterruptedException ignored) {
-        }
-        var successful = false;
-        // 15 attempts because this is really important
-        for (int i = 0; i < 15; i++) {
-            var turnEncoderStatus = BaseStatusSignal.refreshAll(turnAbsolutePosition);
-            var turnEncoderConnected = turnEncoderStatus.isOK();
-            if (turnEncoderConnected) {
-                var absolutePositionRad = Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble());
-                if (absolutePositionRad != 0) {
-                    SparkUtil.sparkStickyFault = false;
-                    SparkUtil.tryUntilOk(5, () -> turnEncoder.setPosition(absolutePositionRad));
-                    if (!SparkUtil.sparkStickyFault) {
-                        System.out.printf("Drive module with cancoder ID %d setting initial position of turn relative encoder to %s%n", cancoderCanID, absolutePositionRad);
-                        successful = true;
-                        break;
-                    }
-                }
-            }
-            System.out.printf("Drive module with cancoder ID %d FAILED on attempt %d to set initial position of turn relative encoder (connected: %s, sparkStickyFault: %s)%n", cancoderCanID, i + 1, turnEncoderConnected, SparkUtil.sparkStickyFault);
-        }
-        if (!successful) {
-            System.out.printf("Drive module with cancoder ID %d GAVE UP setting initial position of turn relative encoder%n", cancoderCanID);
-            turnRelativeEncoderNotReset.set(true);
-        }
-        // TODO: ModuleIOCommon
+        SparkCANcoderHelper.resetTurnSpark(turnEncoder, turnAbsolutePosition, cancoderCanID);
 
         // Create odometry queues
         timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
@@ -247,9 +215,12 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
         inputs.turnAbsolutePositionRad = Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble());
 
         // Update odometry inputs
-        inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+        inputs.odometryDriveTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryDrivePositionsRad = drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
+
+        inputs.odometryTurnTimestamps = inputs.odometryDriveTimestamps;
         inputs.odometryTurnPositionsRad = turnPositionQueue.stream().mapToDouble((Double value) -> value).toArray();
+
         timestampQueue.clear();
         drivePositionQueue.clear();
         turnPositionQueue.clear();

@@ -2,10 +2,7 @@ package frc.robot;
 
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
-
-import java.util.Optional;
 
 public class OperatorDashboard extends SubsystemBaseExt {
     /* Dashboard Inputs */

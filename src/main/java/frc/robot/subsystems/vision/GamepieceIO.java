@@ -29,7 +29,8 @@ public class GamepieceIO {
      * Represents the angle to a simple target, not used for pose estimation.
      */
     public record GamepieceTargetObservation(Rotation2d tx, Rotation2d ty, Translation2d targetPos,
-                                             boolean isPresent) {}
+                                             boolean isPresent) {
+    }
 
     public void updateInputs(GamepieceIOInputs inputs) {
     }

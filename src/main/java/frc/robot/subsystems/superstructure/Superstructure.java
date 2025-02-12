@@ -1,13 +1,14 @@
 package frc.robot.subsystems.superstructure;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.*;
+import frc.robot.FieldLocations;
+import frc.robot.RobotMechanism;
+import frc.robot.RobotState;
 import frc.robot.subsystems.coralintake.CoralIntake;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
@@ -147,7 +148,7 @@ public class Superstructure extends SubsystemBaseExt {
         // This should not require the superstructure because we don't want to conflict with setGoal
         return Commands.waitUntil(
                 () -> getDistance(robotState.getPose(), getPrimaryAlignPose(reefSideSupplier.get())) < primaryAlignToleranceMeters
-                    && Math.abs(getAngle(robotState.getPose(), getPrimaryAlignPose(reefSideSupplier.get())).getRadians()) < primaryAlignToleranceRad
+                        && Math.abs(getAngle(robotState.getPose(), getPrimaryAlignPose(reefSideSupplier.get())).getRadians()) < primaryAlignToleranceRad
         );
     }
 

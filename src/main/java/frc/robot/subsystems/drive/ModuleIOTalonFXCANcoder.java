@@ -180,7 +180,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
                 turnVelocity,
                 turnAppliedVolts,
                 turnCurrent);
-        ParentDevice.optimizeBusUtilizationForAll(driveTalon, turnTalon);
+        ParentDevice.optimizeBusUtilizationForAll(driveTalon, turnTalon, cancoder);
     }
 
     @Override
@@ -207,13 +207,16 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         inputs.turnCurrentAmps = turnCurrent.getValueAsDouble();
 
         // Update odometry inputs
-        inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+        inputs.odometryDriveTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryDrivePositionsRad = drivePositionQueue.stream()
                 .mapToDouble(Units::rotationsToRadians)
                 .toArray();
+
+        inputs.odometryTurnTimestamps = inputs.odometryDriveTimestamps;
         inputs.odometryTurnPositionsRad = turnPositionQueue.stream()
                 .mapToDouble(Units::rotationsToRadians)
                 .toArray();
+
         timestampQueue.clear();
         drivePositionQueue.clear();
         turnPositionQueue.clear();

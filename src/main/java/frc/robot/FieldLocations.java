@@ -6,7 +6,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
-import org.littletonrobotics.junction.AutoLogOutput;
 
 import static frc.robot.Util.shouldFlip;
 
@@ -17,7 +16,7 @@ public class FieldLocations {
      * Notes:
      * Sides will be labeled from the left to right, starting with the farthest left the driver can see at 0.
      * Thus, the side with the apriltag facing the driver is side 1
-     *
+     * <p>
      * Auto Align will use the default fast PID to move to a position primaryAlignDistanceMeters out from the april tag
      * Then it will raise the elevator while using a slower PID to move to a position secondaryAlignDistanceMeters from the reef node
      * Finally, it will move forward the remaining amount and place the gamepiece
@@ -82,7 +81,7 @@ public class FieldLocations {
     public static Pose2d getAprilTagPoseAdjusted(int side) {
         if (!shouldFlip()) {
             // blue
-            return getAprilTagPose(22-((side+3) % 6)).plus(new Transform2d(Units.inchesToMeters(17.25), 0, new Rotation2d()));
+            return getAprilTagPose(22 - ((side + 3) % 6)).plus(new Transform2d(Units.inchesToMeters(17.25), 0, new Rotation2d()));
         } else {
             // red
             return getAprilTagPose(side + 6).plus(new Transform2d(Units.inchesToMeters(17.25), 0, new Rotation2d()));

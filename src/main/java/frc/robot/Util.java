@@ -121,4 +121,17 @@ public class Util {
     public static boolean greaterThanEpsilon(double a) {
         return a > epsilon;
     }
+
+    public static int findArrayIndexWithClosestValue(double targetValue, double[] array) {
+        double smallestDiff = Double.MAX_VALUE;
+        int smallestIndex = 0;
+        for (int i = 0; i < array.length; i++) {
+            double diff = Math.abs(array[i] - targetValue);
+            if (diff < smallestDiff) {
+                smallestDiff = diff;
+                smallestIndex = i;
+            }
+        }
+        return smallestIndex;
+    }
 }

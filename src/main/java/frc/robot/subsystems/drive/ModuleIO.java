@@ -33,8 +33,10 @@ public class ModuleIO {
         public boolean turnAbsoluteEncoderConnected = false;
         public double turnAbsolutePositionRad = 0.0;
 
-        public double[] odometryTimestamps = new double[]{};
+        public double[] odometryDriveTimestamps = new double[]{};
         public double[] odometryDrivePositionsRad = new double[]{};
+
+        public double[] odometryTurnTimestamps = new double[]{};
         public double[] odometryTurnPositionsRad = new double[]{};
     }
 

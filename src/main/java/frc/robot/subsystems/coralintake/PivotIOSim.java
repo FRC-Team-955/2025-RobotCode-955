@@ -6,7 +6,6 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
-import frc.robot.util.PIDF;
 import org.littletonrobotics.junction.Logger;
 
 import static frc.robot.subsystems.coralintake.CoralIntakeConstants.*;
@@ -15,7 +14,7 @@ public class PivotIOSim extends PivotIO {
     private final SingleJointedArmSim armSim = new SingleJointedArmSim(
             DCMotor.getKrakenX60(1),
             pivotConfig.motorGearRatio(),
-            0.1456967969+Units.lbsToKilograms(15.522)*Math.pow(Units.inchesToMeters(17.0502529), 2),
+            0.1456967969 + Units.lbsToKilograms(15.522) * Math.pow(Units.inchesToMeters(17.0502529), 2),
             Units.inchesToMeters(17.0502529),
             0.12833586,
             1.353,

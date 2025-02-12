@@ -1,7 +1,9 @@
 package frc.robot.subsystems.elevator;
 
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.*;
+import com.revrobotics.spark.SparkBase;
+import com.revrobotics.spark.SparkLowLevel;
+import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
@@ -14,7 +16,6 @@ import java.util.function.DoubleSupplier;
 
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 import static frc.robot.util.SparkUtil.*;
-import static frc.robot.util.SparkUtil.tryUntilOkAsync;
 
 public class ElevatorIOSparkMax extends ElevatorIO {
     // Hardware objects
@@ -66,7 +67,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         leadConfig
                 .encoder
                 .positionConversionFactor(2 * Math.PI / gearRatio) // Rotor Rotations -> Drum Radians
-                .velocityConversionFactor((2 * Math.PI ) / 60.0 / gearRatio) // Rotor RPM -> Drum Rad/Sec
+                .velocityConversionFactor((2 * Math.PI) / 60.0 / gearRatio) // Rotor RPM -> Drum Rad/Sec
                 .uvwMeasurementPeriod(10)
                 .uvwAverageDepth(2);
 

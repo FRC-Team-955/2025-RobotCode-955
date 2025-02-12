@@ -38,11 +38,14 @@ public class GyroIOPigeon2 extends GyroIO {
         pigeon = new Pigeon2(canID);
         yaw = pigeon.getYaw();
         yawVelocity = pigeon.getAngularVelocityZWorld();
+
         pigeon.getConfigurator().apply(new Pigeon2Configuration());
         pigeon.getConfigurator().setYaw(0.0);
+        pigeon.optimizeBusUtilization();
+
         yaw.setUpdateFrequency(DriveConstants.phoenixFrequencyHz);
         yawVelocity.setUpdateFrequency(50.0);
-        pigeon.optimizeBusUtilization();
+
         yawTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
         yawPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(pigeon.getYaw());
     }
@@ -59,6 +62,7 @@ public class GyroIOPigeon2 extends GyroIO {
                 yawPositionQueue.stream()
                         .mapToDouble((Double value) -> Units.degreesToRadians(value))
                         .toArray();
+
         yawTimestampQueue.clear();
         yawPositionQueue.clear();
     }
