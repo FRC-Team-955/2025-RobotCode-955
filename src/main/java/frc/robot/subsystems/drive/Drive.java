@@ -476,13 +476,15 @@ public class Drive extends SubsystemBaseExt {
             var linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), joystickDriveDeadband);
             linearMagnitude = linearMagnitude * linearMagnitude;
 
+            var omegaMagnitude = MathUtil.applyDeadband(omega, joystickDriveDeadband);
+            omegaMagnitude = Math.copySign(omegaMagnitude * omegaMagnitude, omegaMagnitude);
+            // Scale linear magnitude by omega - when going full omega, want half linear
+            linearMagnitude *= MathUtil.clamp(1 - Math.abs(omegaMagnitude / 2), 0.5, 1);
+
             var joystickLinearDirection = new Rotation2d(x, y);
             var linearVelocity = new Pose2d(new Translation2d(), joystickLinearDirection)
                     .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
                     .getTranslation();
-
-            var omegaMagnitude = MathUtil.applyDeadband(omega, joystickDriveDeadband);
-            omegaMagnitude = Math.copySign(omegaMagnitude * omegaMagnitude, omegaMagnitude);
 
             Logger.recordOutput("Drive/JoystickDrive/LinearMagnitude", linearMagnitude);
             Logger.recordOutput("Drive/JoystickDrive/LinearDirection", joystickLinearDirection);
