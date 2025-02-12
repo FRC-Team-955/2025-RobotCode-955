@@ -6,6 +6,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import frc.robot.util.PIDF;
 import org.littletonrobotics.junction.Logger;
 
 import static frc.robot.subsystems.coralintake.CoralIntakeConstants.*;
@@ -14,8 +15,8 @@ public class PivotIOSim extends PivotIO {
     private final SingleJointedArmSim armSim = new SingleJointedArmSim(
             DCMotor.getKrakenX60(1),
             pivotConfig.motorGearRatio(),
-            Units.lbsToKilograms(Units.inchesToMeters(Units.inchesToMeters(429.942))),
-            Units.inchesToMeters(20),
+            0.1456967969+Units.lbsToKilograms(15.522)*Math.pow(Units.inchesToMeters(17.0502529), 2),
+            Units.inchesToMeters(17.0502529),
             0.12833586,
             1.353,
             true,
@@ -32,22 +33,7 @@ public class PivotIOSim extends PivotIO {
     private boolean closedLoop = true;
     private double appliedVolts;
 
-    public PivotIOSim(PIDF pidf) {
-        // If we need to test different geometries, we can put this in coralintakeconstants
-        // TODO: Figure out
-        motorSim = new SingleJointedArmSim(
-                DCMotor.getKrakenX60(1),
-                CoralIntakeConstants.pivotConfig.motorGearRatio(),
-                0.1456967969+Units.lbsToKilograms(15.522)*Math.pow(Units.inchesToMeters(17.0502529), 2),
-                Units.inchesToMeters(17.0502529),
-                0.12833586,
-                1.353,
-                true,
-                1.353,
-                0.002, 0.002
-        );
-        pid = pidf.toPID();
-        ff = pidf.toArmFF();
+    public PivotIOSim() {
     }
 
     @Override
