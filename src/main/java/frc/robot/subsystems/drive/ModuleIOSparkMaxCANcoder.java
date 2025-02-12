@@ -36,6 +36,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import frc.robot.Constants;
 import frc.robot.util.PhoenixUtil;
 import frc.robot.util.SparkUtil;
 
@@ -84,7 +85,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
     ) {
         driveSpark = new SparkMax(driveCanID, MotorType.kBrushless);
         turnSpark = new SparkMax(turnCanID, MotorType.kBrushless);
-        cancoder = new CANcoder(cancoderCanID);
+        cancoder = new CANcoder(cancoderCanID, Constants.CANivore.busName);
         driveEncoder = driveSpark.getEncoder();
         turnEncoder = turnSpark.getEncoder();
         driveController = driveSpark.getClosedLoopController();

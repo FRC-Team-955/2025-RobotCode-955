@@ -41,6 +41,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.Constants;
 import frc.robot.util.SparkUtil;
 
 import java.util.Queue;
@@ -107,9 +108,9 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
             int cancoderCanID,
             double absoluteEncoderOffsetRad
     ) {
-        driveTalon = new TalonFX(driveCanID);
+        driveTalon = new TalonFX(driveCanID, Constants.CANivore.busName);
         turnSpark = new SparkMax(turnCanID, SparkLowLevel.MotorType.kBrushless);
-        cancoder = new CANcoder(cancoderCanID);
+        cancoder = new CANcoder(cancoderCanID, Constants.CANivore.busName);
         turnEncoder = turnSpark.getEncoder();
         turnController = turnSpark.getClosedLoopController();
 

@@ -21,8 +21,11 @@ import com.ctre.phoenix6.hardware.Pigeon2;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import frc.robot.Constants;
 
 import java.util.Queue;
+
+import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 /**
  * IO implementation for Pigeon 2.
@@ -35,12 +38,12 @@ public class GyroIOPigeon2 extends GyroIO {
     private final StatusSignal<AngularVelocity> yawVelocity;
 
     public GyroIOPigeon2(int canID) {
-        pigeon = new Pigeon2(canID);
+        pigeon = new Pigeon2(canID, Constants.CANivore.busName);
         yaw = pigeon.getYaw();
         yawVelocity = pigeon.getAngularVelocityZWorld();
 
-        pigeon.getConfigurator().apply(new Pigeon2Configuration());
-        pigeon.getConfigurator().setYaw(0.0);
+        tryUntilOk(5, () -> pigeon.getConfigurator().apply(new Pigeon2Configuration()));
+        tryUntilOk(5, () -> pigeon.getConfigurator().setYaw(0.0));
         pigeon.optimizeBusUtilization();
 
         yaw.setUpdateFrequency(DriveConstants.phoenixFrequencyHz);

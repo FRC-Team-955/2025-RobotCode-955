@@ -30,6 +30,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.Constants;
 
 import java.util.Queue;
 
@@ -97,9 +98,9 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
             int cancoderCanID,
             double absoluteEncoderOffsetRad
     ) {
-        driveTalon = new TalonFX(driveCanID);
-        turnTalon = new TalonFX(turnCanID);
-        cancoder = new CANcoder(cancoderCanID);
+        driveTalon = new TalonFX(driveCanID, Constants.CANivore.busName);
+        turnTalon = new TalonFX(turnCanID, Constants.CANivore.busName);
+        cancoder = new CANcoder(cancoderCanID, Constants.CANivore.busName);
 
         // Configure drive motor
         driveConfig = new TalonFXConfiguration();

@@ -20,6 +20,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import frc.robot.Constants;
 
 import static frc.robot.subsystems.coralintake.CoralIntakeConstants.*;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
@@ -59,7 +60,7 @@ public class PivotIOTalonFX extends PivotIO {
             int encoderID,
             double absoluteEncoderOffsetRad
     ) {
-        talon = new TalonFX(driveCanID);
+        talon = new TalonFX(driveCanID, Constants.CANivore.busName);
         encoder = new DutyCycleEncoder(encoderID, 2 * Math.PI, absoluteEncoderOffsetRad);
 
         // Configure pivot motor
