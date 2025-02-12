@@ -175,7 +175,7 @@ public class Drive extends SubsystemBaseExt {
         // Assume drive has the most samples
         for (int driveSample = 0; driveSample < driveSampleTimestamps.length; driveSample++) {
             double driveSampleTimestamp = driveSampleTimestamps[driveSample];
-            // Use the closest samples for turn and gyro
+            // Find the closest turn sample
             int turnSample = Util.findArrayIndexWithClosestValue(driveSampleTimestamp, turnSampleTimestamps);
 
             // Read wheel positions and deltas from each module
@@ -196,6 +196,7 @@ public class Drive extends SubsystemBaseExt {
 
             // Update gyro angle
             if (gyroInputs.connected) {
+                // Find the closest gyro sample
                 int gyroSample = Util.findArrayIndexWithClosestValue(driveSampleTimestamp, gyroSampleTimestamps);
                 // Use the real gyro angle
                 rawGyroRotation = new Rotation2d(gyroInputs.odometryYawPositionsRad[gyroSample]);
