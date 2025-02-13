@@ -8,11 +8,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.RobotState;
-import frc.robot.subsystems.coralintake.CoralIntake;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
-import frc.robot.subsystems.indexer.Indexer;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
@@ -34,8 +32,8 @@ public class SuperstructureIOSim extends SuperstructureIO {
     );
 
     private final RobotState robotState = RobotState.get();
-    private final CoralIntake coralIntake = CoralIntake.get();
-    private final Indexer indexer = Indexer.get();
+    //    private final CoralIntake coralIntake = CoralIntake.get();
+//    private final Indexer indexer = Indexer.get();
     private final EndEffector endEffector = EndEffector.get();
     private final Elevator elevator = Elevator.get();
 
@@ -55,11 +53,11 @@ public class SuperstructureIOSim extends SuperstructureIO {
 
     @Override
     public void updateInputs(SuperstructureIOInputs inputs) {
-        if (coralIntake.getRollersGoal() == CoralIntake.RollersGoal.INTAKE && coralState == CoralState.NO_CORAL) {
-            intakeSimulation.startIntake();
-        } else {
-            intakeSimulation.stopIntake();
-        }
+//        if (coralIntake.getRollersGoal() == CoralIntake.RollersGoal.INTAKE && coralState == CoralState.NO_CORAL) {
+//            intakeSimulation.startIntake();
+//        } else {
+//            intakeSimulation.stopIntake();
+//        }
 
         var intakedCoral = intakeSimulation.getGamePiecesAmount() > 0;
         if (intakedCoral && coralState == CoralState.NO_CORAL) {
@@ -92,10 +90,10 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 );
             }
             case IN_INDEXER -> {
-                if (indexer.getRollersGoal() == Indexer.RollersGoal.HANDOFF) {
-                    coralState = CoralState.HANDING_OFF;
-                    sinceStartedHandoff.restart();
-                }
+//                if (indexer.getRollersGoal() == Indexer.RollersGoal.HANDOFF) {
+//                    coralState = CoralState.HANDING_OFF;
+//                    sinceStartedHandoff.restart();
+//                }
                 coralRobotRelative = new Transform3d(
                         Units.inchesToMeters(5),
                         0,
@@ -157,31 +155,31 @@ public class SuperstructureIOSim extends SuperstructureIO {
             Logger.recordOutput("FieldSimulation/CoralInRobot", new Pose3d[]{});
         }
 
-        switch (coralState) {
-            case INDEXING -> {
-                inputs.intakeRangeMeters = 0;
-                inputs.indexerBeamBreakTriggered = false;
-                inputs.endEffectorBeamBreakTriggered = false;
-            }
-            case IN_INDEXER, HANDING_OFF -> {
-                inputs.intakeRangeMeters = Double.MAX_VALUE;
-                inputs.indexerBeamBreakTriggered = true;
-                inputs.endEffectorBeamBreakTriggered = false;
-            }
-            case IN_END_EFFECTOR -> {
-                inputs.intakeRangeMeters = Double.MAX_VALUE;
-                inputs.indexerBeamBreakTriggered = false;
-                inputs.endEffectorBeamBreakTriggered = true;
-            }
-            default -> {
-                inputs.intakeRangeMeters = Double.MAX_VALUE;
-                inputs.indexerBeamBreakTriggered = false;
-                inputs.endEffectorBeamBreakTriggered = false;
-            }
-        }
+//        switch (coralState) {
+//            case INDEXING -> {
+//                inputs.intakeRangeMeters = 0;
+//                inputs.indexerBeamBreakTriggered = false;
+//                inputs.endEffectorBeamBreakTriggered = false;
+//            }
+//            case IN_INDEXER, HANDING_OFF -> {
+//                inputs.intakeRangeMeters = Double.MAX_VALUE;
+//                inputs.indexerBeamBreakTriggered = true;
+//                inputs.endEffectorBeamBreakTriggered = false;
+//            }
+//            case IN_END_EFFECTOR -> {
+//                inputs.intakeRangeMeters = Double.MAX_VALUE;
+//                inputs.indexerBeamBreakTriggered = false;
+//                inputs.endEffectorBeamBreakTriggered = true;
+//            }
+//            default -> {
+//                inputs.intakeRangeMeters = Double.MAX_VALUE;
+//                inputs.indexerBeamBreakTriggered = false;
+//                inputs.endEffectorBeamBreakTriggered = false;
+//            }
+//        }
 
-        inputs.intakeRangeConnected = true;
-        inputs.indexerBeamBreakConnected = true;
+//        inputs.intakeRangeConnected = true;
+//        inputs.indexerBeamBreakConnected = true;
         inputs.endEffectorBeamBreakConnected = true;
     }
 }

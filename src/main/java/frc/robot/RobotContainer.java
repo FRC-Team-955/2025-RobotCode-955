@@ -11,19 +11,15 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.factories.auto.TestAuto;
-import frc.robot.subsystems.coralintake.CoralIntake;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
-import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.leds.LEDs;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
-
-import java.util.Optional;
 
 import java.util.Optional;
 
@@ -51,8 +47,8 @@ public class RobotContainer {
     // Note: order does matter
     private final Drive drive = Drive.get();
     private final Vision vision = Vision.get();
-    private final CoralIntake coralIntake = CoralIntake.get();
-    private final Indexer indexer = Indexer.get();
+    //    private final CoralIntake coralIntake = CoralIntake.get();
+//    private final Indexer indexer = Indexer.get();
     private final Elevator elevator = Elevator.get();
     private final EndEffector endEffector = EndEffector.get();
     private final Superstructure superstructure = Superstructure.get();
@@ -104,27 +100,27 @@ public class RobotContainer {
                         // right on joystick is positive x - we want negative x for right (CCW is positive)
                         () -> -driverController.getRightX(),
                         () -> {
-                            if (coralIntake.getRollersGoal() != CoralIntake.RollersGoal.INTAKE)
-                                return Optional.empty();
-                            var gamepiece = vision.getClosestGamepiece();
-                            return gamepiece.map(gamepieceTranslation -> {
-                                var relativeToRobot = gamepieceTranslation.minus(robotState.getTranslation());
-                                if (relativeToRobot.getNorm() < Units.feetToMeters(1)) {
-                                    // Don't try to face towards it if we are too close
-                                    return new Pose2d(gamepieceTranslation, robotState.getRotation());
-                                } else {
-                                    // Try to face towards the game piece
-                                    var toGamepiece = new Rotation2d(relativeToRobot.getX(), relativeToRobot.getY());
-                                    return new Pose2d(gamepieceTranslation, toGamepiece);
-                                }
-                            });
+//                            if (coralIntake.getRollersGoal() != CoralIntake.RollersGoal.INTAKE)
+                            return Optional.empty();
+//                            var gamepiece = vision.getClosestGamepiece();
+//                            return gamepiece.map(gamepieceTranslation -> {
+//                                var relativeToRobot = gamepieceTranslation.minus(robotState.getTranslation());
+//                                if (relativeToRobot.getNorm() < Units.feetToMeters(1)) {
+//                                    // Don't try to face towards it if we are too close
+//                                    return new Pose2d(gamepieceTranslation, robotState.getRotation());
+//                                } else {
+//                                    // Try to face towards the game piece
+//                                    var toGamepiece = new Rotation2d(relativeToRobot.getX(), relativeToRobot.getY());
+//                                    return new Pose2d(gamepieceTranslation, toGamepiece);
+//                                }
+//                            });
                         }
                 )
         );
 
         superstructure.setDefaultCommand(superstructure.idle());
-        coralIntake.setDefaultCommand(superstructure.coralIntakeIdle());
-        indexer.setDefaultCommand(superstructure.indexerIdle());
+//        coralIntake.setDefaultCommand(superstructure.coralIntakeIdle());
+//        indexer.setDefaultCommand(superstructure.indexerIdle());
         elevator.setDefaultCommand(superstructure.elevatorIdle());
         endEffector.setDefaultCommand(superstructure.endEffectorIdle());
     }
@@ -138,7 +134,7 @@ public class RobotContainer {
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
 
-        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
+//        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
 
         driverController.leftTrigger().toggleOnTrue(superstructure.autoAlignAndScore(
                 operatorDashboard::getSide,
@@ -148,12 +144,12 @@ public class RobotContainer {
         ));
 
         if (mode == Constants.Mode.SIM) {
-            driverController.x().onTrue(Commands.runOnce( () ->
+            driverController.x().onTrue(Commands.runOnce(() ->
                     SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(
                             new Pose2d(Units.inchesToMeters(650), Units.inchesToMeters(30), new Rotation2d(Math.random() * 2 * Math.PI))
                     ))
             ));
-            driverController.y().onTrue(Commands.runOnce( () ->
+            driverController.y().onTrue(Commands.runOnce(() ->
                     SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(
                             new Pose2d(Units.inchesToMeters(650), Units.inchesToMeters(285), new Rotation2d(Math.random() * 2 * Math.PI))
                     ))

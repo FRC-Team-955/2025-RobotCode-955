@@ -1,4 +1,4 @@
-package frc.robot.subsystems.coralintake;
-
-public class CoralIntakeTuningDashboard {
-}
+//package frc.robot.subsystems.coralintake;
+//
+//public class CoralIntakeTuningDashboard {
+//}
