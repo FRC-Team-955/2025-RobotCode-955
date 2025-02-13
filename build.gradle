@@ -64,7 +64,7 @@ wpi.java.debugJni = false
 def includeDesktopSupport = true
 
 // Configuration for AdvantageKit
-task(replayWatch, type: JavaExec) {
+tasks.register("replayWatch", JavaExec) {
     mainClass = "org.littletonrobotics.junction.ReplayWatch"
     classpath = sourceSets.main.runtimeClasspath
 }
@@ -151,6 +151,12 @@ tasks.register("deployEvent", Exec) {
 
     finalizedBy tasks.named("deploy")
 }
+
+tasks.register("deployAlerts", JavaExec) {
+    mainClass = "DeployAlerts"
+    classpath = sourceSets.test.runtimeClasspath
+}
+tasks.getByName("deploy").dependsOn(tasks.getByName("deployAlerts"))
 
 // https://gist.github.com/falOn-Dev/512c62e009025b3b7569b899bbef955a
 

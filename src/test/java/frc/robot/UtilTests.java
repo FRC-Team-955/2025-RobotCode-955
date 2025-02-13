@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class UtilTests {
+class UtilTests {
     @Test
     void findArrayIndexWithClosestValueTest() {
         double[] array = {0.5, 3, 1.342, 5.321, -1.23, -0.5, -3};
