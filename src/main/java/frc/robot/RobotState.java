@@ -13,15 +13,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
-import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.elevator.ElevatorConstants;
-import frc.robot.util.swerve.ModuleLimits;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 
 import java.util.function.Supplier;
-
-import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
 
 public class RobotState {
     @Getter
@@ -54,25 +49,6 @@ public class RobotState {
     private RobotState() {
     }
 
-    /* Subsystems */
-    private Elevator elevator;
-    private Drive drive;
-
-    public void afterSubsystemsInitialized() {
-        elevator = Elevator.get();
-        drive = Drive.get();
-    }
-
-    public double getChassisVelocity() {
-        return Math.sqrt(
-                Math.pow(drive.getMeasuredChassisSpeeds().vxMetersPerSecond, 2) +
-                        Math.pow(drive.getMeasuredChassisSpeeds().vyMetersPerSecond, 2));
-    }
-
-    public double getChassisAngularVelocity() {
-        return drive.getMeasuredChassisSpeeds().omegaRadiansPerSecond;
-    }
-
     public void applyOdometryUpdate(
             double currentTimeSeconds,
             Rotation2d gyroAngle,
@@ -103,7 +79,8 @@ public class RobotState {
     }
 
     public void setPose(Pose2d pose) {
-        poseEstimator.resetPosition(Drive.get().getRawGyroRotation(), Drive.get().getMeasuredModulePositions(), pose);
+        final var drive = Drive.get();
+        poseEstimator.resetPosition(drive.getRawGyroRotation(), drive.getMeasuredModulePositions(), pose);
     }
 
     public Command setPose(Supplier<Pose2d> pose) {
@@ -114,14 +91,5 @@ public class RobotState {
 
     public Command resetRotation() {
         return setPose(() -> new Pose2d(getTranslation(), new Rotation2d()));
-    }
-
-    public ModuleLimits getModuleLimits() {
-        var scalar = 1 - DriveConstants.elevatorSlowdownScalar * elevator.getPositionMeters() / ElevatorConstants.maxHeightMeters;
-        return new ModuleLimits(
-                driveConfig.maxLinearSpeedMetersPerSec() * scalar,
-                driveConfig.maxLinearAccelMetersPerSecSquared() * scalar,
-                driveConfig.maxTurnVelocityRadPerSec()
-        );
     }
 }

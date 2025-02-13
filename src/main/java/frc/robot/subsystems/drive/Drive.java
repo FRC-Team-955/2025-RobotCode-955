@@ -21,8 +21,11 @@ import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotState;
 import frc.robot.Util;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.util.characterization.FeedforwardCharacterization;
 import frc.robot.util.subsystem.SubsystemBaseExt;
+import frc.robot.util.swerve.ModuleLimits;
 import frc.robot.util.swerve.SwerveSetpoint;
 import frc.robot.util.swerve.SwerveSetpointGenerator;
 import lombok.Getter;
@@ -44,6 +47,7 @@ import static frc.robot.subsystems.drive.SparkOdometryThread.sparkLock;
 
 public class Drive extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
+    private final Elevator elevator = Elevator.get();
 
     @RequiredArgsConstructor
     public enum Goal {
@@ -270,7 +274,7 @@ public class Drive extends SubsystemBaseExt {
                 }
 
                 prevSetpoint = setpointGenerator.generateSetpoint(
-                        robotState.getModuleLimits(),
+                        getModuleLimits(),
                         prevSetpoint,
                         closedLoopSetpoint, // THIS SHOULD NOT BE DISCRETIZED
                         0.02
@@ -362,6 +366,27 @@ public class Drive extends SubsystemBaseExt {
             states[i] = modules[i].getPosition();
         }
         return states;
+    }
+
+    public double getMeasuredChassisLinearVelocityMetersPerSec() {
+        return Math.sqrt(
+                Math.pow(getMeasuredChassisSpeeds().vxMetersPerSecond, 2) +
+                        Math.pow(getMeasuredChassisSpeeds().vyMetersPerSecond, 2)
+        );
+    }
+
+    public double getMeasuredChassisAngularVelocityRadPerSec() {
+        return getMeasuredChassisSpeeds().omegaRadiansPerSecond;
+    }
+
+    @AutoLogOutput(key = "Drive/ModuleLimits")
+    public ModuleLimits getModuleLimits() {
+        var scalar = 1 - DriveConstants.elevatorSlowdownScalar * elevator.getPositionMeters() / ElevatorConstants.maxHeightMeters;
+        return new ModuleLimits(
+                driveConfig.maxLinearSpeedMetersPerSec() * scalar,
+                driveConfig.maxLinearAccelMetersPerSecSquared() * scalar,
+                driveConfig.maxTurnVelocityRadPerSec()
+        );
     }
 
     public AutoFactory createAutoFactory() {

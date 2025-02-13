@@ -42,21 +42,20 @@ public class RobotContainer {
     private final LoggedDashboardChooser<Command> characterizationChooser = new LoggedDashboardChooser<>("Characterization Choices");
 
     private final RobotState robotState = RobotState.get();
+    private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
 
     /* Subsystems */
     // Note: order does matter
-    private final Drive drive = Drive.get();
-    private final Vision vision = Vision.get();
+    private final Elevator elevator = Elevator.get();
     //    private final CoralIntake coralIntake = CoralIntake.get();
 //    private final Indexer indexer = Indexer.get();
-    private final Elevator elevator = Elevator.get();
     private final EndEffector endEffector = EndEffector.get();
+    private final Vision vision = Vision.get();
+    private final Drive drive = Drive.get();
     private final Superstructure superstructure = Superstructure.get();
     private final LEDs leds = LEDs.get();
-    private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
 
     public RobotContainer() {
-        robotState.afterSubsystemsInitialized();
         addAutos();
         addCharacterizations();
         setDefaultCommands();

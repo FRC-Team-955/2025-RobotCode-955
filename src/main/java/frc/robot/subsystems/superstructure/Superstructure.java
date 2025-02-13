@@ -162,8 +162,8 @@ public class Superstructure extends SubsystemBaseExt {
         return Commands.waitUntil(
                 () -> getDistance(robotState.getPose(), getFinalAlignPose(reefSideSupplier.get(), alignLeftSupplier.get())) < finalAlignToleranceMeters
                         && Math.abs(getAngle(robotState.getPose(), getFinalAlignPose(reefSideSupplier.get(), alignLeftSupplier.get())).getRadians()) < finalAlignToleranceRad
-                        && Math.abs(robotState.getChassisVelocity()) < finalAlignToleranceMetersPerSecond
-                        && Math.abs(robotState.getChassisAngularVelocity()) < finalAlignToleranceRadPerSecond
+                        && Math.abs(drive.getMeasuredChassisLinearVelocityMetersPerSec()) < finalAlignToleranceMetersPerSecond
+                        && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < finalAlignToleranceRadPerSecond
         );
     }
 
