@@ -31,17 +31,17 @@ public class ElevatorIOSim extends ElevatorIO {
     private double setpointVelocityRadPerSec;
     private double appliedVolts = 0.0;
 
+    /** Used when calculating feedforward */
+    private double lastVelocitySetpointRadPerSec = 0;
+
 
     @Override
     public void updateInputs(ElevatorIOInputs inputs) {
         // Run closed-loop control
         if (closedLoop) {
             var pid = pidController.calculate(metersToRad(sim.getPositionMeters()), setpointPositionRad);
-            // TODO: doesn't seem rignt
-            var ff = feedforward.calculateWithVelocities(
-                    metersToRad(sim.getVelocityMetersPerSecond()),
-                    setpointVelocityRadPerSec
-            );
+            var ff = feedforward.calculateWithVelocities(lastVelocitySetpointRadPerSec, setpointVelocityRadPerSec);
+            lastVelocitySetpointRadPerSec = setpointVelocityRadPerSec;
             appliedVolts = ff + pid;
         } else {
             pidController.reset();

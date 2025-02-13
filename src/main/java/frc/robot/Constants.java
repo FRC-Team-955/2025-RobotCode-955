@@ -76,7 +76,7 @@ public final class Constants {
     }
 
     public static final class CANivore {
-        public static final String busName = "phoenix";
+        public static final String busName = "electrical_problem";
         public static final boolean isCANFD = switch (Constants.identity) {
             case COMPBOT -> new CANBus(busName).isNetworkFD();
             case ALPHABOT, SIMBOT -> false;

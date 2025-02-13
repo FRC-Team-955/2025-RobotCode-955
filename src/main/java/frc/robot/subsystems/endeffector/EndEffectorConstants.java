@@ -11,7 +11,7 @@ public class EndEffectorConstants {
     protected static final RollersIO rollersIO = Constants.isReplay
             ? new RollersIO()
             : switch (Constants.identity) {
-        case COMPBOT -> null;
+        case COMPBOT -> new RollersIO();
         case SIMBOT, ALPHABOT -> new RollersIOSim(
                 new RollersConfig(
                         false,

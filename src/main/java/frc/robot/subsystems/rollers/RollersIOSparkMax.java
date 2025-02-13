@@ -54,6 +54,14 @@ public class RollersIOSparkMax extends RollersIO {
                 .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder);
         rollersConfig.positionGains().applySpark(config.closedLoop, ClosedLoopSlot.kSlot0); // position = slot0
         rollersConfig.velocityGains().applySpark(config.closedLoop, ClosedLoopSlot.kSlot1); // velocity = slot1
+        config
+                .signals
+                .primaryEncoderPositionAlwaysOn(true)
+                .primaryEncoderVelocityAlwaysOn(true)
+                .primaryEncoderVelocityPeriodMs(20)
+                .appliedOutputPeriodMs(20)
+                .busVoltagePeriodMs(20)
+                .outputCurrentPeriodMs(20);
         tryUntilOk(5, () -> motor.configure(
                 config,
                 SparkBase.ResetMode.kResetSafeParameters,
@@ -64,7 +72,6 @@ public class RollersIOSparkMax extends RollersIO {
 
     @Override
     public void updateInputs(RollersIO.RollersIOInputs inputs) {
-        // Update drive inputs
         sparkStickyFault = false;
         ifOk(motor, encoder::getPosition, (value) -> inputs.positionRad = value);
         ifOk(motor, encoder::getVelocity, (value) -> inputs.velocityRadPerSec = value);

@@ -77,21 +77,19 @@ public class DriveConstants {
 
     public static final ModuleConfig moduleConfig = switch (Constants.identity) {
         case COMPBOT -> new ModuleConfig(
-                PIDF.ofPDSVA(
-                        0.1, 0.0,
-                        // FL + FR + BL + BR
-                        Util.average(0.21524, 0.16554, 0.083665, 0.061984),
-                        Util.average(0.11224, 0.11693, 0.12106, 0.12449),
-                        Util.average(0.0038991, 0.0018671, 0.004602, 0.0059919)
+                PIDF.ofPDSV(
+                        0.0, 0.0,
+                        // TODO: units are messed up
+                        0.14, 0.12 // velocity - units are 12 / radPerSec, so multiply by 12
                 ),
-                PIDF.ofPDSVA(100.0, 0.0, 0.1, 1.91, 0),
+                PIDF.ofPD(5, 0.0),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
                 false,
                 false,
                 120,
-                60
+                20
         );
         case ALPHABOT -> new ModuleConfig(
                 PIDF.ofPDSVA(
@@ -133,10 +131,10 @@ public class DriveConstants {
         // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
         case COMPBOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
-                new ModuleIOTalonFXSparkMaxCANcoder(10, 12, 13, 0.189),
-                new ModuleIOTalonFXSparkMaxCANcoder(7, 8, 9, 1.891),
-                new ModuleIOTalonFXSparkMaxCANcoder(1, 2, 3, -0.009),
-                new ModuleIOTalonFXSparkMaxCANcoder(5, 6, 4, 1.525),
+                new ModuleIOTalonFXSparkMaxCANcoder(1, 1, 5, 1.577),
+                new ModuleIOTalonFXSparkMaxCANcoder(2, 2, 6, 1.770),
+                new ModuleIOTalonFXSparkMaxCANcoder(3, 3, 7, 3.105),
+                new ModuleIOTalonFXSparkMaxCANcoder(4, 4, 8, -2.817),
         };
         case ALPHABOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
@@ -156,7 +154,7 @@ public class DriveConstants {
     public static final GyroIO gyroIO = Constants.isReplay
             ? new GyroIO()
             : switch (Constants.identity) {
-        case COMPBOT -> new GyroIOPigeon2(11);
+        case COMPBOT -> new GyroIOPigeon2(9);
         case ALPHABOT -> new GyroIOPigeon2(7);
         case SIMBOT -> new GyroIOSim();
     };

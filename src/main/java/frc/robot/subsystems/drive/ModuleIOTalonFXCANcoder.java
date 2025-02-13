@@ -130,8 +130,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         turnConfig.CurrentLimits.StatorCurrentLimit = moduleConfig.turnCurrentLimit();
         turnConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         turnConfig.MotionMagic.MotionMagicCruiseVelocity = 100.0 / moduleConfig.turnGearRatio();
-        turnConfig.MotionMagic.MotionMagicAcceleration =
-                turnConfig.MotionMagic.MotionMagicCruiseVelocity / 0.100;
+        turnConfig.MotionMagic.MotionMagicAcceleration = turnConfig.MotionMagic.MotionMagicCruiseVelocity / 0.100;
         turnConfig.MotionMagic.MotionMagicExpo_kV = 0.12 * moduleConfig.turnGearRatio();
         turnConfig.MotionMagic.MotionMagicExpo_kA = 0.1;
         turnConfig.ClosedLoopGeneral.ContinuousWrap = true;

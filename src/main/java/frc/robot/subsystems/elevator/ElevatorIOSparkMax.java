@@ -1,20 +1,18 @@
 package frc.robot.subsystems.elevator;
 
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkBase;
-import com.revrobotics.spark.SparkLowLevel;
-import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.*;
+import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DigitalInput;
 
 import java.util.function.DoubleSupplier;
 
-import static frc.robot.subsystems.elevator.ElevatorConstants.*;
+import static frc.robot.subsystems.elevator.ElevatorConstants.gains;
+import static frc.robot.subsystems.elevator.ElevatorConstants.gearRatio;
 import static frc.robot.util.SparkUtil.*;
 
 public class ElevatorIOSparkMax extends ElevatorIO {
@@ -29,15 +27,15 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     private final DigitalInput limitSwitch;
 
     // Closed loop controllers
-    private final ProfiledPIDController controller;
-    private final ElevatorFeedforward ff;
+    private final SparkClosedLoopController controller;
+    private final ElevatorFeedforward ff = gains.toElevatorFF();
 
     // Connection debouncers
     private final Debouncer leadConnectedDebounce = new Debouncer(0.5);
     private final Debouncer followConnectedDebounce = new Debouncer(0.5);
 
-    private boolean closedLoop = true;
-    private double setpointVelocityRadPerSec;
+    /** Used when calculating feedforward */
+    private double lastVelocitySetpointRadPerSec = 0;
 
     public ElevatorIOSparkMax(
             int leadCanID,
@@ -49,11 +47,9 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         followMotor = new SparkMax(followCanID, SparkLowLevel.MotorType.kBrushless);
         leadEncoder = leadMotor.getEncoder();
         followEncoder = followMotor.getEncoder();
+        controller = leadMotor.getClosedLoopController();
 
         limitSwitch = new DigitalInput(limitSwitchID);
-
-        controller = gains.toProfiledPID(new TrapezoidProfile.Constraints(maxVelocityMetersPerSecond, maxAccelerationMetersPerSecondSquared));
-        ff = gains.toElevatorFF();
 
         // Configure motors
         leadConfig = new SparkMaxConfig();
@@ -62,7 +58,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         leadConfig
                 .inverted(leaderInverted)
                 .idleMode(SparkBaseConfig.IdleMode.kBrake)
-                .smartCurrentLimit(40)
+                .smartCurrentLimit(60)
                 .voltageCompensation(12.0);
         leadConfig
                 .encoder
@@ -70,6 +66,19 @@ public class ElevatorIOSparkMax extends ElevatorIO {
                 .velocityConversionFactor((2 * Math.PI) / 60.0 / gearRatio) // Rotor RPM -> Drum Rad/Sec
                 .uvwMeasurementPeriod(10)
                 .uvwAverageDepth(2);
+        leadConfig
+                .closedLoop
+                .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder);
+        gains.applySpark(leadConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        leadConfig
+                .signals
+                .primaryEncoderPositionAlwaysOn(true)
+                .primaryEncoderPositionPeriodMs(20)
+                .primaryEncoderVelocityAlwaysOn(true)
+                .primaryEncoderVelocityPeriodMs(20)
+                .appliedOutputPeriodMs(20)
+                .busVoltagePeriodMs(20)
+                .outputCurrentPeriodMs(20);
 
         followConfig.apply(leadConfig).follow(leadMotor, true);
 
@@ -88,15 +97,8 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     }
 
     @Override
-    public void updateInputs(ElevatorIO.ElevatorIOInputs inputs) {
-        if (closedLoop) {
-            leadMotor.setVoltage(
-                    controller.calculate(leadEncoder.getPosition())
-                            + ff.calculate(setpointVelocityRadPerSec));
-        } else {
-            controller.reset(new TrapezoidProfile.State(leadEncoder.getPosition(), leadEncoder.getVelocity()));
-        }
-        // Update drive inputs
+    public void updateInputs(ElevatorIOInputs inputs) {
+        // Update lead inputs
         sparkStickyFault = false;
         ifOk(leadMotor, leadEncoder::getPosition, (value) -> inputs.leaderPositionRad = value);
         ifOk(leadMotor, leadEncoder::getVelocity, (value) -> inputs.leaderVelocityRadPerSec = value);
@@ -108,6 +110,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         ifOk(leadMotor, leadMotor::getOutputCurrent, (value) -> inputs.leaderCurrentAmps = value);
         inputs.leaderConnected = leadConnectedDebounce.calculate(!sparkStickyFault);
 
+        // Update follow inputs
         sparkStickyFault = false;
         ifOk(followMotor, followEncoder::getPosition, (value) -> inputs.followerPositionRad = value);
         ifOk(followMotor, followEncoder::getVelocity, (value) -> inputs.followerVelocityRadPerSec = value);
@@ -120,7 +123,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         inputs.followerConnected = followConnectedDebounce.calculate(!sparkStickyFault);
 
         inputs.limitSwitchConnected = true;
-        inputs.limitSwitchTriggered = limitSwitch.get();
+        inputs.limitSwitchTriggered = !limitSwitch.get();
     }
 
     @Override
@@ -140,15 +143,21 @@ public class ElevatorIOSparkMax extends ElevatorIO {
 
     @Override
     public void setOpenLoop(double output) {
-        closedLoop = false;
+        lastVelocitySetpointRadPerSec = 0;
         leadMotor.setVoltage(output);
     }
 
     @Override
     public void setClosedLoop(double positionRad, double velocityRadPerSec) {
-        closedLoop = true;
-        controller.setGoal(new TrapezoidProfile.State(positionRad, velocityRadPerSec));
-        setpointVelocityRadPerSec = velocityRadPerSec;
+        var ffVolts = ff.calculateWithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
+        lastVelocitySetpointRadPerSec = velocityRadPerSec;
+        controller.setReference(
+                positionRad,
+                SparkBase.ControlType.kPosition,
+                ClosedLoopSlot.kSlot0,
+                ffVolts,
+                SparkClosedLoopController.ArbFFUnits.kVoltage
+        );
     }
 
     @Override
