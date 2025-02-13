@@ -68,7 +68,7 @@ public class RollersIOSim extends RollersIO {
 
     @Override
     public void setBrakeMode(boolean enable) {
-        System.out.println("Setting rollers break mode to " + enable);
+        System.out.println("Setting rollers brake mode to " + enable);
     }
 
     @Override
