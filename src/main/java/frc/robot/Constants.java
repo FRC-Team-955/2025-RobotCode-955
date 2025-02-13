@@ -57,6 +57,7 @@ public final class Constants {
          * If replayIdentity is null, log replay will not run and simulation will run like normal.
          */
         public static final RobotIdentity replayIdentity = null;
+        @SuppressWarnings("ConstantValue")
         public static final boolean shouldReplay = RobotBase.isSimulation() && replayIdentity != null; // Don't modify please!
 
         /**
@@ -76,7 +77,7 @@ public final class Constants {
     }
 
     public static final class CANivore {
-        public static final String busName = "electrical_problem";
+        public static final String busName = "*"; // the canivore is called electrical_problem, but using * is better because it will select any canivore it sees
         public static final boolean isCANFD = switch (Constants.identity) {
             case COMPBOT -> new CANBus(busName).isNetworkFD();
             case ALPHABOT, SIMBOT -> false;
