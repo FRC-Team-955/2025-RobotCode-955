@@ -58,6 +58,7 @@
 //
 //    @Override
 //    public void periodicAfterCommands() {
+//        // TODO: coast override
 //        ////////////// ROLLERS //////////////
 //        Logger.recordOutput("Indexer/Rollers/Goal", rollersGoal);
 //        if (rollersGoal.setpointRadPerSec != null) {

@@ -37,6 +37,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Volts;
+import static frc.robot.OperatorDashboard.coastOverride;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 import static frc.robot.subsystems.drive.PhoenixOdometryThread.phoenixLock;
 import static frc.robot.subsystems.drive.SparkOdometryThread.sparkLock;
@@ -159,11 +160,15 @@ public class Drive extends SubsystemBaseExt {
         Logger.processInputs("Inputs/Drive/Gyro", gyroInputs);
 
         for (var module : modules) {
-            module.periodicBeforeCommands();
+            module.updateAndProcessInputs();
         }
 
         phoenixLock.unlock();
         sparkLock.unlock();
+
+        for (var module : modules) {
+            module.periodicBeforeCommands();
+        }
 
         // Update gyro alert
         gyroDisconnectedAlert.set(!gyroInputs.connected);
@@ -218,6 +223,12 @@ public class Drive extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
+        if (coastOverride.hasChanged(hashCode())) {
+            for (var module : modules) {
+                module.setBrakeMode(!coastOverride.get());
+            }
+        }
+
         Logger.recordOutput("Drive/Goal", goal);
 
         // Stop moving when idle or disabled

@@ -133,6 +133,16 @@ public class ModuleIOSim extends ModuleIO {
     }
 
     @Override
+    public void setDriveBrakeMode(boolean enable) {
+        System.out.println("Setting drive brake mode to " + enable);
+    }
+
+    @Override
+    public void setTurnBrakeMode(boolean enable) {
+        System.out.println("Setting turn brake mode to " + enable);
+    }
+
+    @Override
     public void setDriveOpenLoop(double output) {
         driveClosedLoop = false;
         driveAppliedVolts = output;

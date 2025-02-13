@@ -83,6 +83,7 @@
 //
 //    @Override
 //    public void periodicAfterCommands() {
+//        // TODO: coast override
 //        ////////////// PIVOT //////////////
 //        Logger.recordOutput("CoralIntake/Pivot/Goal", pivotGoal);
 //        if (pivotGoal.setpointRad != null) {

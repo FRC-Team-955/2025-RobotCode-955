@@ -68,6 +68,11 @@ public class ElevatorIOSim extends ElevatorIO {
     }
 
     @Override
+    public void setBrakeMode(boolean enable) {
+        System.out.println("Setting elevator break mode to " + enable);
+    }
+
+    @Override
     public void setOpenLoop(double output) {
         closedLoop = false;
         appliedVolts = output;

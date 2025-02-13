@@ -15,6 +15,8 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
 
+import static frc.robot.OperatorDashboard.coastOverride;
+
 public class EndEffector extends SubsystemBaseExt {
     private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
     private final Elevator elevator = Elevator.get();
@@ -62,6 +64,10 @@ public class EndEffector extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
+        if (coastOverride.hasChanged(hashCode())) {
+            rollersIO.setBrakeMode(!coastOverride.get());
+        }
+
         ////////////// ROLLERS //////////////
         Logger.recordOutput("EndEffector/Rollers/Goal", rollersGoal);
         if (rollersGoal.setpointRadPerSec != null) {

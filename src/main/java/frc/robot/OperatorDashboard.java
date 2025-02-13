@@ -1,5 +1,6 @@
 package frc.robot;
 
+import frc.robot.util.network.LoggedNetworkBooleanExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
 import lombok.Getter;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
@@ -10,9 +11,11 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 public class OperatorDashboard extends VirtualSubsystem {
-    private final Map<ReefZoneSide, LoggedNetworkBoolean> reefZoneSides = convertEnumToMap("ReefZoneSides", ReefZoneSide.values());
-    private final Map<LocalReefSide, LoggedNetworkBoolean> localReefSides = convertEnumToMap("LocalReefSides", LocalReefSide.values());
-    private final Map<CoralLevel, LoggedNetworkBoolean> coralLevels = convertEnumToMap("CoralLevels", CoralLevel.values());
+    public static final LoggedNetworkBooleanExt coastOverride = new LoggedNetworkBooleanExt("/Tuning/OperatorDashboard/CoastOverride", false);
+
+    private final Map<ReefZoneSide, LoggedNetworkBoolean> reefZoneSides = generateTogglesForEnum("ReefZoneSides", ReefZoneSide.values());
+    private final Map<LocalReefSide, LoggedNetworkBoolean> localReefSides = generateTogglesForEnum("LocalReefSides", LocalReefSide.values());
+    private final Map<CoralLevel, LoggedNetworkBoolean> coralLevels = generateTogglesForEnum("CoralLevels", CoralLevel.values());
 
     @Getter
     private ReefZoneSide selectedReefZoneSide = ReefZoneSide.LeftFront;
@@ -37,9 +40,9 @@ public class OperatorDashboard extends VirtualSubsystem {
 
     @Override
     public void periodicBeforeCommands() {
-        handleEnum(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
-        handleEnum(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);
-        handleEnum(coralLevels, selectedCoralLevel, selectNew -> selectedCoralLevel = selectNew);
+        handleEnumToggles(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
+        handleEnumToggles(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);
+        handleEnumToggles(coralLevels, selectedCoralLevel, selectNew -> selectedCoralLevel = selectNew);
     }
 
     public enum ReefZoneSide {
@@ -63,7 +66,7 @@ public class OperatorDashboard extends VirtualSubsystem {
         L4
     }
 
-    private static <E extends Enum<E>> void handleEnum(
+    private static <E extends Enum<E>> void handleEnumToggles(
             Map<E, LoggedNetworkBoolean> map,
             E currentlySelected,
             Consumer<E> select
@@ -96,12 +99,12 @@ public class OperatorDashboard extends VirtualSubsystem {
         }
     }
 
-    private static <E extends Enum<E>> Map<E, LoggedNetworkBoolean> convertEnumToMap(String name, E[] values) {
+    private static <E extends Enum<E>> Map<E, LoggedNetworkBoolean> generateTogglesForEnum(String name, E[] values) {
         return Map.ofEntries(
                 Arrays.stream(values)
                         .map(side -> Map.entry(
                                 side,
-                                new LoggedNetworkBoolean("/OperatorDashboard/" + name + "/" + side.name(), false)
+                                new LoggedNetworkBoolean("/Tuning/OperatorDashboard/" + name + "/" + side.name(), false)
                         ))
                         .toArray((IntFunction<Map.Entry<E, LoggedNetworkBoolean>[]>) Map.Entry[]::new)
         );

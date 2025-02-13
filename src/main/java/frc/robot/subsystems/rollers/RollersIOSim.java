@@ -67,6 +67,11 @@ public class RollersIOSim extends RollersIO {
     }
 
     @Override
+    public void setBrakeMode(boolean enable) {
+        System.out.println("Setting rollers break mode to " + enable);
+    }
+
+    @Override
     public void setOpenLoop(double output) {
         appliedVolts = output;
         closedLoop = false;

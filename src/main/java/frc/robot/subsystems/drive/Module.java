@@ -40,10 +40,12 @@ public class Module {
         turnEncoderDisconnectedAlert = new Alert("Disconnected turn encoder on module " + index + ".", AlertType.kError);
     }
 
-    public void periodicBeforeCommands() {
+    public void updateAndProcessInputs() {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Drive/Module" + index, inputs);
+    }
 
+    public void periodicBeforeCommands() {
         // Update alerts
         driveDisconnectedAlert.set(!inputs.driveConnected);
         turnDisconnectedAlert.set(!inputs.turnConnected);

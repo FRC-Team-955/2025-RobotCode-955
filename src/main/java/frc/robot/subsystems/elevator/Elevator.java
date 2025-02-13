@@ -17,6 +17,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Volts;
+import static frc.robot.OperatorDashboard.coastOverride;
 import static frc.robot.RobotMechanism.middleOfRobot;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
@@ -105,6 +106,10 @@ public class Elevator extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
+        if (coastOverride.hasChanged(hashCode())) {
+            io.setBrakeMode(!coastOverride.get());
+        }
+
         Logger.recordOutput("Elevator/Goal", goal);
         if (goal.setpointMeters != null) {
             var setpointMeters = goal.setpointMeters.getAsDouble();
