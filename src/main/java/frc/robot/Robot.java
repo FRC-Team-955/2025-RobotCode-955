@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.util.subsystem.SubsystemBaseExt;
+import frc.robot.util.subsystem.VirtualSubsystem;
 import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -40,14 +41,22 @@ import java.util.HashSet;
  * project.
  */
 public class Robot extends LoggedRobot {
-    private static final HashSet<SubsystemBaseExt> extendedSubsystems = new HashSet<>();
     private final RobotContainer robotContainer;
     private Command autonomousCommand;
     private double autonomousStart;
 
+    private static final HashSet<SubsystemBaseExt> extendedSubsystems = new HashSet<>();
+    private static final HashSet<VirtualSubsystem> virtualSubsystems = new HashSet<>();
+
     public static void registerExtendedSubsystem(SubsystemBaseExt subsystem) {
         if (!extendedSubsystems.add(subsystem)) {
             Util.error("An extended subsystem has been registered more than once: " + subsystem.getName());
+        }
+    }
+
+    public static void registerVirtualSubsystem(VirtualSubsystem subsystem) {
+        if (!virtualSubsystems.add(subsystem)) {
+            Util.error("A virtual subsystem has been registered more than once: " + subsystem.getClass().getName());
         }
     }
 
@@ -156,10 +165,18 @@ public class Robot extends LoggedRobot {
         // Switch thread to high priority to improve loop timing
         Threads.setCurrentThreadPriority(true, 99);
 
+        for (var subsystem : virtualSubsystems) {
+            subsystem.periodicBeforeCommands();
+        }
+
         // Run the command scheduler.
         // This first runs all subsystem periodic() (AKA periodicBeforeCommands())
         // and then runs all of the commands.
         CommandScheduler.getInstance().run();
+
+        for (var subsystem : virtualSubsystems) {
+            subsystem.periodicAfterCommands();
+        }
 
         for (var subsystem : extendedSubsystems) {
             subsystem.periodicAfterCommands();

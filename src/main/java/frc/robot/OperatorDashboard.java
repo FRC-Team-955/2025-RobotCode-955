@@ -1,31 +1,25 @@
 package frc.robot;
 
-import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.util.subsystem.SubsystemBaseExt;
+import frc.robot.util.subsystem.VirtualSubsystem;
 import lombok.Getter;
-import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
-public class OperatorDashboard extends SubsystemBaseExt {
-    /* Dashboard Inputs */
-    private final LoggedNetworkBoolean leftSideAlign = new LoggedNetworkBoolean("/Tuning/AlignLeftSide", true);
-    private final LoggedNetworkBoolean leftFront = new LoggedNetworkBoolean("/Tuning/leftFront", false);
-    private final LoggedNetworkBoolean middleFront = new LoggedNetworkBoolean("/Tuning/middleFront", false);
-    private final LoggedNetworkBoolean rightFront = new LoggedNetworkBoolean("/Tuning/rightFront", false);
-    private final LoggedNetworkBoolean rightBack = new LoggedNetworkBoolean("/Tuning/rightBack", false);
-    private final LoggedNetworkBoolean middleBack = new LoggedNetworkBoolean("/Tuning/middleBack", false);
-    private final LoggedNetworkBoolean leftBack = new LoggedNetworkBoolean("/Tuning/leftBack", false);
+import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.IntFunction;
 
-    private final LoggedNetworkBoolean l1 = new LoggedNetworkBoolean("/Tuning/L1", false);
-    private final LoggedNetworkBoolean l2 = new LoggedNetworkBoolean("/Tuning/L2", false);
-    private final LoggedNetworkBoolean l3 = new LoggedNetworkBoolean("/Tuning/L3", false);
-    private final LoggedNetworkBoolean l4 = new LoggedNetworkBoolean("/Tuning/L4", true);
+public class OperatorDashboard extends VirtualSubsystem {
+    private final Map<ReefZoneSide, LoggedNetworkBoolean> reefZoneSides = convertEnumToMap("ReefZoneSides", ReefZoneSide.values());
+    private final Map<LocalReefSide, LoggedNetworkBoolean> localReefSides = convertEnumToMap("LocalReefSides", LocalReefSide.values());
+    private final Map<CoralLevel, LoggedNetworkBoolean> coralLevels = convertEnumToMap("CoralLevels", CoralLevel.values());
 
     @Getter
-    private int side = 0;
-
+    private ReefZoneSide selectedReefZoneSide = ReefZoneSide.LeftFront;
     @Getter
-    private int level = 4;
+    private LocalReefSide selectedLocalReefSide = LocalReefSide.Left;
+    @Getter
+    private CoralLevel selectedCoralLevel = CoralLevel.L4;
 
     private static OperatorDashboard instance;
 
@@ -38,88 +32,78 @@ public class OperatorDashboard extends SubsystemBaseExt {
         return instance;
     }
 
-    public OperatorDashboard() {
-    }
-
-    private void setAllSidesFalse() {
-        leftFront.set(false);
-        middleFront.set(false);
-        rightFront.set(false);
-        rightBack.set(false);
-        middleBack.set(false);
-        leftBack.set(false);
-    }
-
-    private void setAllLevelsFalse() {
-        l1.set(false);
-        l2.set(false);
-        l3.set(false);
-        l4.set(false);
+    private OperatorDashboard() {
     }
 
     @Override
     public void periodicBeforeCommands() {
-        if (leftFront.get() && side != 0) {
-            setAllSidesFalse();
-            leftFront.set(true);
-            side = 0;
-        } else if (middleFront.get() && side != 1) {
-            setAllSidesFalse();
-            middleFront.set(true);
-            side = 1;
-        } else if (rightFront.get() && side != 2) {
-            setAllSidesFalse();
-            rightFront.set(true);
-            side = 2;
-        } else if (rightBack.get() && side != 3) {
-            setAllSidesFalse();
-            rightBack.set(true);
-            side = 3;
-        } else if (middleBack.get() && side != 4) {
-            setAllSidesFalse();
-            middleBack.set(true);
-            side = 4;
-        } else if (leftBack.get() && side != 5) {
-            setAllSidesFalse();
-            leftBack.set(true);
-            side = 5;
-        }
-        if (l1.get() && level != 1) {
-            setAllLevelsFalse();
-            l1.set(true);
-            level = 1;
-        } else if (l2.get() && level != 2) {
-            setAllLevelsFalse();
-            l2.set(true);
-            level = 2;
-        } else if (l3.get() && level != 3) {
-            setAllLevelsFalse();
-            l3.set(true);
-            level = 3;
-        } else if (l4.get() && level != 4) {
-            setAllLevelsFalse();
-            l4.set(true);
-            level = 4;
-        }
-
-        Logger.recordOutput("OperatorDashboard/side", side);
-        Logger.recordOutput("OperatorDashboard/level", getElevatorLevel());
+        handleEnum(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
+        handleEnum(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);
+        handleEnum(coralLevels, selectedCoralLevel, selectNew -> selectedCoralLevel = selectNew);
     }
 
-    public boolean getLeftSide() {
-        return leftSideAlign.get();
+    public enum ReefZoneSide {
+        LeftFront,
+        MiddleFront,
+        RightFront,
+        RightBack,
+        MiddleBack,
+        LeftBack
     }
 
-    public Elevator.Goal getElevatorLevel() {
-        if (level == 1) {
-            return Elevator.Goal.SCORE_L1;
-        } else if (level == 2) {
-            return Elevator.Goal.SCORE_L2;
-        } else if (level == 3) {
-            return Elevator.Goal.SCORE_L3;
-        } else if (level == 4) {
-            return Elevator.Goal.SCORE_L4;
+    public enum LocalReefSide {
+        Left,
+        Right
+    }
+
+    public enum CoralLevel {
+        L1,
+        L2,
+        L3,
+        L4
+    }
+
+    private static <E extends Enum<E>> void handleEnum(
+            Map<E, LoggedNetworkBoolean> map,
+            E currentlySelected,
+            Consumer<E> select
+    ) {
+        // If none are toggled
+        if (map.values().stream().noneMatch(LoggedNetworkBoolean::get)) {
+            // Enable the last selected one
+            map.get(currentlySelected).set(true);
+        } else {
+            // Otherwise, look for changes in the toggles
+            for (var entry : map.entrySet()) {
+                LoggedNetworkBoolean toggle = entry.getValue();
+                // If it's toggled
+                if (toggle.get()) {
+                    E side = entry.getKey();
+                    // If it wasn't already selected
+                    if (side != currentlySelected) {
+                        // Select the new value
+                        select.accept(side);
+                        // Set the rest to false
+                        for (var entry1 : map.entrySet()) {
+                            if (entry1.getKey() != side) {
+                                entry1.getValue().set(false);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
         }
-        return Elevator.Goal.STOW;
+    }
+
+    private static <E extends Enum<E>> Map<E, LoggedNetworkBoolean> convertEnumToMap(String name, E[] values) {
+        return Map.ofEntries(
+                Arrays.stream(values)
+                        .map(side -> Map.entry(
+                                side,
+                                new LoggedNetworkBoolean("/OperatorDashboard/" + name + "/" + side.name(), false)
+                        ))
+                        .toArray((IntFunction<Map.Entry<E, LoggedNetworkBoolean>[]>) Map.Entry[]::new)
+        );
     }
 }

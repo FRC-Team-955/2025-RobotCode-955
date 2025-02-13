@@ -10,7 +10,6 @@ import edu.wpi.first.math.util.Units;
 import static frc.robot.Util.shouldFlip;
 
 public class FieldLocations {
-
     /* Auto Align */
     /**
      * Notes:
