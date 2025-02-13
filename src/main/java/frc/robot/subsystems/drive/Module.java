@@ -108,6 +108,10 @@ public class Module {
         return inputs.drivePositionRad;
     }
 
+    public double getVelocityRadPerSec() {
+        return inputs.driveVelocityRadPerSec;
+    }
+
     /**
      * Returns the current drive position of the module in meters.
      */

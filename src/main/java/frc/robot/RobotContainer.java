@@ -74,6 +74,7 @@ public class RobotContainer {
     private void addCharacterizations() {
         ////////////////////// DRIVE //////////////////////
 
+        characterizationChooser.addOption("Drive Feedforward Characterization", drive.feedforwardCharacterization());
         characterizationChooser.addOption("Drive Wheel Radius Characterization", drive.wheelRadiusCharacterization(Drive.WheelRadiusCharacterization.Direction.CLOCKWISE));
         characterizationChooser.addOption("Drive SysId (Quasistatic Forward)", drive.sysId.quasistatic(SysIdRoutine.Direction.kForward));
         characterizationChooser.addOption("Drive SysId (Quasistatic Reverse)", drive.sysId.quasistatic(SysIdRoutine.Direction.kReverse));
@@ -118,11 +119,11 @@ public class RobotContainer {
                 )
         );
 
-        superstructure.setDefaultCommand(superstructure.idle());
+//        superstructure.setDefaultCommand(superstructure.idle());
 //        coralIntake.setDefaultCommand(superstructure.coralIntakeIdle());
 //        indexer.setDefaultCommand(superstructure.indexerIdle());
         elevator.setDefaultCommand(superstructure.elevatorIdle());
-        endEffector.setDefaultCommand(superstructure.endEffectorIdle());
+//        endEffector.setDefaultCommand(superstructure.endEffectorIdle());
     }
 
     /**
@@ -134,14 +135,15 @@ public class RobotContainer {
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
 
+        driverController.rightTrigger().toggleOnTrue(elevator.setGoal(Elevator.Goal.LOW_TESTING_ONLY).andThen(Commands.idle()));
 //        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
 
-        driverController.leftTrigger().toggleOnTrue(superstructure.autoAlignAndScore(
-                operatorDashboard::getSide,
-                operatorDashboard::getLeftSide,
-                operatorDashboard::getElevatorLevel,
-                driverController.leftBumper()
-        ));
+//        driverController.leftTrigger().toggleOnTrue(superstructure.autoAlignAndScore(
+//                operatorDashboard::getSide,
+//                operatorDashboard::getLeftSide,
+//                operatorDashboard::getElevatorLevel,
+//                driverController.leftBumper()
+//        ));
 
         if (mode == Constants.Mode.SIM) {
             driverController.x().onTrue(Commands.runOnce(() ->

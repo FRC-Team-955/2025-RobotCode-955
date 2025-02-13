@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotState;
 import frc.robot.Util;
+import frc.robot.util.characterization.FeedforwardCharacterization;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import frc.robot.util.swerve.SwerveSetpoint;
 import frc.robot.util.swerve.SwerveSetpointGenerator;
@@ -172,42 +173,46 @@ public class Drive extends SubsystemBaseExt {
         double[] driveSampleTimestamps = modules[0].getOdometryDriveTimestamps();
         double[] turnSampleTimestamps = modules[0].getOdometryTurnTimestamps();
         double[] gyroSampleTimestamps = gyroInputs.odometryYawTimestamps;
-        // Assume drive has the most samples
-        for (int driveSample = 0; driveSample < driveSampleTimestamps.length; driveSample++) {
-            double driveSampleTimestamp = driveSampleTimestamps[driveSample];
-            // Find the closest turn sample
-            int turnSample = Util.findArrayIndexWithClosestValue(driveSampleTimestamp, turnSampleTimestamps);
+        // Sanity check in case something is wrong (if a motor controller is disconnected, for example) - gyro sanity check comes later
+        if (driveSampleTimestamps.length > 0 && turnSampleTimestamps.length > 0) {
+            // Assume drive has the most samples
+            for (int driveSample = 0; driveSample < driveSampleTimestamps.length; driveSample++) {
+                double driveSampleTimestamp = driveSampleTimestamps[driveSample];
+                // Find the closest turn sample
+                int turnSample = Util.findArrayIndexWithClosestValue(driveSampleTimestamp, turnSampleTimestamps);
 
-            // Read wheel positions and deltas from each module
-            SwerveModulePosition[] modulePositions = new SwerveModulePosition[modules.length];
-            SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[modules.length];
-            for (int moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
-                double positionMeters = modules[moduleIndex].getOdometryDrivePositionsRad()[driveSample] * driveConfig.wheelRadiusMeters();
-                double angle = modules[moduleIndex].getOdometryTurnPositionsRad()[turnSample];
-                var modulePosition = new SwerveModulePosition(positionMeters, new Rotation2d(angle));
+                // Read wheel positions and deltas from each module
+                SwerveModulePosition[] modulePositions = new SwerveModulePosition[modules.length];
+                SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[modules.length];
+                for (int moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
+                    double positionMeters = modules[moduleIndex].getOdometryDrivePositionsRad()[driveSample] * driveConfig.wheelRadiusMeters();
+                    double angle = modules[moduleIndex].getOdometryTurnPositionsRad()[turnSample];
+                    var modulePosition = new SwerveModulePosition(positionMeters, new Rotation2d(angle));
 
-                modulePositions[moduleIndex] = modulePosition;
-                moduleDeltas[moduleIndex] = new SwerveModulePosition(
-                        modulePosition.distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
-                        modulePosition.angle
-                );
-                lastModulePositions[moduleIndex] = modulePosition;
+                    modulePositions[moduleIndex] = modulePosition;
+                    moduleDeltas[moduleIndex] = new SwerveModulePosition(
+                            modulePosition.distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
+                            modulePosition.angle
+                    );
+                    lastModulePositions[moduleIndex] = modulePosition;
+                }
+
+                // Update gyro angle
+                // Sanity check in case gyro is connected but not giving timestamps
+                if (gyroInputs.connected && gyroSampleTimestamps.length > 0) {
+                    // Find the closest gyro sample
+                    int gyroSample = Util.findArrayIndexWithClosestValue(driveSampleTimestamp, gyroSampleTimestamps);
+                    // Use the real gyro angle
+                    rawGyroRotation = new Rotation2d(gyroInputs.odometryYawPositionsRad[gyroSample]);
+                } else {
+                    // Use the angle delta from the kinematics and module deltas
+                    Twist2d twist = robotState.getKinematics().toTwist2d(moduleDeltas);
+                    rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
+                }
+
+                // Apply update
+                robotState.applyOdometryUpdate(driveSampleTimestamp, rawGyroRotation, modulePositions);
             }
-
-            // Update gyro angle
-            if (gyroInputs.connected) {
-                // Find the closest gyro sample
-                int gyroSample = Util.findArrayIndexWithClosestValue(driveSampleTimestamp, gyroSampleTimestamps);
-                // Use the real gyro angle
-                rawGyroRotation = new Rotation2d(gyroInputs.odometryYawPositionsRad[gyroSample]);
-            } else {
-                // Use the angle delta from the kinematics and module deltas
-                Twist2d twist = robotState.getKinematics().toTwist2d(moduleDeltas);
-                rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
-            }
-
-            // Apply update
-            robotState.applyOdometryUpdate(driveSampleTimestamp, rawGyroRotation, modulePositions);
         }
     }
 
@@ -542,6 +547,19 @@ public class Drive extends SubsystemBaseExt {
                 runDrive(linearVelocity, omegaMagnitude);
             }
         }).withName("Drive Joystick");
+    }
+
+    public Command feedforwardCharacterization() {
+        return withGoal(Goal.CHARACTERIZATION, new FeedforwardCharacterization(
+                volts -> {
+                    for (var module : modules) {
+                        module.runCharacterization(volts);
+                    }
+                },
+                () -> Arrays.stream(modules).mapToDouble(Module::getVelocityRadPerSec).toArray(),
+                modules.length,
+                this
+        ));
     }
 
     public Command wheelRadiusCharacterization(WheelRadiusCharacterization.Direction direction) {

@@ -7,7 +7,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
 import frc.robot.Util;
-import frc.robot.util.characterization.FeedforwardCharacterization;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +27,7 @@ public class Elevator extends SubsystemBaseExt {
     public enum Goal {
         CHARACTERIZATION(null),
         STOW(() -> 0),
+        LOW_TESTING_ONLY(() -> 0.75),
         SCORE_L1(() -> 1.69 - Units.inchesToMeters(54)),
         SCORE_L2(() -> 1.69 - Units.inchesToMeters(40.125)),
         SCORE_L3(() -> 1.69 - Units.inchesToMeters(24.375)),
@@ -169,12 +169,18 @@ public class Elevator extends SubsystemBaseExt {
         return radToMeters(inputs.leaderVelocityRadPerSec);
     }
 
-    public Command feedforwardCharacterization() {
+//    public Command feedforwardCharacterization() {
+//        return setGoal(Goal.CHARACTERIZATION)
+//                .andThen(new FeedforwardCharacterization(
+//                        io::setOpenLoop,
+//                        () -> inputs.leaderVelocityRadPerSec,
+//                        this
+//                ));
+//    }
+
+    public Command runOpenLoop() {
         return setGoal(Goal.CHARACTERIZATION)
-                .andThen(new FeedforwardCharacterization(
-                        io::setOpenLoop,
-                        () -> inputs.leaderVelocityRadPerSec,
-                        this
-                ));
+                .andThen(run(() -> io.setOpenLoop(1)))
+                .finallyDo(() -> io.setOpenLoop(0));
     }
 }
