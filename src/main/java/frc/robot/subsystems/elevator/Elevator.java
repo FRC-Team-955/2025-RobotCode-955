@@ -134,6 +134,7 @@ public class Elevator extends SubsystemBaseExt {
             Logger.recordOutput("Elevator/ClosedLoop", true);
             Logger.recordOutput("Elevator/UsingGentleProfile", shouldUseGentleProfile);
 
+            Logger.recordOutput("Elevator/Setpoint/GoalPositionMeters", setpointMeters);
             Logger.recordOutput("Elevator/Setpoint/PositionMeters", previousState.position);
             Logger.recordOutput("Elevator/Setpoint/VelocityMetersPerSec", previousState.velocity);
         } else {
