@@ -79,8 +79,7 @@ public class DriveConstants {
         case COMPBOT -> new ModuleConfig(
                 PIDF.ofPDSV(
                         0.0, 0.0,
-                        // TODO: units are messed up
-                        0.14, 0.12 // velocity - units are 12 / radPerSec, so multiply by 12
+                        0.14, 0.12
                 ),
                 PIDF.ofPD(5, 0.0),
                 Mk4iGearRatios.L2,
