@@ -137,6 +137,10 @@ public class RobotContainer {
         driverController.rightTrigger().toggleOnTrue(elevator.setGoal(Elevator.Goal.LOW_TESTING_ONLY).andThen(Commands.idle()));
 //        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
 
+        driverController.leftTrigger().onTrue(superstructure.scoreCoralManual(
+                driverController.leftTrigger(),
+                driverController.leftBumper()
+        ));
 //        driverController.leftTrigger().toggleOnTrue(superstructure.autoAlignAndScore(
 //                operatorDashboard::getSide,
 //                operatorDashboard::getLeftSide,
