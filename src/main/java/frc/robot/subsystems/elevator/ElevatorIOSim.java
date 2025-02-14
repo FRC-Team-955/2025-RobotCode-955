@@ -10,8 +10,9 @@ import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
 public class ElevatorIOSim extends ElevatorIO {
+    private static final DCMotor motors = DCMotor.getNEO(2);
     private final ElevatorSim sim = new ElevatorSim(
-            DCMotor.getNEO(2),
+            motors,
             gearRatio,
             6.8,
             drumRadiusMeters,
@@ -30,6 +31,7 @@ public class ElevatorIOSim extends ElevatorIO {
     private double setpointPositionRad;
     private double setpointVelocityRadPerSec;
     private double appliedVolts = 0.0;
+    private double appliedAmps = 0.0;
 
     /** Used when calculating feedforward */
     private double lastVelocitySetpointRadPerSec = 0;
@@ -39,10 +41,17 @@ public class ElevatorIOSim extends ElevatorIO {
     public void updateInputs(ElevatorIOInputs inputs) {
         // Run closed-loop control
         if (closedLoop) {
-            var pid = pidController.calculate(metersToRad(sim.getPositionMeters()), setpointPositionRad);
-            var ff = feedforward.calculateWithVelocities(lastVelocitySetpointRadPerSec, setpointVelocityRadPerSec);
-            lastVelocitySetpointRadPerSec = setpointVelocityRadPerSec;
-            appliedVolts = ff + pid;
+            if (useCurrentControl) {
+                var pid = pidController.calculate(metersToRad(sim.getPositionMeters()), setpointPositionRad);
+                var ff = feedforward.getKs() * Math.signum(pid) + feedforward.getKg();
+                appliedAmps = pid;
+                appliedVolts = ff + motors.getVoltage(motors.getTorque(appliedAmps), metersToRad(sim.getVelocityMetersPerSecond()));
+            } else {
+                var pid = pidController.calculate(metersToRad(sim.getPositionMeters()), setpointPositionRad);
+                var ff = feedforward.calculateWithVelocities(lastVelocitySetpointRadPerSec, setpointVelocityRadPerSec);
+                lastVelocitySetpointRadPerSec = setpointVelocityRadPerSec;
+                appliedVolts = ff + pid;
+            }
         } else {
             pidController.reset();
         }
