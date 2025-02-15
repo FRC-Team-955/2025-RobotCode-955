@@ -74,12 +74,22 @@ public class VisionConstants {
                 ? new AprilTagIO[]{new AprilTagIO(), new AprilTagIO()}
                 : new AprilTagIO[]{
                 new AprilTagIOPhotonVision(
-                        "camera_0",
-                        new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0))
+                        "StationCam",
+                        new Transform3d(
+                                Units.inchesToMeters(-6.7), Units.inchesToMeters(-9.4), Units.inchesToMeters(27.3),
+                                // Rotation order matters
+                                new Rotation3d(0.0, 0.0, Units.degreesToRadians(-60))
+                                        .rotateBy(new Rotation3d(0.0, Units.degreesToRadians(15), 0.0))
+                        )
                 ),
                 new AprilTagIOPhotonVision(
-                        "camera_1",
-                        new Transform3d(-0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, Math.PI))
+                        "ReefCam",
+                        new Transform3d(
+                                Units.inchesToMeters(-7.2), Units.inchesToMeters(8.8), Units.inchesToMeters(26.6),
+                                // Rotation order matters
+                                new Rotation3d(0.0, 0.0, Units.degreesToRadians(-170))
+                                        .rotateBy(new Rotation3d(0.0, Units.degreesToRadians(-35), 0.0))
+                        )
                 )
         };
 //        case ALPHABOT -> Constants.isReplay
