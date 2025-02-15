@@ -5,18 +5,14 @@ import frc.robot.Constants;
 import frc.robot.util.PIDF;
 
 public class ElevatorConstants {
-    public static final boolean useCurrentControl = true;
-
     /** Gains in radians */
     public static final PIDF gains = switch (Constants.identity) {
         case COMPBOT -> PIDF.ofPDSVAG(0, 0, 0.1, 0.08, 0, 0.5);
-        case SIMBOT, ALPHABOT -> useCurrentControl
-                ? PIDF.ofPDSG(30, 0.0, 0, 2.50)
-                : PIDF.ofPDSVAG(0.1, 0.0, 0, 0.06, 0.018, 2.9296);
+        case SIMBOT, ALPHABOT -> PIDF.ofPDSVAG(0.1, 0.0, 0, 0.06, 0.018, 2.9296);
     };
 
     public static final double maxVelocityMetersPerSecond = 5;
-    public static final double maxAccelerationMetersPerSecondSquared = 10;
+    public static final double maxAccelerationMetersPerSecondSquared = 25;
 
     public static final double gearRatio = 3;
     private static final double sprocketRadiusMeters = Units.inchesToMeters((1.0 + (9.0 / 32.0)) / 2);
