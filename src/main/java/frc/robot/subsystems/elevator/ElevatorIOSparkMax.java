@@ -69,7 +69,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         leadConfig
                 .closedLoop
                 .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder);
-        gains.applySpark(leadConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        gains.applySparkPID(leadConfig.closedLoop, ClosedLoopSlot.kSlot0);
         leadConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)

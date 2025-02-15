@@ -52,8 +52,8 @@ public class RollersIOSparkMax extends RollersIO {
         config
                 .closedLoop
                 .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder);
-        rollersConfig.positionGains().applySpark(config.closedLoop, ClosedLoopSlot.kSlot0); // position = slot0
-        rollersConfig.velocityGains().applySpark(config.closedLoop, ClosedLoopSlot.kSlot1); // velocity = slot1
+        rollersConfig.positionGains().applySparkPID(config.closedLoop, ClosedLoopSlot.kSlot0); // position = slot0
+        rollersConfig.velocityGains().applySparkPID(config.closedLoop, ClosedLoopSlot.kSlot1); // velocity = slot1
         config
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)

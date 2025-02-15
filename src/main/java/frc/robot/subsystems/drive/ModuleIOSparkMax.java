@@ -95,7 +95,7 @@ public class ModuleIOSparkMax extends ModuleIO {
         driveConfig
                 .closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder);
-        moduleConfig.driveGains().applySpark(driveConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        moduleConfig.driveGains().applySparkPID(driveConfig.closedLoop, ClosedLoopSlot.kSlot0);
         driveConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
@@ -130,7 +130,7 @@ public class ModuleIOSparkMax extends ModuleIO {
                 .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
                 .positionWrappingEnabled(true)
                 .positionWrappingInputRange(0.0, 2 * Math.PI);
-        moduleConfig.turnGains().applySpark(turnConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        moduleConfig.turnGains().applySparkPID(turnConfig.closedLoop, ClosedLoopSlot.kSlot0);
         turnConfig
                 .signals
                 .absoluteEncoderPositionAlwaysOn(true)

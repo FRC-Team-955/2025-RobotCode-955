@@ -9,6 +9,8 @@ import edu.wpi.first.math.controller.*;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import frc.robot.util.network.LoggedTuningNumber;
 
+import java.util.function.Consumer;
+
 public record PIDF(double kP, double kI, double kD, double kS, double kV, double kA, double kG) {
     public static PIDF ofP(double kP) {
         return new PIDF(kP, 0, 0, 0, 0, 0, 0);
@@ -70,35 +72,11 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
         return new PIDF(kP, kI, kD, kS, kV, kA, kG);
     }
 
-    public LoggedTuningNumber makeTunableKP(String name) {
-        return new LoggedTuningNumber(name + "/kP", kP);
+    public Tunable tunable(String name) {
+        return new Tunable(name);
     }
 
-    public LoggedTuningNumber makeTunableKI(String name) {
-        return new LoggedTuningNumber(name + "/kI", kI);
-    }
-
-    public LoggedTuningNumber makeTunableKD(String name) {
-        return new LoggedTuningNumber(name + "/kD", kD);
-    }
-
-    public LoggedTuningNumber makeTunableKS(String name) {
-        return new LoggedTuningNumber(name + "/kS", kS);
-    }
-
-    public LoggedTuningNumber makeTunableKV(String name) {
-        return new LoggedTuningNumber(name + "/kV", kV);
-    }
-
-    public LoggedTuningNumber makeTunableKA(String name) {
-        return new LoggedTuningNumber(name + "/kA", kA);
-    }
-
-    public LoggedTuningNumber makeTunableKG(String name) {
-        return new LoggedTuningNumber(name + "/kG", kG);
-    }
-
-    public void applySpark(ClosedLoopConfig config, ClosedLoopSlot slot) {
+    public void applySparkPID(ClosedLoopConfig config, ClosedLoopSlot slot) {
         config.pidf(kP, kI, kD, 0, slot);
     }
 
@@ -179,4 +157,51 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
     public ElevatorFeedforward toElevatorFF() {
         return new ElevatorFeedforward(kS, kG, kV, kA);
     }
+
+    public class Tunable {
+        private final String name;
+        private final LoggedTuningNumber tunablekP;
+        private final LoggedTuningNumber tunablekI;
+        private final LoggedTuningNumber tunablekD;
+        private final LoggedTuningNumber tunablekS;
+        private final LoggedTuningNumber tunablekV;
+        private final LoggedTuningNumber tunablekA;
+        private final LoggedTuningNumber tunablekG;
+
+        private Tunable(String name) {
+            this.name = name;
+            tunablekP = new LoggedTuningNumber(name + "/kP", kP);
+            tunablekI = new LoggedTuningNumber(name + "/kI", kI);
+            tunablekD = new LoggedTuningNumber(name + "/kD", kD);
+            tunablekS = new LoggedTuningNumber(name + "/kS", kS);
+            tunablekV = new LoggedTuningNumber(name + "/kV", kV);
+            tunablekA = new LoggedTuningNumber(name + "/kA", kA);
+            tunablekG = new LoggedTuningNumber(name + "/kG", kG);
+        }
+
+        public void ifChanged(Consumer<PIDF> setNewGains) {
+            // too lazy to test if using Tunable.hashCode() gives different results per name
+            // so just be safe and hash the name
+            var hashCode = name.hashCode();
+            if (tunablekP.hasChanged(hashCode)
+                    || tunablekI.hasChanged(hashCode)
+                    || tunablekD.hasChanged(hashCode)
+                    || tunablekS.hasChanged(hashCode)
+                    || tunablekV.hasChanged(hashCode)
+                    || tunablekA.hasChanged(hashCode)
+                    || tunablekG.hasChanged(hashCode)
+            ) {
+                setNewGains.accept(PIDF.ofPIDSVAG(
+                        tunablekP.get(),
+                        tunablekI.get(),
+                        tunablekD.get(),
+                        tunablekS.get(),
+                        tunablekV.get(),
+                        tunablekA.get(),
+                        tunablekG.get()
+                ));
+            }
+        }
+    }
+
 }
