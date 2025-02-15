@@ -41,7 +41,7 @@ import java.util.function.Supplier;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.OperatorDashboard.coastOverride;
 import static frc.robot.subsystems.drive.DriveConstants.*;
-import static frc.robot.subsystems.drive.DriveTuning.characterizationSpeedRadPerSec;
+import static frc.robot.subsystems.drive.DriveTuning.*;
 import static frc.robot.subsystems.drive.PhoenixOdometryThread.phoenixLock;
 import static frc.robot.subsystems.drive.SparkOdometryThread.sparkLock;
 
@@ -232,6 +232,17 @@ public class Drive extends SubsystemBaseExt {
                 module.setBrakeMode(!coastOverride.get());
             }
         }
+
+        moduleDriveGainsTunable.ifChanged(gains -> {
+            for (var module : modules) {
+                module.setDrivePIDF(gains);
+            }
+        });
+        moduleTurnGainsTunable.ifChanged(gains -> {
+            for (var module : modules) {
+                module.setTurnPIDF(gains);
+            }
+        });
 
         Logger.recordOutput("Drive/Goal", goal);
 

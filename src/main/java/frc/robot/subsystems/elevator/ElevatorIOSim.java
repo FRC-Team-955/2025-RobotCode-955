@@ -70,6 +70,7 @@ public class ElevatorIOSim extends ElevatorIO {
 
     @Override
     public void setPIDF(PIDF newGains) {
+        System.out.println("Setting elevator gains");
         feedforward = newGains.toElevatorFF();
         pidController = newGains.toPID();
     }

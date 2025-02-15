@@ -31,6 +31,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.util.PIDF;
 
 import java.util.Queue;
 
@@ -220,6 +221,20 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         timestampQueue.clear();
         drivePositionQueue.clear();
         turnPositionQueue.clear();
+    }
+
+    @Override
+    public void setDrivePIDF(PIDF newGains) {
+        System.out.println("Setting drive gains");
+        driveConfig.Slot0 = Slot0Configs.from(newGains.toPhoenix());
+        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+    }
+
+    @Override
+    public void setTurnPIDF(PIDF newGains) {
+        System.out.println("Setting turn gains");
+        turnConfig.Slot0 = Slot0Configs.from(newGains.toPhoenix());
+        tryUntilOk(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));
     }
 
     @Override

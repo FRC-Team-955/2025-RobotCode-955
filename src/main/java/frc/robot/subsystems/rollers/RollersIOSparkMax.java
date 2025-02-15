@@ -7,6 +7,7 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
+import frc.robot.util.PIDF;
 
 import java.util.function.DoubleSupplier;
 
@@ -24,7 +25,7 @@ public class RollersIOSparkMax extends RollersIO {
     // Connection debouncers
     private final Debouncer connectedDebounce = new Debouncer(0.5);
 
-    private final SimpleMotorFeedforward velocityFeedforward;
+    private SimpleMotorFeedforward velocityFeedforward;
 
     public RollersIOSparkMax(
             int canID,
@@ -82,6 +83,31 @@ public class RollersIOSparkMax extends RollersIO {
         );
         ifOk(motor, motor::getOutputCurrent, (value) -> inputs.currentAmps = value);
         inputs.connected = connectedDebounce.calculate(!sparkStickyFault);
+    }
+
+    @Override
+    public void setPositionPIDF(PIDF newGains) {
+        System.out.println("Setting roller position gains");
+        var newConfig = new SparkMaxConfig();
+        newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        tryUntilOkAsync(5, () -> motor.configure(
+                newConfig,
+                SparkBase.ResetMode.kNoResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters
+        ));
+    }
+
+    @Override
+    public void setVelocityPIDF(PIDF newGains) {
+        System.out.println("Setting roller velocity gains");
+        velocityFeedforward = newGains.toSimpleFF();
+        var newConfig = new SparkMaxConfig();
+        newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        tryUntilOkAsync(5, () -> motor.configure(
+                newConfig,
+                SparkBase.ResetMode.kNoResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters
+        ));
     }
 
     @Override

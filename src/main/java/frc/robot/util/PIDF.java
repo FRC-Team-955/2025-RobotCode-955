@@ -191,6 +191,7 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
                     || tunablekA.hasChanged(hashCode)
                     || tunablekG.hasChanged(hashCode)
             ) {
+                System.out.println("Setting gains for " + name);
                 setNewGains.accept(PIDF.ofPIDSVAG(
                         tunablekP.get(),
                         tunablekI.get(),

@@ -1,5 +1,6 @@
 package frc.robot.subsystems.rollers;
 
+import frc.robot.util.PIDF;
 import org.littletonrobotics.junction.AutoLog;
 
 public class RollersIO {
@@ -16,6 +17,20 @@ public class RollersIO {
      * Updates the set of loggable inputs.
      */
     public void updateInputs(RollersIOInputs inputs) {
+    }
+
+    /**
+     * Change PIDF gains. IO layers should not rely on this method being called, and
+     * should default to the gains in the constants
+     */
+    public void setPositionPIDF(PIDF newGains) {
+    }
+
+    /**
+     * Change PIDF gains. IO layers should not rely on this method being called, and
+     * should default to the gains in the constants
+     */
+    public void setVelocityPIDF(PIDF newGains) {
     }
 
     /**

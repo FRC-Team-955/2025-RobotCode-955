@@ -16,6 +16,8 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 
 import static frc.robot.OperatorDashboard.coastOverride;
+import static frc.robot.subsystems.endeffector.EndEffectorTuning.positionGainsTunable;
+import static frc.robot.subsystems.endeffector.EndEffectorTuning.velocityGainsTunable;
 
 public class EndEffector extends SubsystemBaseExt {
     private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
@@ -67,6 +69,9 @@ public class EndEffector extends SubsystemBaseExt {
         if (coastOverride.hasChanged(hashCode())) {
             rollersIO.setBrakeMode(!coastOverride.get());
         }
+
+        positionGainsTunable.ifChanged(rollersIO::setPositionPIDF);
+        velocityGainsTunable.ifChanged(rollersIO::setVelocityPIDF);
 
         ////////////// ROLLERS //////////////
         Logger.recordOutput("EndEffector/Rollers/Goal", rollersGoal);

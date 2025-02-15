@@ -129,6 +129,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
 
     @Override
     public void setPIDF(PIDF newGains) {
+        System.out.println("Setting elevator gains");
         ff = newGains.toElevatorFF();
         var newConfig = new SparkMaxConfig();
         newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);

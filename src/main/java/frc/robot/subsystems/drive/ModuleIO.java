@@ -13,6 +13,7 @@
 
 package frc.robot.subsystems.drive;
 
+import frc.robot.util.PIDF;
 import org.littletonrobotics.junction.AutoLog;
 
 public class ModuleIO {
@@ -44,6 +45,20 @@ public class ModuleIO {
      * Updates the set of loggable inputs.
      */
     public void updateInputs(ModuleIOInputs inputs) {
+    }
+
+    /**
+     * Change PIDF gains. IO layers should not rely on this method being called, and
+     * should default to the gains in the constants
+     */
+    public void setDrivePIDF(PIDF newGains) {
+    }
+
+    /**
+     * Change PIDF gains. IO layers should not rely on this method being called, and
+     * should default to the gains in the constants
+     */
+    public void setTurnPIDF(PIDF newGains) {
     }
 
     /**
