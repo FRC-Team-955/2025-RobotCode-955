@@ -24,6 +24,7 @@ import frc.robot.Util;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.util.characterization.FeedforwardCharacterization;
+import frc.robot.util.network.LoggedTuningNumber;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import frc.robot.util.swerve.ModuleLimits;
 import frc.robot.util.swerve.SwerveSetpoint;
@@ -32,7 +33,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -603,7 +603,7 @@ public class Drive extends SubsystemBaseExt {
     }
 
     public class WheelRadiusCharacterization extends Command {
-        private static final LoggedNetworkNumber characterizationSpeedRadPerSec = new LoggedNetworkNumber("Drive/Wheel Radius Characterization Rotation Speed (rad per sec)", 1.0);
+        private static final LoggedTuningNumber characterizationSpeedRadPerSec = new LoggedTuningNumber("Drive/Wheel Radius Characterization Rotation Speed (rad per sec)", 1.0);
 
         @RequiredArgsConstructor
         public enum Direction {
