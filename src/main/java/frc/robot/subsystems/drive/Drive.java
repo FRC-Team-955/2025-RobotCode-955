@@ -381,7 +381,11 @@ public class Drive extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Drive/ModuleLimits")
     public ModuleLimits getModuleLimits() {
-        var scalar = 1 - DriveConstants.elevatorSlowdownScalar * elevator.getPositionMeters() / ElevatorConstants.maxHeightMeters;
+        var elevatorSetpoint = elevator.getGoal().setpointMeters != null
+                ? elevator.getGoal().setpointMeters.getAsDouble()
+                : 0;
+        var elevatorPosition = Math.max(elevator.getPositionMeters(), elevatorSetpoint);
+        var scalar = 1 - DriveConstants.elevatorSlowdownScalar * elevatorPosition / ElevatorConstants.maxHeightMeters;
         return new ModuleLimits(
                 driveConfig.maxLinearSpeedMetersPerSec() * scalar,
                 driveConfig.maxLinearAccelMetersPerSecSquared() * scalar,

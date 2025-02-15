@@ -37,7 +37,7 @@ public class Elevator extends SubsystemBaseExt {
         DESCORE_L3(() -> 0);
 
         /** Should be constant for every loop cycle */
-        private final DoubleSupplier setpointMeters;
+        public final DoubleSupplier setpointMeters;
     }
 
     @Getter
