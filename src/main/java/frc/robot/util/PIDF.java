@@ -7,6 +7,7 @@ import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import edu.wpi.first.math.controller.*;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import frc.robot.util.network.LoggedTuningNumber;
 
 public record PIDF(double kP, double kI, double kD, double kS, double kV, double kA, double kG) {
     public static PIDF ofP(double kP) {
@@ -67,6 +68,34 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
 
     public static PIDF ofPIDSVAG(double kP, double kI, double kD, double kS, double kV, double kA, double kG) {
         return new PIDF(kP, kI, kD, kS, kV, kA, kG);
+    }
+
+    public LoggedTuningNumber makeTunableKP(String name) {
+        return new LoggedTuningNumber(name + "/kP", kP);
+    }
+
+    public LoggedTuningNumber makeTunableKI(String name) {
+        return new LoggedTuningNumber(name + "/kI", kI);
+    }
+
+    public LoggedTuningNumber makeTunableKD(String name) {
+        return new LoggedTuningNumber(name + "/kD", kD);
+    }
+
+    public LoggedTuningNumber makeTunableKS(String name) {
+        return new LoggedTuningNumber(name + "/kS", kS);
+    }
+
+    public LoggedTuningNumber makeTunableKV(String name) {
+        return new LoggedTuningNumber(name + "/kV", kV);
+    }
+
+    public LoggedTuningNumber makeTunableKA(String name) {
+        return new LoggedTuningNumber(name + "/kA", kA);
+    }
+
+    public LoggedTuningNumber makeTunableKG(String name) {
+        return new LoggedTuningNumber(name + "/kG", kG);
     }
 
     public void applySpark(ClosedLoopConfig config, ClosedLoopSlot slot) {
