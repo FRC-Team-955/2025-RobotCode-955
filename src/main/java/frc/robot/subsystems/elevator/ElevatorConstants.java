@@ -11,8 +11,8 @@ public class ElevatorConstants {
         case SIMBOT, ALPHABOT -> PIDF.ofPDSVAG(0.1, 0.0, 0, 0.06, 0.018, 2.9296);
     };
 
-    public static final double maxVelocityMetersPerSecond = 5;
-    public static final double maxAccelerationMetersPerSecondSquared = 25;
+    public static final double maxVelocityMetersPerSecond = 0.3;
+    public static final double maxAccelerationMetersPerSecondSquared = 0.3;
 
     public static final double gearRatio = 3;
     private static final double sprocketRadiusMeters = Units.inchesToMeters((1.0 + (9.0 / 32.0)) / 2);
@@ -71,8 +71,7 @@ public class ElevatorConstants {
     protected static final ElevatorIO io = Constants.isReplay
             ? new ElevatorIO()
             : switch (Constants.identity) {
-        case COMPBOT -> new ElevatorIO();
-//        case COMPBOT -> new ElevatorIOSparkMax(5, 6, 9, true);
+        case COMPBOT -> new ElevatorIOSparkMax(5, 6, 9, true);
         case SIMBOT, ALPHABOT -> new ElevatorIOSim();
     };
 }

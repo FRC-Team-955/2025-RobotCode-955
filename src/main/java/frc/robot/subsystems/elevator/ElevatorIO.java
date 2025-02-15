@@ -1,5 +1,6 @@
 package frc.robot.subsystems.elevator;
 
+import frc.robot.util.PIDF;
 import org.littletonrobotics.junction.AutoLog;
 
 public class ElevatorIO {
@@ -22,6 +23,13 @@ public class ElevatorIO {
     }
 
     public void updateInputs(ElevatorIOInputs inputs) {
+    }
+
+    /**
+     * Change PIDF gains. IO layers should not rely on this method being called, and
+     * should default to the gains in the constants
+     */
+    public void setPIDF(PIDF newGains) {
     }
 
     /**

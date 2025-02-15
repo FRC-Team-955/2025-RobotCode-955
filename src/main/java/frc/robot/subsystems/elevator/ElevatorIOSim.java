@@ -6,6 +6,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import frc.robot.util.PIDF;
 
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
@@ -23,8 +24,8 @@ public class ElevatorIOSim extends ElevatorIO {
             0.0001 // velocity, maybe
     );
 
-    private final ElevatorFeedforward feedforward = gains.toElevatorFF();
-    private final PIDController pidController = gains.toPID();
+    private ElevatorFeedforward feedforward = gains.toElevatorFF();
+    private PIDController pidController = gains.toPID();
 
     private boolean closedLoop = true;
     private double setpointPositionRad;
@@ -65,6 +66,12 @@ public class ElevatorIOSim extends ElevatorIO {
 
         inputs.limitSwitchConnected = true;
         inputs.limitSwitchTriggered = sim.getPositionMeters() < Units.inchesToMeters(1);
+    }
+
+    @Override
+    public void setPIDF(PIDF newGains) {
+        feedforward = newGains.toElevatorFF();
+        pidController = newGains.toPID();
     }
 
     @Override

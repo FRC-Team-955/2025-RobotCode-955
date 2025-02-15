@@ -16,10 +16,12 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.OperatorDashboard.coastOverride;
 import static frc.robot.RobotMechanism.middleOfRobot;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
+import static frc.robot.subsystems.elevator.ElevatorTuning.gainsTunable;
 
 public class Elevator extends SubsystemBaseExt {
     private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
@@ -28,7 +30,7 @@ public class Elevator extends SubsystemBaseExt {
     public enum Goal {
         CHARACTERIZATION(null),
         STOW(() -> 0),
-        LOW_TESTING_ONLY(() -> 0.75),
+        LOW_TESTING_ONLY(() -> 0.5),
         SCORE_L1(() -> 1.69 - Units.inchesToMeters(54)),
         SCORE_L2(() -> 1.69 - Units.inchesToMeters(40.125)),
         SCORE_L3(() -> 1.69 - Units.inchesToMeters(24.375)),
@@ -82,7 +84,10 @@ public class Elevator extends SubsystemBaseExt {
                 "Elevator",
                 (voltage) -> io.setOpenLoop(voltage.in(Volts)),
                 () -> goal = Goal.CHARACTERIZATION,
-                this
+                this,
+                Volts.per(Second).of(0.2),
+                Volts.of(3),
+                null
         );
     }
 
@@ -109,6 +114,8 @@ public class Elevator extends SubsystemBaseExt {
         if (coastOverride.hasChanged(hashCode())) {
             io.setBrakeMode(!coastOverride.get());
         }
+
+        gainsTunable.ifChanged(io::setPIDF);
 
         Logger.recordOutput("Elevator/Goal", goal);
         if (goal.setpointMeters != null) {
@@ -172,6 +179,7 @@ public class Elevator extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Elevator/Measurement/VelocityMetersPerSec")
     public double getVelocityMetersPerSec() {
+        // TODO: average leader and follower - position too
         return radToMeters(inputs.leaderVelocityRadPerSec);
     }
 

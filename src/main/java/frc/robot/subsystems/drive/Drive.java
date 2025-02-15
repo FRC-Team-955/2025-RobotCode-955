@@ -24,7 +24,6 @@ import frc.robot.Util;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.util.characterization.FeedforwardCharacterization;
-import frc.robot.util.network.LoggedTuningNumber;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import frc.robot.util.swerve.ModuleLimits;
 import frc.robot.util.swerve.SwerveSetpoint;
@@ -42,6 +41,7 @@ import java.util.function.Supplier;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.OperatorDashboard.coastOverride;
 import static frc.robot.subsystems.drive.DriveConstants.*;
+import static frc.robot.subsystems.drive.DriveTuning.characterizationSpeedRadPerSec;
 import static frc.robot.subsystems.drive.PhoenixOdometryThread.phoenixLock;
 import static frc.robot.subsystems.drive.SparkOdometryThread.sparkLock;
 
@@ -607,8 +607,6 @@ public class Drive extends SubsystemBaseExt {
     }
 
     public class WheelRadiusCharacterization extends Command {
-        private static final LoggedTuningNumber characterizationSpeedRadPerSec = new LoggedTuningNumber("Drive/Wheel Radius Characterization Rotation Speed (rad per sec)", 1.0);
-
         @RequiredArgsConstructor
         public enum Direction {
             CLOCKWISE(-1),

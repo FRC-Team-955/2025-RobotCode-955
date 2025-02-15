@@ -24,7 +24,7 @@ public class DriveConstants {
     public static final PIDF moveToOmega = PIDF.ofPD(1.5, 0);
 
     public static final boolean useSetpointGenerator = true;
-    public static final boolean disableDriving = false;
+    public static final boolean disableDriving = true;
 
     // Slow to 30% speed when elevator is at max height
     public static final double elevatorSlowdownScalar = 0.7;

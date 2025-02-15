@@ -8,6 +8,9 @@ import frc.robot.subsystems.rollers.RollersIOSim;
 import frc.robot.util.PIDF;
 
 public class EndEffectorConstants {
+    public static final PIDF positionGains = PIDF.ofP(1);
+    public static final PIDF velocityGains = PIDF.ofPSVA(1, 0, 1, 1);
+
     protected static final RollersIO rollersIO = Constants.isReplay
             ? new RollersIO()
             : switch (Constants.identity) {
@@ -18,8 +21,8 @@ public class EndEffectorConstants {
                         true,
                         40,
                         3,
-                        PIDF.ofP(1),
-                        PIDF.ofPSVA(1, 0, 1, 1)
+                        positionGains,
+                        velocityGains
                 ),
                 0.01,
                 DCMotor.getNEO(1)

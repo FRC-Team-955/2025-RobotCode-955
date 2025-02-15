@@ -8,6 +8,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.DigitalInput;
+import frc.robot.util.PIDF;
 
 import java.util.function.DoubleSupplier;
 
@@ -28,7 +29,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
 
     // Closed loop controllers
     private final SparkClosedLoopController controller;
-    private final ElevatorFeedforward ff = gains.toElevatorFF();
+    private ElevatorFeedforward ff = gains.toElevatorFF();
 
     // Connection debouncers
     private final Debouncer leadConnectedDebounce = new Debouncer(0.5);
@@ -127,6 +128,23 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     }
 
     @Override
+    public void setPIDF(PIDF newGains) {
+        ff = newGains.toElevatorFF();
+        var newConfig = new SparkMaxConfig();
+        newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        tryUntilOkAsync(5, () -> leadMotor.configure(
+                newConfig,
+                SparkBase.ResetMode.kNoResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters
+        ));
+        tryUntilOkAsync(5, () -> followMotor.configure(
+                newConfig,
+                SparkBase.ResetMode.kNoResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters
+        ));
+    }
+
+    @Override
     public void setBrakeMode(boolean enable) {
         var newConfig = new SparkMaxConfig().idleMode(enable ? SparkBaseConfig.IdleMode.kBrake : SparkBaseConfig.IdleMode.kCoast);
         tryUntilOkAsync(5, () -> leadMotor.configure(
@@ -149,7 +167,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
 
     @Override
     public void setClosedLoop(double positionRad, double velocityRadPerSec) {
-        var ffVolts = ff.calculateWithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
+        var ffVolts = ff.calculate(velocityRadPerSec);//WithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
         lastVelocitySetpointRadPerSec = velocityRadPerSec;
         controller.setReference(
                 positionRad,

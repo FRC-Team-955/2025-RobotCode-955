@@ -118,11 +118,11 @@ public class RobotContainer {
                 )
         );
 
-//        superstructure.setDefaultCommand(superstructure.idle());
+        superstructure.setDefaultCommand(superstructure.idle());
 //        coralIntake.setDefaultCommand(superstructure.coralIntakeIdle());
 //        indexer.setDefaultCommand(superstructure.indexerIdle());
         elevator.setDefaultCommand(superstructure.elevatorIdle());
-//        endEffector.setDefaultCommand(superstructure.endEffectorIdle());
+        endEffector.setDefaultCommand(superstructure.endEffectorIdle());
     }
 
     /**
