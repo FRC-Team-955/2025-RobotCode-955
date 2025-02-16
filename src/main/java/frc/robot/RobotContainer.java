@@ -65,7 +65,8 @@ public class RobotContainer {
     private void addAutos() {
         final var factory = drive.createAutoFactory();
 
-        autoChooser.addDefaultOption("Test Auto", TestAuto.get(factory.newRoutine("Test Auto")));
+        autoChooser.addDefaultOption("None", Commands.none());
+        autoChooser.addOption("Test Auto", TestAuto.get(factory.newRoutine("Test Auto")));
 
         autoChooser.addOption("Characterization", Commands.deferredProxy(characterizationChooser::get));
     }
