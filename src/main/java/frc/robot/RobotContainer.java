@@ -146,7 +146,7 @@ public class RobotContainer {
                 driverController.leftBumper(),
                 operatorDashboard::getCoralScoringElevatorGoal
         ));
-        driverController.leftBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
+        driverController.rightBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
 
 //        driverController.leftTrigger().toggleOnTrue(superstructure.autoAlignAndScore(
 //                operatorDashboard::getSide,
