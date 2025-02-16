@@ -32,13 +32,12 @@ public class Elevator extends SubsystemBaseExt {
     public enum Goal {
         CHARACTERIZATION(null),
         STOW(() -> 0),
-        LOW_TESTING_ONLY(() -> 1),
-        SCORE_L1(() -> 1.69 - Units.inchesToMeters(54)),
-        SCORE_L2(() -> 1.69 - Units.inchesToMeters(40.125)),
-        SCORE_L3(() -> 1.69 - Units.inchesToMeters(24.375)),
-        SCORE_L4(() -> 1.69),
-        DESCORE_L2(() -> 0),
-        DESCORE_L3(() -> 0);
+        SCORE_L1(scoreL1GoalSetpoint::get),
+        SCORE_L2(scoreL2GoalSetpoint::get),
+        SCORE_L3(scoreL3GoalSetpoint::get),
+        SCORE_L4(scoreL4GoalSetpoint::get),
+        DESCORE_L2(descoreL2GoalSetpoint::get),
+        DESCORE_L3(descoreL3GoalSetpoint::get);
 
         /** Should be constant for every loop cycle */
         public final DoubleSupplier setpointMeters;

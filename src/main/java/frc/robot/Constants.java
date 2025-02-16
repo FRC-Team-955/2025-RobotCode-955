@@ -26,7 +26,7 @@ import java.util.function.Function;
  * (log replay from a file).
  */
 public final class Constants {
-    public static final boolean tuningMode = false;
+    public static final boolean tuningMode = true;
 
     public static final RobotIdentity identity = RobotIdentity.determine();
 

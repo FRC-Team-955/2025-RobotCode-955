@@ -175,10 +175,7 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
             tunablekG = new LoggedTunableNumber(name + "/kG", kG);
         }
 
-        public void ifChanged(Consumer<PIDF> setNewGains) {
-            // too lazy to test if using Tunable.hashCode() gives different results per name
-            // so just be safe and hash the name
-            var hashCode = name.hashCode();
+        public void ifChanged(int hashCode, Consumer<PIDF> setNewGains) {
             if (tunablekP.hasChanged(hashCode)
                     || tunablekI.hasChanged(hashCode)
                     || tunablekD.hasChanged(hashCode)

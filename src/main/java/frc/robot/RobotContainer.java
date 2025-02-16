@@ -138,15 +138,16 @@ public class RobotContainer {
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
 
-//        driverController.rightTrigger().toggleOnTrue(elevator.setGoal(Elevator.Goal.LOW_TESTING_ONLY).andThen(Commands.idle()));
         driverController.rightTrigger().whileTrue(superstructure.funnelIntake());
 //        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
 
         driverController.leftTrigger().onTrue(superstructure.scoreCoralManual(
                 driverController.leftTrigger(),
                 driverController.leftBumper(),
-                operatorDashboard::getElevatorGoal
+                operatorDashboard::getCoralScoringElevatorGoal
         ));
+        driverController.leftBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
+
 //        driverController.leftTrigger().toggleOnTrue(superstructure.autoAlignAndScore(
 //                operatorDashboard::getSide,
 //                operatorDashboard::getLeftSide,

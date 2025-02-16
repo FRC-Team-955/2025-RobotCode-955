@@ -44,6 +44,9 @@ public class Superstructure extends SubsystemBaseExt {
         SCORE_CORAL_WAIT_CONFIRM,
         SCORE_CORAL_SCORING,
 
+        DESCORE_ALGAE_WAIT_ELEVATOR,
+        DESCORE_ALGAE_DESCORING,
+
         FUNNEL_INTAKE_WAITING,
         FUNNEL_INTAKE_FINALIZING,
     }
@@ -259,7 +262,7 @@ public class Superstructure extends SubsystemBaseExt {
                                         Commands.sequence(
                                                 Commands.parallel(
                                                         setGoal(Goal.SCORE_CORAL_SCORING),
-                                                        endEffector.setGoal(EndEffector.RollersGoal.SCORE),
+                                                        endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
                                                         elevator.setGoal(elevatorGoalSupplier),
                                                         waitUntilEndEffectorNotTriggered()
                                                 ),
@@ -267,6 +270,24 @@ public class Superstructure extends SubsystemBaseExt {
                                                 Commands.waitSeconds(0.75)
                                         ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
                                 )
+                        )
+                )
+        );
+    }
+
+    public Command descoreAlgaeManual(Supplier<Elevator.Goal> elevatorGoalSupplier) {
+        return CommandsExt.onlyIf(
+                () -> !inputs.endEffectorBeamBreakTriggered,
+                Commands.sequence(
+                        Commands.parallel(
+                                setGoal(Goal.DESCORE_ALGAE_WAIT_ELEVATOR),
+                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
+                        ),
+                        Commands.parallel(
+                                setGoal(Goal.DESCORE_ALGAE_DESCORING),
+                                endEffector.setGoal(EndEffector.RollersGoal.DESCORE_ALGAE),
+                                elevator.setGoal(elevatorGoalSupplier)
                         )
                 )
         );
@@ -286,7 +307,7 @@ public class Superstructure extends SubsystemBaseExt {
                                 Commands.sequence(
                                         Commands.parallel(
                                                 setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
-                                                endEffector.setGoal(EndEffector.RollersGoal.ORIENT),
+                                                endEffector.setGoal(EndEffector.RollersGoal.ORIENT_CORAL),
                                                 Commands.waitSeconds(0.2)
                                         )
                                 ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
@@ -335,7 +356,7 @@ public class Superstructure extends SubsystemBaseExt {
                                                 Commands.sequence(
                                                         Commands.parallel(
                                                                 setGoal(Goal.SCORE_CORAL_SCORING),
-                                                                endEffector.setGoal(EndEffector.RollersGoal.SCORE),
+                                                                endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
                                                                 waitUntilEndEffectorNotTriggered()
                                                         ),
                                                         // Wait for coral to settle

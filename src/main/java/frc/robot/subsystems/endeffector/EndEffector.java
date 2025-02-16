@@ -17,8 +17,7 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 
 import static frc.robot.OperatorDashboard.coastOverride;
-import static frc.robot.subsystems.endeffector.EndEffectorTuning.positionGainsTunable;
-import static frc.robot.subsystems.endeffector.EndEffectorTuning.velocityGainsTunable;
+import static frc.robot.subsystems.endeffector.EndEffectorTuning.*;
 
 public class EndEffector extends SubsystemBaseExt {
     private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
@@ -29,9 +28,10 @@ public class EndEffector extends SubsystemBaseExt {
         CHARACTERIZATION(null),
         IDLE(() -> 0),
         HANDOFF(() -> 0),
-        FUNNEL_INTAKE(() -> Units.rotationsPerMinuteToRadiansPerSecond(800)),
-        ORIENT(() -> Units.rotationsPerMinuteToRadiansPerSecond(100)),
-        SCORE(() -> Units.rotationsPerMinuteToRadiansPerSecond(100));
+        FUNNEL_INTAKE(funnelIntakeGoalSetpoint::get),
+        ORIENT_CORAL(orientCoralGoalSetpoint::get),
+        SCORE_CORAL(scoreCoralGoalSetpoint::get),
+        DESCORE_ALGAE(descoreAlgaeGoalSetpoint::get);
 
         private final DoubleSupplier setpointRadPerSec;
     }

@@ -9,8 +9,6 @@ public class ElevatorConstants {
     public static final PIDF gains = switch (Constants.identity) {
         case COMPBOT -> PIDF.ofPDSVAG(0.04, 0, 0, 0.19, 0.02, 0.7);
         case SIMBOT, ALPHABOT -> PIDF.ofPDVAG(0, 0, 0.1, 0.008, 1.5015);
-//        case SIMBOT, ALPHABOT -> PIDF.ofPDSVAG(0.1, 0.0, 0, 0.06, 0.018, 2.9296);
-//        case SIMBOT, ALPHABOT -> PIDF.ofPDSVAG(0.01, 0.0, 1.33476, 0.23048, 0.011, 2.50);
     };
 
     public static final double maxVelocityMetersPerSecond = 0.3;

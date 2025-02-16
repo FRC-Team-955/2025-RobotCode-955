@@ -133,7 +133,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 var coralOffsetX = Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angle);
                 // TODO: fix the trig, it doesn't actually work but is good enough for sim
                 var coralOffsetZ = Units.inchesToMeters(13.5) + elevator.getPositionMeters() + Units.inchesToMeters(4) * Math.tan(angle);
-                if (endEffector.getRollersGoal() == EndEffector.RollersGoal.SCORE) {
+                if (endEffector.getRollersGoal() == EndEffector.RollersGoal.SCORE_CORAL) {
                     coralState = CoralState.NO_CORAL;
                     SimulatedArena.getInstance()
                             .addGamePieceProjectile(new ReefscapeCoralOnFly(
