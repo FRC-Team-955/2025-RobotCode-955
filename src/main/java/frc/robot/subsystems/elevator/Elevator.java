@@ -17,7 +17,7 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
 import static frc.robot.OperatorDashboard.coastOverride;
 import static frc.robot.RobotMechanism.middleOfRobot;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
@@ -87,7 +87,7 @@ public class Elevator extends SubsystemBaseExt {
                 this,
                 Volts.per(Second).of(0.2),
                 Volts.of(3),
-                null
+                Seconds.of(20)
         );
     }
 
@@ -188,13 +188,14 @@ public class Elevator extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Elevator/Measurement/PositionMeters")
     public double getPositionMeters() {
-        return radToMeters(inputs.leaderPositionRad);
+        var avgPositionRad = (inputs.leaderPositionRad + inputs.followerPositionRad) / 2.0;
+        return radToMeters(avgPositionRad);
     }
 
     @AutoLogOutput(key = "Elevator/Measurement/VelocityMetersPerSec")
     public double getVelocityMetersPerSec() {
-        // TODO: average leader and follower - position too
-        return radToMeters(inputs.leaderVelocityRadPerSec);
+        var avgVelocityRadPerSec = (inputs.leaderVelocityRadPerSec + inputs.followerVelocityRadPerSec) / 2.0;
+        return radToMeters(avgVelocityRadPerSec);
     }
 
     public Command feedforwardCharacterization() {
