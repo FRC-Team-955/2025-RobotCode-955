@@ -49,7 +49,6 @@ public class Elevator extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Elevator/HasZeroed")
     private boolean hasZeroed = false;
-    @AutoLogOutput(key = "Elevator/AutoStop")
     private boolean autoStop = false;
     private final Timer autoStopTimer = new Timer();
 
@@ -136,11 +135,28 @@ public class Elevator extends SubsystemBaseExt {
             hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecond);
         }
 
+        var positionMeters = getPositionMeters();
+        var velocityMetersPerSec = getVelocityMetersPerSec();
+
+        // Check limits
+        if (!autoStop) {
+            autoStop = (positionMeters > upperLimit.positionMeters()
+                    && velocityMetersPerSec > upperLimit.velocityMetersPerSec()
+            ) || (positionMeters < lowerLimit.positionMeters()
+                    && velocityMetersPerSec < lowerLimit.velocityMetersPerSec());
+
+            if (autoStop) {
+                autoStopTimer.restart();
+            }
+        } else if (autoStopTimer.hasElapsed(0.25) && Math.abs(velocityMetersPerSec) < 0.2) {
+            // Only disable auto stop if we have stopped for a bit (roughly - we don't want to get stuck in auto stop)
+            autoStop = false;
+        }
+        Logger.recordOutput("Elevator/AutoStop", autoStop);
+
         Logger.recordOutput("Elevator/Goal", goal);
         if (goal.setpointMeters != null) {
             var setpointMeters = goal.setpointMeters.getAsDouble();
-            var positionMeters = getPositionMeters();
-            var velocityMetersPerSec = getVelocityMetersPerSec();
 
             boolean usingGentleProfile = inputs.leaderVelocityRadPerSec < 0.1 // If we are going down
                     // If we are below the hardstop slowdown zone
@@ -168,20 +184,6 @@ public class Elevator extends SubsystemBaseExt {
             var setpointPositionRad = metersToRad(previousStateMeters.position);
             var setpointVelocityRadPerSec = metersToRad(previousStateMeters.velocity);
 
-            // Check limits
-            if (!autoStop) {
-                autoStop = (positionMeters > upperLimit.positionMeters()
-                        && velocityMetersPerSec > upperLimit.velocityMetersPerSec()
-                ) || (positionMeters < lowerLimit.positionMeters()
-                        && velocityMetersPerSec < lowerLimit.velocityMetersPerSec());
-
-                if (autoStop) {
-                    autoStopTimer.restart();
-                }
-            } else if (autoStopTimer.hasElapsed(0.25) && Math.abs(velocityMetersPerSec) < 0.2) {
-                // Only disable auto stop if we have stopped for a bit (roughly - we don't want to get stuck in auto stop)
-                autoStop = false;
-            }
             if (autoStop) {
                 io.setClosedLoop(positionMeters, 0);
             } else {
@@ -197,6 +199,10 @@ public class Elevator extends SubsystemBaseExt {
             Logger.recordOutput("Elevator/Setpoint/VelocityMetersPerSec", previousStateMeters.velocity);
         } else {
             Logger.recordOutput("Elevator/ClosedLoop", false);
+            if (autoStop) {
+                // giving two commands to the motor, but oh well
+                io.setClosedLoop(positionMeters, 0);
+            }
         }
 
         if (!hasZeroed && inputs.limitSwitchTriggered) {
