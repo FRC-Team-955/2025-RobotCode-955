@@ -23,7 +23,7 @@ public class ElevatorTuning {
     public static final LoggedTunableNumber scoreL4GoalSetpoint =
             new LoggedTunableNumber("Elevator/Goal/ScoreL4", maxHeightMeters);
     public static final LoggedTunableNumber descoreL2GoalSetpoint =
-            new LoggedTunableNumber("Elevator/Goal/DescoreL4", 0);
+            new LoggedTunableNumber("Elevator/Goal/DescoreL2", 0);
     public static final LoggedTunableNumber descoreL3GoalSetpoint =
             new LoggedTunableNumber("Elevator/Goal/DescoreL3", 0);
 }
