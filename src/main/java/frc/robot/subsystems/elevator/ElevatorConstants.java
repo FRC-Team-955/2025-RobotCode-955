@@ -7,22 +7,24 @@ import frc.robot.util.PIDF;
 public class ElevatorConstants {
     /** Gains in radians */
     public static final PIDF gains = switch (Constants.identity) {
-        case COMPBOT -> PIDF.ofPDSVAG(0, 0, 0.59602, 0.041767, 0.01098, 1.30);//1.1952);
+        case COMPBOT -> PIDF.ofPDSVAG(0.04, 0, 0, 0.19, 0.02, 0.7);
         case SIMBOT, ALPHABOT -> PIDF.ofPDVAG(0, 0, 0.1, 0.008, 1.5015);
 //        case SIMBOT, ALPHABOT -> PIDF.ofPDSVAG(0.1, 0.0, 0, 0.06, 0.018, 2.9296);
 //        case SIMBOT, ALPHABOT -> PIDF.ofPDSVAG(0.01, 0.0, 1.33476, 0.23048, 0.011, 2.50);
     };
 
-    public static final double maxVelocityMetersPerSecond = 4;
-    public static final double maxAccelerationMetersPerSecondSquared = 12;
+    public static final double maxVelocityMetersPerSecond = 0.3;
+    public static final double maxAccelerationMetersPerSecondSquared = 0.3;
 
     public static final double gearRatio = 5;
     private static final double sprocketRadiusMeters = Units.inchesToMeters((1.0 + (9.0 / 32.0)) / 2);
     public static final double drumRadiusMeters = sprocketRadiusMeters * 3; // 3 stages
 
+    public static final double setpointToleranceMeters = Units.inchesToMeters(5);
+
     public static final double maxHeightMeters = Units.inchesToMeters(66.622);
-    public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 2);
-    public static final ElevatorLimit lowerLimit = new ElevatorLimit(0.15, -1.5);
+    public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.25, 2);
+    public static final ElevatorLimit lowerLimit = new ElevatorLimit(0.25, -1.5);
 
     public static final double hardstopMeters = Units.inchesToMeters(10.66);
     public static final double gentleMaxVelocityMetersPerSecond = 2;
@@ -59,8 +61,6 @@ public class ElevatorConstants {
         // x is negative because we're going down, we want a positive distance above hardstop
         return hardstopMeters + -x;
     }
-
-    public static final double setpointToleranceRad = metersToRad(Units.inchesToMeters(2));
 
     public static double metersToRad(double meters) {
         return meters / drumRadiusMeters;

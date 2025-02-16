@@ -32,7 +32,7 @@ public class Elevator extends SubsystemBaseExt {
     public enum Goal {
         CHARACTERIZATION(null),
         STOW(() -> 0),
-        LOW_TESTING_ONLY(() -> 0.5),
+        LOW_TESTING_ONLY(() -> 1),
         SCORE_L1(() -> 1.69 - Units.inchesToMeters(54)),
         SCORE_L2(() -> 1.69 - Units.inchesToMeters(40.125)),
         SCORE_L3(() -> 1.69 - Units.inchesToMeters(24.375)),
@@ -119,7 +119,7 @@ public class Elevator extends SubsystemBaseExt {
             io.setBrakeMode(!coastOverride.get());
         }
 
-        gainsTunable.ifChanged(io::setPIDF);
+        gainsTunable.ifChanged(hashCode(), io::setPIDF);
 
         if (maxVelocityMetersPerSecondTunable.hasChanged(hashCode())
                 || maxAccelerationMetersPerSecondSquaredTunable.hasChanged(hashCode())
@@ -211,14 +211,14 @@ public class Elevator extends SubsystemBaseExt {
         }
     }
 
-    public Command setGoal(Goal goal) {
-        return runOnce(() -> this.goal = goal);
+    public Command setGoal(Supplier<Goal> goal) {
+        return runOnce(() -> this.goal = goal.get());
     }
 
     @AutoLogOutput(key = "Elevator/AtGoal")
     private boolean atGoal() {
         // if goal.setpointMeters is null, will be false and won't crash
-        return goal.setpointMeters != null && Math.abs(metersToRad(goal.setpointMeters.getAsDouble()) - inputs.leaderPositionRad) <= setpointToleranceRad;
+        return goal.setpointMeters != null && Math.abs(goal.setpointMeters.getAsDouble() - getPositionMeters()) <= setpointToleranceMeters;
     }
 
     public Command waitUntilAtGoal() {
@@ -231,18 +231,20 @@ public class Elevator extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Elevator/Measurement/PositionMeters")
     public double getPositionMeters() {
-        var avgPositionRad = (inputs.leaderPositionRad + inputs.followerPositionRad) / 2.0;
-        return radToMeters(avgPositionRad);
+        return radToMeters(inputs.leaderPositionRad);
+//        var avgPositionRad = (inputs.leaderPositionRad + inputs.followerPositionRad) / 2.0;
+//        return radToMeters(avgPositionRad);
     }
 
     @AutoLogOutput(key = "Elevator/Measurement/VelocityMetersPerSec")
     public double getVelocityMetersPerSec() {
-        var avgVelocityRadPerSec = (inputs.leaderVelocityRadPerSec + inputs.followerVelocityRadPerSec) / 2.0;
-        return radToMeters(avgVelocityRadPerSec);
+        return radToMeters(inputs.leaderVelocityRadPerSec);
+//        var avgVelocityRadPerSec = (inputs.leaderVelocityRadPerSec + inputs.followerVelocityRadPerSec) / 2.0;
+//        return radToMeters(avgVelocityRadPerSec);
     }
 
     public Command feedforwardCharacterization() {
-        return setGoal(Goal.CHARACTERIZATION)
+        return setGoal(() -> Goal.CHARACTERIZATION)
                 .andThen(new FeedforwardCharacterization(
                         io::setOpenLoop,
                         () -> new double[]{inputs.leaderVelocityRadPerSec},

@@ -43,7 +43,9 @@ public class Superstructure extends SubsystemBaseExt {
         SCORE_CORAL_WAIT_ELEVATOR,
         SCORE_CORAL_WAIT_CONFIRM,
         SCORE_CORAL_SCORING,
-        SCORE_CORAL_DONE
+
+        FUNNEL_INTAKE_WAITING,
+        FUNNEL_INTAKE_FINALIZING,
     }
 
     @Getter
@@ -181,7 +183,7 @@ public class Superstructure extends SubsystemBaseExt {
 //    }
 
     public Command elevatorIdle() {
-        return elevator.setGoal(Elevator.Goal.STOW).andThen(Commands.idle());
+        return elevator.setGoal(() -> Elevator.Goal.STOW).andThen(Commands.idle());
     }
 
     public Command endEffectorIdle() {
@@ -233,7 +235,11 @@ public class Superstructure extends SubsystemBaseExt {
 //        );
 //    }
 
-    public Command scoreCoralManual(Trigger forwardTrigger, Trigger cancelTrigger) {
+    public Command scoreCoralManual(
+            Trigger forwardTrigger,
+            Trigger cancelTrigger,
+            Supplier<Elevator.Goal> elevatorGoalSupplier
+    ) {
         return CommandsExt.onlyIf(
                 () -> inputs.endEffectorBeamBreakTriggered,
                 CommandsExt.cancelOnTrigger(
@@ -242,7 +248,7 @@ public class Superstructure extends SubsystemBaseExt {
                                 Commands.parallel(
                                         setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
                                         endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                                        elevator.setGoalAndWaitUntilAtGoal(() -> Elevator.Goal.SCORE_L4)
+                                        elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
                                 ),
                                 Commands.parallel(
                                         setGoal(Goal.SCORE_CORAL_WAIT_CONFIRM),
@@ -254,13 +260,36 @@ public class Superstructure extends SubsystemBaseExt {
                                                 Commands.parallel(
                                                         setGoal(Goal.SCORE_CORAL_SCORING),
                                                         endEffector.setGoal(EndEffector.RollersGoal.SCORE),
-                                                        elevator.setGoal(Elevator.Goal.SCORE_L4),
+                                                        elevator.setGoal(elevatorGoalSupplier),
                                                         waitUntilEndEffectorNotTriggered()
                                                 ),
                                                 // Wait for coral to settle
                                                 Commands.waitSeconds(0.75)
                                         ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
                                 )
+                        )
+                )
+        );
+    }
+
+    public Command funnelIntake() {
+        return CommandsExt.onlyIf(
+                () -> !inputs.endEffectorBeamBreakTriggered,
+                Commands.sequence(
+                        Commands.parallel(
+                                setGoal(Goal.FUNNEL_INTAKE_WAITING),
+                                endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
+                                waitUntilEndEffectorTriggered()
+                        ),
+                        // Don't allow canceling
+                        CommandsExt.schedule(
+                                Commands.sequence(
+                                        Commands.parallel(
+                                                setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
+                                                endEffector.setGoal(EndEffector.RollersGoal.ORIENT),
+                                                Commands.waitSeconds(0.2)
+                                        )
+                                ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
                         )
                 )
         );

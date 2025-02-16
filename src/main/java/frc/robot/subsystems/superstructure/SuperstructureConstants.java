@@ -6,7 +6,7 @@ public class SuperstructureConstants {
     protected static final SuperstructureIO io = Constants.isReplay
             ? new SuperstructureIO()
             : switch (Constants.identity) {
-        case COMPBOT -> new SuperstructureIO();
+        case COMPBOT -> new SuperstructureIOReal();
         case SIMBOT, ALPHABOT -> new SuperstructureIOSim();
     };
 

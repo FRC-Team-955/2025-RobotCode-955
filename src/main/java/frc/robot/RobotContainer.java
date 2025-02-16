@@ -80,13 +80,17 @@ public class RobotContainer {
         characterizationChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysId.dynamic(SysIdRoutine.Direction.kForward));
         characterizationChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysId.dynamic(SysIdRoutine.Direction.kReverse));
 
-        ////////////////////// DRIVE //////////////////////
+        ////////////////////// ELEVATOR //////////////////////
 
         characterizationChooser.addOption("Elevator SysId (Quasistatic Forward)", elevator.sysId.quasistatic(SysIdRoutine.Direction.kForward));
         characterizationChooser.addOption("Elevator SysId (Quasistatic Reverse)", elevator.sysId.quasistatic(SysIdRoutine.Direction.kReverse));
         characterizationChooser.addOption("Elevator SysId (Dynamic Forward)", elevator.sysId.dynamic(SysIdRoutine.Direction.kForward));
         characterizationChooser.addOption("Elevator SysId (Dynamic Reverse)", elevator.sysId.dynamic(SysIdRoutine.Direction.kReverse));
         characterizationChooser.addOption("Elevator Feedforward Characterization", elevator.feedforwardCharacterization());
+
+        ////////////////////// END EFFECTOR //////////////////////
+
+        characterizationChooser.addOption("End Effector Rollers Feedforward Characterization", endEffector.rollersFeedforwardCharacterization());
     }
 
     private void setDefaultCommands() {
@@ -118,11 +122,11 @@ public class RobotContainer {
                 )
         );
 
-        superstructure.setDefaultCommand(superstructure.idle());
-//        coralIntake.setDefaultCommand(superstructure.coralIntakeIdle());
-//        indexer.setDefaultCommand(superstructure.indexerIdle());
-        elevator.setDefaultCommand(superstructure.elevatorIdle());
-        endEffector.setDefaultCommand(superstructure.endEffectorIdle());
+        superstructure.setDefaultCommand(superstructure.idle().ignoringDisable(true));
+//        coralIntake.setDefaultCommand(superstructure.coralIntakeIdle().ignoringDisable(true));
+//        indexer.setDefaultCommand(superstructure.indexerIdle().ignoringDisable(true));
+        elevator.setDefaultCommand(superstructure.elevatorIdle().ignoringDisable(true));
+        endEffector.setDefaultCommand(superstructure.endEffectorIdle().ignoringDisable(true));
     }
 
     /**
@@ -134,12 +138,14 @@ public class RobotContainer {
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
 
-        driverController.rightTrigger().toggleOnTrue(elevator.setGoal(Elevator.Goal.LOW_TESTING_ONLY).andThen(Commands.idle()));
+//        driverController.rightTrigger().toggleOnTrue(elevator.setGoal(Elevator.Goal.LOW_TESTING_ONLY).andThen(Commands.idle()));
+        driverController.rightTrigger().whileTrue(superstructure.funnelIntake());
 //        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
 
         driverController.leftTrigger().onTrue(superstructure.scoreCoralManual(
                 driverController.leftTrigger(),
-                driverController.leftBumper()
+                driverController.leftBumper(),
+                operatorDashboard::getElevatorGoal
         ));
 //        driverController.leftTrigger().toggleOnTrue(superstructure.autoAlignAndScore(
 //                operatorDashboard::getSide,

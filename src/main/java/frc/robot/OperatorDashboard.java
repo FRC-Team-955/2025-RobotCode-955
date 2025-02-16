@@ -1,5 +1,6 @@
 package frc.robot;
 
+import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.util.network.LoggedNetworkBooleanExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
 import lombok.Getter;
@@ -44,6 +45,15 @@ public class OperatorDashboard extends VirtualSubsystem {
         handleEnumToggles(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
         handleEnumToggles(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);
         handleEnumToggles(coralLevels, selectedCoralLevel, selectNew -> selectedCoralLevel = selectNew);
+    }
+
+    public Elevator.Goal getElevatorGoal() {
+        return switch (selectedCoralLevel) {
+            case L1 -> Elevator.Goal.SCORE_L1;
+            case L2 -> Elevator.Goal.SCORE_L2;
+            case L3 -> Elevator.Goal.SCORE_L3;
+            case L4 -> Elevator.Goal.SCORE_L4;
+        };
     }
 
     public enum ReefZoneSide {

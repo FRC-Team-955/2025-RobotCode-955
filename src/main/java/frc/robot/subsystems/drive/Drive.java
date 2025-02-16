@@ -233,12 +233,12 @@ public class Drive extends SubsystemBaseExt {
             }
         }
 
-        moduleDriveGainsTunable.ifChanged(gains -> {
+        moduleDriveGainsTunable.ifChanged(hashCode(), gains -> {
             for (var module : modules) {
                 module.setDrivePIDF(gains);
             }
         });
-        moduleTurnGainsTunable.ifChanged(gains -> {
+        moduleTurnGainsTunable.ifChanged(hashCode(), gains -> {
             for (var module : modules) {
                 module.setTurnPIDF(gains);
             }

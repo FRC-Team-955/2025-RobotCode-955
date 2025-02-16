@@ -8,6 +8,7 @@ import frc.robot.RobotState;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
+import frc.robot.util.characterization.FeedforwardCharacterization;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +28,10 @@ public class EndEffector extends SubsystemBaseExt {
     public enum RollersGoal {
         CHARACTERIZATION(null),
         IDLE(() -> 0),
-        HANDOFF(() -> 1),
-        SCORE(() -> 1);
+        HANDOFF(() -> 0),
+        FUNNEL_INTAKE(() -> Units.rotationsPerMinuteToRadiansPerSecond(800)),
+        ORIENT(() -> Units.rotationsPerMinuteToRadiansPerSecond(100)),
+        SCORE(() -> Units.rotationsPerMinuteToRadiansPerSecond(100));
 
         private final DoubleSupplier setpointRadPerSec;
     }
@@ -70,8 +73,8 @@ public class EndEffector extends SubsystemBaseExt {
             rollersIO.setBrakeMode(!coastOverride.get());
         }
 
-        positionGainsTunable.ifChanged(rollersIO::setPositionPIDF);
-        velocityGainsTunable.ifChanged(rollersIO::setVelocityPIDF);
+        positionGainsTunable.ifChanged(hashCode(), rollersIO::setPositionPIDF);
+        velocityGainsTunable.ifChanged(hashCode(), rollersIO::setVelocityPIDF);
 
         ////////////// ROLLERS //////////////
         Logger.recordOutput("EndEffector/Rollers/Goal", rollersGoal);
@@ -95,5 +98,15 @@ public class EndEffector extends SubsystemBaseExt {
                 90 + (40 / Units.inchesToMeters(2.25) * (elevator.getPositionMeters() - Units.inchesToMeters(5))),
                 90, 130
         );
+    }
+
+    public Command rollersFeedforwardCharacterization() {
+        return setGoal(RollersGoal.CHARACTERIZATION)
+                .andThen(new FeedforwardCharacterization(
+                        rollersIO::setOpenLoop,
+                        () -> new double[]{rollersInputs.velocityRadPerSec},
+                        1,
+                        this
+                ));
     }
 }

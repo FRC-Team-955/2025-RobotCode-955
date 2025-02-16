@@ -5,16 +5,27 @@ import frc.robot.Constants;
 import frc.robot.subsystems.rollers.RollersConfig;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOSim;
+import frc.robot.subsystems.rollers.RollersIOSparkMax;
 import frc.robot.util.PIDF;
 
 public class EndEffectorConstants {
     public static final PIDF positionGains = PIDF.ofP(1);
-    public static final PIDF velocityGains = PIDF.ofPSVA(1, 0, 1, 1);
+    public static final PIDF velocityGains = PIDF.ofPSV(0.01, 0.43576, 0.31280);
 
     protected static final RollersIO rollersIO = Constants.isReplay
             ? new RollersIO()
             : switch (Constants.identity) {
-        case COMPBOT -> new RollersIO();
+        case COMPBOT -> new RollersIOSparkMax(
+                7,
+                new RollersConfig(
+                        false,
+                        true,
+                        40,
+                        15,
+                        positionGains,
+                        velocityGains
+                )
+        );
         case SIMBOT, ALPHABOT -> new RollersIOSim(
                 new RollersConfig(
                         false,
