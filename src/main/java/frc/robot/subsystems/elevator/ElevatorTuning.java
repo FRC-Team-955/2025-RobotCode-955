@@ -1,6 +1,5 @@
 package frc.robot.subsystems.elevator;
 
-import edu.wpi.first.math.util.Units;
 import frc.robot.util.PIDF;
 import frc.robot.util.network.LoggedTunableNumber;
 
@@ -15,15 +14,15 @@ public class ElevatorTuning {
             new LoggedTunableNumber("Elevator/MaxAccelerationMetersPerSecondSquared", maxAccelerationMetersPerSecondSquared);
 
     public static final LoggedTunableNumber scoreL1GoalSetpoint =
-            new LoggedTunableNumber("Elevator/Goal/ScoreL1", maxHeightMeters - Units.inchesToMeters(54));
+            new LoggedTunableNumber("Elevator/Goal/ScoreL1", .5);
     public static final LoggedTunableNumber scoreL2GoalSetpoint =
-            new LoggedTunableNumber("Elevator/Goal/ScoreL2", maxHeightMeters - Units.inchesToMeters(40.125));
+            new LoggedTunableNumber("Elevator/Goal/ScoreL2", .7);
     public static final LoggedTunableNumber scoreL3GoalSetpoint =
-            new LoggedTunableNumber("Elevator/Goal/ScoreL3", maxHeightMeters - Units.inchesToMeters(24.375));
+            new LoggedTunableNumber("Elevator/Goal/ScoreL3", 1.1);
     public static final LoggedTunableNumber scoreL4GoalSetpoint =
             new LoggedTunableNumber("Elevator/Goal/ScoreL4", maxHeightMeters);
     public static final LoggedTunableNumber descoreL2GoalSetpoint =
-            new LoggedTunableNumber("Elevator/Goal/DescoreL2", 0);
+            new LoggedTunableNumber("Elevator/Goal/DescoreL2", .6);
     public static final LoggedTunableNumber descoreL3GoalSetpoint =
-            new LoggedTunableNumber("Elevator/Goal/DescoreL3", 0);
+            new LoggedTunableNumber("Elevator/Goal/DescoreL3", .7);
 }
