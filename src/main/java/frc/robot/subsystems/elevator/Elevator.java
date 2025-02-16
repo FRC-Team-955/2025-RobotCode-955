@@ -2,6 +2,7 @@ package frc.robot.subsystems.elevator;
 
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotMechanism;
@@ -48,6 +49,9 @@ public class Elevator extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Elevator/HasZeroed")
     private boolean hasZeroed = false;
+    @AutoLogOutput(key = "Elevator/AutoStop")
+    private boolean autoStop = false;
+    private final Timer autoStopTimer = new Timer();
 
     private static final ElevatorIO io = ElevatorConstants.io;
     private static final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
@@ -135,19 +139,22 @@ public class Elevator extends SubsystemBaseExt {
         Logger.recordOutput("Elevator/Goal", goal);
         if (goal.setpointMeters != null) {
             var setpointMeters = goal.setpointMeters.getAsDouble();
+            var positionMeters = getPositionMeters();
+            var velocityMetersPerSec = getVelocityMetersPerSec();
 
             boolean usingGentleProfile = inputs.leaderVelocityRadPerSec < 0.1 // If we are going down
                     // If we are below the hardstop slowdown zone
-                    && getPositionMeters() < hardstopSlowdownMeters;
+                    && positionMeters < hardstopSlowdownMeters;
             var profile = usingGentleProfile
                     ? profileGentleVelocity
                     : profileFullVelocity;
 
             // Sometimes the profile outruns the elevator, so failsafe if it does
-            var currentState = useRealElevatorState.get()
-                    ? new TrapezoidProfile.State(getPositionMeters(), getVelocityMetersPerSec())
+            var usingRealStateAsCurrent = useRealElevatorState.get();
+            var currentState = usingRealStateAsCurrent
+                    ? new TrapezoidProfile.State(positionMeters, velocityMetersPerSec)
                     : previousStateMeters;
-            if (useRealElevatorState.get()) {
+            if (usingRealStateAsCurrent) {
                 // Turn it off instantly
                 useRealElevatorState.set(false);
             }
@@ -160,7 +167,26 @@ public class Elevator extends SubsystemBaseExt {
 
             var setpointPositionRad = metersToRad(previousStateMeters.position);
             var setpointVelocityRadPerSec = metersToRad(previousStateMeters.velocity);
-            io.setClosedLoop(setpointPositionRad, setpointVelocityRadPerSec);
+
+            // Check limits
+            if (!autoStop) {
+                autoStop = (positionMeters > upperLimit.positionMeters()
+                        && velocityMetersPerSec > upperLimit.velocityMetersPerSec()
+                ) || (positionMeters < lowerLimit.positionMeters()
+                        && velocityMetersPerSec < lowerLimit.velocityMetersPerSec());
+
+                if (autoStop) {
+                    autoStopTimer.restart();
+                }
+            } else if (autoStopTimer.hasElapsed(0.25) && Math.abs(velocityMetersPerSec) < 0.2) {
+                // Only disable auto stop if we have stopped for a bit (roughly - we don't want to get stuck in auto stop)
+                autoStop = false;
+            }
+            if (autoStop) {
+                io.setClosedLoop(positionMeters, 0);
+            } else {
+                io.setClosedLoop(setpointPositionRad, setpointVelocityRadPerSec);
+            }
 
             Logger.recordOutput("Elevator/ClosedLoop", true);
             Logger.recordOutput("Elevator/UsingGentleProfile", usingGentleProfile);

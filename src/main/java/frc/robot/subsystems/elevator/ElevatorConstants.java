@@ -19,7 +19,10 @@ public class ElevatorConstants {
     public static final double gearRatio = 5;
     private static final double sprocketRadiusMeters = Units.inchesToMeters((1.0 + (9.0 / 32.0)) / 2);
     public static final double drumRadiusMeters = sprocketRadiusMeters * 3; // 3 stages
+
     public static final double maxHeightMeters = Units.inchesToMeters(66.622);
+    public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 2);
+    public static final ElevatorLimit lowerLimit = new ElevatorLimit(0.15, -1.5);
 
     public static final double hardstopMeters = Units.inchesToMeters(10.66);
     public static final double gentleMaxVelocityMetersPerSecond = 2;
@@ -76,4 +79,10 @@ public class ElevatorConstants {
         case COMPBOT -> new ElevatorIOSparkMax(5, 6, 9, true);
         case SIMBOT, ALPHABOT -> new ElevatorIOSim();
     };
+
+    public record ElevatorLimit(
+            double positionMeters,
+            double velocityMetersPerSec
+    ) {
+    }
 }
