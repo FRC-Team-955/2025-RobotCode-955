@@ -86,7 +86,7 @@ public class RobotContainer {
         characterizationChooser.addOption("Elevator SysId (Quasistatic Reverse)", elevator.sysId.quasistatic(SysIdRoutine.Direction.kReverse));
         characterizationChooser.addOption("Elevator SysId (Dynamic Forward)", elevator.sysId.dynamic(SysIdRoutine.Direction.kForward));
         characterizationChooser.addOption("Elevator SysId (Dynamic Reverse)", elevator.sysId.dynamic(SysIdRoutine.Direction.kReverse));
-//        characterizationChooser.addOption("Elevator Gravity", elevator.gravityCharacterization());
+        characterizationChooser.addOption("Elevator Feedforward Characterization", elevator.feedforwardCharacterization());
     }
 
     private void setDefaultCommands() {

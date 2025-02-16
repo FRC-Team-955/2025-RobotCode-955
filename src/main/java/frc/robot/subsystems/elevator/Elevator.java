@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
 import frc.robot.Util;
+import frc.robot.util.characterization.FeedforwardCharacterization;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -16,12 +17,10 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.OperatorDashboard.coastOverride;
 import static frc.robot.RobotMechanism.middleOfRobot;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
-import static frc.robot.subsystems.elevator.ElevatorTuning.gainsTunable;
 
 public class Elevator extends SubsystemBaseExt {
     private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
@@ -64,7 +63,8 @@ public class Elevator extends SubsystemBaseExt {
                     maxAccelerationMetersPerSecondSquared
             )
     );
-    private TrapezoidProfile.State previousState = new TrapezoidProfile.State();
+    private TrapezoidProfile.State previousStateMeters = new TrapezoidProfile.State();
+    private boolean usingRealStateAsCurrent = false;
 
     public final SysIdRoutine sysId;
 
@@ -121,29 +121,43 @@ public class Elevator extends SubsystemBaseExt {
         if (goal.setpointMeters != null) {
             var setpointMeters = goal.setpointMeters.getAsDouble();
 
-            boolean shouldUseGentleProfile = inputs.leaderVelocityRadPerSec < 0.01 // If we are going down
+            boolean usingGentleProfile = inputs.leaderVelocityRadPerSec < 0.1 // If we are going down
                     // If we are below the hardstop slowdown zone
                     && getPositionMeters() < hardstopSlowdownMeters;
-            var profile = shouldUseGentleProfile
+            var profile = usingGentleProfile
                     ? profileGentleVelocity
                     : profileFullVelocity;
-            previousState = profile.calculate(
+
+            // Sometimes the profile outruns the elevator, so failsafe if it does
+            usingRealStateAsCurrent = usingRealStateAsCurrent
+                    // Stop using the real state as the current state once we get close enough to setpoint
+                    // This way, it doesn't go back and forth and is "sticky"
+                    ? !(Math.abs(getPositionMeters() - previousStateMeters.position) < 0.05)
+                    : (
+                    Math.abs(getPositionMeters() - previousStateMeters.position) > 0.25 // If we are too far away from setpoint state
+                            && getVelocityMetersPerSec() < 0.1 // If we have stopped
+            );
+            var currentState = usingRealStateAsCurrent
+                    ? new TrapezoidProfile.State(getPositionMeters(), getVelocityMetersPerSec())
+                    : previousStateMeters;
+
+            previousStateMeters = profile.calculate(
                     0.02,
-//                    previousState,
-                    new TrapezoidProfile.State(getPositionMeters(), getVelocityMetersPerSec()),
+                    currentState,
                     new TrapezoidProfile.State(setpointMeters, 0)
             );
 
-            var setpointPositionRad = metersToRad(previousState.position);
-            var setpointVelocityRadPerSec = metersToRad(previousState.velocity);
+            var setpointPositionRad = metersToRad(previousStateMeters.position);
+            var setpointVelocityRadPerSec = metersToRad(previousStateMeters.velocity);
             io.setClosedLoop(setpointPositionRad, setpointVelocityRadPerSec);
 
             Logger.recordOutput("Elevator/ClosedLoop", true);
-            Logger.recordOutput("Elevator/UsingGentleProfile", shouldUseGentleProfile);
+            Logger.recordOutput("Elevator/UsingGentleProfile", usingGentleProfile);
+            Logger.recordOutput("Elevator/UsingRealStateAsCurrent", usingRealStateAsCurrent);
 
             Logger.recordOutput("Elevator/Setpoint/GoalPositionMeters", setpointMeters);
-            Logger.recordOutput("Elevator/Setpoint/PositionMeters", previousState.position);
-            Logger.recordOutput("Elevator/Setpoint/VelocityMetersPerSec", previousState.velocity);
+            Logger.recordOutput("Elevator/Setpoint/PositionMeters", previousStateMeters.position);
+            Logger.recordOutput("Elevator/Setpoint/VelocityMetersPerSec", previousStateMeters.velocity);
         } else {
             Logger.recordOutput("Elevator/ClosedLoop", false);
         }
@@ -183,14 +197,15 @@ public class Elevator extends SubsystemBaseExt {
         return radToMeters(inputs.leaderVelocityRadPerSec);
     }
 
-//    public Command feedforwardCharacterization() {
-//        return setGoal(Goal.CHARACTERIZATION)
-//                .andThen(new FeedforwardCharacterization(
-//                        io::setOpenLoop,
-//                        () -> inputs.leaderVelocityRadPerSec,
-//                        this
-//                ));
-//    }
+    public Command feedforwardCharacterization() {
+        return setGoal(Goal.CHARACTERIZATION)
+                .andThen(new FeedforwardCharacterization(
+                        io::setOpenLoop,
+                        () -> new double[]{inputs.leaderVelocityRadPerSec},
+                        1,
+                        this
+                ));
+    }
 
     public Command runOpenLoop() {
         return setGoal(Goal.CHARACTERIZATION)

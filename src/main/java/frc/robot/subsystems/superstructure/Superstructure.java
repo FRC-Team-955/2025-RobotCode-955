@@ -41,6 +41,7 @@ public class Superstructure extends SubsystemBaseExt {
         HANDOFF_HANDING_OFF,
 
         SCORE_CORAL_WAIT_ELEVATOR,
+        SCORE_CORAL_WAIT_CONFIRM,
         SCORE_CORAL_SCORING,
         SCORE_CORAL_DONE
     }
@@ -243,13 +244,17 @@ public class Superstructure extends SubsystemBaseExt {
                                         endEffector.setGoal(EndEffector.RollersGoal.IDLE),
                                         elevator.setGoalAndWaitUntilAtGoal(() -> Elevator.Goal.SCORE_L4)
                                 ),
-                                Commands.waitUntil(forwardTrigger),
+                                Commands.parallel(
+                                        setGoal(Goal.SCORE_CORAL_WAIT_CONFIRM),
+                                        Commands.waitUntil(forwardTrigger)
+                                ),
                                 // Don't allow canceling
                                 CommandsExt.schedule(
                                         Commands.sequence(
                                                 Commands.parallel(
                                                         setGoal(Goal.SCORE_CORAL_SCORING),
                                                         endEffector.setGoal(EndEffector.RollersGoal.SCORE),
+                                                        elevator.setGoal(Elevator.Goal.SCORE_L4),
                                                         waitUntilEndEffectorNotTriggered()
                                                 ),
                                                 // Wait for coral to settle

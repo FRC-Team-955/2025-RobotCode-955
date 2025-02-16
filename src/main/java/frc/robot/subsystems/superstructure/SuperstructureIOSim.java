@@ -16,10 +16,19 @@ import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.Arrays;
+
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
 
 public class SuperstructureIOSim extends SuperstructureIO {
+    private static final Translation2d[] stationLocations = {
+            new Translation2d(1, 1),
+            new Translation2d(1, 7),
+            new Translation2d(16.5, 7),
+            new Translation2d(16.5, 1)
+    };
+
     private final IntakeSimulation intakeSimulation = IntakeSimulation.OverTheBumperIntake(
             "Coral",
             ModuleIOSim.driveSimulation,
@@ -69,6 +78,12 @@ public class SuperstructureIOSim extends SuperstructureIO {
         var pose = robotState.getPose();
         Transform3d coralRobotRelative = null;
         switch (coralState) {
+            case NO_CORAL -> {
+                var current = robotState.getPose().getTranslation();
+                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 1)) {
+                    coralState = CoralState.IN_END_EFFECTOR;
+                }
+            }
             case INDEXING -> {
                 if (sinceCoralIntaked.hasElapsed(indexTime)) {
                     coralState = CoralState.IN_INDEXER;
@@ -155,7 +170,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
             Logger.recordOutput("FieldSimulation/CoralInRobot", new Pose3d[]{});
         }
 
-//        switch (coralState) {
+        switch (coralState) {
 //            case INDEXING -> {
 //                inputs.intakeRangeMeters = 0;
 //                inputs.indexerBeamBreakTriggered = false;
@@ -166,17 +181,17 @@ public class SuperstructureIOSim extends SuperstructureIO {
 //                inputs.indexerBeamBreakTriggered = true;
 //                inputs.endEffectorBeamBreakTriggered = false;
 //            }
-//            case IN_END_EFFECTOR -> {
+            case IN_END_EFFECTOR -> {
 //                inputs.intakeRangeMeters = Double.MAX_VALUE;
 //                inputs.indexerBeamBreakTriggered = false;
-//                inputs.endEffectorBeamBreakTriggered = true;
-//            }
-//            default -> {
+                inputs.endEffectorBeamBreakTriggered = true;
+            }
+            default -> {
 //                inputs.intakeRangeMeters = Double.MAX_VALUE;
 //                inputs.indexerBeamBreakTriggered = false;
-//                inputs.endEffectorBeamBreakTriggered = false;
-//            }
-//        }
+                inputs.endEffectorBeamBreakTriggered = false;
+            }
+        }
 
 //        inputs.intakeRangeConnected = true;
 //        inputs.indexerBeamBreakConnected = true;
