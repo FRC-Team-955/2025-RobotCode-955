@@ -309,7 +309,7 @@ public class Superstructure extends SubsystemBaseExt {
                                         Commands.parallel(
                                                 setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
                                                 endEffector.setGoal(EndEffector.RollersGoal.ORIENT_CORAL),
-                                                Commands.waitSeconds(0.3)
+                                                Commands.waitSeconds(0.25)
                                         )
                                 ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
                         )
