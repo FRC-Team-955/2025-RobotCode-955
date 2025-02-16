@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.util.PIDF;
 import org.littletonrobotics.junction.Logger;
 
+import static frc.robot.subsystems.drive.DriveConstants.disableDriving;
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
 
 public class Module {
@@ -67,8 +68,7 @@ public class Module {
         state.cosineScale(currentAngle);
 
         // Apply setpoints
-        io.setDriveVelocity(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
-        io.setTurnPosition(state.angle.getRadians());
+        runSetpointUnoptimized(state);
     }
 
     /**
@@ -76,7 +76,11 @@ public class Module {
      */
     public void runSetpointUnoptimized(SwerveModuleState state) {
         // Apply setpoints
-        io.setDriveVelocity(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
+        if (disableDriving) {
+            io.setDriveOpenLoop(0.0);
+        } else {
+            io.setDriveVelocity(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
+        }
         io.setTurnPosition(state.angle.getRadians());
     }
 

@@ -306,13 +306,7 @@ public class Drive extends SubsystemBaseExt {
                 // Calculate module setpoints
                 ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(closedLoopSetpoint, 0.02);
                 SwerveModuleState[] setpointStates = robotState.getKinematics().toSwerveModuleStates(discreteSpeeds);
-                if (disableDriving) {
-                    for (int i = 0; i < modules.length; i++) {
-                        setpointStates[i].speedMetersPerSecond = 0.0;
-                    }
-                } else {
-                    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, driveConfig.maxLinearSpeedMetersPerSec());
-                }
+                SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, driveConfig.maxLinearSpeedMetersPerSec());
 
                 Logger.recordOutput("Drive/ModuleStates/Setpoints", setpointStates);
 
