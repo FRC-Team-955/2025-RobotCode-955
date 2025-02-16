@@ -38,8 +38,8 @@ public class DriveConstants {
                 Units.inchesToMeters(34.625),
                 PIDF.ofPD(1.5, 0),
                 PIDF.ofPD(1.5, 0),
-                4.574, // from Choreo
-                20,
+                4.022, // from Choreo
+                15,
                 11.580, // from Choreo
                 55.116, // from Choreo
                 Units.degreesToRadians(1080)
@@ -108,8 +108,8 @@ public class DriveConstants {
                 20
         );
         case SIMBOT -> new ModuleConfig(
-                PIDF.ofPDSV(0.05, 0.0, 0.0, 0.15),
-                PIDF.ofPD(8.0, 0.0),
+                PIDF.ofPDSV(0.05, 0.0, 0.02522, 0.14115),
+                PIDF.ofPD(3.0, 0.07),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,

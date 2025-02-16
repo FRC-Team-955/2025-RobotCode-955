@@ -21,6 +21,7 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.OperatorDashboard.coastOverride;
 import static frc.robot.RobotMechanism.middleOfRobot;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
+import static frc.robot.subsystems.elevator.ElevatorTuning.*;
 
 public class Elevator extends SubsystemBaseExt {
     private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
@@ -51,13 +52,13 @@ public class Elevator extends SubsystemBaseExt {
     private static final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
 
     /** NOTE: UNITS IN METERS! */
-    private final TrapezoidProfile profileFullVelocity = new TrapezoidProfile(
+    private TrapezoidProfile profileFullVelocity = new TrapezoidProfile(
             new TrapezoidProfile.Constraints(
                     maxVelocityMetersPerSecond,
                     maxAccelerationMetersPerSecondSquared
             )
     );
-    private final TrapezoidProfile profileGentleVelocity = new TrapezoidProfile(
+    private TrapezoidProfile profileGentleVelocity = new TrapezoidProfile(
             new TrapezoidProfile.Constraints(
                     gentleMaxVelocityMetersPerSecond,
                     maxAccelerationMetersPerSecondSquared
@@ -117,6 +118,20 @@ public class Elevator extends SubsystemBaseExt {
 
         gainsTunable.ifChanged(io::setPIDF);
 
+        if (maxVelocityMetersPerSecondTunable.hasChanged(hashCode())
+                || maxAccelerationMetersPerSecondSquaredTunable.hasChanged(hashCode())
+        ) {
+            profileFullVelocity = new TrapezoidProfile(new TrapezoidProfile.Constraints(
+                    maxVelocityMetersPerSecondTunable.get(),
+                    maxAccelerationMetersPerSecondSquaredTunable.get()
+            ));
+            profileGentleVelocity = new TrapezoidProfile(new TrapezoidProfile.Constraints(
+                    gentleMaxVelocityMetersPerSecond,
+                    maxAccelerationMetersPerSecondSquaredTunable.get()
+            ));
+            hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecond);
+        }
+
         Logger.recordOutput("Elevator/Goal", goal);
         if (goal.setpointMeters != null) {
             var setpointMeters = goal.setpointMeters.getAsDouble();
@@ -129,14 +144,9 @@ public class Elevator extends SubsystemBaseExt {
                     : profileFullVelocity;
 
             // Sometimes the profile outruns the elevator, so failsafe if it does
-            usingRealStateAsCurrent = usingRealStateAsCurrent
-                    // Stop using the real state as the current state once we get close enough to setpoint
-                    // This way, it doesn't go back and forth and is "sticky"
-                    ? !(Math.abs(getPositionMeters() - previousStateMeters.position) < 0.05)
-                    : (
-                    Math.abs(getPositionMeters() - previousStateMeters.position) > 0.25 // If we are too far away from setpoint state
-                            && getVelocityMetersPerSec() < 0.1 // If we have stopped
-            );
+            // TODO: operator override
+//            usingRealStateAsCurrent = Math.abs(getPositionMeters() - previousStateMeters.position) > 0.05 // If we are too far away from setpoint state
+//                    && getVelocityMetersPerSec() < 0.005; // If we have stopped
             var currentState = usingRealStateAsCurrent
                     ? new TrapezoidProfile.State(getPositionMeters(), getVelocityMetersPerSec())
                     : previousStateMeters;
@@ -206,11 +216,5 @@ public class Elevator extends SubsystemBaseExt {
                         1,
                         this
                 ));
-    }
-
-    public Command runOpenLoop() {
-        return setGoal(Goal.CHARACTERIZATION)
-                .andThen(run(() -> io.setOpenLoop(1)))
-                .finallyDo(() -> io.setOpenLoop(0));
     }
 }

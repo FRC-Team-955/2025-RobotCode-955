@@ -260,24 +260,16 @@ public class Robot extends LoggedRobot {
     public void simulationPeriodic() {
         SimulatedArena.getInstance().simulationPeriodic();
 
-        if (DriverStation.isAutonomousEnabled()) {
-            var pose = RobotState.get().getPose();
-            // Scuffed hack to reset apply odometry reset at the start of auto
-            if (!SIMULATION_ONLY_hasResetPoseOnAutonomousEnable &&
-                    pose.getTranslation().getDistance(
-                            ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose().getTranslation()
-                    ) >= 0.5
-            ) {
-                ModuleIOSim.driveSimulation.setSimulationWorldPose(pose);
-                SIMULATION_ONLY_hasResetPoseOnAutonomousEnable = true;
-            } else {
-                RobotState.get().setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
-            }
-        } else {
-            RobotState.get().setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
-            if (SIMULATION_ONLY_hasResetPoseOnAutonomousEnable) {
-                SIMULATION_ONLY_hasResetPoseOnAutonomousEnable = false;
-            }
+        // Scuffed hack to reset apply odometry reset at the start of auto
+        var pose = RobotState.get().getPose();
+        if (DriverStation.isAutonomousEnabled()
+                && !SIMULATION_ONLY_hasResetPoseOnAutonomousEnable
+                && pose.getTranslation().getDistance(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose().getTranslation()) >= 0.5
+        ) {
+            ModuleIOSim.driveSimulation.setSimulationWorldPose(pose);
+            SIMULATION_ONLY_hasResetPoseOnAutonomousEnable = true;
+        } else if (SIMULATION_ONLY_hasResetPoseOnAutonomousEnable) {
+            SIMULATION_ONLY_hasResetPoseOnAutonomousEnable = false;
         }
 
         Logger.recordOutput("FieldSimulation/RobotPosition", ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());

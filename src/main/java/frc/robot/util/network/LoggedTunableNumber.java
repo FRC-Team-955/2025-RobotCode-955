@@ -5,11 +5,11 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import java.util.HashSet;
 
-public class LoggedTuningNumber {
+public class LoggedTunableNumber {
     private final LoggedTuningNumberInner inner;
     private double defaultValue;
 
-    public LoggedTuningNumber(String key, double defaultValue) {
+    public LoggedTunableNumber(String key, double defaultValue) {
         if (Constants.tuningMode) {
             inner = new LoggedTuningNumberInner(key, defaultValue);
         } else {

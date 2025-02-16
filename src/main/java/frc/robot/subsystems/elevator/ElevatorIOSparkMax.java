@@ -168,7 +168,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
 
     @Override
     public void setClosedLoop(double positionRad, double velocityRadPerSec) {
-        var ffVolts = ff.calculate(velocityRadPerSec);//WithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
+        var ffVolts = ff.calculateWithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
         lastVelocitySetpointRadPerSec = velocityRadPerSec;
         controller.setReference(
                 positionRad,

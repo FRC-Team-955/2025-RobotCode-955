@@ -7,7 +7,7 @@ import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import edu.wpi.first.math.controller.*;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import frc.robot.util.network.LoggedTuningNumber;
+import frc.robot.util.network.LoggedTunableNumber;
 
 import java.util.function.Consumer;
 
@@ -18,10 +18,6 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
 
     public static PIDF ofPD(double kP, double kD) {
         return new PIDF(kP, 0, kD, 0, 0, 0, 0);
-    }
-
-    public static PIDF ofPID(double kP, double kI, double kD) {
-        return new PIDF(kP, kI, kD, 0, 0, 0, 0);
     }
 
     public static PIDF ofPSV(double kP, double kS, double kV) {
@@ -64,8 +60,8 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
         return new PIDF(kP, 0, kD, kS, kV, kA, kG);
     }
 
-    public static PIDF ofPIDSVA(double kP, double kI, double kD, double kS, double kV, double kA) {
-        return new PIDF(kP, kI, kD, kS, kV, kA, 0);
+    public static PIDF ofPDVAG(double kP, double kD, double kV, double kA, double kG) {
+        return new PIDF(kP, 0, kD, 0, kV, kA, kG);
     }
 
     public static PIDF ofPIDSVAG(double kP, double kI, double kD, double kS, double kV, double kA, double kG) {
@@ -160,23 +156,23 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
 
     public class Tunable {
         private final String name;
-        private final LoggedTuningNumber tunablekP;
-        private final LoggedTuningNumber tunablekI;
-        private final LoggedTuningNumber tunablekD;
-        private final LoggedTuningNumber tunablekS;
-        private final LoggedTuningNumber tunablekV;
-        private final LoggedTuningNumber tunablekA;
-        private final LoggedTuningNumber tunablekG;
+        private final LoggedTunableNumber tunablekP;
+        private final LoggedTunableNumber tunablekI;
+        private final LoggedTunableNumber tunablekD;
+        private final LoggedTunableNumber tunablekS;
+        private final LoggedTunableNumber tunablekV;
+        private final LoggedTunableNumber tunablekA;
+        private final LoggedTunableNumber tunablekG;
 
         private Tunable(String name) {
             this.name = name;
-            tunablekP = new LoggedTuningNumber(name + "/kP", kP);
-            tunablekI = new LoggedTuningNumber(name + "/kI", kI);
-            tunablekD = new LoggedTuningNumber(name + "/kD", kD);
-            tunablekS = new LoggedTuningNumber(name + "/kS", kS);
-            tunablekV = new LoggedTuningNumber(name + "/kV", kV);
-            tunablekA = new LoggedTuningNumber(name + "/kA", kA);
-            tunablekG = new LoggedTuningNumber(name + "/kG", kG);
+            tunablekP = new LoggedTunableNumber(name + "/kP", kP);
+            tunablekI = new LoggedTunableNumber(name + "/kI", kI);
+            tunablekD = new LoggedTunableNumber(name + "/kD", kD);
+            tunablekS = new LoggedTunableNumber(name + "/kS", kS);
+            tunablekV = new LoggedTunableNumber(name + "/kV", kV);
+            tunablekA = new LoggedTunableNumber(name + "/kA", kA);
+            tunablekG = new LoggedTunableNumber(name + "/kG", kG);
         }
 
         public void ifChanged(Consumer<PIDF> setNewGains) {

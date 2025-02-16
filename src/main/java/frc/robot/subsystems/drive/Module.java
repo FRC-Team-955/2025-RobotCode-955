@@ -13,6 +13,7 @@
 
 package frc.robot.subsystems.drive;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -112,7 +113,7 @@ public class Module {
      * Returns the current turn angle of the module.
      */
     public Rotation2d getAngle() {
-        return new Rotation2d(inputs.turnPositionRad);
+        return new Rotation2d(MathUtil.angleModulus(inputs.turnPositionRad));
     }
 
     public double getPositionRad() {

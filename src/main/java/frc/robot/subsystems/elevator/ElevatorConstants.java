@@ -7,20 +7,22 @@ import frc.robot.util.PIDF;
 public class ElevatorConstants {
     /** Gains in radians */
     public static final PIDF gains = switch (Constants.identity) {
-        case COMPBOT -> PIDF.ofPDSVAG(0, 0, 0.1, 0.08, 0, 0.5);
-        case SIMBOT, ALPHABOT -> PIDF.ofPDSVAG(0.1, 0.0, 0, 0.06, 0.018, 2.9296);
+        case COMPBOT -> PIDF.ofPDSVAG(0, 0, 0.59602, 0.041767, 0.01098, 1.30);//1.1952);
+        case SIMBOT, ALPHABOT -> PIDF.ofPDVAG(0, 0, 0.1, 0.008, 1.5015);
+//        case SIMBOT, ALPHABOT -> PIDF.ofPDSVAG(0.1, 0.0, 0, 0.06, 0.018, 2.9296);
+//        case SIMBOT, ALPHABOT -> PIDF.ofPDSVAG(0.01, 0.0, 1.33476, 0.23048, 0.011, 2.50);
     };
 
-    public static final double maxVelocityMetersPerSecond = 0.3;
-    public static final double maxAccelerationMetersPerSecondSquared = 0.3;
+    public static final double maxVelocityMetersPerSecond = 4;
+    public static final double maxAccelerationMetersPerSecondSquared = 12;
 
-    public static final double gearRatio = 3;
+    public static final double gearRatio = 5;
     private static final double sprocketRadiusMeters = Units.inchesToMeters((1.0 + (9.0 / 32.0)) / 2);
     public static final double drumRadiusMeters = sprocketRadiusMeters * 3; // 3 stages
     public static final double maxHeightMeters = Units.inchesToMeters(66.622);
 
     public static final double hardstopMeters = Units.inchesToMeters(10.66);
-    public static final double gentleMaxVelocityMetersPerSecond = maxVelocityMetersPerSecond / 4;
+    public static final double gentleMaxVelocityMetersPerSecond = 2;
     /**
      * Not actually the max acceleration, just the max acceleration we assume when calculating slowdown
      * height in order to be a little conservative.
@@ -30,9 +32,9 @@ public class ElevatorConstants {
      * While we could calculate this based on the current velocity, it caused the gentle profile to be used
      * for only half of the loop cycles. This could probably be solved but I don't think it's worth the effort
      */
-    public static final double hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecond);
+    public static double hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecond);
 
-    private static double calculateHardstopSlowdownMeters(double currentVelocityMetersPerSec) {
+    public static double calculateHardstopSlowdownMeters(double currentVelocityMetersPerSec) {
         // If we are going down at v:
         //     x = -v * t
         // If we slow down at a, max acceleration,

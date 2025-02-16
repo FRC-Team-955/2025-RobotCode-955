@@ -14,7 +14,9 @@
 package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import frc.robot.subsystems.drive.ModuleIOSim;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
@@ -29,19 +31,16 @@ import static frc.robot.subsystems.vision.VisionConstants.aprilTagLayout;
 public class AprilTagIOPhotonVisionSim extends AprilTagIOPhotonVision {
     private static VisionSystemSim visionSim;
 
-    private final Supplier<Pose2d> poseSupplier;
+    private static final Supplier<Pose2d> poseSupplier = ModuleIOSim.driveSimulation::getSimulatedDriveTrainPose;
     private final PhotonCameraSim cameraSim;
 
     /**
      * Creates a new VisionIOPhotonVisionSim.
      *
-     * @param name         The name of the camera.
-     * @param poseSupplier Supplier for the robot pose to use in simulation.
+     * @param name The name of the camera.
      */
-    public AprilTagIOPhotonVisionSim(
-            String name, Transform3d robotToCamera, Supplier<Pose2d> poseSupplier) {
+    public AprilTagIOPhotonVisionSim(String name, Transform3d robotToCamera) {
         super(name, robotToCamera);
-        this.poseSupplier = poseSupplier;
 
         // Initialize vision sim
         if (visionSim == null) {
@@ -51,6 +50,7 @@ public class AprilTagIOPhotonVisionSim extends AprilTagIOPhotonVision {
 
         // Add sim camera
         var cameraProperties = new SimCameraProperties();
+        cameraProperties.setCalibration(1600, 1200, Rotation2d.fromDegrees(95.5));
         cameraSim = new PhotonCameraSim(camera, cameraProperties);
         visionSim.addCamera(cameraSim, robotToCamera);
     }
