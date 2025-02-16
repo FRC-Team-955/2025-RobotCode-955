@@ -19,6 +19,7 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.OperatorDashboard.coastOverride;
+import static frc.robot.OperatorDashboard.useRealElevatorState;
 import static frc.robot.RobotMechanism.middleOfRobot;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 import static frc.robot.subsystems.elevator.ElevatorTuning.*;
@@ -65,7 +66,6 @@ public class Elevator extends SubsystemBaseExt {
             )
     );
     private TrapezoidProfile.State previousStateMeters = new TrapezoidProfile.State();
-    private boolean usingRealStateAsCurrent = false;
 
     public final SysIdRoutine sysId;
 
@@ -144,12 +144,13 @@ public class Elevator extends SubsystemBaseExt {
                     : profileFullVelocity;
 
             // Sometimes the profile outruns the elevator, so failsafe if it does
-            // TODO: operator override
-//            usingRealStateAsCurrent = Math.abs(getPositionMeters() - previousStateMeters.position) > 0.05 // If we are too far away from setpoint state
-//                    && getVelocityMetersPerSec() < 0.005; // If we have stopped
-            var currentState = usingRealStateAsCurrent
+            var currentState = useRealElevatorState.get()
                     ? new TrapezoidProfile.State(getPositionMeters(), getVelocityMetersPerSec())
                     : previousStateMeters;
+            if (useRealElevatorState.get()) {
+                // Turn it off instantly
+                useRealElevatorState.set(false);
+            }
 
             previousStateMeters = profile.calculate(
                     0.02,
