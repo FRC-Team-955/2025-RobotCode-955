@@ -6,18 +6,16 @@ import java.util.HashSet;
 
 public class LoggedNetworkBooleanExt extends LoggedNetworkBoolean {
     private final HashSet<Integer> hashCodesGottenChange = new HashSet<>();
-    private boolean lastValue = get();
-
-    public LoggedNetworkBooleanExt(String key) {
-        super(key);
-    }
+    private boolean lastValue;
+    private boolean hasChangedOnce = false;
 
     public LoggedNetworkBooleanExt(String key, boolean defaultValue) {
         super(key, defaultValue);
+        lastValue = defaultValue;
     }
 
     public boolean hasChanged(int hashCode) {
-        if (!hashCodesGottenChange.contains(hashCode)) {
+        if (hasChangedOnce && !hashCodesGottenChange.contains(hashCode)) {
             hashCodesGottenChange.add(hashCode);
             return true;
         } else {
@@ -33,6 +31,7 @@ public class LoggedNetworkBooleanExt extends LoggedNetworkBoolean {
         if (newValue != lastValue) {
             // Clear all hash codes that have been given the change so that they get the new value
             hashCodesGottenChange.clear();
+            hasChangedOnce = true;
         }
         lastValue = newValue;
     }
