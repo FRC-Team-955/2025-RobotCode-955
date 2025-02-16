@@ -287,7 +287,8 @@ public class Superstructure extends SubsystemBaseExt {
                         Commands.parallel(
                                 setGoal(Goal.DESCORE_ALGAE_DESCORING),
                                 endEffector.setGoal(EndEffector.RollersGoal.DESCORE_ALGAE),
-                                elevator.setGoal(elevatorGoalSupplier)
+                                elevator.setGoal(elevatorGoalSupplier),
+                                Commands.idle()
                         )
                 )
         );
