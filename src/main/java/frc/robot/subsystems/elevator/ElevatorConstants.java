@@ -15,7 +15,7 @@ public class ElevatorConstants {
     public static final double maxAccelerationMetersPerSecondSquared = 0.5;
 
     public static final double gearRatio = 5;
-    private static final double sprocketRadiusMeters = Units.inchesToMeters((1.0 + (9.0 / 32.0)) / 2);
+    protected static final double sprocketRadiusMeters = Units.inchesToMeters((1.0 + (9.0 / 32.0)) / 2);
     public static final double drumRadiusMeters = sprocketRadiusMeters * 3; // 3 stages
 
     public static final double setpointToleranceMeters = Units.inchesToMeters(5);
