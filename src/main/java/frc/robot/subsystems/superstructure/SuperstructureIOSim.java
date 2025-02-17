@@ -7,6 +7,8 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.elevator.Elevator;
@@ -58,6 +60,10 @@ public class SuperstructureIOSim extends SuperstructureIO {
         IN_INDEXER,
         HANDING_OFF,
         IN_END_EFFECTOR
+    }
+
+    public SuperstructureIOSim() {
+        RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() -> coralState = CoralState.IN_END_EFFECTOR));
     }
 
     @Override

@@ -19,6 +19,8 @@ import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
@@ -251,26 +253,16 @@ public class Robot extends LoggedRobot {
     @Override
     public void simulationInit() {
         SimulatedArena.getInstance().resetFieldForAuto();
+        RobotModeTriggers.autonomous().onTrue(Commands.runOnce(SimulatedArena.getInstance()::resetFieldForAuto));
+        RobotModeTriggers.autonomous().onTrue(Commands.waitSeconds(0.05)
+                .andThen(Commands.runOnce(() -> ModuleIOSim.driveSimulation.setSimulationWorldPose(RobotState.get().getPose()))));
         RobotState.get().setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
     }
 
-    private boolean SIMULATION_ONLY_hasResetPoseOnAutonomousEnable = false;
 
     @Override
     public void simulationPeriodic() {
         SimulatedArena.getInstance().simulationPeriodic();
-
-        // Scuffed hack to reset apply odometry reset at the start of auto
-        var pose = RobotState.get().getPose();
-        if (DriverStation.isAutonomousEnabled()
-                && !SIMULATION_ONLY_hasResetPoseOnAutonomousEnable
-                && pose.getTranslation().getDistance(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose().getTranslation()) >= 0.5
-        ) {
-            ModuleIOSim.driveSimulation.setSimulationWorldPose(pose);
-            SIMULATION_ONLY_hasResetPoseOnAutonomousEnable = true;
-        } else if (SIMULATION_ONLY_hasResetPoseOnAutonomousEnable) {
-            SIMULATION_ONLY_hasResetPoseOnAutonomousEnable = false;
-        }
 
         Logger.recordOutput("FieldSimulation/RobotPosition", ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
         Logger.recordOutput(

@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.factories.auto.TestAuto;
+import frc.robot.factories.auto.BargeSideAuto;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
@@ -65,8 +65,8 @@ public class RobotContainer {
     private void addAutos() {
         final var factory = drive.createAutoFactory();
 
-        autoChooser.addDefaultOption("None", Commands.none());
-        autoChooser.addOption("Test Auto", TestAuto.get(factory.newRoutine("Test Auto")));
+        autoChooser.addOption("None", Commands.none());
+        autoChooser.addDefaultOption("Barge Side", BargeSideAuto.get(factory.newRoutine("Barge Side")));
 
         autoChooser.addOption("Characterization", Commands.deferredProxy(characterizationChooser::get));
     }

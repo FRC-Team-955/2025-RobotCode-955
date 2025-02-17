@@ -238,6 +238,32 @@ public class Superstructure extends SubsystemBaseExt {
 //        );
 //    }
 
+    /** NOT FOR TELEOP USE */
+    public Command scoreCoralDuringAuto(
+            Trigger forwardTrigger,
+            Supplier<Elevator.Goal> elevatorGoalSupplier
+    ) {
+
+        return Commands.sequence(
+                Commands.parallel(
+                        setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
+                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                        elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
+                ),
+                Commands.parallel(
+                        setGoal(Goal.SCORE_CORAL_WAIT_CONFIRM),
+                        Commands.waitUntil(forwardTrigger)
+                ),
+                Commands.parallel(
+                        setGoal(Goal.SCORE_CORAL_SCORING),
+                        endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
+                        elevator.setGoal(elevatorGoalSupplier)
+                ),
+                // Wait for coral to settle
+                Commands.waitSeconds(0.5)
+        );
+    }
+
     public Command scoreCoralManual(
             Trigger forwardTrigger,
             Trigger cancelTrigger,
