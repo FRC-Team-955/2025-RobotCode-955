@@ -30,8 +30,8 @@
 //    @Getter
 //    private RollersGoal rollersGoal = RollersGoal.IDLE;
 //
-//    private static final RollersIO rollersIO = IndexerConstants.rollersIO;
-//    private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
+//    private final RollersIO rollersIO = IndexerConstants.rollersIO;
+//    private final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 //
 //    private static Indexer instance;
 //
@@ -51,6 +51,8 @@
 //    public void periodicBeforeCommands() {
 //        rollersIO.updateInputs(rollersInputs);
 //        Logger.processInputs("Inputs/Indexer/Rollers", rollersInputs);
+//
+//        // TODO: connection alerts
 //
 //        // side rollers are reversed relative to motor
 //        robotMechanism.indexer.rollersLigament.setAngle(Units.radiansToDegrees(-rollersInputs.positionRad));

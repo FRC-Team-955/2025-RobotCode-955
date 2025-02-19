@@ -66,7 +66,6 @@ public class ElevatorIOSim extends ElevatorIO {
         inputs.followerAppliedVolts = inputs.leaderAppliedVolts;
         inputs.followerCurrentAmps = inputs.leaderCurrentAmps;
 
-        inputs.limitSwitchConnected = true;
         inputs.limitSwitchTriggered = sim.getPositionMeters() < Units.inchesToMeters(1);
     }
 

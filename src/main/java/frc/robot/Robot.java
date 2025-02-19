@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.subsystems.drive.ModuleIOSim;
+import frc.robot.util.CANLogger;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
 import org.ironmaple.simulation.SimulatedArena;
@@ -128,6 +129,11 @@ public class Robot extends LoggedRobot {
         // Configure brownout voltage
         RobotController.setBrownoutVoltage(6.0);
 
+        // Disable controller disconnection alerts since we have our own alert
+        DriverStation.silenceJoystickConnectionWarning(true);
+
+        CANLogger.ensureInitialized();
+
         // No references to RobotContainer/RobotState/any subsystem should be made before this point!
         System.out.println("********** Initializing RobotContainer **********");
         robotContainer = new RobotContainer();
@@ -176,14 +182,6 @@ public class Robot extends LoggedRobot {
         // and then runs all of the commands.
         CommandScheduler.getInstance().run();
 
-        for (var subsystem : virtualSubsystems) {
-            subsystem.periodicAfterCommands();
-        }
-
-        for (var subsystem : extendedSubsystems) {
-            subsystem.periodicAfterCommands();
-        }
-
         if (DriverStation.isAutonomousEnabled()) {
             // We want this to run after the command scheduler,
             // so this can't go in autonomousPeriodic
@@ -192,6 +190,14 @@ public class Robot extends LoggedRobot {
                 autonomousCommand = null;
                 System.out.printf("********** Auto finished in %.2f seconds **********%n", autonomousEnd - autonomousStart);
             }
+        }
+
+        for (var subsystem : virtualSubsystems) {
+            subsystem.periodicAfterCommands();
+        }
+
+        for (var subsystem : extendedSubsystems) {
+            subsystem.periodicAfterCommands();
         }
 
         // Return to normal thread priority

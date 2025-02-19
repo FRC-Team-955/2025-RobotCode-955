@@ -3,6 +3,7 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController;
@@ -17,6 +18,7 @@ import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.leds.LEDs;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
+import frc.robot.util.subsystem.VirtualSubsystem;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -31,15 +33,18 @@ import static frc.robot.Constants.mode;
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
-public class RobotContainer {
+public class RobotContainer extends VirtualSubsystem {
     // Controller
     private final CommandXboxController driverController = RobotBase.isSimulation()
             ? Constants.Simulation.simController.apply(0)
             : new CommandXboxController(0);
+    private final Alert driverControllerDisconnectedAlert = new Alert("Driver controller is not connected!", Alert.AlertType.kError);
 
     // Dashboard inputs
+    /** THERE SHOULD NOT BE A DEFAULT OPTION OR THE ALERT WILL BREAK!! */
     private final LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Choices");
     private final LoggedDashboardChooser<Command> characterizationChooser = new LoggedDashboardChooser<>("Characterization Choices");
+    private final Alert autoNotChosenAlert = new Alert("Auto is not chosen!", Alert.AlertType.kError);
 
     private final RobotState robotState = RobotState.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
@@ -65,8 +70,10 @@ public class RobotContainer {
     private void addAutos() {
         final var factory = drive.createAutoFactory();
 
+        // THERE SHOULD NOT BE A DEFAULT OPTION OR THE ALERT WILL BREAK!!
+
         autoChooser.addOption("None", Commands.none());
-        autoChooser.addDefaultOption("Barge Side", BargeSideAuto.get(factory.newRoutine("Barge Side")));
+        autoChooser.addOption("Barge Side", BargeSideAuto.get(factory.newRoutine("Barge Side")));
 
         autoChooser.addOption("Characterization", Commands.deferredProxy(characterizationChooser::get));
     }
@@ -190,5 +197,12 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         return autoChooser.get();
+    }
+
+    @Override
+    public void periodicBeforeCommands() {
+        driverControllerDisconnectedAlert.set(!driverController.isConnected());
+
+        autoNotChosenAlert.set(autoChooser.get() == null);
     }
 }

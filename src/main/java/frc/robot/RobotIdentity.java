@@ -1,5 +1,6 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.RobotBase;
 import org.littletonrobotics.junction.Logger;
 
@@ -14,6 +15,8 @@ public enum RobotIdentity {
         this.macAddress = macAddress;
     }
 
+    private static final Alert unmatchedMacAddressAlert = new Alert("Mac address did not match any robot identities, assuming COMPBOT", Alert.AlertType.kWarning);
+
     public static RobotIdentity determine() {
         if (RobotBase.isReal()) {
             final var macAddress = Util.getMacAddress();
@@ -27,6 +30,7 @@ public enum RobotIdentity {
                 return ALPHABOT;
 
             System.out.println("Mac address " + macAddress + " did not match any robot identities. Assuming COMPBOT");
+            unmatchedMacAddressAlert.set(true);
             return COMPBOT;
         } else {
             if (Constants.Simulation.shouldReplay)

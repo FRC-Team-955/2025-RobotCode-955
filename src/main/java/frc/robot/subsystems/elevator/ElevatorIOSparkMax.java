@@ -125,7 +125,6 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         ifOk(followMotor, followMotor::getOutputCurrent, (value) -> inputs.followerCurrentAmps = value);
         inputs.followerConnected = followConnectedDebounce.calculate(!sparkStickyFault);
 
-        inputs.limitSwitchConnected = true;
         inputs.limitSwitchTriggered = !limitSwitch.get();
     }
 

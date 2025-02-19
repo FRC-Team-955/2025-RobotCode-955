@@ -49,8 +49,8 @@
 //    @Getter
 //    private RollersGoal rollersGoal = RollersGoal.IDLE;
 //
-//    private static final RollersIO rollersIO = CoralIntakeConstants.rollersIo;
-//    private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
+//    private final RollersIO rollersIO = CoralIntakeConstants.rollersIo;
+//    private final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 //
 //    private static CoralIntake instance;
 //
@@ -70,6 +70,8 @@
 //    public void periodicBeforeCommands() {
 //        pivotIO.updateInputs(pivotInputs);
 //        Logger.processInputs("Inputs/CoralIntake/Pivot", pivotInputs);
+//
+//        // TODO: connection and zeroed alerts
 //
 //        rollersIO.updateInputs(rollersInputs);
 //        Logger.processInputs("Inputs/CoralIntake/Rollers", rollersInputs);

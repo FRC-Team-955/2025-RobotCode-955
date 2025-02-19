@@ -2,6 +2,7 @@ package frc.robot.subsystems.endeffector;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
@@ -40,8 +41,10 @@ public class EndEffector extends SubsystemBaseExt {
     @Getter
     private RollersGoal rollersGoal = RollersGoal.IDLE;
 
-    private static final RollersIO rollersIO = createRollersIO();
-    private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
+    private final RollersIO rollersIO = createRollersIO();
+    private final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
+
+    private final Alert rollersDisconnectedAlert = new Alert("End effector rollers motor is disconnected.", Alert.AlertType.kError);
 
     private static EndEffector instance;
 
@@ -61,6 +64,8 @@ public class EndEffector extends SubsystemBaseExt {
     public void periodicBeforeCommands() {
         rollersIO.updateInputs(rollersInputs);
         Logger.processInputs("Inputs/EndEffector/Rollers", rollersInputs);
+
+        rollersDisconnectedAlert.set(!rollersInputs.connected);
 
         robotMechanism.endEffector.ligament.setAngle(getAngleDegrees());
         robotMechanism.endEffector.ligament.setAngle(getAngleDegrees());

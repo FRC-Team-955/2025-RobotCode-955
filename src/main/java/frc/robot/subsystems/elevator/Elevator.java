@@ -52,8 +52,8 @@ public class Elevator extends SubsystemBaseExt {
     private final Timer autoStopTimer = new Timer();
     private boolean prevEmergencyStopped = false;
 
-    private static final ElevatorIO io = createIO();
-    private static final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
+    private final ElevatorIO io = createIO();
+    private final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
 
     /** NOTE: UNITS IN METERS! */
     private TrapezoidProfile profileFullVelocity = new TrapezoidProfile(
@@ -72,7 +72,10 @@ public class Elevator extends SubsystemBaseExt {
 
     public final SysIdRoutine sysId;
 
-    private final Alert emergencyStoppedAlert = new Alert("Elevator is emergency stopped", Alert.AlertType.kInfo);
+    private final Alert emergencyStoppedAlert = new Alert("Elevator is emergency stopped.", Alert.AlertType.kError);
+    private final Alert notZeroedAlert = new Alert("Elevator is not zeroed.", Alert.AlertType.kWarning);
+    private final Alert leaderDisconnectedAlert = new Alert("Elevator leader motor is disconnected.", Alert.AlertType.kError);
+    private final Alert followerDisconnectedAlert = new Alert("Elevator follower motor is disconnected.", Alert.AlertType.kError);
 
     private static Elevator instance;
 
@@ -102,7 +105,8 @@ public class Elevator extends SubsystemBaseExt {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Elevator", inputs);
 
-        // TODO: connected and has zeroed alerts
+        leaderDisconnectedAlert.set(!inputs.leaderConnected);
+        followerDisconnectedAlert.set(!inputs.followerConnected);
 
         // Check emergency stop and limits for auto stop
         var positionMeters = getPositionMeters();
@@ -170,6 +174,7 @@ public class Elevator extends SubsystemBaseExt {
             hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecond);
         }
 
+        // Goal control
         Logger.recordOutput("Elevator/Goal", goal);
         if (goal.setpointMeters != null) {
             var positionMeters = getPositionMeters();
@@ -215,10 +220,12 @@ public class Elevator extends SubsystemBaseExt {
             Logger.recordOutput("Elevator/ClosedLoop", false);
         }
 
+        // Check limit switch and zero if needed
         if (!hasZeroed && inputs.limitSwitchTriggered) {
             io.setEncoder(0);
             hasZeroed = true;
         }
+        notZeroedAlert.set(!hasZeroed);
     }
 
     public Command setGoal(Supplier<Goal> goal) {

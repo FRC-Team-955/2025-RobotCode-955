@@ -18,7 +18,6 @@ public class ElevatorIO {
         public double followerAppliedVolts = 0.0;
         public double followerCurrentAmps = 0.0;
 
-        public boolean limitSwitchConnected = false;
         public boolean limitSwitchTriggered = false;
     }
 
