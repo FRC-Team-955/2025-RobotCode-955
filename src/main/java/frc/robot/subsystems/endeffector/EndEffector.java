@@ -17,6 +17,7 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 
 import static frc.robot.OperatorDashboard.coastOverride;
+import static frc.robot.subsystems.endeffector.EndEffectorConstants.createRollersIO;
 import static frc.robot.subsystems.endeffector.EndEffectorTuning.*;
 
 public class EndEffector extends SubsystemBaseExt {
@@ -39,7 +40,7 @@ public class EndEffector extends SubsystemBaseExt {
     @Getter
     private RollersGoal rollersGoal = RollersGoal.IDLE;
 
-    private static final RollersIO rollersIO = EndEffectorConstants.rollersIO;
+    private static final RollersIO rollersIO = createRollersIO();
     private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 
     private static EndEffector instance;

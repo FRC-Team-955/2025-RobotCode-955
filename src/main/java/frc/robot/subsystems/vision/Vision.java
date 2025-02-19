@@ -35,8 +35,8 @@ import static frc.robot.subsystems.vision.VisionConstants.*;
 public class Vision extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
 
-    private final AprilTagIO[] aprilTagIo = VisionConstants.aprilTagIO;
-    private final GamepieceIO[] gamepieceIo = VisionConstants.gamepieceIO;
+    private final AprilTagIO[] aprilTagIo = createAprilTagIO();
+    private final GamepieceIO[] gamepieceIo = createGamepieceIO();
     private final AprilTagIOInputsAutoLogged[] atInputs;
     private final GamepieceIOInputsAutoLogged[] gpInputs;
     private final Alert[] atDisconnectedAlerts;

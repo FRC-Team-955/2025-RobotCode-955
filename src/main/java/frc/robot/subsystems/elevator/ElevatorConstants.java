@@ -68,15 +68,15 @@ public class ElevatorConstants {
         return rad * drumRadiusMeters;
     }
 
-    // IO layers should go at the bottom in case they reference constants that aren't yet initialized
-    // TODO: function to avoid this?
-
-    protected static final ElevatorIO io = Constants.isReplay
-            ? new ElevatorIO()
-            : switch (Constants.identity) {
-        case COMPBOT -> new ElevatorIOSparkMax(5, 6, 9, true);
-        case SIMBOT, ALPHABOT -> new ElevatorIOSim();
-    };
+    protected static ElevatorIO createIO() {
+        if (Constants.isReplay) {
+            return new ElevatorIO();
+        }
+        return switch (Constants.identity) {
+            case COMPBOT -> new ElevatorIOSparkMax(5, 6, 9, true);
+            case SIMBOT, ALPHABOT -> new ElevatorIOSim();
+        };
+    }
 
     public record ElevatorLimit(
             double positionMeters,

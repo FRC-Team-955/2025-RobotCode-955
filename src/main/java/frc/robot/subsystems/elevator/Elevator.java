@@ -51,7 +51,7 @@ public class Elevator extends SubsystemBaseExt {
     private boolean autoStop = false;
     private final Timer autoStopTimer = new Timer();
 
-    private static final ElevatorIO io = ElevatorConstants.io;
+    private static final ElevatorIO io = createIO();
     private static final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
 
     /** NOTE: UNITS IN METERS! */

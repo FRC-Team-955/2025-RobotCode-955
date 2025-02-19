@@ -12,31 +12,34 @@ public class EndEffectorConstants {
     public static final PIDF positionGains = PIDF.ofP(1);
     public static final PIDF velocityGains = PIDF.ofPSV(0.01, 0.43576, 0.31280);
 
-    protected static final RollersIO rollersIO = Constants.isReplay
-            ? new RollersIO()
-            : switch (Constants.identity) {
-        case COMPBOT -> new RollersIOSparkMax(
-                7,
-                new RollersConfig(
-                        false,
-                        true,
-                        40,
-                        15,
-                        positionGains,
-                        velocityGains
-                )
-        );
-        case SIMBOT, ALPHABOT -> new RollersIOSim(
-                new RollersConfig(
-                        false,
-                        true,
-                        40,
-                        3,
-                        positionGains,
-                        velocityGains
-                ),
-                0.01,
-                DCMotor.getNEO(1)
-        );
-    };
+    protected static RollersIO createRollersIO() {
+        if (Constants.isReplay) {
+            return new RollersIO();
+        }
+        return switch (Constants.identity) {
+            case COMPBOT -> new RollersIOSparkMax(
+                    7,
+                    new RollersConfig(
+                            false,
+                            true,
+                            40,
+                            15,
+                            positionGains,
+                            velocityGains
+                    )
+            );
+            case SIMBOT, ALPHABOT -> new RollersIOSim(
+                    new RollersConfig(
+                            false,
+                            true,
+                            40,
+                            3,
+                            positionGains,
+                            velocityGains
+                    ),
+                    0.01,
+                    DCMotor.getNEO(1)
+            );
+        };
+    }
 }

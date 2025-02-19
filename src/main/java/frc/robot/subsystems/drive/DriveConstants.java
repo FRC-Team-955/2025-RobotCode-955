@@ -120,43 +120,47 @@ public class DriveConstants {
         );
     };
 
-    // IO layers should go at the bottom in case they reference constants that aren't yet initialized
+    public static ModuleIO[] createModuleIO() {
+        if (Constants.isReplay) {
+            return new ModuleIO[]{new ModuleIO(), new ModuleIO(), new ModuleIO(), new ModuleIO()};
+        }
+        return switch (Constants.identity) {
+            // To calibrate the absolute encoder offsets, point the modules straight (such that forward
+            // motion on the drive motor will propel the robot forward) and copy the reported values from the
+            // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
+            case COMPBOT -> new ModuleIO[]{
+                    // FL, FR, BL, BR
+                    new ModuleIOTalonFXSparkMaxCANcoder(1, 1, 5, 1.577),
+                    new ModuleIOTalonFXSparkMaxCANcoder(2, 2, 6, 1.770),
+                    new ModuleIOTalonFXSparkMaxCANcoder(3, 3, 7, 3.105),
+                    new ModuleIOTalonFXSparkMaxCANcoder(4, 4, 8, -2.817),
+            };
+            case ALPHABOT -> new ModuleIO[]{
+                    // FL, FR, BL, BR
+                    new ModuleIOSparkMaxCANcoder(4, 5, 6, -2.115),
+                    new ModuleIOSparkMaxCANcoder(2, 3, 1, -2.161),
+                    new ModuleIOSparkMaxCANcoder(9, 10, 8, 0.255),
+                    new ModuleIOSparkMaxCANcoder(12, 13, 11, 0.852),
+            };
+            case SIMBOT -> new ModuleIO[]{
+                    new ModuleIOSim(0),
+                    new ModuleIOSim(1),
+                    new ModuleIOSim(2),
+                    new ModuleIOSim(3)
+            };
+        };
+    }
 
-    public static final ModuleIO[] moduleIO = Constants.isReplay
-            ? new ModuleIO[]{new ModuleIO(), new ModuleIO(), new ModuleIO(), new ModuleIO()}
-            : switch (Constants.identity) {
-        // To calibrate the absolute encoder offsets, point the modules straight (such that forward
-        // motion on the drive motor will propel the robot forward) and copy the reported values from the
-        // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
-        case COMPBOT -> new ModuleIO[]{
-                // FL, FR, BL, BR
-                new ModuleIOTalonFXSparkMaxCANcoder(1, 1, 5, 1.577),
-                new ModuleIOTalonFXSparkMaxCANcoder(2, 2, 6, 1.770),
-                new ModuleIOTalonFXSparkMaxCANcoder(3, 3, 7, 3.105),
-                new ModuleIOTalonFXSparkMaxCANcoder(4, 4, 8, -2.817),
+    public static GyroIO createGyroIO() {
+        if (Constants.isReplay) {
+            return new GyroIO();
+        }
+        return switch (Constants.identity) {
+            case COMPBOT -> new GyroIOPigeon2(9);
+            case ALPHABOT -> new GyroIOPigeon2(7);
+            case SIMBOT -> new GyroIOSim();
         };
-        case ALPHABOT -> new ModuleIO[]{
-                // FL, FR, BL, BR
-                new ModuleIOSparkMaxCANcoder(4, 5, 6, -2.115),
-                new ModuleIOSparkMaxCANcoder(2, 3, 1, -2.161),
-                new ModuleIOSparkMaxCANcoder(9, 10, 8, 0.255),
-                new ModuleIOSparkMaxCANcoder(12, 13, 11, 0.852),
-        };
-        case SIMBOT -> new ModuleIO[]{
-                new ModuleIOSim(0),
-                new ModuleIOSim(1),
-                new ModuleIOSim(2),
-                new ModuleIOSim(3)
-        };
-    };
-
-    public static final GyroIO gyroIO = Constants.isReplay
-            ? new GyroIO()
-            : switch (Constants.identity) {
-        case COMPBOT -> new GyroIOPigeon2(9);
-        case ALPHABOT -> new GyroIOPigeon2(7);
-        case SIMBOT -> new GyroIOSim();
-    };
+    }
 
     public record DriveConfig(
             double wheelRadiusMeters,

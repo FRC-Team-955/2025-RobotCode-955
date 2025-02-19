@@ -3,8 +3,10 @@ package frc.robot.subsystems.leds;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import org.littletonrobotics.junction.Logger;
 
+import static frc.robot.subsystems.leds.LEDConstants.createIO;
+
 public class LEDs extends SubsystemBaseExt {
-    private final LEDsIO io = LEDConstants.io;
+    private final LEDsIO io = createIO();
     private final LEDsIOInputsAutoLogged inputs = new LEDsIOInputsAutoLogged();
 
     private static LEDs instance;

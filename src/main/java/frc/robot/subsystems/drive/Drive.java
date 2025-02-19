@@ -87,7 +87,7 @@ public class Drive extends SubsystemBaseExt {
         };
     }
 
-    private final GyroIO gyroIO = DriveConstants.gyroIO;
+    private final GyroIO gyroIO = createGyroIO();
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
 
     /**
@@ -131,6 +131,7 @@ public class Drive extends SubsystemBaseExt {
     }
 
     private Drive() {
+        var moduleIO = createModuleIO();
         // Array is currently four nulls, so length works just fine
         for (int i = 0; i < modules.length; i++) {
             modules[i] = new Module(moduleIO[i], i);

@@ -20,6 +20,7 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.Supplier;
 
 import static frc.robot.FieldLocations.*;
+import static frc.robot.subsystems.superstructure.SuperstructureConstants.createIO;
 
 public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
@@ -54,7 +55,7 @@ public class Superstructure extends SubsystemBaseExt {
     @Getter
     private Goal goal = Goal.IDLE;
 
-    private final SuperstructureIO io = SuperstructureConstants.io;
+    private final SuperstructureIO io = createIO();
     private final SuperstructureIOInputsAutoLogged inputs = new SuperstructureIOInputsAutoLogged();
 
     private Command withGoal(Goal goal, Command command) {
