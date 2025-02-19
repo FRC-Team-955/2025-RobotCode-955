@@ -30,6 +30,8 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.Constants;
+import frc.robot.util.PIDF;
 
 import java.util.Queue;
 
@@ -97,9 +99,9 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
             int cancoderCanID,
             double absoluteEncoderOffsetRad
     ) {
-        driveTalon = new TalonFX(driveCanID);
-        turnTalon = new TalonFX(turnCanID);
-        cancoder = new CANcoder(cancoderCanID);
+        driveTalon = new TalonFX(driveCanID, Constants.CANivore.busName);
+        turnTalon = new TalonFX(turnCanID, Constants.CANivore.busName);
+        cancoder = new CANcoder(cancoderCanID, Constants.CANivore.busName);
 
         // Configure drive motor
         driveConfig = new TalonFXConfiguration();
@@ -129,8 +131,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         turnConfig.CurrentLimits.StatorCurrentLimit = moduleConfig.turnCurrentLimit();
         turnConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         turnConfig.MotionMagic.MotionMagicCruiseVelocity = 100.0 / moduleConfig.turnGearRatio();
-        turnConfig.MotionMagic.MotionMagicAcceleration =
-                turnConfig.MotionMagic.MotionMagicCruiseVelocity / 0.100;
+        turnConfig.MotionMagic.MotionMagicAcceleration = turnConfig.MotionMagic.MotionMagicCruiseVelocity / 0.100;
         turnConfig.MotionMagic.MotionMagicExpo_kV = 0.12 * moduleConfig.turnGearRatio();
         turnConfig.MotionMagic.MotionMagicExpo_kA = 0.1;
         turnConfig.ClosedLoopGeneral.ContinuousWrap = true;
@@ -180,7 +181,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
                 turnVelocity,
                 turnAppliedVolts,
                 turnCurrent);
-        ParentDevice.optimizeBusUtilizationForAll(driveTalon, turnTalon);
+        ParentDevice.optimizeBusUtilizationForAll(driveTalon, turnTalon, cancoder);
     }
 
     @Override
@@ -207,16 +208,33 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         inputs.turnCurrentAmps = turnCurrent.getValueAsDouble();
 
         // Update odometry inputs
-        inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+        inputs.odometryDriveTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryDrivePositionsRad = drivePositionQueue.stream()
                 .mapToDouble(Units::rotationsToRadians)
                 .toArray();
+
+        inputs.odometryTurnTimestamps = inputs.odometryDriveTimestamps;
         inputs.odometryTurnPositionsRad = turnPositionQueue.stream()
                 .mapToDouble(Units::rotationsToRadians)
                 .toArray();
+
         timestampQueue.clear();
         drivePositionQueue.clear();
         turnPositionQueue.clear();
+    }
+
+    @Override
+    public void setDrivePIDF(PIDF newGains) {
+        System.out.println("Setting drive gains");
+        driveConfig.Slot0 = Slot0Configs.from(newGains.toPhoenix());
+        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+    }
+
+    @Override
+    public void setTurnPIDF(PIDF newGains) {
+        System.out.println("Setting turn gains");
+        turnConfig.Slot0 = Slot0Configs.from(newGains.toPhoenix());
+        tryUntilOk(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));
     }
 
     @Override

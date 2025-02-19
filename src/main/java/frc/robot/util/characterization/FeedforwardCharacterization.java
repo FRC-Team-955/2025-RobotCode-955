@@ -35,21 +35,31 @@ public class FeedforwardCharacterization extends Command {
     private static final double START_DELAY_SECS = 2.0;
     private static final double RAMP_VOLTS_PER_SEC = 0.1;
 
-    private FeedforwardCharacterizationData data;
+    private FeedforwardCharacterizationData[] data;
+    private final int numberOfVelocity;
     private final Consumer<Double> voltageConsumer;
-    private final Supplier<Double> velocitySupplier;
+    private final Supplier<double[]> velocitySupplier;
 
     private final Timer timer = new Timer();
 
-    public FeedforwardCharacterization(Consumer<Double> voltageConsumer, Supplier<Double> velocitySupplier, Subsystem subsystem) {
+    public FeedforwardCharacterization(
+            Consumer<Double> voltageConsumer,
+            Supplier<double[]> velocitySupplier,
+            int numberOfVelocity,
+            Subsystem subsystem
+    ) {
         this.voltageConsumer = voltageConsumer;
+        this.numberOfVelocity = numberOfVelocity;
         this.velocitySupplier = velocitySupplier;
         addRequirements(subsystem);
     }
 
     @Override
     public void initialize() {
-        data = new FeedforwardCharacterizationData();
+        data = new FeedforwardCharacterizationData[numberOfVelocity];
+        for (int i = 0; i < numberOfVelocity; i++) {
+            data[i] = new FeedforwardCharacterizationData();
+        }
         timer.reset();
         timer.start();
     }
@@ -61,7 +71,10 @@ public class FeedforwardCharacterization extends Command {
         } else {
             double voltage = (timer.get() - START_DELAY_SECS) * RAMP_VOLTS_PER_SEC;
             voltageConsumer.accept(voltage);
-            data.add(velocitySupplier.get(), voltage);
+            var velocities = velocitySupplier.get();
+            for (int i = 0; i < numberOfVelocity; i++) {
+                data[i].add(velocities[i], voltage);
+            }
         }
     }
 
@@ -69,7 +82,10 @@ public class FeedforwardCharacterization extends Command {
     public void end(boolean interrupted) {
         voltageConsumer.accept(0.0);
         timer.stop();
-        data.printResults();
+        for (int i = 0; i < numberOfVelocity; i++) {
+            System.out.println("Velocity #" + i);
+            data[i].printResults();
+        }
     }
 
     private static class FeedforwardCharacterizationData {

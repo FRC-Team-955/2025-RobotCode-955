@@ -20,7 +20,7 @@ public class DriveConstants {
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
     // Ranges: -1 to 1, where 1 is the maximum speed
-    public static final PIDF moveToXY = PIDF.ofPD(4, 0);
+    public static final PIDF moveToXY = PIDF.ofPD(2.7, 0.2);
     public static final PIDF moveToOmega = PIDF.ofPD(1.5, 0);
 
     public static final boolean useSetpointGenerator = true;
@@ -38,8 +38,8 @@ public class DriveConstants {
                 Units.inchesToMeters(34.625),
                 PIDF.ofPD(1.5, 0),
                 PIDF.ofPD(1.5, 0),
-                4.574, // from Choreo
-                20,
+                4.022, // from Choreo
+                15,
                 11.580, // from Choreo
                 55.116, // from Choreo
                 Units.degreesToRadians(1080)
@@ -77,21 +77,18 @@ public class DriveConstants {
 
     public static final ModuleConfig moduleConfig = switch (Constants.identity) {
         case COMPBOT -> new ModuleConfig(
-                PIDF.ofPDSVA(
-                        0.1, 0.0,
-                        // FL + FR + BL + BR
-                        Util.average(0.21524, 0.16554, 0.083665, 0.061984),
-                        Util.average(0.11224, 0.11693, 0.12106, 0.12449),
-                        Util.average(0.0038991, 0.0018671, 0.004602, 0.0059919)
+                PIDF.ofPDSV(
+                        0.0, 0.0,
+                        0.14, 0.8
                 ),
-                PIDF.ofPDSVA(100.0, 0.0, 0.1, 1.91, 0),
+                PIDF.ofPD(4, 0.0),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
                 false,
                 false,
                 120,
-                60
+                20
         );
         case ALPHABOT -> new ModuleConfig(
                 PIDF.ofPDSVA(
@@ -111,8 +108,8 @@ public class DriveConstants {
                 20
         );
         case SIMBOT -> new ModuleConfig(
-                PIDF.ofPDSV(0.05, 0.0, 0.0, 0.15),
-                PIDF.ofPD(8.0, 0.0),
+                PIDF.ofPDSV(0.05, 0.0, 0.02522, 0.14115),
+                PIDF.ofPD(3.0, 0.07),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
@@ -133,10 +130,10 @@ public class DriveConstants {
         // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
         case COMPBOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
-                new ModuleIOTalonFXSparkMaxCANcoder(10, 12, 13, 0.189),
-                new ModuleIOTalonFXSparkMaxCANcoder(7, 8, 9, 1.891),
-                new ModuleIOTalonFXSparkMaxCANcoder(1, 2, 3, -0.009),
-                new ModuleIOTalonFXSparkMaxCANcoder(5, 6, 4, 1.525),
+                new ModuleIOTalonFXSparkMaxCANcoder(1, 1, 5, 1.577),
+                new ModuleIOTalonFXSparkMaxCANcoder(2, 2, 6, 1.770),
+                new ModuleIOTalonFXSparkMaxCANcoder(3, 3, 7, 3.105),
+                new ModuleIOTalonFXSparkMaxCANcoder(4, 4, 8, -2.817),
         };
         case ALPHABOT -> new ModuleIO[]{
                 // FL, FR, BL, BR
@@ -156,7 +153,7 @@ public class DriveConstants {
     public static final GyroIO gyroIO = Constants.isReplay
             ? new GyroIO()
             : switch (Constants.identity) {
-        case COMPBOT -> new GyroIOPigeon2(11);
+        case COMPBOT -> new GyroIOPigeon2(9);
         case ALPHABOT -> new GyroIOPigeon2(7);
         case SIMBOT -> new GyroIOSim();
     };

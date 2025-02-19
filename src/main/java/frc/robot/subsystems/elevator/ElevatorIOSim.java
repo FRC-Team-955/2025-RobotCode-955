@@ -6,6 +6,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import frc.robot.util.PIDF;
 
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
@@ -23,13 +24,16 @@ public class ElevatorIOSim extends ElevatorIO {
             0.0001 // velocity, maybe
     );
 
-    private final ElevatorFeedforward feedforward = gains.toElevatorFF();
-    private final PIDController pidController = gains.toPID();
+    private ElevatorFeedforward feedforward = gains.toElevatorFF();
+    private PIDController pidController = gains.toPID();
 
     private boolean closedLoop = true;
     private double setpointPositionRad;
     private double setpointVelocityRadPerSec;
     private double appliedVolts = 0.0;
+
+    /** Used when calculating feedforward */
+    private double lastVelocitySetpointRadPerSec = 0;
 
 
     @Override
@@ -37,10 +41,8 @@ public class ElevatorIOSim extends ElevatorIO {
         // Run closed-loop control
         if (closedLoop) {
             var pid = pidController.calculate(metersToRad(sim.getPositionMeters()), setpointPositionRad);
-            var ff = feedforward.calculateWithVelocities(
-                    metersToRad(sim.getVelocityMetersPerSecond()),
-                    setpointVelocityRadPerSec
-            );
+            var ff = feedforward.calculateWithVelocities(lastVelocitySetpointRadPerSec, setpointVelocityRadPerSec);
+            lastVelocitySetpointRadPerSec = setpointVelocityRadPerSec;
             appliedVolts = ff + pid;
         } else {
             pidController.reset();
@@ -64,6 +66,18 @@ public class ElevatorIOSim extends ElevatorIO {
 
         inputs.limitSwitchConnected = true;
         inputs.limitSwitchTriggered = sim.getPositionMeters() < Units.inchesToMeters(1);
+    }
+
+    @Override
+    public void setPIDF(PIDF newGains) {
+        System.out.println("Setting elevator gains");
+        feedforward = newGains.toElevatorFF();
+        pidController = newGains.toPID();
+    }
+
+    @Override
+    public void setBrakeMode(boolean enable) {
+        System.out.println("Setting elevator break mode to " + enable);
     }
 
     @Override

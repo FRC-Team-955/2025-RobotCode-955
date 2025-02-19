@@ -8,8 +8,7 @@ import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 
-import static frc.robot.subsystems.elevator.ElevatorConstants.hardstopMeters;
-import static frc.robot.subsystems.elevator.ElevatorConstants.hardstopSlowdownMeters;
+import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
 /** Holds the Mechanism2d and all roots and ligaments that visualizes the robot state */
 public class RobotMechanism {
@@ -21,8 +20,8 @@ public class RobotMechanism {
 
     public final Elevator elevator = new Elevator();
     public final EndEffector endEffector = new EndEffector();
-    public final Indexer indexer = new Indexer();
-    public final CoralIntake coralIntake = new CoralIntake();
+//    public final Indexer indexer = new Indexer();
+//    public final CoralIntake coralIntake = new CoralIntake();
 
     public class Elevator {
         public final LoggedMechanismRoot2d stage1Root = mechanism.getRoot("elevator_stage1", 0, 0);
@@ -84,6 +83,24 @@ public class RobotMechanism {
                     11,
                     new Color8Bit(Color.kYellow)
             ));
+
+            var autoStopUpperRoot = mechanism.getRoot("elevator_autoStopUpper", middleOfRobot - Units.inchesToMeters(15), Units.inchesToMeters(2.85) + upperLimit.positionMeters());
+            autoStopUpperRoot.append(new LoggedMechanismLigament2d(
+                    "autoStopUpper",
+                    Units.inchesToMeters(1),
+                    90,
+                    11,
+                    new Color8Bit(Color.kRed)
+            ));
+
+            var autoStopLowerRoot = mechanism.getRoot("elevator_autoStopLower", middleOfRobot - Units.inchesToMeters(15), Units.inchesToMeters(2.85) + lowerLimit.positionMeters());
+            autoStopLowerRoot.append(new LoggedMechanismLigament2d(
+                    "autoStopLower",
+                    Units.inchesToMeters(1),
+                    90,
+                    11,
+                    new Color8Bit(Color.kRed)
+            ));
         }
     }
 
@@ -119,87 +136,87 @@ public class RobotMechanism {
         }
     }
 
-    public class Indexer {
-        private static final double x = middleOfRobot + Units.inchesToMeters(12.2);
-        private static final double y = Units.inchesToMeters(6);
-        private static final double angle = 180 - 13.815;
-
-        public final LoggedMechanismRoot2d root = mechanism.getRoot("indexer", x, y + 0.065);
-
-        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot(
-                "indexer_beamBreak",
-                x - Units.inchesToMeters(9.5),
-                y + Units.inchesToMeters(5)
-        );
-        public final LoggedMechanismLigament2d beamBreakLigament = beamBreakRoot.append(new LoggedMechanismLigament2d(
-                "indexer_beamBreak",
-                Units.inchesToMeters(1),
-                angle,
-                11,
-                new Color8Bit(Color.kRed)
-        ));
-
-        public final LoggedMechanismRoot2d rollersRoot = mechanism.getRoot(
-                "indexer_rollers",
-                x - Units.inchesToMeters(5),
-                y + Units.inchesToMeters(7)
-        );
-        public final LoggedMechanismLigament2d rollersLigament = rollersRoot.append(new LoggedMechanismLigament2d(
-                "indexer_rollers",
-                Units.inchesToMeters(1),
-                0,
-                12,
-                new Color8Bit(Color.kOrange)
-        ));
-
-        private Indexer() {
-            root.append(new LoggedMechanismLigament2d(
-                    "ligament",
-                    Units.inchesToMeters(14.75),
-                    angle,
-                    10,
-                    new Color8Bit(Color.kBlue)
-            ));
-        }
-    }
-
-    public class CoralIntake {
-        public final LoggedMechanismRoot2d root = mechanism.getRoot("coralIntake", 0, 0);
-        public final LoggedMechanismLigament2d ligament = root.append(new LoggedMechanismLigament2d(
-                "ligament",
-                Units.inchesToMeters(1), // width, x
-                0,
-                35, // height, y
-                new Color8Bit(Color.kGreen)
-        ));
-
-        public final LoggedMechanismRoot2d rangeRoot = mechanism.getRoot(
-                "coralIntake_range",
-                middleOfRobot + Units.inchesToMeters(18),
-                Units.inchesToMeters(7)
-        );
-        public final LoggedMechanismLigament2d rangeLigament = rangeRoot.append(new LoggedMechanismLigament2d(
-                "coralIntake_range",
-                Units.inchesToMeters(1),
-                135,
-                11,
-                new Color8Bit(Color.kRed)
-        ));
-
-        public final LoggedMechanismRoot2d topRollersRoot = mechanism.getRoot(
-                "coralIntake_topRollers",
-                middleOfRobot + Units.inchesToMeters(23),
-                Units.inchesToMeters(7)
-        );
-        public final LoggedMechanismLigament2d topRollersLigament = topRollersRoot.append(new LoggedMechanismLigament2d(
-                "coralIntake_topRollers",
-                Units.inchesToMeters(1),
-                0,
-                12,
-                new Color8Bit(Color.kOrange)
-        ));
-
-        private CoralIntake() {
-        }
-    }
+//    public class Indexer {
+//        private static final double x = middleOfRobot + Units.inchesToMeters(12.2);
+//        private static final double y = Units.inchesToMeters(6);
+//        private static final double angle = 180 - 13.815;
+//
+//        public final LoggedMechanismRoot2d root = mechanism.getRoot("indexer", x, y + 0.065);
+//
+//        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot(
+//                "indexer_beamBreak",
+//                x - Units.inchesToMeters(9.5),
+//                y + Units.inchesToMeters(5)
+//        );
+//        public final LoggedMechanismLigament2d beamBreakLigament = beamBreakRoot.append(new LoggedMechanismLigament2d(
+//                "indexer_beamBreak",
+//                Units.inchesToMeters(1),
+//                angle,
+//                11,
+//                new Color8Bit(Color.kRed)
+//        ));
+//
+//        public final LoggedMechanismRoot2d rollersRoot = mechanism.getRoot(
+//                "indexer_rollers",
+//                x - Units.inchesToMeters(5),
+//                y + Units.inchesToMeters(7)
+//        );
+//        public final LoggedMechanismLigament2d rollersLigament = rollersRoot.append(new LoggedMechanismLigament2d(
+//                "indexer_rollers",
+//                Units.inchesToMeters(1),
+//                0,
+//                12,
+//                new Color8Bit(Color.kOrange)
+//        ));
+//
+//        private Indexer() {
+//            root.append(new LoggedMechanismLigament2d(
+//                    "ligament",
+//                    Units.inchesToMeters(14.75),
+//                    angle,
+//                    10,
+//                    new Color8Bit(Color.kBlue)
+//            ));
+//        }
+//    }
+//
+//    public class CoralIntake {
+//        public final LoggedMechanismRoot2d root = mechanism.getRoot("coralIntake", 0, 0);
+//        public final LoggedMechanismLigament2d ligament = root.append(new LoggedMechanismLigament2d(
+//                "ligament",
+//                Units.inchesToMeters(1), // width, x
+//                0,
+//                35, // height, y
+//                new Color8Bit(Color.kGreen)
+//        ));
+//
+//        public final LoggedMechanismRoot2d rangeRoot = mechanism.getRoot(
+//                "coralIntake_range",
+//                middleOfRobot + Units.inchesToMeters(18),
+//                Units.inchesToMeters(7)
+//        );
+//        public final LoggedMechanismLigament2d rangeLigament = rangeRoot.append(new LoggedMechanismLigament2d(
+//                "coralIntake_range",
+//                Units.inchesToMeters(1),
+//                135,
+//                11,
+//                new Color8Bit(Color.kRed)
+//        ));
+//
+//        public final LoggedMechanismRoot2d topRollersRoot = mechanism.getRoot(
+//                "coralIntake_topRollers",
+//                middleOfRobot + Units.inchesToMeters(23),
+//                Units.inchesToMeters(7)
+//        );
+//        public final LoggedMechanismLigament2d topRollersLigament = topRollersRoot.append(new LoggedMechanismLigament2d(
+//                "coralIntake_topRollers",
+//                Units.inchesToMeters(1),
+//                0,
+//                12,
+//                new Color8Bit(Color.kOrange)
+//        ));
+//
+//        private CoralIntake() {
+//        }
+//    }
 }

@@ -63,7 +63,6 @@
             "/RealOutputs/RobotState/Mechanism/elevator",
             "/RealOutputs/RobotState/Mechanism/elevator/stage1",
             "/RealOutputs/FieldSimulation",
-            "/Inputs/Drive",
             "/RealOutputs/Alerts",
             "/RealOutputs/Alerts/warnings",
             "/RealOutputs/Alerts/infos",
@@ -78,11 +77,28 @@
             "/RealOutputs/CoralIntake/Pivot",
             "/RealOutputs/Superstructure",
             "/RealOutputs/EndEffector",
-            "/RealOutputs/EndEffector/Rollers"
+            "/RealOutputs/EndEffector/Rollers",
+            "/Tuning",
+            "/Tuning/Elevator",
+            "/RealOutputs/Vision",
+            "/RealOutputs/Vision/Summary/TagPoses",
+            "/Tuning/OperatorDashboard",
+            "/Tuning/Drive",
+            "/Tuning/Drive/ModuleTurn",
+            "/Tuning/Elevator/Gains",
+            "/RealOutputs/Vision/Summary/TagPoses/0",
+            "/Inputs/Vision",
+            "/Inputs/Vision/Camera1",
+            "/Inputs/Vision/Camera0",
+            "/Inputs/Vision/Camera0/TagIds",
+            "/Inputs/Vision/Camera1/TagIds",
+            "/Inputs/Vision/Camera1/PoseObservations/1",
+            "/RealOutputs/Vision/Summary/RobotPosesAccepted",
+            "/RealOutputs/Vision/Summary/RobotPosesRejected"
           ]
         },
         "tabs": {
-          "selected": 7,
+          "selected": 6,
           "tabs": [
             {
               "type": 0,
@@ -105,7 +121,7 @@
                     "options": {}
                   }
                 ],
-                "game": "2025 Field",
+                "game": "2025 Field (Welded)",
                 "bumpers": "auto",
                 "origin": "blue",
                 "orientation": 0,
@@ -124,7 +140,7 @@
                     "type": "stepped",
                     "logKey": "/RealOutputs/Elevator/Measurement/PositionMeters",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#80588e",
                       "size": "normal"
@@ -134,9 +150,19 @@
                     "type": "stepped",
                     "logKey": "/RealOutputs/Elevator/Setpoint/PositionMeters",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#e48b32",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Elevator/Setpoint/GoalPositionMeters",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#3b875a",
                       "size": "normal"
                     }
                   }
@@ -163,7 +189,44 @@
                     }
                   }
                 ],
-                "discreteSources": [],
+                "discreteSources": [
+                  {
+                    "type": "stripes",
+                    "logKey": "/RealOutputs/Elevator/AtGoal",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#af2437"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "/RealOutputs/Elevator/HasZeroed",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#c0b487"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "/RealOutputs/Elevator/UsingGentleProfile",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#858584"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "/RealOutputs/Elevator/UsingRealStateAsCurrent",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#d993aa"
+                    }
+                  }
+                ],
                 "leftLockedRange": null,
                 "rightLockedRange": null,
                 "leftUnitConversion": {
@@ -315,22 +378,6 @@
               "controlsHeight": 200
             },
             {
-              "type": 10,
-              "title": "Mechanism",
-              "controller": [
-                {
-                  "type": "mechanism",
-                  "logKey": "/RealOutputs/RobotState/Mechanism",
-                  "logType": "Mechanism2d",
-                  "visible": true,
-                  "options": {}
-                }
-              ],
-              "controllerUUID": "995vc9y8xizk4ewh0icha8mocwlvaoaw",
-              "renderer": null,
-              "controlsHeight": 162
-            },
-            {
               "type": 5,
               "title": "Console",
               "controller": "/RealOutputs/Console",
@@ -382,6 +429,16 @@
                     "options": {}
                   },
                   {
+                    "type": "vision",
+                    "logKey": "/RealOutputs/Vision/Summary/TagPoses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "size": "normal"
+                    }
+                  },
+                  {
                     "type": "ghost",
                     "logKey": "/RealOutputs/Drive/Assist/Pose",
                     "logType": "Pose2d",
@@ -390,13 +447,6 @@
                       "model": "Crab Bot",
                       "color": "#00ff00"
                     }
-                  },
-                  {
-                    "type": "component",
-                    "logKey": "/RealOutputs/FieldSimulation/CoralInRobot",
-                    "logType": "Pose3d[]",
-                    "visible": true,
-                    "options": {}
                   },
                   {
                     "type": "gamePiece",
@@ -423,7 +473,7 @@
                     "visible": true,
                     "options": {
                       "model": "KitBot",
-                      "color": "#00ff00"
+                      "color": "#ff00ff"
                     }
                   },
                   {
@@ -463,9 +513,29 @@
                       "model": "KitBot",
                       "color": "#ff8c00"
                     }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "/RealOutputs/Vision/Summary/RobotPosesAccepted",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "/RealOutputs/Vision/Summary/RobotPosesRejected",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#ff0000"
+                    }
                   }
                 ],
-                "game": "2025 Field",
+                "game": "2025 Field (Welded)",
                 "origin": "blue"
               },
               "controllerUUID": "9rze3pds5b8u1nxoisw2jmjaxfeawu7t",
@@ -473,17 +543,17 @@
                 "cameraIndex": -1,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  10.671418736657113,
-                  4.1007542929686,
-                  0.14853016750089798
+                  1.574307353760787,
+                  10.211331836695305,
+                  -0.11360113988373097
                 ],
                 "cameraTarget": [
-                  5.357136624088996,
-                  0.12566377513557125,
-                  0.04073340838182604
+                  4.8306195451777105,
+                  1.0731489051813998,
+                  0.10500557875007818
                 ]
               },
-              "controlsHeight": 200
+              "controlsHeight": 378
             },
             {
               "type": 9,

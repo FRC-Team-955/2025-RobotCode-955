@@ -13,14 +13,16 @@
 
 package frc.robot.subsystems.drive;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import lombok.Getter;
+import frc.robot.util.PIDF;
 import org.littletonrobotics.junction.Logger;
 
+import static frc.robot.subsystems.drive.DriveConstants.disableDriving;
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
 
 public class Module {
@@ -32,13 +34,6 @@ public class Module {
     private final Alert turnDisconnectedAlert;
     private final Alert turnEncoderDisconnectedAlert;
 
-    /**
-     * -- GETTER --
-     * Returns the module positions received this cycle.
-     */
-    @Getter
-    private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[]{};
-
     public Module(ModuleIO io, int index) {
         this.io = io;
         this.index = index;
@@ -48,23 +43,16 @@ public class Module {
         turnEncoderDisconnectedAlert = new Alert("Disconnected turn encoder on module " + index + ".", AlertType.kError);
     }
 
-    public void periodicBeforeCommands() {
+    public void updateAndProcessInputs() {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Drive/Module" + index, inputs);
+    }
 
+    public void periodicBeforeCommands() {
         // Update alerts
         driveDisconnectedAlert.set(!inputs.driveConnected);
         turnDisconnectedAlert.set(!inputs.turnConnected);
         turnEncoderDisconnectedAlert.set(!inputs.turnAbsoluteEncoderConnected);
-
-        // Calculate positions for odometry
-        int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
-        odometryPositions = new SwerveModulePosition[sampleCount];
-        for (int i = 0; i < sampleCount; i++) {
-            double positionMeters = inputs.odometryDrivePositionsRad[i] * driveConfig.wheelRadiusMeters();
-            double angle = inputs.odometryTurnPositionsRad[i];
-            odometryPositions[i] = new SwerveModulePosition(positionMeters, new Rotation2d(angle));
-        }
     }
 
     public void periodicAfterCommands() {
@@ -80,8 +68,7 @@ public class Module {
         state.cosineScale(currentAngle);
 
         // Apply setpoints
-        io.setDriveVelocity(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
-        io.setTurnPosition(state.angle.getRadians());
+        runSetpointUnoptimized(state);
     }
 
     /**
@@ -89,7 +76,11 @@ public class Module {
      */
     public void runSetpointUnoptimized(SwerveModuleState state) {
         // Apply setpoints
-        io.setDriveVelocity(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
+        if (disableDriving) {
+            io.setDriveOpenLoop(0.0);
+        } else {
+            io.setDriveVelocity(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
+        }
         io.setTurnPosition(state.angle.getRadians());
     }
 
@@ -109,6 +100,14 @@ public class Module {
         io.setTurnOpenLoop(0.0);
     }
 
+    public void setDrivePIDF(PIDF newGains) {
+        io.setDrivePIDF(newGains);
+    }
+
+    public void setTurnPIDF(PIDF newGains) {
+        io.setTurnPIDF(newGains);
+    }
+
     public void setBrakeMode(boolean enable) {
         io.setDriveBrakeMode(enable);
         io.setTurnBrakeMode(enable);
@@ -118,11 +117,15 @@ public class Module {
      * Returns the current turn angle of the module.
      */
     public Rotation2d getAngle() {
-        return new Rotation2d(inputs.turnPositionRad);
+        return new Rotation2d(MathUtil.angleModulus(inputs.turnPositionRad));
     }
 
     public double getPositionRad() {
         return inputs.drivePositionRad;
+    }
+
+    public double getVelocityRadPerSec() {
+        return inputs.driveVelocityRadPerSec;
     }
 
     /**
@@ -156,8 +159,23 @@ public class Module {
     /**
      * Returns the timestamps of the samples received this cycle.
      */
-    public double[] getOdometryTimestamps() {
-        return inputs.odometryTimestamps;
+    public double[] getOdometryDriveTimestamps() {
+        return inputs.odometryDriveTimestamps;
+    }
+
+    /**
+     * Returns the timestamps of the samples received this cycle.
+     */
+    public double[] getOdometryTurnTimestamps() {
+        return inputs.odometryTurnTimestamps;
+    }
+
+    public double[] getOdometryDrivePositionsRad() {
+        return inputs.odometryDrivePositionsRad;
+    }
+
+    public double[] getOdometryTurnPositionsRad() {
+        return inputs.odometryTurnPositionsRad;
     }
 
     /**

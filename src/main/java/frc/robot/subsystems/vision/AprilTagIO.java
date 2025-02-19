@@ -29,7 +29,8 @@ public class AprilTagIO {
     /**
      * Represents the angle to a simple target, not used for pose estimation.
      */
-    public record AprilTagTargetObservation(Rotation2d tx, Rotation2d ty) {}
+    public record AprilTagTargetObservation(Rotation2d tx, Rotation2d ty) {
+    }
 
     /**
      * Represents a robot pose sample used for pose estimation.
@@ -40,7 +41,8 @@ public class AprilTagIO {
             double ambiguity,
             int tagCount,
             double averageTagDistance,
-            PoseObservationType type) {}
+            PoseObservationType type) {
+    }
 
     public enum PoseObservationType {
         MEGATAG_1,

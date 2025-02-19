@@ -19,7 +19,6 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
-import frc.robot.RobotState;
 
 public class VisionConstants {
     // AprilTag layout
@@ -27,19 +26,19 @@ public class VisionConstants {
 
     // Basic filtering thresholds
     public static double maxAmbiguity = 0.3;
-    public static double maxZError = 0.75;
+    public static double maxZError = 0.25;
 
     // Standard deviation baselines, for 1 meter distance and 1 tag
     // (Adjusted automatically based on distance and # of tags)
-    public static double linearStdDevBaseline = 0.02; // Meters
-    public static double angularStdDevBaseline = 0.06; // Radians
+    public static double linearStdDevBaseline = 0.1; // Meters
+    public static double angularStdDevBaseline = Units.degreesToRadians(15); // Radians
 
     // Standard deviation multipliers for each camera
     // (Adjust to trust some cameras more than others)
     public static double[] cameraStdDevFactors =
             new double[]{
-                    1.0, // Camera 0
-                    1.0 // Camera 1
+                    1.0, // StationCam
+                    0.25 // ReefCam
             };
 
     // Multipliers to apply for MegaTag 2 observations
@@ -47,9 +46,12 @@ public class VisionConstants {
     public static double angularStdDevMegatag2Factor = Double.POSITIVE_INFINITY; // No rotation data available
 
     public static final GamepieceIO[] gamepieceIO = switch (Constants.identity) {
+        /*
         case COMPBOT -> Constants.isReplay
                 ? new GamepieceIO[]{new GamepieceIO()}
                 : new GamepieceIO[]{new GamepieceIOLimelight("limelight", new Transform3d())};
+         */
+        case COMPBOT -> new GamepieceIO[]{};
         case ALPHABOT -> Constants.isReplay
                 ? new GamepieceIO[]{new GamepieceIO()}
                 : new GamepieceIO[]{
@@ -66,18 +68,25 @@ public class VisionConstants {
                 : new GamepieceIO[]{new GamepieceIOSim()};
     };
 
+    private static final Transform3d stationCamRobotToCamera = new Transform3d(
+            Units.inchesToMeters(-6.7), Units.inchesToMeters(-9.4), Units.inchesToMeters(27.3),
+            // Rotation order matters
+            new Rotation3d(0.0, 0.0, Units.degreesToRadians(-60))
+                    .rotateBy(new Rotation3d(0.0, Units.degreesToRadians(15), 0.0))
+    );
+    private static final Transform3d reefCamRobotToCamera = new Transform3d(
+            Units.inchesToMeters(-7.2), Units.inchesToMeters(8.8), Units.inchesToMeters(26.6),
+            // Rotation order matters
+            new Rotation3d(0.0, 0.0, Units.degreesToRadians(-170))
+                    .rotateBy(new Rotation3d(0.0, Units.degreesToRadians(-35), 0.0))
+    );
+
     public static final AprilTagIO[] aprilTagIO = switch (Constants.identity) {
         case COMPBOT -> Constants.isReplay
                 ? new AprilTagIO[]{new AprilTagIO(), new AprilTagIO()}
                 : new AprilTagIO[]{
-                new AprilTagIOPhotonVision(
-                        "camera_0",
-                        new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0))
-                ),
-                new AprilTagIOPhotonVision(
-                        "camera_1",
-                        new Transform3d(-0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, Math.PI))
-                )
+                new AprilTagIOPhotonVision("StationCam", stationCamRobotToCamera),
+                new AprilTagIOPhotonVision("ReefCam", reefCamRobotToCamera)
         };
 //        case ALPHABOT -> Constants.isReplay
 //                ? new VisionIO[]{new VisionIO()}
@@ -92,15 +101,13 @@ public class VisionConstants {
                 ? new AprilTagIO[]{new AprilTagIO(), new AprilTagIO()}
                 : new AprilTagIO[]{
                 new AprilTagIOPhotonVisionSim(
-                        "camera_0",
-                        new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0)
-                        ),
-                        RobotState.get()::getPose),
+                        "StationCam",
+                        stationCamRobotToCamera
+                ),
                 new AprilTagIOPhotonVisionSim(
-                        "camera_1",
-                        new Transform3d(-0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, Math.PI)
-                        ),
-                        RobotState.get()::getPose)
+                        "ReefCam",
+                        reefCamRobotToCamera
+                )
         };
     };
 }

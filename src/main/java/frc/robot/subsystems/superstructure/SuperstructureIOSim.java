@@ -7,21 +7,30 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.RobotState;
-import frc.robot.subsystems.coralintake.CoralIntake;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
-import frc.robot.subsystems.indexer.Indexer;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.Arrays;
+
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
 
 public class SuperstructureIOSim extends SuperstructureIO {
+    private static final Translation2d[] stationLocations = {
+            new Translation2d(1, 1),
+            new Translation2d(1, 7),
+            new Translation2d(16.5, 7),
+            new Translation2d(16.5, 1)
+    };
+
     private final IntakeSimulation intakeSimulation = IntakeSimulation.OverTheBumperIntake(
             "Coral",
             ModuleIOSim.driveSimulation,
@@ -34,8 +43,8 @@ public class SuperstructureIOSim extends SuperstructureIO {
     );
 
     private final RobotState robotState = RobotState.get();
-    private final CoralIntake coralIntake = CoralIntake.get();
-    private final Indexer indexer = Indexer.get();
+    //    private final CoralIntake coralIntake = CoralIntake.get();
+//    private final Indexer indexer = Indexer.get();
     private final EndEffector endEffector = EndEffector.get();
     private final Elevator elevator = Elevator.get();
 
@@ -53,13 +62,17 @@ public class SuperstructureIOSim extends SuperstructureIO {
         IN_END_EFFECTOR
     }
 
+    public SuperstructureIOSim() {
+        RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() -> coralState = CoralState.IN_END_EFFECTOR));
+    }
+
     @Override
     public void updateInputs(SuperstructureIOInputs inputs) {
-        if (coralIntake.getRollersGoal() == CoralIntake.RollersGoal.INTAKE && coralState == CoralState.NO_CORAL) {
-            intakeSimulation.startIntake();
-        } else {
-            intakeSimulation.stopIntake();
-        }
+//        if (coralIntake.getRollersGoal() == CoralIntake.RollersGoal.INTAKE && coralState == CoralState.NO_CORAL) {
+//            intakeSimulation.startIntake();
+//        } else {
+//            intakeSimulation.stopIntake();
+//        }
 
         var intakedCoral = intakeSimulation.getGamePiecesAmount() > 0;
         if (intakedCoral && coralState == CoralState.NO_CORAL) {
@@ -71,6 +84,12 @@ public class SuperstructureIOSim extends SuperstructureIO {
         var pose = robotState.getPose();
         Transform3d coralRobotRelative = null;
         switch (coralState) {
+            case NO_CORAL -> {
+                var current = robotState.getPose().getTranslation();
+                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 1)) {
+                    coralState = CoralState.IN_END_EFFECTOR;
+                }
+            }
             case INDEXING -> {
                 if (sinceCoralIntaked.hasElapsed(indexTime)) {
                     coralState = CoralState.IN_INDEXER;
@@ -92,10 +111,10 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 );
             }
             case IN_INDEXER -> {
-                if (indexer.getRollersGoal() == Indexer.RollersGoal.HANDOFF) {
-                    coralState = CoralState.HANDING_OFF;
-                    sinceStartedHandoff.restart();
-                }
+//                if (indexer.getRollersGoal() == Indexer.RollersGoal.HANDOFF) {
+//                    coralState = CoralState.HANDING_OFF;
+//                    sinceStartedHandoff.restart();
+//                }
                 coralRobotRelative = new Transform3d(
                         Units.inchesToMeters(5),
                         0,
@@ -120,7 +139,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 var coralOffsetX = Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angle);
                 // TODO: fix the trig, it doesn't actually work but is good enough for sim
                 var coralOffsetZ = Units.inchesToMeters(13.5) + elevator.getPositionMeters() + Units.inchesToMeters(4) * Math.tan(angle);
-                if (endEffector.getRollersGoal() == EndEffector.RollersGoal.SCORE) {
+                if (endEffector.getRollersGoal() == EndEffector.RollersGoal.SCORE_CORAL) {
                     coralState = CoralState.NO_CORAL;
                     SimulatedArena.getInstance()
                             .addGamePieceProjectile(new ReefscapeCoralOnFly(
@@ -158,30 +177,30 @@ public class SuperstructureIOSim extends SuperstructureIO {
         }
 
         switch (coralState) {
-            case INDEXING -> {
-                inputs.intakeRangeMeters = 0;
-                inputs.indexerBeamBreakTriggered = false;
-                inputs.endEffectorBeamBreakTriggered = false;
-            }
-            case IN_INDEXER, HANDING_OFF -> {
-                inputs.intakeRangeMeters = Double.MAX_VALUE;
-                inputs.indexerBeamBreakTriggered = true;
-                inputs.endEffectorBeamBreakTriggered = false;
-            }
+//            case INDEXING -> {
+//                inputs.intakeRangeMeters = 0;
+//                inputs.indexerBeamBreakTriggered = false;
+//                inputs.endEffectorBeamBreakTriggered = false;
+//            }
+//            case IN_INDEXER, HANDING_OFF -> {
+//                inputs.intakeRangeMeters = Double.MAX_VALUE;
+//                inputs.indexerBeamBreakTriggered = true;
+//                inputs.endEffectorBeamBreakTriggered = false;
+//            }
             case IN_END_EFFECTOR -> {
-                inputs.intakeRangeMeters = Double.MAX_VALUE;
-                inputs.indexerBeamBreakTriggered = false;
+//                inputs.intakeRangeMeters = Double.MAX_VALUE;
+//                inputs.indexerBeamBreakTriggered = false;
                 inputs.endEffectorBeamBreakTriggered = true;
             }
             default -> {
-                inputs.intakeRangeMeters = Double.MAX_VALUE;
-                inputs.indexerBeamBreakTriggered = false;
+//                inputs.intakeRangeMeters = Double.MAX_VALUE;
+//                inputs.indexerBeamBreakTriggered = false;
                 inputs.endEffectorBeamBreakTriggered = false;
             }
         }
 
-        inputs.intakeRangeConnected = true;
-        inputs.indexerBeamBreakConnected = true;
+//        inputs.intakeRangeConnected = true;
+//        inputs.indexerBeamBreakConnected = true;
         inputs.endEffectorBeamBreakConnected = true;
     }
 }

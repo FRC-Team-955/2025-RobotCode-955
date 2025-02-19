@@ -4,6 +4,7 @@ import edu.wpi.first.math.util.Units;
 import org.junit.jupiter.api.Test;
 
 import static frc.robot.subsystems.elevator.ElevatorConstants.radToMeters;
+import static frc.robot.subsystems.elevator.ElevatorConstants.sprocketRadiusMeters;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ElevatorConstantsTests {
@@ -11,7 +12,7 @@ class ElevatorConstantsTests {
 
     @Test
     void radToMetersTest() {
-        var distancePerStagePerRotation = Units.inchesToMeters(0.75) * 2 * Math.PI;
+        var distancePerStagePerRotation = sprocketRadiusMeters * 2 * Math.PI;
         for (int rotations = 0; rotations < 10; rotations++) {
             assertEquals(rotations * distancePerStagePerRotation * 3, radToMeters(Units.rotationsToRadians(rotations)), delta);
         }

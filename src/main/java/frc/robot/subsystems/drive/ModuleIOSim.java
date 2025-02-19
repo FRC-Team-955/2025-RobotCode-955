@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.Timer;
+import frc.robot.util.PIDF;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -69,9 +70,9 @@ public class ModuleIOSim extends ModuleIO {
 
     private boolean driveClosedLoop = false;
     private boolean turnClosedLoop = false;
-    private final PIDController driveController = moduleConfig.driveGains().toPID();
-    private final PIDController turnController = moduleConfig.turnGains().toPIDWrapRadians();
-    private final SimpleMotorFeedforward driveFF = moduleConfig.driveGains().toSimpleFF();
+    private PIDController driveController = moduleConfig.driveGains().toPID();
+    private PIDController turnController = moduleConfig.turnGains().toPIDWrapRadians();
+    private SimpleMotorFeedforward driveFF = moduleConfig.driveGains().toSimpleFF();
     private double driveFFVolts = 0.0;
     private double driveAppliedVolts = 0.0;
     private double turnAppliedVolts = 0.0;
@@ -121,13 +122,38 @@ public class ModuleIOSim extends ModuleIO {
         inputs.turnCurrentAmps = Math.abs(moduleSimulation.getSteerMotorStatorCurrent().in(Amps));
 
         // Update odometry inputs
-        inputs.odometryTimestamps = getSimulationOdometryTimeStamps();
+        inputs.odometryDriveTimestamps = getSimulationOdometryTimeStamps();
         inputs.odometryDrivePositionsRad = Arrays.stream(moduleSimulation.getCachedDriveWheelFinalPositions())
                 .mapToDouble(angle -> angle.in(Radians))
                 .toArray();
+
+        inputs.odometryTurnTimestamps = inputs.odometryDriveTimestamps;
         inputs.odometryTurnPositionsRad = Arrays.stream(moduleSimulation.getCachedSteerAbsolutePositions())
                 .mapToDouble(Rotation2d::getRadians)
                 .toArray();
+    }
+
+    @Override
+    public void setDrivePIDF(PIDF newGains) {
+        System.out.println("Setting drive gains");
+        driveFF = newGains.toSimpleFF();
+        driveController = newGains.toPID();
+    }
+
+    @Override
+    public void setTurnPIDF(PIDF newGains) {
+        System.out.println("Setting turn gains");
+        turnController = newGains.toPID();
+    }
+
+    @Override
+    public void setDriveBrakeMode(boolean enable) {
+        System.out.println("Setting drive brake mode to " + enable);
+    }
+
+    @Override
+    public void setTurnBrakeMode(boolean enable) {
+        System.out.println("Setting turn brake mode to " + enable);
     }
 
     @Override

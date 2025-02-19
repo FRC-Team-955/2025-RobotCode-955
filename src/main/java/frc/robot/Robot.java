@@ -19,8 +19,11 @@ import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.util.subsystem.SubsystemBaseExt;
+import frc.robot.util.subsystem.VirtualSubsystem;
 import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -40,14 +43,22 @@ import java.util.HashSet;
  * project.
  */
 public class Robot extends LoggedRobot {
-    private static final HashSet<SubsystemBaseExt> extendedSubsystems = new HashSet<>();
     private final RobotContainer robotContainer;
     private Command autonomousCommand;
     private double autonomousStart;
 
+    private static final HashSet<SubsystemBaseExt> extendedSubsystems = new HashSet<>();
+    private static final HashSet<VirtualSubsystem> virtualSubsystems = new HashSet<>();
+
     public static void registerExtendedSubsystem(SubsystemBaseExt subsystem) {
         if (!extendedSubsystems.add(subsystem)) {
             Util.error("An extended subsystem has been registered more than once: " + subsystem.getName());
+        }
+    }
+
+    public static void registerVirtualSubsystem(VirtualSubsystem subsystem) {
+        if (!virtualSubsystems.add(subsystem)) {
+            Util.error("A virtual subsystem has been registered more than once: " + subsystem.getClass().getName());
         }
     }
 
@@ -156,10 +167,18 @@ public class Robot extends LoggedRobot {
         // Switch thread to high priority to improve loop timing
         Threads.setCurrentThreadPriority(true, 99);
 
+        for (var subsystem : virtualSubsystems) {
+            subsystem.periodicBeforeCommands();
+        }
+
         // Run the command scheduler.
         // This first runs all subsystem periodic() (AKA periodicBeforeCommands())
         // and then runs all of the commands.
         CommandScheduler.getInstance().run();
+
+        for (var subsystem : virtualSubsystems) {
+            subsystem.periodicAfterCommands();
+        }
 
         for (var subsystem : extendedSubsystems) {
             subsystem.periodicAfterCommands();
@@ -234,34 +253,16 @@ public class Robot extends LoggedRobot {
     @Override
     public void simulationInit() {
         SimulatedArena.getInstance().resetFieldForAuto();
+        RobotModeTriggers.autonomous().onTrue(Commands.runOnce(SimulatedArena.getInstance()::resetFieldForAuto));
+        RobotModeTriggers.autonomous().onTrue(Commands.waitSeconds(0.05)
+                .andThen(Commands.runOnce(() -> ModuleIOSim.driveSimulation.setSimulationWorldPose(RobotState.get().getPose()))));
         RobotState.get().setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
     }
 
-    private boolean SIMULATION_ONLY_hasResetPoseOnAutonomousEnable = false;
 
     @Override
     public void simulationPeriodic() {
         SimulatedArena.getInstance().simulationPeriodic();
-
-        if (DriverStation.isAutonomousEnabled()) {
-            var pose = RobotState.get().getPose();
-            // Scuffed hack to reset apply odometry reset at the start of auto
-            if (!SIMULATION_ONLY_hasResetPoseOnAutonomousEnable &&
-                    pose.getTranslation().getDistance(
-                            ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose().getTranslation()
-                    ) >= 0.5
-            ) {
-                ModuleIOSim.driveSimulation.setSimulationWorldPose(pose);
-                SIMULATION_ONLY_hasResetPoseOnAutonomousEnable = true;
-            } else {
-                RobotState.get().setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
-            }
-        } else {
-            RobotState.get().setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
-            if (SIMULATION_ONLY_hasResetPoseOnAutonomousEnable) {
-                SIMULATION_ONLY_hasResetPoseOnAutonomousEnable = false;
-            }
-        }
 
         Logger.recordOutput("FieldSimulation/RobotPosition", ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
         Logger.recordOutput(

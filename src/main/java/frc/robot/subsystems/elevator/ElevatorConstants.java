@@ -7,20 +7,25 @@ import frc.robot.util.PIDF;
 public class ElevatorConstants {
     /** Gains in radians */
     public static final PIDF gains = switch (Constants.identity) {
-        case COMPBOT -> null;
-        case SIMBOT, ALPHABOT -> PIDF.ofPDSVAG(0.1, 0.0, 0, 0.06, 0.018, 2.9296);
+        case COMPBOT -> PIDF.ofPDSVAG(0.02, 0, 0, 0.23, 0.03, 1.1);
+        case SIMBOT, ALPHABOT -> PIDF.ofPDVAG(0, 0, 0.1, 0.008, 1.5015);
     };
 
-    public static final double maxVelocityMetersPerSecond = 5;
-    public static final double maxAccelerationMetersPerSecondSquared = 25;
+    public static final double maxVelocityMetersPerSecond = 0.7;
+    public static final double maxAccelerationMetersPerSecondSquared = 0.5;
 
-    public static final double gearRatio = 3;
-    private static final double sprocketRadiusMeters = Units.inchesToMeters(0.75);
+    public static final double gearRatio = 5;
+    protected static final double sprocketRadiusMeters = Units.inchesToMeters((1.0 + (9.0 / 32.0)) / 2);
     public static final double drumRadiusMeters = sprocketRadiusMeters * 3; // 3 stages
-    public static final double maxHeightMeters = Units.inchesToMeters(66.622);
+
+    public static final double setpointToleranceMeters = Units.inchesToMeters(5);
+
+    public static final double maxHeightMeters = Units.inchesToMeters(66);
+    public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.25, 2);
+    public static final ElevatorLimit lowerLimit = new ElevatorLimit(0.25, -1.5);
 
     public static final double hardstopMeters = Units.inchesToMeters(10.66);
-    public static final double gentleMaxVelocityMetersPerSecond = maxVelocityMetersPerSecond / 4;
+    public static final double gentleMaxVelocityMetersPerSecond = 2;
     /**
      * Not actually the max acceleration, just the max acceleration we assume when calculating slowdown
      * height in order to be a little conservative.
@@ -30,9 +35,9 @@ public class ElevatorConstants {
      * While we could calculate this based on the current velocity, it caused the gentle profile to be used
      * for only half of the loop cycles. This could probably be solved but I don't think it's worth the effort
      */
-    public static final double hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecond);
+    public static double hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecond);
 
-    private static double calculateHardstopSlowdownMeters(double currentVelocityMetersPerSec) {
+    public static double calculateHardstopSlowdownMeters(double currentVelocityMetersPerSec) {
         // If we are going down at v:
         //     x = -v * t
         // If we slow down at a, max acceleration,
@@ -55,8 +60,6 @@ public class ElevatorConstants {
         return hardstopMeters + -x;
     }
 
-    public static final double setpointToleranceRad = metersToRad(Units.inchesToMeters(2));
-
     public static double metersToRad(double meters) {
         return meters / drumRadiusMeters;
     }
@@ -71,7 +74,13 @@ public class ElevatorConstants {
     protected static final ElevatorIO io = Constants.isReplay
             ? new ElevatorIO()
             : switch (Constants.identity) {
-        case COMPBOT -> null;
+        case COMPBOT -> new ElevatorIOSparkMax(5, 6, 9, true);
         case SIMBOT, ALPHABOT -> new ElevatorIOSim();
     };
+
+    public record ElevatorLimit(
+            double positionMeters,
+            double velocityMetersPerSec
+    ) {
+    }
 }

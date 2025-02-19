@@ -2,6 +2,9 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.VoltageUnit;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -37,15 +40,31 @@ public class Util {
 //            Runnable end,
             Subsystem subsystem
     ) {
+        return sysIdRoutine(name, voltageConsumer, start, subsystem, null, null, null);
+    }
+
+    /**
+     * start and end should be used to set the goal to characterization
+     */
+    public static SysIdRoutine sysIdRoutine(
+            String name,
+            Consumer<Voltage> voltageConsumer,
+            Runnable start,
+//            Runnable end,
+            Subsystem subsystem,
+            Velocity<VoltageUnit> rampRate,
+            Voltage stepVoltage,
+            Time timeout
+    ) {
         // Java forces us to do this if we want to use the variable in the lambda
         var ref = new Object() {
             boolean hasStarted = false;
         };
         return new SysIdRoutine(
                 new SysIdRoutine.Config(
-                        null,
-                        null,
-                        null,
+                        rampRate,
+                        stepVoltage,
+                        timeout,
                         (state) -> {
                             Logger.recordOutput(name + "/SysIdState", state.toString());
                             if (!ref.hasStarted && state != SysIdRoutineLog.State.kNone) {
@@ -120,5 +139,18 @@ public class Util {
 
     public static boolean greaterThanEpsilon(double a) {
         return a > epsilon;
+    }
+
+    public static int findArrayIndexWithClosestValue(double targetValue, double[] array) {
+        double smallestDiff = Double.MAX_VALUE;
+        int smallestIndex = 0;
+        for (int i = 0; i < array.length; i++) {
+            double diff = Math.abs(array[i] - targetValue);
+            if (diff < smallestDiff) {
+                smallestDiff = diff;
+                smallestIndex = i;
+            }
+        }
+        return smallestIndex;
     }
 }

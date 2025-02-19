@@ -7,6 +7,7 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
+import frc.robot.util.PIDF;
 
 import java.util.function.DoubleSupplier;
 
@@ -24,7 +25,7 @@ public class RollersIOSparkMax extends RollersIO {
     // Connection debouncers
     private final Debouncer connectedDebounce = new Debouncer(0.5);
 
-    private final SimpleMotorFeedforward velocityFeedforward;
+    private SimpleMotorFeedforward velocityFeedforward;
 
     public RollersIOSparkMax(
             int canID,
@@ -52,8 +53,16 @@ public class RollersIOSparkMax extends RollersIO {
         config
                 .closedLoop
                 .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder);
-        rollersConfig.positionGains().applySpark(config.closedLoop, ClosedLoopSlot.kSlot0); // position = slot0
-        rollersConfig.velocityGains().applySpark(config.closedLoop, ClosedLoopSlot.kSlot1); // velocity = slot1
+        rollersConfig.positionGains().applySparkPID(config.closedLoop, ClosedLoopSlot.kSlot0); // position = slot0
+        rollersConfig.velocityGains().applySparkPID(config.closedLoop, ClosedLoopSlot.kSlot1); // velocity = slot1
+        config
+                .signals
+                .primaryEncoderPositionAlwaysOn(true)
+                .primaryEncoderVelocityAlwaysOn(true)
+                .primaryEncoderVelocityPeriodMs(20)
+                .appliedOutputPeriodMs(20)
+                .busVoltagePeriodMs(20)
+                .outputCurrentPeriodMs(20);
         tryUntilOk(5, () -> motor.configure(
                 config,
                 SparkBase.ResetMode.kResetSafeParameters,
@@ -64,7 +73,6 @@ public class RollersIOSparkMax extends RollersIO {
 
     @Override
     public void updateInputs(RollersIO.RollersIOInputs inputs) {
-        // Update drive inputs
         sparkStickyFault = false;
         ifOk(motor, encoder::getPosition, (value) -> inputs.positionRad = value);
         ifOk(motor, encoder::getVelocity, (value) -> inputs.velocityRadPerSec = value);
@@ -75,6 +83,31 @@ public class RollersIOSparkMax extends RollersIO {
         );
         ifOk(motor, motor::getOutputCurrent, (value) -> inputs.currentAmps = value);
         inputs.connected = connectedDebounce.calculate(!sparkStickyFault);
+    }
+
+    @Override
+    public void setPositionPIDF(PIDF newGains) {
+        System.out.println("Setting roller position gains");
+        var newConfig = new SparkMaxConfig();
+        newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        tryUntilOkAsync(5, () -> motor.configure(
+                newConfig,
+                SparkBase.ResetMode.kNoResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters
+        ));
+    }
+
+    @Override
+    public void setVelocityPIDF(PIDF newGains) {
+        System.out.println("Setting roller velocity gains");
+        velocityFeedforward = newGains.toSimpleFF();
+        var newConfig = new SparkMaxConfig();
+        newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        tryUntilOkAsync(5, () -> motor.configure(
+                newConfig,
+                SparkBase.ResetMode.kNoResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters
+        ));
     }
 
     @Override

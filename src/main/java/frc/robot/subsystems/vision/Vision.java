@@ -126,10 +126,8 @@ public class Vision extends SubsystemBaseExt {
                 boolean rejectPose =
                         observation.tagCount() == 0 // Must have at least one tag
                                 || (observation.tagCount() == 1
-                                && observation.ambiguity() > maxAmbiguity) // Cannot be high ambiguity
-                                || Math.abs(observation.pose().getZ())
-                                > maxZError // Must have realistic Z coordinate
-
+                                && observation.ambiguity() > maxAmbiguity) // Cannot be high ambiguity if only one tap
+                                || Math.abs(observation.pose().getZ()) > maxZError // Must have realistic Z coordinate
                                 // Must be within the field boundaries
                                 || observation.pose().getX() < 0.0
                                 || observation.pose().getX() > aprilTagLayout.getFieldLength()
@@ -150,8 +148,7 @@ public class Vision extends SubsystemBaseExt {
                 }
 
                 // Calculate standard deviations
-                double stdDevFactor =
-                        Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
+                double stdDevFactor = Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
                 double linearStdDev = linearStdDevBaseline * stdDevFactor;
                 double angularStdDev = angularStdDevBaseline * stdDevFactor;
                 if (observation.type() == PoseObservationType.MEGATAG_2) {
@@ -167,22 +164,27 @@ public class Vision extends SubsystemBaseExt {
                 RobotState.get().addVisionMeasurement(
                         observation.pose().toPose2d(),
                         observation.timestamp(),
-                        VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
+                        VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev)
+                );
             }
 
             // Log camera datadata
             Logger.recordOutput(
                     "Vision/Camera" + cameraIndex + "/TagPoses",
-                    tagPoses.toArray(new Pose3d[tagPoses.size()]));
+                    tagPoses.toArray(new Pose3d[tagPoses.size()])
+            );
             Logger.recordOutput(
                     "Vision/Camera" + cameraIndex + "/RobotPoses",
-                    robotPoses.toArray(new Pose3d[robotPoses.size()]));
+                    robotPoses.toArray(new Pose3d[robotPoses.size()])
+            );
             Logger.recordOutput(
                     "Vision/Camera" + cameraIndex + "/RobotPosesAccepted",
-                    robotPosesAccepted.toArray(new Pose3d[robotPosesAccepted.size()]));
+                    robotPosesAccepted.toArray(new Pose3d[robotPosesAccepted.size()])
+            );
             Logger.recordOutput(
                     "Vision/Camera" + cameraIndex + "/RobotPosesRejected",
-                    robotPosesRejected.toArray(new Pose3d[robotPosesRejected.size()]));
+                    robotPosesRejected.toArray(new Pose3d[robotPosesRejected.size()])
+            );
             allTagPoses.addAll(tagPoses);
             allRobotPoses.addAll(robotPoses);
             allRobotPosesAccepted.addAll(robotPosesAccepted);
