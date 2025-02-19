@@ -601,7 +601,9 @@ public class Drive extends SubsystemBaseExt {
                         module.runCharacterization(volts);
                     }
                 },
-                () -> Arrays.stream(modules).mapToDouble(Module::getVelocityRadPerSec).toArray(),
+                () -> Arrays.stream(modules)
+                        .mapToDouble(Module::getVelocityRadPerSec)
+                        .toArray(),
                 modules.length,
                 this
         ));

@@ -259,7 +259,6 @@ public class Robot extends LoggedRobot {
         RobotState.get().setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
     }
 
-
     @Override
     public void simulationPeriodic() {
         SimulatedArena.getInstance().simulationPeriodic();

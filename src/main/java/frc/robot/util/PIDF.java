@@ -11,6 +11,22 @@ import frc.robot.util.network.LoggedTunableNumber;
 
 import java.util.function.Consumer;
 
+/**
+ * Units (velocity control additions are in brackets):
+ * <ul>
+ *     <li><code>kP</code>: volts / (rad [per sec] of error)</li>
+ *     <li><code>kI</code>: volts / (rad [per sec] of accumulated error)</li>
+ *     <li><code>kD</code>: volts / (rad per sec [squared] of derivative error)</li>
+ *     <ul>
+ *         <li>position control derivative is velocity</li>
+ *         <li>velocity control derivative is acceleration</li>
+ *     </ul>
+ *     <li><code>kS</code>: volts</li>
+ *     <li><code>kV</code>: volts / (rad per sec)</li>
+ *     <li><code>kA</code>: volts / (rad per sec squared)</li>
+ *     <li><code>kG</code>: volts</li>
+ * </ul>
+ */
 public record PIDF(double kP, double kI, double kD, double kS, double kV, double kA, double kG) {
     public static PIDF ofP(double kP) {
         return new PIDF(kP, 0, 0, 0, 0, 0, 0);
@@ -73,51 +89,75 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
     }
 
     public void applySparkPID(ClosedLoopConfig config, ClosedLoopSlot slot) {
-        config.pidf(kP, kI, kD, 0, slot);
+        // We do spark unit conversions on controller so no need for unit conversions
+        config.pid(kP, kI, kD, slot);
+    }
+
+    private PIDF toPhoenixUnits() {
+        // See top level javadoc for PIDF units
+        // Phoenix unit is rotations
+
+        // Why multiply by 2π?
+        //    volts       2 π rad
+        // ----------- *  -------
+        // rad per sec     1 rot
+        return PIDF.ofPIDSVAG(
+                kP * 2 * Math.PI,
+                kI * 2 * Math.PI,
+                kD * 2 * Math.PI,
+                kS, // kS stays the same
+                kV * 2 * Math.PI,
+                kA * 2 * Math.PI,
+                kG // kG stays the same
+        );
     }
 
     public SlotConfigs toPhoenix() {
+        var converted = toPhoenixUnits();
         return new SlotConfigs()
-                .withKP(kP)
-                .withKI(kI)
-                .withKD(kD)
-                .withKS(kS)
-                .withKV(kV)
-                .withKA(kA);
+                .withKP(converted.kP)
+                .withKI(converted.kI)
+                .withKD(converted.kD)
+                .withKS(converted.kS)
+                .withKV(converted.kV)
+                .withKA(converted.kA);
     }
 
     public SlotConfigs toPhoenix(StaticFeedforwardSignValue staticFeedforwardSign) {
+        var converted = toPhoenixUnits();
         return new SlotConfigs()
-                .withKP(kP)
-                .withKI(kI)
-                .withKD(kD)
-                .withKS(kS)
-                .withKV(kV)
-                .withKA(kA)
+                .withKP(converted.kP)
+                .withKI(converted.kI)
+                .withKD(converted.kD)
+                .withKS(converted.kS)
+                .withKV(converted.kV)
+                .withKA(converted.kA)
                 .withStaticFeedforwardSign(staticFeedforwardSign);
     }
 
     public SlotConfigs toPhoenixWithGravity(GravityTypeValue gravityType) {
+        var converted = toPhoenixUnits();
         return new SlotConfigs()
-                .withKP(kP)
-                .withKI(kI)
-                .withKD(kD)
-                .withKS(kS)
-                .withKV(kV)
-                .withKA(kA)
-                .withKG(kG)
+                .withKP(converted.kP)
+                .withKI(converted.kI)
+                .withKD(converted.kD)
+                .withKS(converted.kS)
+                .withKV(converted.kV)
+                .withKA(converted.kA)
+                .withKG(converted.kG)
                 .withGravityType(gravityType);
     }
 
     public SlotConfigs toPhoenixWithGravity(GravityTypeValue gravityType, StaticFeedforwardSignValue staticFeedforwardSign) {
+        var converted = toPhoenixUnits();
         return new SlotConfigs()
-                .withKP(kP)
-                .withKI(kI)
-                .withKD(kD)
-                .withKS(kS)
-                .withKV(kV)
-                .withKA(kA)
-                .withKG(kG)
+                .withKP(converted.kP)
+                .withKI(converted.kI)
+                .withKD(converted.kD)
+                .withKS(converted.kS)
+                .withKV(converted.kV)
+                .withKA(converted.kA)
+                .withKG(converted.kG)
                 .withGravityType(gravityType)
                 .withStaticFeedforwardSign(staticFeedforwardSign);
     }
