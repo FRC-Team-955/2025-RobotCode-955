@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
+import frc.robot.RobotIdentity;
 import frc.robot.util.subsystem.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
 
@@ -38,7 +39,7 @@ public class CANLogger extends VirtualSubsystem {
         roboRIOCANErrorAlert.set(!roboRIOCANErrorTimer.hasElapsed(0.5));
 
         // Check and log CANivore status
-        if (Constants.mode == Constants.Mode.REAL) {
+        if (Constants.mode == Constants.Mode.REAL && Constants.identity == RobotIdentity.COMPBOT) {
             var canivoreStatus = canivoreReader.getStatus();
             Logger.recordOutput("CANivore/Status", canivoreStatus.Status.getName());
             Logger.recordOutput("CANivore/Utilization", canivoreStatus.BusUtilization);
