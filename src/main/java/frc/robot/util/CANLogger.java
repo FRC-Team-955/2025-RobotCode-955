@@ -12,7 +12,7 @@ import org.littletonrobotics.junction.Logger;
 public class CANLogger extends VirtualSubsystem {
     private final Timer roboRIOCANErrorTimer = new Timer();
     private final Timer canivoreErrorTimer = new Timer();
-    private final CANBus canivoreReader = new CANBus(Constants.CANivore.busName);
+    private final CANBus canivore = new CANBus(Constants.CANivore.busName);
 
     private final Alert roboRIOCANErrorAlert = new Alert("roboRIO CAN errors detected.", Alert.AlertType.kError);
     private final Alert canivoreErrorAlert = new Alert("CANivore errors detected.", Alert.AlertType.kError);
@@ -40,7 +40,7 @@ public class CANLogger extends VirtualSubsystem {
 
         // Check and log CANivore status
         if (Constants.mode == Constants.Mode.REAL && Constants.identity == RobotIdentity.COMPBOT) {
-            var canivoreStatus = canivoreReader.getStatus();
+            var canivoreStatus = canivore.getStatus();
             Logger.recordOutput("CANivore/Status", canivoreStatus.Status.getName());
             Logger.recordOutput("CANivore/Utilization", canivoreStatus.BusUtilization);
             Logger.recordOutput("CANivore/OffCount", canivoreStatus.BusOffCount);
