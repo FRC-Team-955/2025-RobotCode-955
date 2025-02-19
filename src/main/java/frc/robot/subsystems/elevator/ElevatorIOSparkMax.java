@@ -35,6 +35,8 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     private final Debouncer leadConnectedDebounce = new Debouncer(0.5);
     private final Debouncer followConnectedDebounce = new Debouncer(0.5);
 
+    private boolean emergencyStopped = false;
+
     /** Used when calculating feedforward */
     private double lastVelocitySetpointRadPerSec = 0;
 
@@ -161,22 +163,35 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     }
 
     @Override
+    public void setEmergencyStopped(boolean emergencyStopped) {
+        this.emergencyStopped = emergencyStopped;
+        if (emergencyStopped) {
+            lastVelocitySetpointRadPerSec = 0;
+            leadMotor.setVoltage(0);
+        }
+    }
+
+    @Override
     public void setOpenLoop(double output) {
-        lastVelocitySetpointRadPerSec = 0;
-        leadMotor.setVoltage(output);
+        if (!emergencyStopped) {
+            lastVelocitySetpointRadPerSec = 0;
+            leadMotor.setVoltage(output);
+        }
     }
 
     @Override
     public void setClosedLoop(double positionRad, double velocityRadPerSec) {
-        var ffVolts = ff.calculateWithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
-        lastVelocitySetpointRadPerSec = velocityRadPerSec;
-        controller.setReference(
-                positionRad,
-                SparkBase.ControlType.kPosition,
-                ClosedLoopSlot.kSlot0,
-                ffVolts,
-                SparkClosedLoopController.ArbFFUnits.kVoltage
-        );
+        if (!emergencyStopped) {
+            var ffVolts = ff.calculateWithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
+            lastVelocitySetpointRadPerSec = velocityRadPerSec;
+            controller.setReference(
+                    positionRad,
+                    SparkBase.ControlType.kPosition,
+                    ClosedLoopSlot.kSlot0,
+                    ffVolts,
+                    SparkClosedLoopController.ArbFFUnits.kVoltage
+            );
+        }
     }
 
     @Override

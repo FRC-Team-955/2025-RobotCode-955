@@ -13,6 +13,7 @@ import java.util.function.IntFunction;
 
 public class OperatorDashboard extends VirtualSubsystem {
     public static final LoggedNetworkBooleanExt coastOverride = new LoggedNetworkBooleanExt("/Tuning/OperatorDashboard/CoastOverride", false);
+    public static final LoggedNetworkBooleanExt elevatorEStop = new LoggedNetworkBooleanExt("/Tuning/OperatorDashboard/ElevatorEStop", false);
     public static final LoggedNetworkBooleanExt useRealElevatorState = new LoggedNetworkBooleanExt("/Tuning/OperatorDashboard/UseRealElevatorState", false);
 
     private final Map<ReefZoneSide, LoggedNetworkBoolean> reefZoneSides = generateTogglesForEnum("ReefZoneSides", ReefZoneSide.values());

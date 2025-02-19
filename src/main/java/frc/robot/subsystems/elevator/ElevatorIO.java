@@ -39,6 +39,13 @@ public class ElevatorIO {
     }
 
     /**
+     * Set the emergency stopped value. IO layers should expect this only to be called when the value changes.
+     * If true, the IO layer should ignore all commands and stop the motor until set back to false.
+     */
+    public void setEmergencyStopped(boolean emergencyStopped) {
+    }
+
+    /**
      * Run the motor at the specified open loop value.
      */
     public void setOpenLoop(double output) {
