@@ -270,77 +270,80 @@ public class Superstructure extends SubsystemBaseExt {
             Trigger cancelTrigger,
             Supplier<Elevator.Goal> elevatorGoalSupplier
     ) {
+        Command cmd = Commands.sequence(
+                Commands.parallel(
+                        setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
+                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                        elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
+                ),
+                Commands.parallel(
+                        setGoal(Goal.SCORE_CORAL_WAIT_CONFIRM),
+                        Commands.waitUntil(forwardTrigger)
+                ),
+                // Don't allow canceling
+                CommandsExt.schedule(
+                        Commands.sequence(
+                                Commands.parallel(
+                                        setGoal(Goal.SCORE_CORAL_SCORING),
+                                        endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
+                                        elevator.setGoal(elevatorGoalSupplier),
+                                        waitUntilEndEffectorNotTriggered()
+                                ),
+                                // Wait for coral to settle
+                                Commands.waitSeconds(0.75)
+                        ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                )
+        );
         return CommandsExt.onlyIf(
                 () -> inputs.endEffectorBeamBreakTriggered,
                 CommandsExt.cancelOnTrigger(
                         cancelTrigger,
-                        Commands.sequence(
-                                Commands.parallel(
-                                        setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
-                                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                                        elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
-                                ),
-                                Commands.parallel(
-                                        setGoal(Goal.SCORE_CORAL_WAIT_CONFIRM),
-                                        Commands.waitUntil(forwardTrigger)
-                                ),
-                                // Don't allow canceling
-                                CommandsExt.schedule(
-                                        Commands.sequence(
-                                                Commands.parallel(
-                                                        setGoal(Goal.SCORE_CORAL_SCORING),
-                                                        endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
-                                                        elevator.setGoal(elevatorGoalSupplier),
-                                                        waitUntilEndEffectorNotTriggered()
-                                                ),
-                                                // Wait for coral to settle
-                                                Commands.waitSeconds(0.75)
-                                        ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
-                                )
-                        )
+                        cmd
                 )
         );
     }
 
     public Command descoreAlgaeManual(Supplier<Elevator.Goal> elevatorGoalSupplier) {
+        Command cmd = Commands.sequence(
+                Commands.parallel(
+                        setGoal(Goal.DESCORE_ALGAE_WAIT_ELEVATOR),
+                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                        elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
+                ),
+                Commands.parallel(
+                        setGoal(Goal.DESCORE_ALGAE_DESCORING),
+                        endEffector.setGoal(EndEffector.RollersGoal.DESCORE_ALGAE),
+                        elevator.setGoal(elevatorGoalSupplier),
+                        Commands.idle()
+                )
+        );
         return CommandsExt.onlyIf(
                 () -> !inputs.endEffectorBeamBreakTriggered,
-                Commands.sequence(
-                        Commands.parallel(
-                                setGoal(Goal.DESCORE_ALGAE_WAIT_ELEVATOR),
-                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                                elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
-                        ),
-                        Commands.parallel(
-                                setGoal(Goal.DESCORE_ALGAE_DESCORING),
-                                endEffector.setGoal(EndEffector.RollersGoal.DESCORE_ALGAE),
-                                elevator.setGoal(elevatorGoalSupplier),
-                                Commands.idle()
-                        )
-                )
+                cmd
         );
     }
 
     public Command funnelIntake() {
+        Command cmd = Commands.sequence(
+                Commands.parallel(
+                        setGoal(Goal.FUNNEL_INTAKE_WAITING),
+                        endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
+                        waitUntilEndEffectorTriggered()
+                ),
+                // Don't allow canceling
+                CommandsExt.schedule(
+                        Commands.sequence(
+                                Commands.parallel(
+                                        setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
+                                        endEffector.setGoal(EndEffector.RollersGoal.ORIENT_CORAL),
+                                        Commands.waitSeconds(0.25)
+                                )
+                        ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                )
+        );
         return CommandsExt.onlyIf(
                 () -> !inputs.endEffectorBeamBreakTriggered,
-                Commands.sequence(
-                        Commands.parallel(
-                                setGoal(Goal.FUNNEL_INTAKE_WAITING),
-                                endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                                waitUntilEndEffectorTriggered()
-                        ),
-                        // Don't allow canceling
-                        CommandsExt.schedule(
-                                Commands.sequence(
-                                        Commands.parallel(
-                                                setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
-                                                endEffector.setGoal(EndEffector.RollersGoal.ORIENT_CORAL),
-                                                Commands.waitSeconds(0.25)
-                                        )
-                                ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
-                        )
-                )
+                cmd
         );
     }
 
@@ -350,49 +353,50 @@ public class Superstructure extends SubsystemBaseExt {
             Supplier<Elevator.Goal> elevatorGoalSupplier,
             Trigger cancelTrigger
     ) {
+        Command cmd = Commands.sequence(
+                // Drive to primary position and intake
+                Commands.race(
+                        drive.moveTo(() -> getPrimaryAlignPose(reefSideSupplier.get())),
+                        waitUntilAtPrimaryPosition(reefSideSupplier)
+                ),
+                // Drive to secondary position while raising elevator
+                Commands.race(
+                        drive.moveTo(() -> getSecondaryAlignPose(reefSideSupplier.get(), alignLeftSupplier.get())),
+                        Commands.parallel(
+                                setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
+                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier),
+                                waitUntilAtSecondaryPosition(reefSideSupplier, alignLeftSupplier)
+                        )
+                ),
+                // Drive to final position and score
+                Commands.race(
+                        drive.moveTo(() -> getFinalAlignPose(reefSideSupplier.get(), alignLeftSupplier.get())),
+                        waitUntilAtFinalPosition(reefSideSupplier, alignLeftSupplier)
+                ),
+                // don't allow cancelling
+                CommandsExt.schedule(
+                        Commands.race(
+                                drive.moveTo(() -> getFinalAlignPose(reefSideSupplier.get(), alignLeftSupplier.get())),
+                                Commands.sequence(
+                                        Commands.parallel(
+                                                setGoal(Goal.SCORE_CORAL_SCORING),
+                                                endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
+                                                waitUntilEndEffectorNotTriggered()
+                                        ),
+                                        // Wait for coral to settle
+                                        Commands.waitSeconds(0.75)
+                                ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                        )
+                )
+        );
         return CommandsExt.onlyIf(
                 // Only run if you have coral and are in front of your reef side
-                () -> (inputs.endEffectorBeamBreakTriggered)
+                () -> inputs.endEffectorBeamBreakTriggered
                         && alignable(reefSideSupplier.get(), RobotState.get().getPose()),
                 CommandsExt.cancelOnTrigger(
                         cancelTrigger,
-                        Commands.sequence(
-                                // Drive to primary position and intake
-                                Commands.race(
-                                        drive.moveTo(() -> getPrimaryAlignPose(reefSideSupplier.get())),
-                                        waitUntilAtPrimaryPosition(reefSideSupplier)
-                                ),
-                                // Drive to secondary position while raising elevator
-                                Commands.race(
-                                        drive.moveTo(() -> getSecondaryAlignPose(reefSideSupplier.get(), alignLeftSupplier.get())),
-                                        Commands.parallel(
-                                                setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
-                                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                                                elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier),
-                                                waitUntilAtSecondaryPosition(reefSideSupplier, alignLeftSupplier)
-                                        )
-                                ),
-                                // Drive to final position and score
-                                Commands.race(
-                                        drive.moveTo(() -> getFinalAlignPose(reefSideSupplier.get(), alignLeftSupplier.get())),
-                                        waitUntilAtFinalPosition(reefSideSupplier, alignLeftSupplier)
-                                ),
-                                // don't allow cancelling
-                                CommandsExt.schedule(
-                                        Commands.race(
-                                                drive.moveTo(() -> getFinalAlignPose(reefSideSupplier.get(), alignLeftSupplier.get())),
-                                                Commands.sequence(
-                                                        Commands.parallel(
-                                                                setGoal(Goal.SCORE_CORAL_SCORING),
-                                                                endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
-                                                                waitUntilEndEffectorNotTriggered()
-                                                        ),
-                                                        // Wait for coral to settle
-                                                        Commands.waitSeconds(0.75)
-                                                ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
-                                        )
-                                )
-                        )
+                        cmd
                 )
         );
     }
