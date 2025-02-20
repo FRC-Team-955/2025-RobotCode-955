@@ -2,9 +2,9 @@ package frc.robot;
 
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.util.network.LoggedNetworkBooleanExt;
+import frc.robot.util.network.LoggedNetworkNumberExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
 import lombok.Getter;
-import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -12,18 +12,19 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 public class OperatorDashboard extends VirtualSubsystem {
-    private static final String prefix = "/Tuning/OperatorDashboard/";
+    private static final String prefix = "/OperatorDashboard/";
 
     public final LoggedNetworkBooleanExt coastOverride = new LoggedNetworkBooleanExt(prefix + "CoastOverride", false);
     public final LoggedNetworkBooleanExt elevatorEStop = new LoggedNetworkBooleanExt(prefix + "ElevatorEStop", false);
     public final LoggedNetworkBooleanExt useRealElevatorState = new LoggedNetworkBooleanExt(prefix + "UseRealElevatorState", false);
     public final LoggedNetworkBooleanExt forceZeroElevator = new LoggedNetworkBooleanExt(prefix + "ForceZeroElevator", false);
     public final LoggedNetworkBooleanExt coralStuckInRobotMode = new LoggedNetworkBooleanExt(prefix + "CoralStuckInRobotMode", false);
+    public final LoggedNetworkNumberExt elevatorOffset = new LoggedNetworkNumberExt(prefix + "ElevatorOffset", 0);
 
-    private final Map<ReefZoneSide, LoggedNetworkBoolean> reefZoneSides = generateTogglesForEnum("ReefZoneSides", ReefZoneSide.values());
-    private final Map<LocalReefSide, LoggedNetworkBoolean> localReefSides = generateTogglesForEnum("LocalReefSides", LocalReefSide.values());
-    private final Map<CoralScoringLevel, LoggedNetworkBoolean> coralScoringLevels = generateTogglesForEnum("CoralScoringLevels", CoralScoringLevel.values());
-    private final Map<AlgaeDescoringLevel, LoggedNetworkBoolean> algaeDescoringLevels = generateTogglesForEnum("AlgaeDescoringLevels", AlgaeDescoringLevel.values());
+    private final Map<ReefZoneSide, LoggedNetworkBooleanExt> reefZoneSides = generateTogglesForEnum("ReefZoneSides", ReefZoneSide.values());
+    private final Map<LocalReefSide, LoggedNetworkBooleanExt> localReefSides = generateTogglesForEnum("LocalReefSides", LocalReefSide.values());
+    private final Map<CoralScoringLevel, LoggedNetworkBooleanExt> coralScoringLevels = generateTogglesForEnum("CoralScoringLevels", CoralScoringLevel.values());
+    private final Map<AlgaeDescoringLevel, LoggedNetworkBooleanExt> algaeDescoringLevels = generateTogglesForEnum("AlgaeDescoringLevels", AlgaeDescoringLevel.values());
 
     @Getter
     private ReefZoneSide selectedReefZoneSide = ReefZoneSide.LeftFront;
@@ -99,18 +100,18 @@ public class OperatorDashboard extends VirtualSubsystem {
     }
 
     private static <E extends Enum<E>> void handleEnumToggles(
-            Map<E, LoggedNetworkBoolean> map,
+            Map<E, LoggedNetworkBooleanExt> map,
             E currentlySelected,
             Consumer<E> select
     ) {
         // If none are toggled
-        if (map.values().stream().noneMatch(LoggedNetworkBoolean::get)) {
+        if (map.values().stream().noneMatch(LoggedNetworkBooleanExt::get)) {
             // Enable the last selected one
             map.get(currentlySelected).set(true);
         } else {
             // Otherwise, look for changes in the toggles
             for (var entry : map.entrySet()) {
-                LoggedNetworkBoolean toggle = entry.getValue();
+                LoggedNetworkBooleanExt toggle = entry.getValue();
                 // If it's toggled
                 if (toggle.get()) {
                     E side = entry.getKey();
@@ -131,14 +132,14 @@ public class OperatorDashboard extends VirtualSubsystem {
         }
     }
 
-    private static <E extends Enum<E>> Map<E, LoggedNetworkBoolean> generateTogglesForEnum(String name, E[] values) {
+    private static <E extends Enum<E>> Map<E, LoggedNetworkBooleanExt> generateTogglesForEnum(String name, E[] values) {
         return Map.ofEntries(
                 Arrays.stream(values)
                         .map(side -> Map.entry(
                                 side,
-                                new LoggedNetworkBoolean(prefix + name + "/" + side.name(), false)
+                                new LoggedNetworkBooleanExt(prefix + name + "/" + side.name(), false)
                         ))
-                        .toArray((IntFunction<Map.Entry<E, LoggedNetworkBoolean>[]>) Map.Entry[]::new)
+                        .toArray((IntFunction<Map.Entry<E, LoggedNetworkBooleanExt>[]>) Map.Entry[]::new)
         );
     }
 }

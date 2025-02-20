@@ -185,6 +185,7 @@ public class Elevator extends SubsystemBaseExt {
             double positionMeters = getPositionMeters();
             double velocityMetersPerSec = getVelocityMetersPerSec();
             double setpointMeters = MathUtil.clamp(goal.setpointMeters.getAsDouble(), 0, maxHeightMeters);
+            setpointMeters += operatorDashboard.elevatorOffset.get(); // Offset should override clamping
 
             if (goal == Goal.STOW && operatorDashboard.coralStuckInRobotMode.get()) {
                 // Override stow setpoint if coral is stuck in the robot

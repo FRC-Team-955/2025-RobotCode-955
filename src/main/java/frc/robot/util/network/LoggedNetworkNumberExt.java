@@ -1,16 +1,16 @@
 package frc.robot.util.network;
 
-import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import java.util.HashSet;
 
 /** Note: automatically adds <code>/Tuning</code> to key */
-public class LoggedNetworkBooleanExt extends LoggedNetworkBoolean {
+public class LoggedNetworkNumberExt extends LoggedNetworkNumber {
     private final HashSet<Integer> hashCodesGottenChange = new HashSet<>();
-    private boolean lastValue;
+    private double lastValue;
     private boolean hasChangedOnce = false;
 
-    public LoggedNetworkBooleanExt(String key, boolean defaultValue) {
+    public LoggedNetworkNumberExt(String key, double defaultValue) {
         super("/Tuning/" + removeSlash(key), defaultValue);
         lastValue = defaultValue;
     }
@@ -28,7 +28,7 @@ public class LoggedNetworkBooleanExt extends LoggedNetworkBoolean {
     public void periodic() {
         super.periodic();
 
-        boolean newValue = get();
+        double newValue = get();
         if (newValue != lastValue) {
             // Clear all hash codes that have been given the change so that they get the new value
             hashCodesGottenChange.clear();
