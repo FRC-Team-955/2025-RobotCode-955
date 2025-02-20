@@ -308,7 +308,7 @@ public class Drive extends SubsystemBaseExt {
                 // Calculate module setpoints
                 ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(closedLoopSetpoint, 0.02);
                 SwerveModuleState[] setpointStates = robotState.getKinematics().toSwerveModuleStates(discreteSpeeds);
-                SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, driveConfig.maxLinearSpeedMetersPerSec());
+                SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, driveConfig.maxDriveVelocityMetersPerSec());
 
                 Logger.recordOutput("Drive/ModuleStates/Setpoints", setpointStates);
 
@@ -392,10 +392,13 @@ public class Drive extends SubsystemBaseExt {
                 ? elevator.getGoal().setpointMeters.getAsDouble()
                 : 0;
         var elevatorPosition = Math.max(elevator.getPositionMeters(), elevatorSetpoint);
-        var scalar = 1 - DriveConstants.elevatorSlowdownScalar * elevatorPosition / ElevatorConstants.maxHeightMeters;
+        var scalar = MathUtil.clamp(
+                1 - elevatorSlowdownScalar * elevatorPosition / ElevatorConstants.maxHeightMeters,
+                1 - elevatorSlowdownScalar,
+                1
         return new ModuleLimits(
-                driveConfig.maxLinearSpeedMetersPerSec() * scalar,
-                driveConfig.maxLinearAccelMetersPerSecSquared() * scalar,
+                driveConfig.maxDriveVelocityMetersPerSec() * scalar,
+                driveConfig.maxDriveAccelMetersPerSecSquared() * scalar,
                 driveConfig.maxTurnVelocityRadPerSec()
         );
     }
@@ -438,8 +441,8 @@ public class Drive extends SubsystemBaseExt {
     private void runDrive(Translation2d linearVelocity, double omega) {
         // Convert to field relative speeds & send command
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
-                linearVelocity.getX() * driveConfig.maxLinearSpeedMetersPerSec(),
-                linearVelocity.getY() * driveConfig.maxLinearSpeedMetersPerSec(),
+                linearVelocity.getX() * driveConfig.maxDriveVelocityMetersPerSec(),
+                linearVelocity.getY() * driveConfig.maxDriveVelocityMetersPerSec(),
                 omega * joystickMaxAngularSpeedRadPerSec,
                 Util.flipIfNeeded(robotState.getRotation()) // Driver is alliance relative, flip
         );
@@ -448,25 +451,25 @@ public class Drive extends SubsystemBaseExt {
     private void runDriveAssisted(Pose2d assistPose, Translation2d linearVelocity, double linearMagnitude, double omegaMagnitude) {
         var currentPose = robotState.getPose();
 
-        var driverX = linearVelocity.getX() * driveConfig.maxLinearSpeedMetersPerSec();
-        var driverY = linearVelocity.getY() * driveConfig.maxLinearSpeedMetersPerSec();
+        var driverX = linearVelocity.getX() * driveConfig.maxDriveVelocityMetersPerSec();
+        var driverY = linearVelocity.getY() * driveConfig.maxDriveVelocityMetersPerSec();
         var driverOmega = omegaMagnitude * joystickMaxAngularSpeedRadPerSec;
 
         var assistX = moveToX.calculate(currentPose.getX(), assistPose.getX());
         assistX = MathUtil.clamp(assistX, -1, 1) // Limit to 100% max linear speed
-                * driveConfig.maxLinearSpeedMetersPerSec()
+                * driveConfig.maxDriveVelocityMetersPerSec()
                 * linearMagnitude; // Limit to the driver's overall linear speed
         Logger.recordOutput("Drive/Assist/PID/X", assistX);
 
         var assistY = moveToY.calculate(currentPose.getY(), assistPose.getY());
         assistY = MathUtil.clamp(assistY, -1, 1) // Limit to 100% max linear speed
-                * driveConfig.maxLinearSpeedMetersPerSec()
+                * driveConfig.maxDriveVelocityMetersPerSec()
                 * linearMagnitude; // Limit to the driver's overall linear speed
         Logger.recordOutput("Drive/Assist/PID/Y", assistY);
 
         var assistOmega = moveToOmega.calculate(currentPose.getRotation().getRadians(), assistPose.getRotation().getRadians());
         assistOmega = MathUtil.clamp(assistOmega, -1, 1) // Limit to 100% max angular speed
-                * driveConfig.maxAngularSpeedRadPerSec()
+                * maxAngularVelocityRadPerSec
                 // If we are driving fast and not rotating, need fast rotation assist, so limit to driver's overall linear speed
                 // Otherwise, limit to driver omega speed
                 * Math.max(omegaMagnitude, linearMagnitude);
@@ -492,13 +495,13 @@ public class Drive extends SubsystemBaseExt {
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
                 // Limit to 100% max linear speed
                 MathUtil.clamp(moveToX.calculate(currentPose.getX(), pose.getX()), -1, 1)
-                        * driveConfig.maxLinearSpeedMetersPerSec(),
+                        * driveConfig.maxDriveVelocityMetersPerSec(),
                 // Limit to 100% max linear speed
                 MathUtil.clamp(moveToY.calculate(currentPose.getY(), pose.getY()), -1, 1)
-                        * driveConfig.maxLinearSpeedMetersPerSec(),
+                        * driveConfig.maxDriveVelocityMetersPerSec(),
                 // Limit to 100% max angular speed
                 MathUtil.clamp(moveToOmega.calculate(currentPose.getRotation().getRadians(), pose.getRotation().getRadians()), -1, 1)
-                        * driveConfig.maxAngularSpeedRadPerSec(),
+                        * maxAngularVelocityRadPerSec,
                 currentPose.getRotation() // Move to is absolute, don't flip
         );
     }
@@ -670,7 +673,7 @@ public class Drive extends SubsystemBaseExt {
             }
             averageWheelPosition /= modules.length;
 
-            currentEffectiveWheelRadius = (accumGyroYawRads * drivebaseRadius) / averageWheelPosition;
+            currentEffectiveWheelRadius = (accumGyroYawRads * drivebaseRadiusMeters) / averageWheelPosition;
             Logger.recordOutput("Drive/RadiusCharacterization/DrivePosition", averageWheelPosition);
             Logger.recordOutput("Drive/RadiusCharacterization/AccumGyroYawRads", accumGyroYawRads);
             Logger.recordOutput(

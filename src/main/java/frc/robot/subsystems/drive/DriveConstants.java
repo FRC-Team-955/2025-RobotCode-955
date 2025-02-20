@@ -38,10 +38,8 @@ public class DriveConstants {
                 Units.inchesToMeters(34.625),
                 PIDF.ofPD(1.5, 0),
                 PIDF.ofPD(1.5, 0),
-                4.022, // from Choreo
+                4.022,
                 15,
-                11.580, // from Choreo
-                55.116, // from Choreo
                 Units.degreesToRadians(1080)
         );
         case ALPHABOT -> new DriveConfig(
@@ -52,11 +50,9 @@ public class DriveConstants {
                 Units.inchesToMeters(30),
                 PIDF.ofPD(1.5, 0),
                 PIDF.ofPD(1.5, 0),
-                4.637, // from Choreo
+                4.637,
                 20,
-                12.442, // from Choreo
-                31.923, // from Choreo
-                Units.degreesToRadians(1080) // not from Choreo
+                Units.degreesToRadians(1080)
         );
     };
 
@@ -70,9 +66,12 @@ public class DriveConstants {
             new Translation2d(-driveConfig.trackWidthMeters / 2.0, -driveConfig.trackLengthMeters / 2.0)
     };
 
-    public static final double drivebaseRadius = Math.hypot(driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0);
+    public static final double drivebaseRadiusMeters = Math.hypot(driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0);
 
-    public static final double joystickMaxAngularSpeedRadPerSec = Math.min(Units.degreesToRadians(315), driveConfig.maxAngularSpeedRadPerSec());
+    /** Maximum angular velocity of the whole drivetrain if all drive motors/wheels are going at full speed. */
+    public static final double maxAngularVelocityRadPerSec = driveConfig.maxDriveVelocityMetersPerSec() / drivebaseRadiusMeters;
+
+    public static final double joystickMaxAngularSpeedRadPerSec = Math.min(Units.degreesToRadians(315), maxAngularVelocityRadPerSec);
     public static final double joystickDriveDeadband = 0.1;
 
     public static final ModuleConfig moduleConfig = switch (Constants.identity) {
@@ -170,10 +169,8 @@ public class DriveConstants {
             double bumperLengthMeters,
             PIDF choreoFeedbackXY,
             PIDF choreoFeedbackOmega,
-            double maxLinearSpeedMetersPerSec,
-            double maxLinearAccelMetersPerSecSquared,
-            double maxAngularSpeedRadPerSec,
-            double maxAngularAccelRadPerSecSquared,
+            double maxDriveVelocityMetersPerSec, // Maximum velocity of the drive motor
+            double maxDriveAccelMetersPerSecSquared, // Maximum acceleration of the drive motor
             double maxTurnVelocityRadPerSec // Maximum velocity of the turn motor
     ) {
     }
