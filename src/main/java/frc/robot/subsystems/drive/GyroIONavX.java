@@ -39,6 +39,7 @@ public class GyroIONavX extends GyroIO {
         inputs.connected = navX.isConnected();
         inputs.yawPositionRad = Units.degreesToRadians(-navX.getYaw());
         inputs.yawVelocityRadPerSec = Units.degreesToRadians(-navX.getRawGyroZ());
+        inputs.temperatureCelsius = navX.getTempC();
 
         inputs.odometryYawTimestamps =
                 yawTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();

@@ -26,10 +26,7 @@ import com.ctre.phoenix6.signals.*;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
 import frc.robot.util.PIDF;
 
@@ -79,6 +76,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
     private final StatusSignal<AngularVelocity> driveVelocity;
     private final StatusSignal<Voltage> driveAppliedVolts;
     private final StatusSignal<Current> driveCurrent;
+    private final StatusSignal<Temperature> driveTemperature;
 
     // Inputs from turn motor
     private final StatusSignal<Angle> turnAbsolutePosition;
@@ -87,6 +85,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
     private final StatusSignal<AngularVelocity> turnVelocity;
     private final StatusSignal<Voltage> turnAppliedVolts;
     private final StatusSignal<Current> turnCurrent;
+    private final StatusSignal<Temperature> turnTemperature;
 
     // Connection debouncers
     private final Debouncer driveConnectedDebounce = new Debouncer(0.5);
@@ -160,6 +159,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         driveVelocity = driveTalon.getVelocity();
         driveAppliedVolts = driveTalon.getMotorVoltage();
         driveCurrent = driveTalon.getStatorCurrent();
+        driveTemperature = driveTalon.getDeviceTemp();
 
         // Create turn status signals
         turnAbsolutePosition = cancoder.getAbsolutePosition();
@@ -168,6 +168,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         turnVelocity = turnTalon.getVelocity();
         turnAppliedVolts = turnTalon.getMotorVoltage();
         turnCurrent = turnTalon.getStatorCurrent();
+        turnTemperature = driveTalon.getDeviceTemp();
 
         // Configure periodic frames
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -177,18 +178,21 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
                 driveVelocity,
                 driveAppliedVolts,
                 driveCurrent,
+                driveTemperature,
                 turnAbsolutePosition,
                 turnVelocity,
                 turnAppliedVolts,
-                turnCurrent);
+                turnCurrent,
+                turnTemperature
+        );
         ParentDevice.optimizeBusUtilizationForAll(driveTalon, turnTalon, cancoder);
     }
 
     @Override
     public void updateInputs(ModuleIOInputs inputs) {
         // Refresh all signals
-        var driveStatus = BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrent);
-        var turnStatus = BaseStatusSignal.refreshAll(turnPosition, turnVelocity, turnAppliedVolts, turnCurrent);
+        var driveStatus = BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrent, driveTemperature);
+        var turnStatus = BaseStatusSignal.refreshAll(turnPosition, turnVelocity, turnAppliedVolts, turnCurrent, turnTemperature);
         var turnEncoderStatus = BaseStatusSignal.refreshAll(turnAbsolutePosition);
 
         // Update drive inputs
@@ -197,6 +201,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
         inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
         inputs.driveCurrentAmps = driveCurrent.getValueAsDouble();
+        inputs.driveTemperatureCelsius = driveTemperature.getValueAsDouble();
 
         // Update turn inputs
         inputs.turnConnected = turnConnectedDebounce.calculate(turnStatus.isOK());
@@ -206,6 +211,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         inputs.turnVelocityRadPerSec = Units.rotationsToRadians(turnVelocity.getValueAsDouble());
         inputs.turnAppliedVolts = turnAppliedVolts.getValueAsDouble();
         inputs.turnCurrentAmps = turnCurrent.getValueAsDouble();
+        inputs.turnTemperatureCelsius = turnTemperature.getValueAsDouble();
 
         // Update odometry inputs
         inputs.odometryDriveTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();

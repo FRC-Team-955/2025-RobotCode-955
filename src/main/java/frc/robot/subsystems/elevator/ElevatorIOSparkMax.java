@@ -111,6 +111,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
                 (values) -> inputs.leaderAppliedVolts = values[0] * values[1]
         );
         ifOk(leadMotor, leadMotor::getOutputCurrent, (value) -> inputs.leaderCurrentAmps = value);
+        ifOk(leadMotor, leadMotor::getMotorTemperature, (value) -> inputs.leaderTemperatureCelsius = value);
         inputs.leaderConnected = leadConnectedDebounce.calculate(!sparkStickyFault);
 
         // Update follow inputs
@@ -123,6 +124,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
                 (values) -> inputs.followerAppliedVolts = values[0] * values[1]
         );
         ifOk(followMotor, followMotor::getOutputCurrent, (value) -> inputs.followerCurrentAmps = value);
+        ifOk(followMotor, followMotor::getMotorTemperature, (value) -> inputs.followerTemperatureCelsius = value);
         inputs.followerConnected = followConnectedDebounce.calculate(!sparkStickyFault);
 
         inputs.limitSwitchTriggered = !limitSwitch.get();

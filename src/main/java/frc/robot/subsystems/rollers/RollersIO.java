@@ -11,6 +11,7 @@ public class RollersIO {
         public double velocityRadPerSec = 0.0;
         public double appliedVolts = 0.0;
         public double currentAmps = 0.0;
+        public double temperatureCelsius = 0.0;
     }
 
     /**

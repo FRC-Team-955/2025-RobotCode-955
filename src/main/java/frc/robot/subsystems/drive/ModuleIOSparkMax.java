@@ -168,6 +168,7 @@ public class ModuleIOSparkMax extends ModuleIO {
                 (values) -> inputs.driveAppliedVolts = values[0] * values[1]
         );
         ifOk(driveSpark, driveSpark::getOutputCurrent, (value) -> inputs.driveCurrentAmps = value);
+        ifOk(driveSpark, driveSpark::getMotorTemperature, (value) -> inputs.driveTemperatureCelsius = value);
         inputs.driveConnected = driveConnectedDebounce.calculate(!sparkStickyFault);
 
         // Update turn inputs
@@ -184,6 +185,7 @@ public class ModuleIOSparkMax extends ModuleIO {
                 (values) -> inputs.turnAppliedVolts = values[0] * values[1]
         );
         ifOk(turnSpark, turnSpark::getOutputCurrent, (value) -> inputs.turnCurrentAmps = value);
+        ifOk(turnSpark, turnSpark::getMotorTemperature, (value) -> inputs.turnTemperatureCelsius = value);
         inputs.turnConnected = turnConnectedDebounce.calculate(!sparkStickyFault);
 
         // Update odometry inputs

@@ -21,6 +21,7 @@ public class GyroIO {
         public boolean connected = false;
         public double yawPositionRad = 0.0;
         public double yawVelocityRadPerSec = 0.0;
+        public double temperatureCelsius = 0.0;
 
         public double[] odometryYawTimestamps = new double[]{};
         public double[] odometryYawPositionsRad = new double[]{};

@@ -82,6 +82,7 @@ public class RollersIOSparkMax extends RollersIO {
                 (values) -> inputs.appliedVolts = values[0] * values[1]
         );
         ifOk(motor, motor::getOutputCurrent, (value) -> inputs.currentAmps = value);
+        ifOk(motor, motor::getMotorTemperature, (value) -> inputs.temperatureCelsius = value);
         inputs.connected = connectedDebounce.calculate(!sparkStickyFault);
     }
 

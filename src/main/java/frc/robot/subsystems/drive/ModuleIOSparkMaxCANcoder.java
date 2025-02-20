@@ -46,7 +46,6 @@ import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
 import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
-import static frc.robot.util.SparkUtil.tryUntilOkAsync;
 
 /**
  * Module IO implementation for Spark Max drive motor controller, Spark Max turn motor controller,
@@ -195,6 +194,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
                 (values) -> inputs.driveAppliedVolts = values[0] * values[1]
         );
         SparkUtil.ifOk(driveSpark, driveSpark::getOutputCurrent, (value) -> inputs.driveCurrentAmps = value);
+        SparkUtil.ifOk(driveSpark, driveSpark::getMotorTemperature, (value) -> inputs.driveTemperatureCelsius = value);
         inputs.driveConnected = driveConnectedDebounce.calculate(!SparkUtil.sparkStickyFault);
 
         // Update turn inputs
@@ -211,6 +211,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
                 (values) -> inputs.turnAppliedVolts = values[0] * values[1]
         );
         SparkUtil.ifOk(turnSpark, turnSpark::getOutputCurrent, (value) -> inputs.turnCurrentAmps = value);
+        SparkUtil.ifOk(turnSpark, turnSpark::getMotorTemperature, (value) -> inputs.turnTemperatureCelsius = value);
         inputs.turnConnected = turnConnectedDebounce.calculate(!SparkUtil.sparkStickyFault);
 
         // Turn cancoder
@@ -236,7 +237,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
         driveFF = newGains.toSimpleFF();
         var newConfig = new SparkMaxConfig();
         newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
-        tryUntilOkAsync(5, () -> driveSpark.configure(
+        SparkUtil.tryUntilOkAsync(5, () -> driveSpark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
                 SparkBase.PersistMode.kPersistParameters
@@ -248,7 +249,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
         System.out.println("Setting turn gains");
         var newConfig = new SparkMaxConfig();
         newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
-        tryUntilOkAsync(5, () -> turnSpark.configure(
+        SparkUtil.tryUntilOkAsync(5, () -> turnSpark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
                 SparkBase.PersistMode.kPersistParameters
