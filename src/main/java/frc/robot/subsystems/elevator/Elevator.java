@@ -32,7 +32,7 @@ public class Elevator extends SubsystemBaseExt {
     @RequiredArgsConstructor
     public enum Goal {
         CHARACTERIZATION(null),
-        STOW(() -> 0),
+        STOW(() -> 0), // Setpoint for when coral stuck in robot mode is activated is in periodicAfterCommands
         SCORE_L1(scoreL1GoalSetpoint::get),
         SCORE_L2(scoreL2GoalSetpoint::get),
         SCORE_L3(scoreL3GoalSetpoint::get),
@@ -184,6 +184,11 @@ public class Elevator extends SubsystemBaseExt {
             var positionMeters = getPositionMeters();
             var velocityMetersPerSec = getVelocityMetersPerSec();
             var setpointMeters = goal.setpointMeters.getAsDouble();
+
+            if (goal == Goal.STOW && operatorDashboard.coralStuckInRobotMode.get()) {
+                // Override stow setpoint if coral is stuck in the robot
+                setpointMeters = 1.1;
+            }
 
             boolean usingGentleProfile = inputs.leaderVelocityRadPerSec < 0.1 // If we are going down
                     // If we are below the hardstop slowdown zone

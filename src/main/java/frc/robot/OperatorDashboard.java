@@ -12,10 +12,13 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 public class OperatorDashboard extends VirtualSubsystem {
-    public final LoggedNetworkBooleanExt coastOverride = new LoggedNetworkBooleanExt("/Tuning/OperatorDashboard/CoastOverride", false);
-    public final LoggedNetworkBooleanExt elevatorEStop = new LoggedNetworkBooleanExt("/Tuning/OperatorDashboard/ElevatorEStop", false);
-    public final LoggedNetworkBooleanExt useRealElevatorState = new LoggedNetworkBooleanExt("/Tuning/OperatorDashboard/UseRealElevatorState", false);
-    public final LoggedNetworkBooleanExt forceZeroElevator = new LoggedNetworkBooleanExt("/Tuning/OperatorDashboard/ForceZeroElevator", false);
+    private static final String prefix = "/Tuning/OperatorDashboard/";
+
+    public final LoggedNetworkBooleanExt coastOverride = new LoggedNetworkBooleanExt(prefix + "CoastOverride", false);
+    public final LoggedNetworkBooleanExt elevatorEStop = new LoggedNetworkBooleanExt(prefix + "ElevatorEStop", false);
+    public final LoggedNetworkBooleanExt useRealElevatorState = new LoggedNetworkBooleanExt(prefix + "UseRealElevatorState", false);
+    public final LoggedNetworkBooleanExt forceZeroElevator = new LoggedNetworkBooleanExt(prefix + "ForceZeroElevator", false);
+    public final LoggedNetworkBooleanExt coralStuckInRobotMode = new LoggedNetworkBooleanExt(prefix + "CoralStuckInRobotMode", false);
 
     private final Map<ReefZoneSide, LoggedNetworkBoolean> reefZoneSides = generateTogglesForEnum("ReefZoneSides", ReefZoneSide.values());
     private final Map<LocalReefSide, LoggedNetworkBoolean> localReefSides = generateTogglesForEnum("LocalReefSides", LocalReefSide.values());
@@ -133,7 +136,7 @@ public class OperatorDashboard extends VirtualSubsystem {
                 Arrays.stream(values)
                         .map(side -> Map.entry(
                                 side,
-                                new LoggedNetworkBoolean("/Tuning/OperatorDashboard/" + name + "/" + side.name(), false)
+                                new LoggedNetworkBoolean(prefix + name + "/" + side.name(), false)
                         ))
                         .toArray((IntFunction<Map.Entry<E, LoggedNetworkBoolean>[]>) Map.Entry[]::new)
         );

@@ -388,6 +388,14 @@ public class Drive extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Drive/ModuleLimits")
     public ModuleLimits getModuleLimits() {
+        if (operatorDashboard.coralStuckInRobotMode.get()) {
+            return new ModuleLimits(
+                    driveConfig.maxDriveVelocityMetersPerSec(),
+                    driveConfig.maxDriveAccelMetersPerSecSquared(),
+                    driveConfig.maxTurnVelocityRadPerSec()
+            );
+        }
+
         var elevatorSetpoint = elevator.getGoal().setpointMeters != null
                 ? elevator.getGoal().setpointMeters.getAsDouble()
                 : 0;
@@ -396,6 +404,7 @@ public class Drive extends SubsystemBaseExt {
                 1 - elevatorSlowdownScalar * elevatorPosition / ElevatorConstants.maxHeightMeters,
                 1 - elevatorSlowdownScalar,
                 1
+        );
         return new ModuleLimits(
                 driveConfig.maxDriveVelocityMetersPerSec() * scalar,
                 driveConfig.maxDriveAccelMetersPerSecSquared() * scalar,
