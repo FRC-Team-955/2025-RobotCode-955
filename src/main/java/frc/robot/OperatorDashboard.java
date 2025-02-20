@@ -15,6 +15,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     public final LoggedNetworkBooleanExt coastOverride = new LoggedNetworkBooleanExt("/Tuning/OperatorDashboard/CoastOverride", false);
     public final LoggedNetworkBooleanExt elevatorEStop = new LoggedNetworkBooleanExt("/Tuning/OperatorDashboard/ElevatorEStop", false);
     public final LoggedNetworkBooleanExt useRealElevatorState = new LoggedNetworkBooleanExt("/Tuning/OperatorDashboard/UseRealElevatorState", false);
+    public final LoggedNetworkBooleanExt forceZeroElevator = new LoggedNetworkBooleanExt("/Tuning/OperatorDashboard/ForceZeroElevator", false);
 
     private final Map<ReefZoneSide, LoggedNetworkBoolean> reefZoneSides = generateTogglesForEnum("ReefZoneSides", ReefZoneSide.values());
     private final Map<LocalReefSide, LoggedNetworkBoolean> localReefSides = generateTogglesForEnum("LocalReefSides", LocalReefSide.values());

@@ -198,7 +198,8 @@ public class Elevator extends SubsystemBaseExt {
                     ? new TrapezoidProfile.State(positionMeters, velocityMetersPerSec)
                     : previousStateMeters;
             if (usingRealStateAsCurrent) {
-                // Turn the toggle off instantly
+                // Turn the toggle off instantly so it's like a button
+                // We only want to use the real state for one cycle anyways
                 operatorDashboard.useRealElevatorState.set(false);
             }
 
@@ -225,9 +226,14 @@ public class Elevator extends SubsystemBaseExt {
         }
 
         // Check limit switch and zero if needed
-        if (!hasZeroed && inputs.limitSwitchTriggered) {
+        var forceZero = operatorDashboard.forceZeroElevator.get();
+        if ((!hasZeroed && inputs.limitSwitchTriggered) || forceZero) {
             io.setEncoder(0);
             hasZeroed = true;
+            if (forceZero) {
+                // Turn off the toggle instantly so it's like a button
+                operatorDashboard.forceZeroElevator.set(false);
+            }
         }
         notZeroedAlert.set(!hasZeroed);
     }
