@@ -163,7 +163,7 @@ public class RobotContainer extends VirtualSubsystem {
 //                        driverController.leftBumper()
 //                ),
                 operatorDashboard.manualScoring::get
-        );
+        ));
         driverController.rightBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
 
         if (mode == Constants.Mode.SIM) {
