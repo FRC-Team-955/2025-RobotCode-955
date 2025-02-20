@@ -149,19 +149,22 @@ public class RobotContainer extends VirtualSubsystem {
         driverController.rightTrigger().whileTrue(superstructure.funnelIntake());
 //        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
 
-        driverController.leftTrigger().onTrue(superstructure.scoreCoralManual(
-                driverController.leftTrigger(),
-                driverController.leftBumper(),
-                operatorDashboard::getCoralScoringElevatorGoal
-        ));
+        driverController.leftTrigger().onTrue(Commands.either(
+                superstructure.scoreCoralManual(
+                        driverController.leftTrigger(),
+                        driverController.leftBumper(),
+                        operatorDashboard::getCoralScoringElevatorGoal
+                ),
+                Commands.none(),
+//                superstructure.autoAlignAndScore(
+//                        operatorDashboard::getSide,
+//                        operatorDashboard::getLeftSide,
+//                        operatorDashboard::getElevatorLevel,
+//                        driverController.leftBumper()
+//                ),
+                operatorDashboard.manualScoring::get
+        );
         driverController.rightBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
-
-//        driverController.leftTrigger().toggleOnTrue(superstructure.autoAlignAndScore(
-//                operatorDashboard::getSide,
-//                operatorDashboard::getLeftSide,
-//                operatorDashboard::getElevatorLevel,
-//                driverController.leftBumper()
-//        ));
 
         if (mode == Constants.Mode.SIM) {
             driverController.x().onTrue(Commands.runOnce(() ->
@@ -169,7 +172,7 @@ public class RobotContainer extends VirtualSubsystem {
                             new Pose2d(Units.inchesToMeters(650), Units.inchesToMeters(30), new Rotation2d(Math.random() * 2 * Math.PI))
                     ))
             ));
-            driverController.y().onTrue(Commands.runOnce(() ->
+            driverController.a().onTrue(Commands.runOnce(() ->
                     SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(
                             new Pose2d(Units.inchesToMeters(650), Units.inchesToMeters(285), new Rotation2d(Math.random() * 2 * Math.PI))
                     ))
