@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
 import frc.robot.Util;
 import frc.robot.util.characterization.FeedforwardCharacterization;
@@ -20,13 +21,13 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
-import static frc.robot.OperatorDashboard.*;
 import static frc.robot.RobotMechanism.middleOfRobot;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 import static frc.robot.subsystems.elevator.ElevatorTuning.*;
 
 public class Elevator extends SubsystemBaseExt {
     private final RobotMechanism robotMechanism = RobotMechanism.get();
+    private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
 
     @RequiredArgsConstructor
     public enum Goal {
@@ -127,7 +128,7 @@ public class Elevator extends SubsystemBaseExt {
         }
         Logger.recordOutput("Elevator/AutoStop", autoStop);
 
-        boolean emergencyStopped = elevatorEStop.get() || autoStop;
+        boolean emergencyStopped = operatorDashboard.elevatorEStop.get() || autoStop;
         if (emergencyStopped != prevEmergencyStopped) {
             if (emergencyStopped) {
                 System.out.println("Elevator is emergency stopping");
@@ -154,8 +155,8 @@ public class Elevator extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
-        if (coastOverride.hasChanged(hashCode())) {
-            io.setBrakeMode(!coastOverride.get());
+        if (operatorDashboard.coastOverride.hasChanged(hashCode())) {
+            io.setBrakeMode(!operatorDashboard.coastOverride.get());
         }
 
         gainsTunable.ifChanged(hashCode(), io::setPIDF);
@@ -192,13 +193,13 @@ public class Elevator extends SubsystemBaseExt {
                     : profileFullVelocity;
 
             // Sometimes the profile outruns the elevator, so failsafe if it does
-            var usingRealStateAsCurrent = useRealElevatorState.get();
+            var usingRealStateAsCurrent = operatorDashboard.useRealElevatorState.get();
             var currentState = usingRealStateAsCurrent
                     ? new TrapezoidProfile.State(positionMeters, velocityMetersPerSec)
                     : previousStateMeters;
             if (usingRealStateAsCurrent) {
-                // Turn it off instantly
-                useRealElevatorState.set(false);
+                // Turn the toggle off instantly
+                operatorDashboard.useRealElevatorState.set(false);
             }
 
             previousStateMeters = profile.calculate(

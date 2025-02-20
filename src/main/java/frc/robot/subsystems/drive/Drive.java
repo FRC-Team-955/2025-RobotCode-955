@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.OperatorDashboard;
 import frc.robot.RobotState;
 import frc.robot.Util;
 import frc.robot.subsystems.elevator.Elevator;
@@ -39,7 +40,6 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.OperatorDashboard.coastOverride;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 import static frc.robot.subsystems.drive.DriveTuning.*;
 import static frc.robot.subsystems.drive.PhoenixOdometryThread.phoenixLock;
@@ -47,6 +47,7 @@ import static frc.robot.subsystems.drive.SparkOdometryThread.sparkLock;
 
 public class Drive extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
+    private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final Elevator elevator = Elevator.get();
 
     @RequiredArgsConstructor
@@ -228,9 +229,9 @@ public class Drive extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
-        if (coastOverride.hasChanged(hashCode())) {
+        if (operatorDashboard.coastOverride.hasChanged(hashCode())) {
             for (var module : modules) {
-                module.setBrakeMode(!coastOverride.get());
+                module.setBrakeMode(!operatorDashboard.coastOverride.get());
             }
         }
 
