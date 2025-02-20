@@ -78,6 +78,7 @@ public class Elevator extends SubsystemBaseExt {
     private final Alert notZeroedAlert = new Alert("Elevator is not zeroed.", Alert.AlertType.kWarning);
     private final Alert leaderDisconnectedAlert = new Alert("Elevator leader motor is disconnected.", Alert.AlertType.kError);
     private final Alert followerDisconnectedAlert = new Alert("Elevator follower motor is disconnected.", Alert.AlertType.kError);
+    private final Alert elevatorOffsetSetAlert = new Alert("Elevator offset is not zero, bad things may happen.", Alert.AlertType.kWarning);
 
     private static Elevator instance;
 
@@ -185,7 +186,14 @@ public class Elevator extends SubsystemBaseExt {
             double positionMeters = getPositionMeters();
             double velocityMetersPerSec = getVelocityMetersPerSec();
             double setpointMeters = MathUtil.clamp(goal.setpointMeters.getAsDouble(), 0, maxHeightMeters);
-            setpointMeters += operatorDashboard.elevatorOffsetMeters.get(); // Offset should override clamping
+
+            double offsetMeters = operatorDashboard.elevatorOffsetMeters.get();
+            if (offsetMeters != 0.0) {
+                setpointMeters += offsetMeters; // Offset should override clamping
+                elevatorOffsetSetAlert.set(true);
+            } else {
+                elevatorOffsetSetAlert.set(false);
+            }
 
             if (goal == Goal.STOW && operatorDashboard.coralStuckInRobotMode.get()) {
                 // Override stow setpoint if coral is stuck in the robot
