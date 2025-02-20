@@ -1,5 +1,6 @@
 package frc.robot.subsystems.elevator;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
@@ -181,9 +182,9 @@ public class Elevator extends SubsystemBaseExt {
             Logger.recordOutput("Elevator/ClosedLoop", false);
             io.setOpenLoop(0);
         } else if (goal.setpointMeters != null) {
-            var positionMeters = getPositionMeters();
-            var velocityMetersPerSec = getVelocityMetersPerSec();
-            var setpointMeters = goal.setpointMeters.getAsDouble();
+            double positionMeters = getPositionMeters();
+            double velocityMetersPerSec = getVelocityMetersPerSec();
+            double setpointMeters = MathUtil.clamp(goal.setpointMeters.getAsDouble(), 0, maxHeightMeters);
 
             if (goal == Goal.STOW && operatorDashboard.coralStuckInRobotMode.get()) {
                 // Override stow setpoint if coral is stuck in the robot
