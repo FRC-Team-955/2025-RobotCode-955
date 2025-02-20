@@ -63,6 +63,7 @@
 //        // TODO: coast override
 //        ////////////// ROLLERS //////////////
 //        Logger.recordOutput("Indexer/Rollers/Goal", rollersGoal);
+//        // TODO: disabled check
 //        if (rollersGoal.setpointRadPerSec != null) {
 //            var rollersSetpointRadPerSec = rollersGoal.setpointRadPerSec.getAsDouble();
 //            rollersIO.setVelocity(rollersSetpointRadPerSec);

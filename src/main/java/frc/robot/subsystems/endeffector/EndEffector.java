@@ -3,6 +3,7 @@ package frc.robot.subsystems.endeffector;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
@@ -84,7 +85,10 @@ public class EndEffector extends SubsystemBaseExt {
 
         ////////////// ROLLERS //////////////
         Logger.recordOutput("EndEffector/Rollers/Goal", rollersGoal);
-        if (rollersGoal.setpointRadPerSec != null) {
+        if (DriverStation.isDisabled()) {
+            Logger.recordOutput("EndEffector/Rollers/ClosedLoop", false);
+            rollersIO.setOpenLoop(0);
+        } else if (rollersGoal.setpointRadPerSec != null) {
             var rollersSetpointRadPerSec = rollersGoal.setpointRadPerSec.getAsDouble();
             rollersIO.setVelocity(rollersSetpointRadPerSec);
             Logger.recordOutput("EndEffector/Rollers/ClosedLoop", true);

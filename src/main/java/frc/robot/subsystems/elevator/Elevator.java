@@ -3,6 +3,7 @@ package frc.robot.subsystems.elevator;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -176,7 +177,10 @@ public class Elevator extends SubsystemBaseExt {
 
         // Goal control
         Logger.recordOutput("Elevator/Goal", goal);
-        if (goal.setpointMeters != null) {
+        if (DriverStation.isDisabled()) {
+            Logger.recordOutput("Elevator/ClosedLoop", false);
+            io.setOpenLoop(0);
+        } else if (goal.setpointMeters != null) {
             var positionMeters = getPositionMeters();
             var velocityMetersPerSec = getVelocityMetersPerSec();
             var setpointMeters = goal.setpointMeters.getAsDouble();

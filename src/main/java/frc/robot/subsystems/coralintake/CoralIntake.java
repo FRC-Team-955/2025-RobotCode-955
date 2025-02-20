@@ -88,6 +88,7 @@
 //        // TODO: coast override
 //        ////////////// PIVOT //////////////
 //        Logger.recordOutput("CoralIntake/Pivot/Goal", pivotGoal);
+//        // TODO: disabled check
 //        if (pivotGoal.setpointRad != null) {
 //            var pivotSetpointRad = pivotGoal.setpointRad.getAsDouble();
 //            pivotIO.setClosedLoop(pivotSetpointRad);
@@ -99,6 +100,7 @@
 //
 //        ////////////// ROLLERS //////////////
 //        Logger.recordOutput("CoralIntake/Rollers/Goal", rollersGoal);
+//        // TODO: disabled check
 //        if (rollersGoal.setpointRadPerSec != null) {
 //            var rollersSetpointRadPerSec = rollersGoal.setpointRadPerSec.getAsDouble();
 //            rollersIO.setVelocity(rollersSetpointRadPerSec);
