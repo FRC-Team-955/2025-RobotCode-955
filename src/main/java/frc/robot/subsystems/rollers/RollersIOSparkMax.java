@@ -15,7 +15,7 @@ import static frc.robot.util.SparkUtil.*;
 
 public class RollersIOSparkMax extends RollersIO {
     // Hardware objects
-    private final SparkMax motor;
+    private final SparkMax spark;
     private final RelativeEncoder encoder;
     private final SparkMaxConfig config;
 
@@ -31,9 +31,9 @@ public class RollersIOSparkMax extends RollersIO {
             int canID,
             RollersConfig rollersConfig
     ) {
-        motor = new SparkMax(canID, SparkLowLevel.MotorType.kBrushless);
-        encoder = motor.getEncoder();
-        controller = motor.getClosedLoopController();
+        spark = new SparkMax(canID, SparkLowLevel.MotorType.kBrushless);
+        encoder = spark.getEncoder();
+        controller = spark.getClosedLoopController();
 
         velocityFeedforward = rollersConfig.velocityGains().toSimpleFF();
 
@@ -63,7 +63,7 @@ public class RollersIOSparkMax extends RollersIO {
                 .appliedOutputPeriodMs(20)
                 .busVoltagePeriodMs(20)
                 .outputCurrentPeriodMs(20);
-        tryUntilOk(5, () -> motor.configure(
+        tryUntilOk(5, () -> spark.configure(
                 config,
                 SparkBase.ResetMode.kResetSafeParameters,
                 SparkBase.PersistMode.kPersistParameters
@@ -74,15 +74,15 @@ public class RollersIOSparkMax extends RollersIO {
     @Override
     public void updateInputs(RollersIO.RollersIOInputs inputs) {
         sparkStickyFault = false;
-        ifOk(motor, encoder::getPosition, (value) -> inputs.positionRad = value);
-        ifOk(motor, encoder::getVelocity, (value) -> inputs.velocityRadPerSec = value);
+        ifOk(spark, encoder::getPosition, (value) -> inputs.positionRad = value);
+        ifOk(spark, encoder::getVelocity, (value) -> inputs.velocityRadPerSec = value);
         ifOk(
-                motor,
-                new DoubleSupplier[]{motor::getAppliedOutput, motor::getBusVoltage},
+                spark,
+                new DoubleSupplier[]{spark::getAppliedOutput, spark::getBusVoltage},
                 (values) -> inputs.appliedVolts = values[0] * values[1]
         );
-        ifOk(motor, motor::getOutputCurrent, (value) -> inputs.currentAmps = value);
-        ifOk(motor, motor::getMotorTemperature, (value) -> inputs.temperatureCelsius = value);
+        ifOk(spark, spark::getOutputCurrent, (value) -> inputs.currentAmps = value);
+        ifOk(spark, spark::getMotorTemperature, (value) -> inputs.temperatureCelsius = value);
         inputs.connected = connectedDebounce.calculate(!sparkStickyFault);
     }
 
@@ -91,7 +91,7 @@ public class RollersIOSparkMax extends RollersIO {
         System.out.println("Setting roller position gains");
         var newConfig = new SparkMaxConfig();
         newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
-        tryUntilOkAsync(5, () -> motor.configure(
+        tryUntilOkAsync(5, () -> spark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
                 SparkBase.PersistMode.kPersistParameters
@@ -104,7 +104,7 @@ public class RollersIOSparkMax extends RollersIO {
         velocityFeedforward = newGains.toSimpleFF();
         var newConfig = new SparkMaxConfig();
         newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
-        tryUntilOkAsync(5, () -> motor.configure(
+        tryUntilOkAsync(5, () -> spark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
                 SparkBase.PersistMode.kPersistParameters
@@ -114,7 +114,7 @@ public class RollersIOSparkMax extends RollersIO {
     @Override
     public void setBrakeMode(boolean enable) {
         var newConfig = new SparkMaxConfig().idleMode(enable ? SparkBaseConfig.IdleMode.kBrake : SparkBaseConfig.IdleMode.kCoast);
-        tryUntilOkAsync(5, () -> motor.configure(
+        tryUntilOkAsync(5, () -> spark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
                 SparkBase.PersistMode.kPersistParameters
@@ -123,7 +123,7 @@ public class RollersIOSparkMax extends RollersIO {
 
     @Override
     public void setOpenLoop(double output) {
-        motor.setVoltage(output);
+        spark.setVoltage(output);
     }
 
     @Override
