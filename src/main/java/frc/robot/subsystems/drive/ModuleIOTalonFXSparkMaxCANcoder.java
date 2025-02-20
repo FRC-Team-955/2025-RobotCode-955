@@ -90,8 +90,8 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
     private final Queue<Double> drivePositionQueue;
     private final StatusSignal<AngularVelocity> driveVelocity;
     private final StatusSignal<Voltage> driveAppliedVolts;
-    private final StatusSignal<Current> driveCurrent;
-    private final StatusSignal<Temperature> driveTemperature;
+    private final StatusSignal<Current> driveCurrentAmps;
+    private final StatusSignal<Temperature> driveTemperatureCelsius;
 
     // Inputs from turn motor
     private final StatusSignal<Angle> turnAbsolutePosition;
@@ -182,8 +182,8 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
         drivePositionQueue = PhoenixOdometryThread.getInstance().registerSignal(driveTalon.getPosition());
         driveVelocity = driveTalon.getVelocity();
         driveAppliedVolts = driveTalon.getMotorVoltage();
-        driveCurrent = driveTalon.getStatorCurrent();
-        driveTemperature = driveTalon.getDeviceTemp();
+        driveCurrentAmps = driveTalon.getStatorCurrent();
+        driveTemperatureCelsius = driveTalon.getDeviceTemp();
 
         // Create turn status signals
         turnAbsolutePosition = cancoder.getAbsolutePosition();
@@ -195,8 +195,8 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
                 50.0,
                 driveVelocity,
                 driveAppliedVolts,
-                driveCurrent,
-                driveTemperature,
+                driveCurrentAmps,
+                driveTemperatureCelsius,
                 turnAbsolutePosition
         );
         ParentDevice.optimizeBusUtilizationForAll(driveTalon, cancoder);
@@ -207,13 +207,13 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
     @Override
     public void updateInputs(ModuleIOInputs inputs) {
         // Update drive inputs
-        var driveStatus = BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrent, driveTemperature);
+        var driveStatus = BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrentAmps, driveTemperatureCelsius);
         inputs.driveConnected = driveConnectedDebounce.calculate(driveStatus.isOK());
         inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
         inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
         inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
-        inputs.driveCurrentAmps = driveCurrent.getValueAsDouble();
-        inputs.driveTemperatureCelsius = driveTemperature.getValueAsDouble();
+        inputs.driveCurrentAmps = driveCurrentAmps.getValueAsDouble();
+        inputs.driveTemperatureCelsius = driveTemperatureCelsius.getValueAsDouble();
 
         // Update turn inputs
         SparkUtil.sparkStickyFault = false;

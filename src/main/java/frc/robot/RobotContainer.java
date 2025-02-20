@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.factories.auto.BargeSideAuto;
+import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
@@ -59,6 +60,7 @@ public class RobotContainer extends VirtualSubsystem {
     private final Drive drive = Drive.get();
     private final Superstructure superstructure = Superstructure.get();
     private final LEDs leds = LEDs.get();
+    private final Climber climber = Climber.get();
 
     public RobotContainer() {
         addAutos();
