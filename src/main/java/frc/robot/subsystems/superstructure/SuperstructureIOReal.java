@@ -8,7 +8,6 @@ public class SuperstructureIOReal extends SuperstructureIO {
 
     @Override
     public void updateInputs(SuperstructureIOInputs inputs) {
-        inputs.endEffectorBeamBreakConnected = true;
         inputs.endEffectorBeamBreakTriggered = !endEffectorBeamBreak.get();
     }
 }

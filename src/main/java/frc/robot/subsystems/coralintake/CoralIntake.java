@@ -18,7 +18,7 @@
 //import static frc.robot.subsystems.coralintake.CoralIntakeConstants.pivotSetpointToleranceRad;
 //
 //public class CoralIntake extends SubsystemBaseExt {
-//    private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
+//    private final RobotMechanism robotMechanism = RobotMechanism.get();
 //
 //    @RequiredArgsConstructor
 //    public enum PivotGoal {

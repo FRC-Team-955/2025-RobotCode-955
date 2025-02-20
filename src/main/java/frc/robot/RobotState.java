@@ -32,9 +32,6 @@ public class RobotState {
             },
             new Pose2d());
 
-    @Getter
-    private final RobotMechanism mechanism = new RobotMechanism();
-
     private static RobotState instance;
 
     public static RobotState get() {

@@ -6,7 +6,6 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotMechanism;
-import frc.robot.RobotState;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
@@ -23,7 +22,7 @@ import static frc.robot.subsystems.endeffector.EndEffectorConstants.createRoller
 import static frc.robot.subsystems.endeffector.EndEffectorTuning.*;
 
 public class EndEffector extends SubsystemBaseExt {
-    private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
+    private final RobotMechanism robotMechanism = RobotMechanism.get();
     private final Elevator elevator = Elevator.get();
 
     @RequiredArgsConstructor

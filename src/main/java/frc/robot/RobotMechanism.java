@@ -12,6 +12,20 @@ import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
 /** Holds the Mechanism2d and all roots and ligaments that visualizes the robot state */
 public class RobotMechanism {
+    private static RobotMechanism instance;
+
+    public static RobotMechanism get() {
+        if (instance == null)
+            synchronized (RobotMechanism.class) {
+                instance = new RobotMechanism();
+            }
+
+        return instance;
+    }
+
+    private RobotMechanism() {
+    }
+
     /** Middle of the robot in the mechanism */
     public static final double middleOfRobot = 0.75;
 

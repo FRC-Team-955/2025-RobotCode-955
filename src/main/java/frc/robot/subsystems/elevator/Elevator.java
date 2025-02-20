@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotMechanism;
-import frc.robot.RobotState;
 import frc.robot.Util;
 import frc.robot.util.characterization.FeedforwardCharacterization;
 import frc.robot.util.subsystem.SubsystemBaseExt;
@@ -27,7 +26,7 @@ import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 import static frc.robot.subsystems.elevator.ElevatorTuning.*;
 
 public class Elevator extends SubsystemBaseExt {
-    private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
+    private final RobotMechanism robotMechanism = RobotMechanism.get();
 
     @RequiredArgsConstructor
     public enum Goal {

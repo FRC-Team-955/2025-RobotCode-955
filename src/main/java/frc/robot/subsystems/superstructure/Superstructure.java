@@ -24,7 +24,7 @@ import static frc.robot.subsystems.superstructure.SuperstructureConstants.create
 
 public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
-    private final RobotMechanism robotMechanism = robotState.getMechanism();
+    private final RobotMechanism robotMechanism = RobotMechanism.get();
     private final Drive drive = Drive.get();
     //    private final CoralIntake coralIntake = CoralIntake.get();
 //    private final Indexer indexer = Indexer.get();

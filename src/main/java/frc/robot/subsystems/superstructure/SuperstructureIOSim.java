@@ -198,9 +198,5 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 inputs.endEffectorBeamBreakTriggered = false;
             }
         }
-
-//        inputs.intakeRangeConnected = true;
-//        inputs.indexerBeamBreakConnected = true;
-        inputs.endEffectorBeamBreakConnected = true;
     }
 }
