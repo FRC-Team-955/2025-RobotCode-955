@@ -20,6 +20,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     public final LoggedNetworkBooleanExt coralStuckInRobotMode = new LoggedNetworkBooleanExt(prefix + "CoralStuckInRobotMode", false);
     public final LoggedNetworkBooleanExt manualScoring = new LoggedNetworkBooleanExt(prefix + "ManualScoring", false);
     public final LoggedNetworkBooleanExt ignoreEndEffectorBeamBreak = new LoggedNetworkBooleanExt(prefix + "IgnoreEndEffectorBeamBreak", false);
+
     public final LoggedNetworkBooleanExt forceZeroClimber = new LoggedNetworkBooleanExt(prefix + "ForceZeroClimber", false);
     public final LoggedNetworkBooleanExt bypassClimberLimits = new LoggedNetworkBooleanExt(prefix + "BypassClimberLimits", false);
 
@@ -43,6 +44,9 @@ public class OperatorDashboard extends VirtualSubsystem {
     private AlgaeDescoringLevel selectedAlgaeDescoringLevel = AlgaeDescoringLevel.L3;
 
     private final Alert coastOverrideAlert = new Alert("Coast override is enabled.", Alert.AlertType.kWarning);
+    private final Alert coralStuckInRobotModeAlert = new Alert("Coral stuck in robot mode is enabled.", Alert.AlertType.kWarning);
+    private final Alert manualScoringAlert = new Alert("Manual scoring is enabled.", Alert.AlertType.kWarning);
+    private final Alert ignoreEndEffectorBeamBreakAlert = new Alert("Ignore end effector beam break is enabled.", Alert.AlertType.kWarning);
 
     private static OperatorDashboard instance;
 
@@ -60,7 +64,12 @@ public class OperatorDashboard extends VirtualSubsystem {
 
     @Override
     public void periodicBeforeCommands() {
+        // Note - we only handle alerts for general overrides.
+        // So elevator and climber toggles are handled in their respective subsystems
         coastOverrideAlert.set(coastOverride.get());
+        coralStuckInRobotModeAlert.set(coralStuckInRobotMode.get());
+        manualScoringAlert.set(manualScoring.get());
+        ignoreEndEffectorBeamBreakAlert.set(ignoreEndEffectorBeamBreak.get());
 
         handleEnumToggles(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
         handleEnumToggles(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);
