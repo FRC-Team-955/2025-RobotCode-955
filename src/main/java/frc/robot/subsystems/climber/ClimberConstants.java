@@ -11,7 +11,7 @@ public class ClimberConstants {
             return new ClimberIO();
         }
         return switch (Constants.identity) {
-            case COMPBOT -> new ClimberIO();
+            case COMPBOT -> new ClimberIOTalonFX(10, true);
             case SIMBOT, ALPHABOT -> new ClimberIOSim();
         };
     }
