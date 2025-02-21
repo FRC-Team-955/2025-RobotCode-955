@@ -88,7 +88,7 @@ public class DriveConstants {
                 false,
                 false,
                 120,
-                20
+                60
         );
         case ALPHABOT -> new ModuleConfig(
                 PIDF.ofPDSVA(
@@ -105,7 +105,7 @@ public class DriveConstants {
                 false,
                 false,
                 60,
-                20
+                60
         );
         case SIMBOT -> new ModuleConfig(
                 PIDF.ofPDSV(0.05, 0.0, 0.02522, 0.14115),
