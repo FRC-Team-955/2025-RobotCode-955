@@ -40,14 +40,13 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
 import frc.robot.util.PIDF;
+import frc.robot.util.PhoenixUtil;
 import frc.robot.util.SparkUtil;
 
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
 import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
-import static frc.robot.util.PhoenixUtil.tryUntilOk;
-import static frc.robot.util.SparkUtil.tryUntilOkAsync;
 
 /**
  * Module IO implementation for Talon FX drive motor controller, Spark MAX turn motor controller, and
@@ -127,8 +126,8 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
                 moduleConfig.driveInverted()
                         ? InvertedValue.Clockwise_Positive
                         : InvertedValue.CounterClockwise_Positive;
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
-        tryUntilOk(5, () -> driveTalon.setPosition(0.0, 0.25));
+        PhoenixUtil.tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+        PhoenixUtil.tryUntilOk(5, () -> driveTalon.setPosition(0.0, 0.25));
 
         // Configure turn motor
         turnConfig = new SparkMaxConfig();
@@ -171,7 +170,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
                 moduleConfig.encoderInverted()
                         ? SensorDirectionValue.Clockwise_Positive
                         : SensorDirectionValue.CounterClockwise_Positive;
-        tryUntilOk(5, () -> cancoder.getConfigurator().apply(cancoderConfig));
+        PhoenixUtil.tryUntilOk(5, () -> cancoder.getConfigurator().apply(cancoderConfig));
 
         // Create timestamp queue
         phoenixTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
@@ -258,7 +257,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
     public void setDrivePIDF(PIDF newGains) {
         System.out.println("Setting drive gains");
         driveConfig.Slot0 = Slot0Configs.from(newGains.toPhoenix());
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+        PhoenixUtil.tryUntilOkAsync(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
     }
 
     @Override
@@ -266,7 +265,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
         System.out.println("Setting turn gains");
         var newConfig = new SparkMaxConfig();
         newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
-        tryUntilOkAsync(5, () -> turnSpark.configure(
+        SparkUtil.tryUntilOkAsync(5, () -> turnSpark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
                 SparkBase.PersistMode.kPersistParameters
@@ -276,7 +275,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
     @Override
     public void setDriveBrakeMode(boolean enable) {
         driveConfig.MotorOutput.NeutralMode = enable ? NeutralModeValue.Brake : NeutralModeValue.Coast;
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+        PhoenixUtil.tryUntilOkAsync(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
     }
 
     @Override

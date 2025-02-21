@@ -34,6 +34,7 @@ import java.util.Queue;
 
 import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
+import static frc.robot.util.PhoenixUtil.tryUntilOkAsync;
 
 /**
  * Module IO implementation for Talon FX drive motor controller, Talon FX turn motor controller, and
@@ -233,26 +234,26 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
     public void setDrivePIDF(PIDF newGains) {
         System.out.println("Setting drive gains");
         driveConfig.Slot0 = Slot0Configs.from(newGains.toPhoenix());
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+        tryUntilOkAsync(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
     }
 
     @Override
     public void setTurnPIDF(PIDF newGains) {
         System.out.println("Setting turn gains");
         turnConfig.Slot0 = Slot0Configs.from(newGains.toPhoenix());
-        tryUntilOk(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));
+        tryUntilOkAsync(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));
     }
 
     @Override
     public void setDriveBrakeMode(boolean enable) {
         driveConfig.MotorOutput.NeutralMode = enable ? NeutralModeValue.Brake : NeutralModeValue.Coast;
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+        tryUntilOkAsync(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
     }
 
     @Override
     public void setTurnBrakeMode(boolean enable) {
         turnConfig.MotorOutput.NeutralMode = enable ? NeutralModeValue.Brake : NeutralModeValue.Coast;
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(turnConfig, 0.25));
+        tryUntilOkAsync(5, () -> driveTalon.getConfigurator().apply(turnConfig, 0.25));
     }
 
     @Override

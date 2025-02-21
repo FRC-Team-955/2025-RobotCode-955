@@ -197,7 +197,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
 
     @Override
     public void setEncoder(double positionRad) {
-        tryUntilOk(5, () -> leadEncoder.setPosition(positionRad));
-        tryUntilOk(5, () -> followEncoder.setPosition(positionRad));
+        tryUntilOkAsync(5, () -> leadEncoder.setPosition(positionRad));
+        tryUntilOkAsync(5, () -> followEncoder.setPosition(positionRad));
     }
 }
