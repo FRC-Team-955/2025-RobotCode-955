@@ -34,6 +34,7 @@ public class RobotMechanism {
 
     public final Elevator elevator = new Elevator();
     public final EndEffector endEffector = new EndEffector();
+    public final Climber climber = new Climber();
 //    public final Indexer indexer = new Indexer();
 //    public final CoralIntake coralIntake = new CoralIntake();
 
@@ -152,6 +153,21 @@ public class RobotMechanism {
         ));
 
         private EndEffector() {
+        }
+    }
+
+    public class Climber {
+        public final LoggedMechanismRoot2d root = mechanism.getRoot("climber", middleOfRobot, 0.5);
+        public final LoggedMechanismLigament2d ligament = root.append(new LoggedMechanismLigament2d(
+                "ligament",
+                Units.inchesToMeters(15),
+                0,
+                1,
+                new Color8Bit(Color.kCyan)
+        ));
+
+        private Climber() {
+
         }
     }
 

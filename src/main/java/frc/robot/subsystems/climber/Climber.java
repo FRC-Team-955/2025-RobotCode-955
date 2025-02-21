@@ -1,9 +1,11 @@
 package frc.robot.subsystems.climber;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.OperatorDashboard;
+import frc.robot.RobotMechanism;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import org.littletonrobotics.junction.Logger;
 import static frc.robot.subsystems.climber.ClimberConstants.*;
 
 public class Climber extends SubsystemBaseExt {
+    private final RobotMechanism robotMechanism = RobotMechanism.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
 
     private final ClimberIO io = createIO();
@@ -62,6 +65,8 @@ public class Climber extends SubsystemBaseExt {
         temperatureAlert.set(inputs.temperatureCelsius > 30);
 
         bypassLimitsAlert.set(operatorDashboard.bypassClimberLimits.get());
+
+        robotMechanism.climber.ligament.setAngle(Units.radiansToDegrees(inputs.positionRad));
     }
 
     @Override

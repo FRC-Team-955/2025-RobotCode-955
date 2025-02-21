@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.FieldLocations;
 import frc.robot.OperatorDashboard;
-import frc.robot.Robot;
 import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
@@ -366,7 +365,6 @@ public class Superstructure extends SubsystemBaseExt {
                         Commands.sequence(
                                 Commands.parallel(
                                         setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
-                                        endEffector.setGoal(EndEffector.RollersGoal.ORIENT_CORAL),
                                         // Go forward 5 inches
                                         endEffector.moveByAndWaitUntilDone(Units.inchesToMeters(5))
                                 )
