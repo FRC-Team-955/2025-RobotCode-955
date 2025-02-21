@@ -32,7 +32,7 @@ public class DriveConstants {
 
     public static final DriveConfig driveConfig = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> new DriveConfig(
-                Units.inchesToMeters(2),
+                Units.inchesToMeters(1.935948620917915),
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(34.625),

@@ -747,17 +747,17 @@ public class Drive extends SubsystemBaseExt {
             averageWheelPosition /= modules.length;
 
             currentEffectiveWheelRadius = (accumGyroYawRads * drivebaseRadiusMeters) / averageWheelPosition;
-            Logger.recordOutput("Drive/RadiusCharacterization/DrivePosition", averageWheelPosition);
-            Logger.recordOutput("Drive/RadiusCharacterization/AccumGyroYawRads", accumGyroYawRads);
+            Logger.recordOutput("Drive/WheelRadiusCharacterization/DrivePosition", averageWheelPosition);
+            Logger.recordOutput("Drive/WheelRadiusCharacterization/AccumGyroYawRads", accumGyroYawRads);
             Logger.recordOutput(
-                    "Drive/RadiusCharacterization/CurrentWheelRadiusInches",
+                    "Drive/WheelRadiusCharacterization/CurrentWheelRadiusInches",
                     Units.metersToInches(currentEffectiveWheelRadius)
             );
         }
 
         @Override
         public void end(boolean interrupted) {
-            if (accumGyroYawRads <= Math.PI * 2.0) {
+            if (Math.abs(accumGyroYawRads) <= Math.PI * 2.0) {
                 System.out.println("Not enough data for characterization");
             } else {
                 System.out.println("Effective Wheel Radius: " + Units.metersToInches(currentEffectiveWheelRadius) + " inches");
