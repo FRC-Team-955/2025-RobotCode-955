@@ -663,13 +663,11 @@ public class Drive extends SubsystemBaseExt {
 
     public Command fullSpeedCharacterization() {
         return withGoal(Goal.CHARACTERIZATION, Commands.sequence(
-                startEnd(
+                startIdle(
                         () -> {
                             for (var module : modules) {
                                 module.runCharacterization(2.0);
                             }
-                        },
-                        () -> {
                         }
                 ).withTimeout(2),
                 startEnd(
