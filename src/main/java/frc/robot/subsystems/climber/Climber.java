@@ -14,6 +14,7 @@ public class Climber extends SubsystemBaseExt {
     private final ClimberIO io = createIO();
     private final ClimberIOInputsAutoLogged inputs = new ClimberIOInputsAutoLogged();
 
+    private final Alert disconnectedAlert = new Alert("Climber motor motor is disconnected.", Alert.AlertType.kError);
     private final Alert temperatureAlert = new Alert("Climber motor temperature is high. Be careful.", Alert.AlertType.kWarning);
 
     private static Climber instance;
@@ -35,6 +36,7 @@ public class Climber extends SubsystemBaseExt {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Climber", inputs);
 
+        disconnectedAlert.set(!inputs.connected);
         temperatureAlert.set(inputs.temperatureCelsius > 30);
     }
 
