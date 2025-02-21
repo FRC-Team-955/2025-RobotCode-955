@@ -24,4 +24,8 @@ public class ClimberIO {
      */
     public void setOpenLoop(double output) {
     }
+
+    /** Set the encoder of the motor to the specified position. Used for zeroing */
+    public void setEncoder(double positionRad) {
+    }
 }

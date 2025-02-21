@@ -5,6 +5,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 import static frc.robot.subsystems.climber.ClimberConstants.gearRatio;
+import static frc.robot.subsystems.climber.ClimberConstants.initialPositionRad;
 
 public class ClimberIOSim extends ClimberIO {
     private final DCMotor motor = DCMotor.getKrakenX60(1);
@@ -16,6 +17,10 @@ public class ClimberIOSim extends ClimberIO {
     );
     ;
     private double appliedVolts;
+
+    public ClimberIOSim() {
+        motorSim.setState(initialPositionRad, 0);
+    }
 
     @Override
     public void updateInputs(ClimberIO.ClimberIOInputs inputs) {
@@ -38,5 +43,10 @@ public class ClimberIOSim extends ClimberIO {
     @Override
     public void setOpenLoop(double output) {
         appliedVolts = output;
+    }
+
+    @Override
+    public void setEncoder(double positionRad) {
+        motorSim.setState(positionRad, motorSim.getAngularVelocityRadPerSec());
     }
 }

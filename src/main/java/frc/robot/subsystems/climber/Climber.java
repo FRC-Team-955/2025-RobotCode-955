@@ -1,13 +1,16 @@
 package frc.robot.subsystems.climber;
 
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.OperatorDashboard;
 import frc.robot.util.subsystem.SubsystemBaseExt;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-import static frc.robot.subsystems.climber.ClimberConstants.createIO;
-
+import static frc.robot.subsystems.climber.ClimberConstants.*;
 
 public class Climber extends SubsystemBaseExt {
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
@@ -15,8 +18,25 @@ public class Climber extends SubsystemBaseExt {
     private final ClimberIO io = createIO();
     private final ClimberIOInputsAutoLogged inputs = new ClimberIOInputsAutoLogged();
 
+    @RequiredArgsConstructor
+    public enum Goal {
+        IDLE(0),
+        TOWARDS_ROBOT(12),
+        AWAY_FROM_ROBOT(-12);
+
+        public final double volts;
+    }
+
+    @Getter
+    private Goal goal = Goal.IDLE;
+
+    @AutoLogOutput(key = "Climber/HasZeroed")
+    private boolean hasZeroed = false;
+
     private final Alert disconnectedAlert = new Alert("Climber motor motor is disconnected.", Alert.AlertType.kError);
     private final Alert temperatureAlert = new Alert("Climber motor temperature is high.", Alert.AlertType.kWarning);
+    private final Alert notZeroedAlert = new Alert("Climber is not zeroed.", Alert.AlertType.kWarning);
+    private final Alert hitLimitAlert = new Alert("Climber has hit its limit.", Alert.AlertType.kWarning);
 
     private static Climber instance;
 
@@ -46,19 +66,39 @@ public class Climber extends SubsystemBaseExt {
         if (operatorDashboard.coastOverride.hasChanged(hashCode())) {
             io.setBrakeMode(!operatorDashboard.coastOverride.get());
         }
+
+        Logger.recordOutput("Climber/Goal", goal);
+        boolean canRun = inputs.positionRad < upperLimitRad
+                && inputs.positionRad > lowerLimitRad;
+        hitLimitAlert.set(!canRun);
+        if (!canRun && DriverStation.isDisabled()) {
+            Logger.recordOutput("Climber/Running", false);
+            io.setOpenLoop(0);
+        } else {
+            Logger.recordOutput("Climber/Running", true);
+            io.setOpenLoop(goal.volts);
+        }
+
+        // Check force zero and zero if needed
+        var forceZero = operatorDashboard.forceZeroClimber.get();
+        if (forceZero) {
+            io.setEncoder(0);
+            hasZeroed = true;
+            // Turn off the toggle instantly so it's like a button
+            operatorDashboard.forceZeroClimber.set(false);
+        }
+        notZeroedAlert.set(!hasZeroed);
     }
 
-    public Command moveTowardsRobot() {
-        return startEnd(
-                () -> io.setOpenLoop(3),
-                () -> io.setOpenLoop(0)
-        );
+    public Command idle() {
+        return startIdle(() -> goal = Goal.IDLE);
     }
 
-    public Command moveAwayFromRobot() {
-        return startEnd(
-                () -> io.setOpenLoop(-3),
-                () -> io.setOpenLoop(0)
-        );
+    public Command towardsRobot() {
+        return startIdle(() -> goal = Goal.TOWARDS_ROBOT);
+    }
+
+    public Command awayFromRobot() {
+        return startIdle(() -> goal = Goal.AWAY_FROM_ROBOT);
     }
 }

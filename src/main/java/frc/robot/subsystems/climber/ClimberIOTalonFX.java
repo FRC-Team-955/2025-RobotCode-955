@@ -13,9 +13,9 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
 
-import static frc.robot.subsystems.climber.ClimberConstants.currentLimitAmps;
-import static frc.robot.subsystems.climber.ClimberConstants.gearRatio;
+import static frc.robot.subsystems.climber.ClimberConstants.*;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
+import static frc.robot.util.PhoenixUtil.tryUntilOkAsync;
 
 public class ClimberIOTalonFX extends ClimberIO {
     private final TalonFX talon;
@@ -48,7 +48,7 @@ public class ClimberIOTalonFX extends ClimberIO {
                         ? InvertedValue.Clockwise_Positive
                         : InvertedValue.CounterClockwise_Positive;
         tryUntilOk(5, () -> talon.getConfigurator().apply(talonConfig, 0.25));
-        tryUntilOk(5, () -> talon.setPosition(0.0, 0.25));
+        tryUntilOk(5, () -> talon.setPosition(initialPositionRad, 0.25));
 
         position = talon.getPosition();
         velocity = talon.getVelocity();
@@ -84,11 +84,16 @@ public class ClimberIOTalonFX extends ClimberIO {
     @Override
     public void setBrakeMode(boolean enable) {
         talonConfig.MotorOutput.NeutralMode = enable ? NeutralModeValue.Brake : NeutralModeValue.Coast;
-        tryUntilOk(5, () -> talon.getConfigurator().apply(talonConfig, 0.25));
+        tryUntilOkAsync(5, () -> talon.getConfigurator().apply(talonConfig, 0.25));
     }
 
     @Override
     public void setOpenLoop(double output) {
         talon.setControl(voltageRequest.withOutput(output));
+    }
+
+    @Override
+    public void setEncoder(double positionRad) {
+        tryUntilOkAsync(5, () -> talon.setPosition(Units.radiansToRotations(positionRad), 0.25));
     }
 }
