@@ -26,6 +26,9 @@ public class EndEffector extends SubsystemBaseExt {
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final Elevator elevator = Elevator.get();
 
+    private final RollersIO rollersIO = createRollersIO();
+    private final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
+
     @RequiredArgsConstructor
     public enum RollersGoal {
         CHARACTERIZATION(null),
@@ -44,9 +47,6 @@ public class EndEffector extends SubsystemBaseExt {
     @Getter
     private RollersGoal rollersGoal = RollersGoal.IDLE;
     private Double rollersPositionSetpointRad = null;
-
-    private final RollersIO rollersIO = createRollersIO();
-    private final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 
     private final Alert rollersDisconnectedAlert = new Alert("End effector rollers motor is disconnected.", Alert.AlertType.kError);
 

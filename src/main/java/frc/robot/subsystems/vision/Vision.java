@@ -39,6 +39,7 @@ public class Vision extends SubsystemBaseExt {
     private final GamepieceIO[] gamepieceIo = createGamepieceIO();
     private final AprilTagIOInputsAutoLogged[] atInputs;
     private final GamepieceIOInputsAutoLogged[] gpInputs;
+
     private final Alert[] atDisconnectedAlerts;
     private final Alert[] gpDisconnectedAlerts;
 

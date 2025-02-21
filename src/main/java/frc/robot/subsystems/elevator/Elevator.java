@@ -30,6 +30,9 @@ public class Elevator extends SubsystemBaseExt {
     private final RobotMechanism robotMechanism = RobotMechanism.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
 
+    private final ElevatorIO io = createIO();
+    private final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
+
     @RequiredArgsConstructor
     public enum Goal {
         CHARACTERIZATION(null),
@@ -53,9 +56,6 @@ public class Elevator extends SubsystemBaseExt {
     private boolean autoStop = false;
     private final Timer autoStopTimer = new Timer();
     private boolean prevEmergencyStopped = false;
-
-    private final ElevatorIO io = createIO();
-    private final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
 
     /** NOTE: UNITS IN METERS! */
     private TrapezoidProfile profileFullVelocity = new TrapezoidProfile(

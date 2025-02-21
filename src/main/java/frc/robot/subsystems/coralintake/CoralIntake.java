@@ -20,6 +20,9 @@
 //public class CoralIntake extends SubsystemBaseExt {
 //    private final RobotMechanism robotMechanism = RobotMechanism.get();
 //
+//    private static final PivotIO pivotIO = CoralIntakeConstants.pivotIo;
+//    private static final PivotIOInputsAutoLogged pivotInputs = new PivotIOInputsAutoLogged();
+//
 //    @RequiredArgsConstructor
 //    public enum PivotGoal {
 //        CHARACTERIZATION(null),
@@ -33,8 +36,8 @@
 //    @Getter
 //    private PivotGoal pivotGoal = PivotGoal.STOW;
 //
-//    private static final PivotIO pivotIO = CoralIntakeConstants.pivotIo;
-//    private static final PivotIOInputsAutoLogged pivotInputs = new PivotIOInputsAutoLogged();
+//    private final RollersIO rollersIO = CoralIntakeConstants.rollersIo;
+//    private final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 //
 //    @RequiredArgsConstructor
 //    public enum RollersGoal {
@@ -48,9 +51,6 @@
 //
 //    @Getter
 //    private RollersGoal rollersGoal = RollersGoal.IDLE;
-//
-//    private final RollersIO rollersIO = CoralIntakeConstants.rollersIo;
-//    private final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 //
 //    private static CoralIntake instance;
 //

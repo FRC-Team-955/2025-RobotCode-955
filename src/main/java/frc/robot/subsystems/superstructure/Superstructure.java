@@ -36,6 +36,9 @@ public class Superstructure extends SubsystemBaseExt {
     private final Elevator elevator = Elevator.get();
     private final EndEffector endEffector = EndEffector.get();
 
+    private final SuperstructureIO io = createIO();
+    private final SuperstructureIOInputsAutoLogged inputs = new SuperstructureIOInputsAutoLogged();
+
     public enum Goal {
         IDLE,
 
@@ -61,9 +64,6 @@ public class Superstructure extends SubsystemBaseExt {
 
     @Getter
     private Goal goal = Goal.IDLE;
-
-    private final SuperstructureIO io = createIO();
-    private final SuperstructureIOInputsAutoLogged inputs = new SuperstructureIOInputsAutoLogged();
 
     private final Debouncer endEffectorBeamBreakDebouncer = new Debouncer(0.05);
 

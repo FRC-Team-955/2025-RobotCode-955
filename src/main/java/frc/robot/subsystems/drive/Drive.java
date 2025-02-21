@@ -52,6 +52,9 @@ public class Drive extends SubsystemBaseExt {
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final Elevator elevator = Elevator.get();
 
+    private final GyroIO gyroIO = createGyroIO();
+    private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
+
     @RequiredArgsConstructor
     public enum Goal {
         CHARACTERIZATION(ControlMode.OPEN_LOOP),
@@ -89,9 +92,6 @@ public class Drive extends SubsystemBaseExt {
             }
         };
     }
-
-    private final GyroIO gyroIO = createGyroIO();
-    private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
 
     /**
      * FL, FR, BL, BR

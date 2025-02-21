@@ -16,6 +16,9 @@
 //public class Indexer extends SubsystemBaseExt {
 //    private final RobotMechanism robotMechanism = RobotMechanism.get();
 //
+//    private final RollersIO rollersIO = IndexerConstants.rollersIO;
+//    private final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
+//
 //    @RequiredArgsConstructor
 //    public enum RollersGoal {
 //        CHARACTERIZATION(null),
@@ -29,9 +32,6 @@
 //
 //    @Getter
 //    private RollersGoal rollersGoal = RollersGoal.IDLE;
-//
-//    private final RollersIO rollersIO = IndexerConstants.rollersIO;
-//    private final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 //
 //    private static Indexer instance;
 //
