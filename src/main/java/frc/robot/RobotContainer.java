@@ -84,6 +84,7 @@ public class RobotContainer extends VirtualSubsystem {
         ////////////////////// DRIVE //////////////////////
 
         characterizationChooser.addOption("Drive Feedforward Characterization", drive.feedforwardCharacterization());
+        characterizationChooser.addOption("Drive Full Speed Characterization", drive.fullSpeedCharacterization());
         characterizationChooser.addOption("Drive Wheel Radius Characterization", drive.wheelRadiusCharacterization(Drive.WheelRadiusCharacterization.Direction.CLOCKWISE));
         characterizationChooser.addOption("Drive SysId (Quasistatic Forward)", drive.sysId.quasistatic(SysIdRoutine.Direction.kForward));
         characterizationChooser.addOption("Drive SysId (Quasistatic Reverse)", drive.sysId.quasistatic(SysIdRoutine.Direction.kReverse));

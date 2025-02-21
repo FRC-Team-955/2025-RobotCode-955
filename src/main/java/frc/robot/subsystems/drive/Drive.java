@@ -623,6 +623,21 @@ public class Drive extends SubsystemBaseExt {
         ));
     }
 
+    public Command fullSpeedCharacterization() {
+        return withGoal(Goal.CHARACTERIZATION, startEnd(
+                () -> {
+                    for (var module : modules) {
+                        module.runCharacterization(12.0);
+                    }
+                },
+                () -> {
+                    for (var module : modules) {
+                        module.runCharacterization(0.0);
+                    }
+                }
+        ));
+    }
+
     public Command wheelRadiusCharacterization(WheelRadiusCharacterization.Direction direction) {
         return withGoal(Goal.WHEEL_RADIUS_CHARACTERIZATION, new WheelRadiusCharacterization(direction)).withName("Drive Wheel Radius Characterization");
     }
