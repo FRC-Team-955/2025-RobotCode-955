@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.OperatorDashboard;
@@ -661,17 +662,28 @@ public class Drive extends SubsystemBaseExt {
     }
 
     public Command fullSpeedCharacterization() {
-        return withGoal(Goal.CHARACTERIZATION, startEnd(
-                () -> {
-                    for (var module : modules) {
-                        module.runCharacterization(12.0);
-                    }
-                },
-                () -> {
-                    for (var module : modules) {
-                        module.runCharacterization(0.0);
-                    }
-                }
+        return withGoal(Goal.CHARACTERIZATION, Commands.sequence(
+                startEnd(
+                        () -> {
+                            for (var module : modules) {
+                                module.runCharacterization(2.0);
+                            }
+                        },
+                        () -> {
+                        }
+                ).withTimeout(2),
+                startEnd(
+                        () -> {
+                            for (var module : modules) {
+                                module.runCharacterization(12.0);
+                            }
+                        },
+                        () -> {
+                            for (var module : modules) {
+                                module.runCharacterization(0.0);
+                            }
+                        }
+                )
         ));
     }
 
