@@ -545,7 +545,9 @@ public class Drive extends SubsystemBaseExt {
             // Scale linear magnitude by omega - when going full omega, want half linear
             linearMagnitude *= MathUtil.clamp(1 - Math.abs(omegaMagnitude / 2), 0.5, 1);
 
-            var joystickLinearDirection = new Rotation2d(x, y);
+            var joystickLinearDirection = x == 0 && y == 0
+                    ? new Rotation2d()
+                    : new Rotation2d(x, y);
             var linearVelocity = new Pose2d(new Translation2d(), joystickLinearDirection)
                     .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
                     .getTranslation();
