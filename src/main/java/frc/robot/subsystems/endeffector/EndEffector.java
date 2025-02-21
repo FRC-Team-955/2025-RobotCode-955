@@ -35,13 +35,15 @@ public class EndEffector extends SubsystemBaseExt {
         ORIENT_CORAL(orientCoralGoalSetpoint::get),
         SCORE_CORAL(scoreCoralGoalSetpoint::get),
         DESCORE_ALGAE(descoreAlgaeGoalSetpoint::get),
-        EJECT(ejectGoalSetpoint::get);
+        EJECT(ejectGoalSetpoint::get),
+        GO_TO_POSITION(null); // Handled specially in periodic and with rollersPositionSetpointRad
 
         private final DoubleSupplier setpointRadPerSec;
     }
 
     @Getter
     private RollersGoal rollersGoal = RollersGoal.IDLE;
+    private Double rollersPositionSetpointRad = null;
 
     private final RollersIO rollersIO = createRollersIO();
     private final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
@@ -87,20 +89,44 @@ public class EndEffector extends SubsystemBaseExt {
         ////////////// ROLLERS //////////////
         Logger.recordOutput("EndEffector/Rollers/Goal", rollersGoal);
         if (DriverStation.isDisabled()) {
-            Logger.recordOutput("EndEffector/Rollers/ClosedLoop", false);
+            Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", false);
+            Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", false);
             rollersIO.setOpenLoop(0);
         } else if (rollersGoal.setpointRadPerSec != null) {
-            var rollersSetpointRadPerSec = rollersGoal.setpointRadPerSec.getAsDouble();
-            rollersIO.setVelocity(rollersSetpointRadPerSec);
-            Logger.recordOutput("EndEffector/Rollers/ClosedLoop", true);
-            Logger.recordOutput("EndEffector/Rollers/SetpointRadPerSec", rollersSetpointRadPerSec);
+            // Velocity control
+            var rollersVelocitySetpointRadPerSec = rollersGoal.setpointRadPerSec.getAsDouble();
+            rollersIO.setVelocity(rollersVelocitySetpointRadPerSec);
+            Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", false);
+            Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", true);
+            Logger.recordOutput("EndEffector/Rollers/Velocity/SetpointRadPerSec", rollersVelocitySetpointRadPerSec);
+        } else if (rollersGoal == RollersGoal.GO_TO_POSITION && rollersPositionSetpointRad != null) {
+            // Position control
+            Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", true);
+            Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", false);
+            Logger.recordOutput("EndEffector/Rollers/Position/SetpointRad", rollersPositionSetpointRad);
+            rollersIO.setPosition(rollersPositionSetpointRad);
         } else {
-            Logger.recordOutput("EndEffector/Rollers/ClosedLoop", false);
+            Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", false);
+            Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", false);
         }
     }
 
     public Command setGoal(RollersGoal rollersGoal) {
         return runOnce(() -> this.rollersGoal = rollersGoal);
+    }
+
+    /** Goes positionRad forward (or backwards) from current position */
+    public Command goToPosition(double positionRad) {
+        return startEnd(
+                () -> {
+                    this.rollersGoal = RollersGoal.GO_TO_POSITION;
+                    rollersPositionSetpointRad = rollersInputs.positionRad + positionRad;
+                },
+                () -> {
+                    this.rollersGoal = RollersGoal.IDLE;
+                    rollersPositionSetpointRad = null;
+                }
+        );
     }
 
     public double getAngleDegrees() {
