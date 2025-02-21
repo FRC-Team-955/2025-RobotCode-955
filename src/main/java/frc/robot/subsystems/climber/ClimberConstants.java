@@ -4,7 +4,7 @@ import frc.robot.Constants;
 
 public class ClimberConstants {
     public static final double currentLimitAmps = 40;
-    public static final double gearRatio = 128;
+    public static final double gearRatio = 640;
 
     protected static ClimberIO createIO() {
         if (Constants.isReplay) {
