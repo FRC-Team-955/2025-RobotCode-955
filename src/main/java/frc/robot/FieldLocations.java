@@ -6,6 +6,9 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
+import lombok.RequiredArgsConstructor;
+
+import java.util.function.Supplier;
 
 import static frc.robot.Util.shouldFlip;
 
@@ -20,10 +23,33 @@ public class FieldLocations {
      * Then it will raise the elevator while using a slower PID to move to a position secondaryAlignDistanceMeters from the reef node
      * Finally, it will move forward the remaining amount and place the gamepiece
      */
+    @RequiredArgsConstructor
+    public enum ReefZoneSide {
+        LEFT_FRONT(() -> getAprilTagPoseSide(0)),
+        MIDDLE_FRONT(() -> getAprilTagPoseSide(1)),
+        RIGHT_FRONT(() -> getAprilTagPoseSide(2)),
+        RIGHT_BACK(() -> getAprilTagPoseSide(3)),
+        MIDDLE_BACK(() -> getAprilTagPoseSide(4)),
+        LEFT_BACK(() -> getAprilTagPoseSide(5));
+
+        /** Should be constant for every loop cycle */
+        public final Supplier<Pose2d> tagPose;
+    }
+
+    @RequiredArgsConstructor
+    public enum LocalReefSide {
+        LEFT(() -> new Transform2d(0, Units.inchesToMeters(-6.5), new Rotation2d())),
+        RIGHT(() -> new Transform2d(0, Units.inchesToMeters(6.5), new Rotation2d()));
+
+        public final Supplier<Transform2d> adjustPose;
+    }
+
     public static AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
     private static final double primaryAlignDistanceMeters = 1;
+    private static final Transform2d primaryAlignPosition = new Transform2d(1, 0, new Rotation2d());
     private static final double secondaryAlignDistanceMeters = 0.1;
+    private static final Transform2d secondaryAlignPosition = new Transform2d(0.1, 0, new Rotation2d());
 
     // Very rough - 30 cm and 30 degrees
     public static final double primaryAlignToleranceMeters = 0.3;
@@ -50,40 +76,35 @@ public class FieldLocations {
      * Checks whether moving to the side will intersect with the reef, and refuses to do so if it does.
      * A bit rudimentary and imperfect, but definitely plenty good
      */
-    public static boolean alignable(int side, Pose2d currentPose) {
-        return currentPose.relativeTo(getAprilTagPoseAdjusted(side)).getX() > 0;
+    public static boolean alignable(ReefZoneSide reefZoneSide, Pose2d currentPose) {
+        return currentPose.relativeTo(getAprilTagPoseAdjusted(reefZoneSide)).getX() > 0;
     }
 
-    public static Pose2d getFinalAlignPose(int side, boolean leftSide) {
-        return getAprilTagPoseAdjusted(side).plus(new Transform2d(
-                0,
-                leftSide ? Units.inchesToMeters(-6.5) : Units.inchesToMeters(6.5),
-                new Rotation2d()
-        ));
+    public static Pose2d getFinalAlignPose(ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
+        return getAprilTagPoseAdjusted(reefZoneSide).plus(localReefSide.adjustPose.get());
     }
 
-    public static Pose2d getSecondaryAlignPose(int side, boolean leftSide) {
-        return getAprilTagPoseAdjusted(side).plus(new Transform2d(
-                secondaryAlignDistanceMeters,
-                // right relative to the pose since the pose faces away from the reef
-                leftSide ? Units.inchesToMeters(-6.5) : Units.inchesToMeters(6.5),
-                new Rotation2d()
-        ));
+    public static Pose2d getSecondaryAlignPose(ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
+        return getAprilTagPoseAdjusted(reefZoneSide).plus(localReefSide.adjustPose.get()).plus(secondaryAlignPosition);
     }
 
-    public static Pose2d getPrimaryAlignPose(int side) {
+    public static Pose2d getPrimaryAlignPose(ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
         // TODO: Maybe adjust this so you get closer to your pose?
-        return getAprilTagPoseAdjusted(side).plus(new Transform2d(primaryAlignDistanceMeters, 0, new Rotation2d()));
+        return getAprilTagPoseAdjusted(reefZoneSide).plus(localReefSide.adjustPose.get()).plus(primaryAlignPosition);
     }
 
     // See notes above, also accounts for robot size
-    public static Pose2d getAprilTagPoseAdjusted(int side) {
+    public static Pose2d getAprilTagPoseAdjusted(ReefZoneSide reefZoneSide) {
+        return reefZoneSide.tagPose.get().plus(new Transform2d(Units.inchesToMeters(17.25), 0, new Rotation2d()));
+    }
+
+    public static Pose2d getAprilTagPoseSide(int side) {
         if (!shouldFlip()) {
             // blue
-            return getAprilTagPose(22 - ((side + 3) % 6)).plus(new Transform2d(Units.inchesToMeters(17.25), 0, new Rotation2d()));
+            return getAprilTagPose(22 - ((side + 3) % 6));
         } else {
             // red
-            return getAprilTagPose(side + 6).plus(new Transform2d(Units.inchesToMeters(17.25), 0, new Rotation2d()));
+            return getAprilTagPose(side + 6);
         }
     }
 
