@@ -1,6 +1,7 @@
 package frc.robot.subsystems.climber;
 
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.OperatorDashboard;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import org.littletonrobotics.junction.Logger;
@@ -15,7 +16,7 @@ public class Climber extends SubsystemBaseExt {
     private final ClimberIOInputsAutoLogged inputs = new ClimberIOInputsAutoLogged();
 
     private final Alert disconnectedAlert = new Alert("Climber motor motor is disconnected.", Alert.AlertType.kError);
-    private final Alert temperatureAlert = new Alert("Climber motor temperature is high. Be careful.", Alert.AlertType.kWarning);
+    private final Alert temperatureAlert = new Alert("Climber motor temperature is high.", Alert.AlertType.kWarning);
 
     private static Climber instance;
 
@@ -45,5 +46,19 @@ public class Climber extends SubsystemBaseExt {
         if (operatorDashboard.coastOverride.hasChanged(hashCode())) {
             io.setBrakeMode(!operatorDashboard.coastOverride.get());
         }
+    }
+
+    public Command moveTowardsRobot() {
+        return startEnd(
+                () -> io.setOpenLoop(3),
+                () -> io.setOpenLoop(0)
+        );
+    }
+
+    public Command moveAwayFromRobot() {
+        return startEnd(
+                () -> io.setOpenLoop(-3),
+                () -> io.setOpenLoop(0)
+        );
     }
 }
