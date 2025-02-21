@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import org.littletonrobotics.junction.Logger;
 
 public enum RobotIdentity {
-    COMPBOT("00-80-2F-22-AE-61"),
+    COMPBOT("00-80-2F-38-91-BC"),
     ALPHABOT("00-80-2F-38-8E-B8"),
     SIMBOT(null);
 
