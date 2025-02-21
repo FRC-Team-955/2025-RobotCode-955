@@ -71,7 +71,8 @@ public class Climber extends SubsystemBaseExt {
         boolean canRun = inputs.positionRad < upperLimitRad
                 && inputs.positionRad > lowerLimitRad;
         hitLimitAlert.set(!canRun);
-        if (!canRun && DriverStation.isDisabled()) {
+        boolean shouldStop = !canRun && !operatorDashboard.bypassClimberLimits.get();
+        if (shouldStop && DriverStation.isDisabled()) {
             Logger.recordOutput("Climber/Running", false);
             io.setOpenLoop(0);
         } else {
