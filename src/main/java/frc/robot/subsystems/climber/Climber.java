@@ -37,6 +37,7 @@ public class Climber extends SubsystemBaseExt {
     private final Alert temperatureAlert = new Alert("Climber motor temperature is high.", Alert.AlertType.kWarning);
     private final Alert notZeroedAlert = new Alert("Climber is not zeroed.", Alert.AlertType.kWarning);
     private final Alert hitLimitAlert = new Alert("Climber has hit its limit.", Alert.AlertType.kWarning);
+    private final Alert bypassLimitsAlert = new Alert("Climber limits are being bypassed.", Alert.AlertType.kWarning);
 
     private static Climber instance;
 
@@ -59,6 +60,8 @@ public class Climber extends SubsystemBaseExt {
 
         disconnectedAlert.set(!inputs.connected);
         temperatureAlert.set(inputs.temperatureCelsius > 30);
+
+        bypassLimitsAlert.set(operatorDashboard.bypassClimberLimits.get());
     }
 
     @Override
