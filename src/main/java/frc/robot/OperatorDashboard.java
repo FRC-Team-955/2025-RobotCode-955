@@ -1,5 +1,6 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Alert;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.util.network.LoggedNetworkBooleanExt;
 import frc.robot.util.network.LoggedNetworkNumberExt;
@@ -37,6 +38,8 @@ public class OperatorDashboard extends VirtualSubsystem {
     @Getter
     private AlgaeDescoringLevel selectedAlgaeDescoringLevel = AlgaeDescoringLevel.L3;
 
+    private final Alert coastOverrideAlert = new Alert("Coast override is enabled.", Alert.AlertType.kWarning);
+
     private static OperatorDashboard instance;
 
     public static OperatorDashboard get() {
@@ -53,6 +56,8 @@ public class OperatorDashboard extends VirtualSubsystem {
 
     @Override
     public void periodicBeforeCommands() {
+        coastOverrideAlert.set(coastOverride.get());
+
         handleEnumToggles(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
         handleEnumToggles(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);
         handleEnumToggles(coralScoringLevels, selectedCoralScoringLevel, selectNew -> selectedCoralScoringLevel = selectNew);
