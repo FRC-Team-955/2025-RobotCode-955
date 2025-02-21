@@ -10,6 +10,9 @@ public class ClimberConstants {
         if (Constants.isReplay) {
             return new ClimberIO();
         }
-        return new ClimberIO();
+        return switch (Constants.identity) {
+            case COMPBOT -> new ClimberIO();
+            case SIMBOT, ALPHABOT -> new ClimberIOSim();
+        };
     }
 }

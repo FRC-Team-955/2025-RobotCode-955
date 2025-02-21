@@ -38,8 +38,7 @@ import java.util.function.DoubleSupplier;
 public class PhoenixOdometryThread extends Thread {
     static final Lock phoenixLock = new ReentrantLock();
 
-    private final Lock signalsLock =
-            new ReentrantLock(); // Prevents conflicts when registering signals
+    private final Lock signalsLock = new ReentrantLock(); // Prevents conflicts when registering signals
     private BaseStatusSignal[] phoenixSignals = new BaseStatusSignal[0];
     private final List<DoubleSupplier> genericSignals = new ArrayList<>();
     private final List<Queue<Double>> phoenixQueues = new ArrayList<>();

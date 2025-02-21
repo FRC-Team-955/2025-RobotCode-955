@@ -1,5 +1,6 @@
 package frc.robot.subsystems.climber;
 
+import frc.robot.OperatorDashboard;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import org.littletonrobotics.junction.Logger;
 
@@ -7,6 +8,8 @@ import static frc.robot.subsystems.climber.ClimberConstants.createIO;
 
 
 public class Climber extends SubsystemBaseExt {
+    private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
+
     private final ClimberIO io = createIO();
     private final ClimberIOInputsAutoLogged inputs = new ClimberIOInputsAutoLogged();
 
@@ -32,6 +35,8 @@ public class Climber extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
-
+        if (operatorDashboard.coastOverride.hasChanged(hashCode())) {
+            io.setBrakeMode(!operatorDashboard.coastOverride.get());
+        }
     }
 }
