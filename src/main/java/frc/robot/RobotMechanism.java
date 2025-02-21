@@ -41,6 +41,11 @@ public class RobotMechanism {
         public final LoggedMechanismRoot2d stage1Root = mechanism.getRoot("elevator_stage1", 0, 0);
         public final LoggedMechanismRoot2d stage2Root = mechanism.getRoot("elevator_stage2", 0, 0);
         public final LoggedMechanismRoot2d stage3Root = mechanism.getRoot("elevator_stage3", 0, 0);
+        private final LoggedMechanismRoot2d hardstopSlowdownRoot = mechanism.getRoot("elevator_hardstopSlowdown", 0, 0);
+
+        public void updateHardstopSlowdownPosition() {
+            hardstopSlowdownRoot.setPosition(middleOfRobot - Units.inchesToMeters(15), Units.inchesToMeters(2.85) + hardstopSlowdownMeters);
+        }
 
         private Elevator() {
             var baseRoot = mechanism.getRoot(
@@ -89,7 +94,7 @@ public class RobotMechanism {
                     new Color8Bit(Color.kGray)
             ));
 
-            var hardstopSlowdownRoot = mechanism.getRoot("elevator_hardstopSlowdown", middleOfRobot - Units.inchesToMeters(15), Units.inchesToMeters(2.85) + hardstopSlowdownMeters);
+            updateHardstopSlowdownPosition();
             hardstopSlowdownRoot.append(new LoggedMechanismLigament2d(
                     "hardstopSlowdown",
                     Units.inchesToMeters(1),

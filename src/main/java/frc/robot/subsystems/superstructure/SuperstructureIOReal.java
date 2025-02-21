@@ -3,7 +3,7 @@ package frc.robot.subsystems.superstructure;
 import edu.wpi.first.wpilibj.DigitalInput;
 
 public class SuperstructureIOReal extends SuperstructureIO {
-    private final DigitalInput endEffectorBeamBreak = new DigitalInput(0);
+    private final DigitalInput endEffectorBeamBreak = new DigitalInput(4);
 
 
     @Override

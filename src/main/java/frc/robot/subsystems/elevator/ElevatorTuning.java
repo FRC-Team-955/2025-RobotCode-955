@@ -13,6 +13,8 @@ public class ElevatorTuning {
     public static final LoggedTunableNumber maxAccelerationMetersPerSecondSquaredTunable =
             new LoggedTunableNumber("Elevator/MaxAccelerationMetersPerSecondSquared", maxAccelerationMetersPerSecondSquared);
 
+    public static final LoggedTunableNumber stowGoalSetpoint =
+            new LoggedTunableNumber("Elevator/Goal/Stow", 0);
     public static final LoggedTunableNumber scoreL1GoalSetpoint =
             new LoggedTunableNumber("Elevator/Goal/ScoreL1", .5);
     public static final LoggedTunableNumber scoreL2GoalSetpoint =

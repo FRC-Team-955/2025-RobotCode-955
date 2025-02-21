@@ -33,7 +33,7 @@ public class Elevator extends SubsystemBaseExt {
     @RequiredArgsConstructor
     public enum Goal {
         CHARACTERIZATION(null),
-        STOW(() -> 0), // Setpoint for when coral stuck in robot mode is activated is in periodicAfterCommands
+        STOW(stowGoalSetpoint::get), // Setpoint for when coral stuck in robot mode is activated is in periodicAfterCommands
         SCORE_L1(scoreL1GoalSetpoint::get),
         SCORE_L2(scoreL2GoalSetpoint::get),
         SCORE_L3(scoreL3GoalSetpoint::get),
@@ -174,7 +174,8 @@ public class Elevator extends SubsystemBaseExt {
                     gentleMaxVelocityMetersPerSecond,
                     maxAccelerationMetersPerSecondSquaredTunable.get()
             ));
-            hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecond);
+            hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecondTunable.get());
+            robotMechanism.elevator.updateHardstopSlowdownPosition();
         }
 
         // Goal control
