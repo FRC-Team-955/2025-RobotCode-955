@@ -14,6 +14,7 @@ import static frc.robot.Util.shouldFlip;
 
 public class FieldLocations {
     /* Auto Align */
+
     /**
      * Notes:
      * Sides will be labeled from the left to right, starting with the farthest left the driver can see at 0.
@@ -32,7 +33,6 @@ public class FieldLocations {
         MIDDLE_BACK(() -> getAprilTagPoseSide(4)),
         LEFT_BACK(() -> getAprilTagPoseSide(5));
 
-        /** Should be constant for every loop cycle */
         public final Supplier<Pose2d> tagPose;
     }
 
@@ -98,7 +98,7 @@ public class FieldLocations {
         return reefZoneSide.tagPose.get().plus(new Transform2d(Units.inchesToMeters(17.25), 0, new Rotation2d()));
     }
 
-    public static Pose2d getAprilTagPoseSide(int side) {
+    private static Pose2d getAprilTagPoseSide(int side) {
         if (!shouldFlip()) {
             // blue
             return getAprilTagPose(22 - ((side + 3) % 6));
