@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.FieldLocations;
+import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
@@ -27,6 +28,7 @@ import static frc.robot.subsystems.superstructure.SuperstructureConstants.create
 public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
     private final RobotMechanism robotMechanism = RobotMechanism.get();
+    private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final Drive drive = Drive.get();
     //    private final CoralIntake coralIntake = CoralIntake.get();
 //    private final Indexer indexer = Indexer.get();
@@ -109,7 +111,7 @@ public class Superstructure extends SubsystemBaseExt {
 //                        : new Color8Bit(Color.kRed)
 //        );
         robotMechanism.endEffector.beamBreakLigament.setColor(
-                endEffectorBeamBreakDebounced()
+                endEffectorTriggered()
                         ? new Color8Bit(Color.kGreen)
                         : new Color8Bit(Color.kRed)
         );
@@ -134,9 +136,10 @@ public class Superstructure extends SubsystemBaseExt {
 //        return inputs.intakeRangeMeters <= intakeRangeTriggerMeters;
 //    }
 
-    @AutoLogOutput(key = "Superstructure/EndEffectorBeamBreakDebounced")
-    private boolean endEffectorBeamBreakDebounced() {
-        return endEffectorBeamBreakDebouncer.calculate(inputs.endEffectorBeamBreakTriggered);
+    @AutoLogOutput(key = "Superstructure/EndEffectorTriggered")
+    private boolean endEffectorTriggered() {
+        return endEffectorBeamBreakDebouncer.calculate(inputs.endEffectorBeamBreakTriggered)
+                || operatorDashboard.ignoreEndEffectorBeamBreak.get();
     }
 
 //    public Command waitUntilIntakeTriggered() {
@@ -149,14 +152,22 @@ public class Superstructure extends SubsystemBaseExt {
 //        return Commands.waitUntil(() -> inputs.indexerBeamBreakTriggered);
 //    }
 
-    public Command waitUntilEndEffectorTriggered() {
+    public Command waitUntilEndEffectorTriggered(Command ifIgnored) {
         // This should not require the superstructure because we don't want to conflict with setGoal
-        return Commands.waitUntil(this::endEffectorBeamBreakDebounced);
+        return Commands.either(
+                ifIgnored,
+                Commands.waitUntil(this::endEffectorTriggered),
+                operatorDashboard.ignoreEndEffectorBeamBreak::get
+        );
     }
 
-    public Command waitUntilEndEffectorNotTriggered() {
+    public Command waitUntilEndEffectorNotTriggered(Command ifIngored) {
         // This should not require the superstructure because we don't want to conflict with setGoal
-        return Commands.waitUntil(() -> !endEffectorBeamBreakDebounced());
+        return Commands.either(
+                ifIngored,
+                Commands.waitUntil(() -> !endEffectorTriggered()),
+                operatorDashboard.ignoreEndEffectorBeamBreak::get
+        );
     }
 
     public Command waitUntilAtPrimaryPosition(Supplier<Integer> reefSideSupplier) {
@@ -306,7 +317,7 @@ public class Superstructure extends SubsystemBaseExt {
                                         setGoal(Goal.SCORE_CORAL_SCORING),
                                         endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
                                         elevator.setGoal(elevatorGoalSupplier),
-                                        waitUntilEndEffectorNotTriggered()
+                                        waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
                                 ),
                                 // Wait for coral to settle
                                 Commands.waitSeconds(0.75)
@@ -314,7 +325,7 @@ public class Superstructure extends SubsystemBaseExt {
                 )
         );
         return CommandsExt.onlyIf(
-                this::endEffectorBeamBreakDebounced,
+                this::endEffectorTriggered,
                 CommandsExt.cancelOnTrigger(
                         cancelTrigger,
                         cmd
@@ -337,7 +348,7 @@ public class Superstructure extends SubsystemBaseExt {
                 )
         );
         return CommandsExt.onlyIf(
-                () -> !endEffectorBeamBreakDebounced(),
+                () -> !endEffectorTriggered(),
                 cmd
         );
     }
@@ -347,7 +358,7 @@ public class Superstructure extends SubsystemBaseExt {
                 Commands.parallel(
                         setGoal(Goal.FUNNEL_INTAKE_WAITING),
                         endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                        waitUntilEndEffectorTriggered()
+                        waitUntilEndEffectorTriggered(Commands.idle())
                 ),
                 // Don't allow canceling
                 CommandsExt.schedule(
@@ -361,7 +372,7 @@ public class Superstructure extends SubsystemBaseExt {
                 )
         );
         return CommandsExt.onlyIf(
-                () -> !endEffectorBeamBreakDebounced(),
+                () -> !endEffectorTriggered(),
                 cmd
         );
     }
@@ -401,7 +412,7 @@ public class Superstructure extends SubsystemBaseExt {
                                         Commands.parallel(
                                                 setGoal(Goal.SCORE_CORAL_SCORING),
                                                 endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
-                                                waitUntilEndEffectorNotTriggered()
+                                                waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
                                         ),
                                         // Wait for coral to settle
                                         Commands.waitSeconds(0.75)
@@ -411,7 +422,7 @@ public class Superstructure extends SubsystemBaseExt {
         );
         return CommandsExt.onlyIf(
                 // Only run if you have coral and are in front of your reef side
-                () -> endEffectorBeamBreakDebounced()
+                () -> endEffectorTriggered()
                         && alignable(reefSideSupplier.get(), RobotState.get().getPose()),
                 CommandsExt.cancelOnTrigger(
                         cancelTrigger,
