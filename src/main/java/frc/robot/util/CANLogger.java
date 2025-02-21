@@ -36,7 +36,7 @@ public class CANLogger extends VirtualSubsystem {
         if (roboRIOCANStatus.transmitErrorCount > 0 || roboRIOCANStatus.receiveErrorCount > 0) {
             roboRIOCANErrorTimer.restart();
         }
-        roboRIOCANErrorAlert.set(!roboRIOCANErrorTimer.hasElapsed(0.5));
+        roboRIOCANErrorAlert.set(roboRIOCANErrorTimer.isRunning() && !roboRIOCANErrorTimer.hasElapsed(0.5));
 
         // Check and log CANivore status
         if (Constants.mode == Constants.Mode.REAL && Constants.identity == RobotIdentity.COMPBOT) {
@@ -53,7 +53,7 @@ public class CANLogger extends VirtualSubsystem {
             ) {
                 canivoreErrorTimer.restart();
             }
-            canivoreErrorAlert.set(!canivoreErrorTimer.hasElapsed(0.5));
+            canivoreErrorAlert.set(canivoreErrorTimer.isRunning() && !canivoreErrorTimer.hasElapsed(0.5));
         }
     }
 }
