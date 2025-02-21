@@ -111,7 +111,7 @@ public class Superstructure extends SubsystemBaseExt {
 //                        : new Color8Bit(Color.kRed)
 //        );
         robotMechanism.endEffector.beamBreakLigament.setColor(
-                endEffectorTriggered()
+                endEffectorTriggered() || operatorDashboard.ignoreEndEffectorBeamBreak.get()
                         ? new Color8Bit(Color.kGreen)
                         : new Color8Bit(Color.kRed)
         );
@@ -138,8 +138,7 @@ public class Superstructure extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Superstructure/EndEffectorTriggered")
     private boolean endEffectorTriggered() {
-        return endEffectorBeamBreakDebouncer.calculate(inputs.endEffectorBeamBreakTriggered)
-                || operatorDashboard.ignoreEndEffectorBeamBreak.get();
+        return endEffectorBeamBreakDebouncer.calculate(inputs.endEffectorBeamBreakTriggered);
     }
 
 //    public Command waitUntilIntakeTriggered() {
@@ -325,7 +324,7 @@ public class Superstructure extends SubsystemBaseExt {
                 )
         );
         return CommandsExt.onlyIf(
-                this::endEffectorTriggered,
+                () -> endEffectorTriggered() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                 CommandsExt.cancelOnTrigger(
                         cancelTrigger,
                         cmd
@@ -348,7 +347,7 @@ public class Superstructure extends SubsystemBaseExt {
                 )
         );
         return CommandsExt.onlyIf(
-                () -> !endEffectorTriggered(),
+                () -> !endEffectorTriggered() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                 cmd
         );
     }
@@ -372,7 +371,7 @@ public class Superstructure extends SubsystemBaseExt {
                 )
         );
         return CommandsExt.onlyIf(
-                () -> !endEffectorTriggered(),
+                () -> !endEffectorTriggered() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                 cmd
         );
     }
@@ -422,7 +421,7 @@ public class Superstructure extends SubsystemBaseExt {
         );
         return CommandsExt.onlyIf(
                 // Only run if you have coral and are in front of your reef side
-                () -> endEffectorTriggered()
+                () -> (endEffectorTriggered() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
                         && alignable(reefSideSupplier.get(), RobotState.get().getPose()),
                 CommandsExt.cancelOnTrigger(
                         cancelTrigger,
