@@ -52,6 +52,8 @@ public class Superstructure extends SubsystemBaseExt {
 
         FUNNEL_INTAKE_WAITING,
         FUNNEL_INTAKE_FINALIZING,
+
+        EJECT,
     }
 
     @Getter
@@ -247,6 +249,14 @@ public class Superstructure extends SubsystemBaseExt {
 //                )
 //        );
 //    }
+
+    public Command eject() {
+        return Commands.parallel(
+                setGoal(Goal.EJECT),
+                endEffector.setGoal(EndEffector.RollersGoal.EJECT),
+                Commands.idle()
+        );
+    }
 
     /** NOT FOR TELEOP USE */
     public Command scoreCoralDuringAuto(

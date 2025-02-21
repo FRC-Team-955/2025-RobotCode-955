@@ -149,6 +149,8 @@ public class RobotContainer extends VirtualSubsystem {
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
 
+        driverController.x().whileTrue(superstructure.eject());
+
         driverController.rightTrigger().whileTrue(superstructure.funnelIntake());
 //        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
 

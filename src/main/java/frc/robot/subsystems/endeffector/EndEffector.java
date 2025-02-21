@@ -34,7 +34,8 @@ public class EndEffector extends SubsystemBaseExt {
         FUNNEL_INTAKE(funnelIntakeGoalSetpoint::get),
         ORIENT_CORAL(orientCoralGoalSetpoint::get),
         SCORE_CORAL(scoreCoralGoalSetpoint::get),
-        DESCORE_ALGAE(descoreAlgaeGoalSetpoint::get);
+        DESCORE_ALGAE(descoreAlgaeGoalSetpoint::get),
+        EJECT(ejectGoalSetpoint::get);
 
         private final DoubleSupplier setpointRadPerSec;
     }
