@@ -16,6 +16,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -104,6 +105,8 @@ public class Drive extends SubsystemBaseExt {
     @Getter
     private Rotation2d rawGyroRotation = new Rotation2d();
 
+    private Rotation2d lastJoystickDriveLinearDirection = new Rotation2d();
+
     private final SwerveSetpointGenerator setpointGenerator = new SwerveSetpointGenerator(robotState.getKinematics());
     /** If null, it will be set to the measured ChassisSpeeds and module states when the setpoint generator starts to be used */
     private SwerveSetpoint prevSetpoint = null;
@@ -180,50 +183,81 @@ public class Drive extends SubsystemBaseExt {
         gyroDisconnectedAlert.set(!gyroInputs.connected);
 
         // Odometry
-        // Since we may have desynced timestamps, this becomes much more complicated than if all timestamps were synced
-        double[] driveSampleTimestamps = modules[0].getOdometryDriveTimestamps();
-        double[] turnSampleTimestamps = modules[0].getOdometryTurnTimestamps();
-        double[] gyroSampleTimestamps = gyroInputs.odometryYawTimestamps;
-        // Sanity check in case something is wrong (if a motor controller is disconnected, for example) - gyro sanity check comes later
-        if (driveSampleTimestamps.length > 0 && turnSampleTimestamps.length > 0) {
-            // Assume drive has the most samples
-            for (int driveSample = 0; driveSample < driveSampleTimestamps.length; driveSample++) {
-                double driveSampleTimestamp = driveSampleTimestamps[driveSample];
-                // Find the closest turn sample
-                int turnSample = Util.findArrayIndexWithClosestValue(driveSampleTimestamp, turnSampleTimestamps);
+        if (useHighFrequencyOdometry) {
+            // Since we may have desynced timestamps, this becomes much more complicated than if all timestamps were synced
+            double[] driveSampleTimestamps = modules[0].getOdometryDriveTimestamps();
+            double[] turnSampleTimestamps = modules[0].getOdometryTurnTimestamps();
+            double[] gyroSampleTimestamps = gyroInputs.odometryYawTimestamps;
+            // Sanity check in case something is wrong (if a motor controller is disconnected, for example) - gyro sanity check comes later
+            if (driveSampleTimestamps.length > 0 && turnSampleTimestamps.length > 0) {
+                // Assume drive has the most samples
+                for (int driveSample = 0; driveSample < driveSampleTimestamps.length; driveSample++) {
+                    double driveSampleTimestamp = driveSampleTimestamps[driveSample];
+                    // Find the closest turn sample
+                    int turnSample = Util.findArrayIndexWithClosestValue(driveSampleTimestamp, turnSampleTimestamps);
 
-                // Read wheel positions and deltas from each module
-                SwerveModulePosition[] modulePositions = new SwerveModulePosition[modules.length];
-                SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[modules.length];
-                for (int moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
-                    double positionMeters = modules[moduleIndex].getOdometryDrivePositionsRad()[driveSample] * driveConfig.wheelRadiusMeters();
-                    double angle = modules[moduleIndex].getOdometryTurnPositionsRad()[turnSample];
-                    var modulePosition = new SwerveModulePosition(positionMeters, new Rotation2d(angle));
+                    // Read wheel positions and deltas from each module
+                    SwerveModulePosition[] modulePositions = new SwerveModulePosition[modules.length];
+                    SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[modules.length];
+                    for (int moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
+                        double positionMeters = modules[moduleIndex].getOdometryDrivePositionsRad()[driveSample] * driveConfig.wheelRadiusMeters();
+                        double angle = modules[moduleIndex].getOdometryTurnPositionsRad()[turnSample];
+                        var modulePosition = new SwerveModulePosition(positionMeters, new Rotation2d(angle));
 
-                    modulePositions[moduleIndex] = modulePosition;
-                    moduleDeltas[moduleIndex] = new SwerveModulePosition(
-                            modulePosition.distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
-                            modulePosition.angle
-                    );
-                    lastModulePositions[moduleIndex] = modulePosition;
+                        modulePositions[moduleIndex] = modulePosition;
+                        moduleDeltas[moduleIndex] = new SwerveModulePosition(
+                                modulePosition.distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
+                                modulePosition.angle
+                        );
+                        lastModulePositions[moduleIndex] = modulePosition;
+                    }
+
+                    // Update gyro angle
+                    // Sanity check in case gyro is connected but not giving timestamps
+                    if (gyroInputs.connected && gyroSampleTimestamps.length > 0) {
+                        // Find the closest gyro sample
+                        int gyroSample = Util.findArrayIndexWithClosestValue(driveSampleTimestamp, gyroSampleTimestamps);
+                        // Use the real gyro angle
+                        rawGyroRotation = new Rotation2d(gyroInputs.odometryYawPositionsRad[gyroSample]);
+                    } else {
+                        // Use the angle delta from the kinematics and module deltas
+                        Twist2d twist = robotState.getKinematics().toTwist2d(moduleDeltas);
+                        rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
+                    }
+
+                    // Apply update
+                    robotState.applyOdometryUpdate(driveSampleTimestamp, rawGyroRotation, modulePositions);
                 }
-
-                // Update gyro angle
-                // Sanity check in case gyro is connected but not giving timestamps
-                if (gyroInputs.connected && gyroSampleTimestamps.length > 0) {
-                    // Find the closest gyro sample
-                    int gyroSample = Util.findArrayIndexWithClosestValue(driveSampleTimestamp, gyroSampleTimestamps);
-                    // Use the real gyro angle
-                    rawGyroRotation = new Rotation2d(gyroInputs.odometryYawPositionsRad[gyroSample]);
-                } else {
-                    // Use the angle delta from the kinematics and module deltas
-                    Twist2d twist = robotState.getKinematics().toTwist2d(moduleDeltas);
-                    rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
-                }
-
-                // Apply update
-                robotState.applyOdometryUpdate(driveSampleTimestamp, rawGyroRotation, modulePositions);
             }
+        } else {
+            // Read wheel positions and deltas from each module
+            SwerveModulePosition[] modulePositions = new SwerveModulePosition[modules.length];
+            SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[modules.length];
+            for (int moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
+                double positionMeters = modules[moduleIndex].getPositionRad() * driveConfig.wheelRadiusMeters();
+                Rotation2d angle = modules[moduleIndex].getAngle();
+                var modulePosition = new SwerveModulePosition(positionMeters, angle);
+
+                modulePositions[moduleIndex] = modulePosition;
+                moduleDeltas[moduleIndex] = new SwerveModulePosition(
+                        modulePosition.distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
+                        modulePosition.angle
+                );
+                lastModulePositions[moduleIndex] = modulePosition;
+            }
+
+            // Update gyro angle
+            if (gyroInputs.connected) {
+                // Use the real gyro angle
+                rawGyroRotation = new Rotation2d(gyroInputs.yawPositionRad);
+            } else {
+                // Use the angle delta from the kinematics and module deltas
+                Twist2d twist = robotState.getKinematics().toTwist2d(moduleDeltas);
+                rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
+            }
+
+            // Apply update
+            robotState.applyOdometryUpdate(Timer.getTimestamp(), rawGyroRotation, modulePositions);
         }
     }
 
@@ -545,15 +579,16 @@ public class Drive extends SubsystemBaseExt {
             // Scale linear magnitude by omega - when going full omega, want half linear
             linearMagnitude *= MathUtil.clamp(1 - Math.abs(omegaMagnitude / 2), 0.5, 1);
 
-            var joystickLinearDirection = x == 0 && y == 0
-                    ? new Rotation2d()
-                    : new Rotation2d(x, y);
-            var linearVelocity = new Pose2d(new Translation2d(), joystickLinearDirection)
+            // If x and y are both 0, Rotation2d will not be happy
+            if (x != 0 || y != 0) {
+                lastJoystickDriveLinearDirection = new Rotation2d(x, y);
+            }
+            var linearVelocity = new Pose2d(new Translation2d(), lastJoystickDriveLinearDirection)
                     .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
                     .getTranslation();
 
             Logger.recordOutput("Drive/JoystickDrive/LinearMagnitude", linearMagnitude);
-            Logger.recordOutput("Drive/JoystickDrive/LinearDirection", joystickLinearDirection);
+            Logger.recordOutput("Drive/JoystickDrive/LinearDirection", lastJoystickDriveLinearDirection);
             Logger.recordOutput("Drive/JoystickDrive/LinearVelocity", linearVelocity);
             Logger.recordOutput("Drive/JoystickDrive/OmegaMagnitude", omegaMagnitude);
 
@@ -574,7 +609,7 @@ public class Drive extends SubsystemBaseExt {
 
                 // Flip joystick direction to match robot to assist direction
                 // Joystick direction is relative to alliance wall and needs to be flipped on red alliance to match origin
-                var joystickLinearDirectionFlipped = Util.flipIfNeeded(joystickLinearDirection);
+                var joystickLinearDirectionFlipped = Util.flipIfNeeded(lastJoystickDriveLinearDirection);
                 Logger.recordOutput("Drive/Assist/FlippedJoystickLinearDirection", joystickLinearDirectionFlipped);
 
                 // Get difference between joystick direction and assist direction
