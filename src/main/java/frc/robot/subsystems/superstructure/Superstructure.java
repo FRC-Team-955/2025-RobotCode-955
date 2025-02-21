@@ -1,6 +1,7 @@
 package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -365,7 +366,8 @@ public class Superstructure extends SubsystemBaseExt {
                                 Commands.parallel(
                                         setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
                                         endEffector.setGoal(EndEffector.RollersGoal.ORIENT_CORAL),
-                                        Commands.waitSeconds(0.20)
+                                        // Go forward 5 inches
+                                        endEffector.moveByAndWaitUntilDone(Units.inchesToMeters(5))
                                 )
                         ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
                 )

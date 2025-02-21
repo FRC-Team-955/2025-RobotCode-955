@@ -18,7 +18,7 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
 
-import static frc.robot.subsystems.endeffector.EndEffectorConstants.createRollersIO;
+import static frc.robot.subsystems.endeffector.EndEffectorConstants.*;
 import static frc.robot.subsystems.endeffector.EndEffectorTuning.*;
 
 public class EndEffector extends SubsystemBaseExt {
@@ -115,17 +115,22 @@ public class EndEffector extends SubsystemBaseExt {
         return runOnce(() -> this.rollersGoal = rollersGoal);
     }
 
-    /** Goes positionRad forward (or backwards) from current position */
-    public Command goToPosition(double positionRad) {
-        return startEnd(
+    public boolean atPositionSetpoint() {
+        return Math.abs(rollersInputs.positionRad - rollersPositionSetpointRad) <= rollersPositionToleranceRad;
+    }
+
+    /** Goes positionDeltaMeters forward (or backwards) from current position */
+    public Command moveByAndWaitUntilDone(double positionDeltaMeters) {
+        return startEndWaitUntil(
                 () -> {
                     this.rollersGoal = RollersGoal.GO_TO_POSITION;
-                    rollersPositionSetpointRad = rollersInputs.positionRad + positionRad;
+                    rollersPositionSetpointRad = rollersInputs.positionRad + rollersRadiansForMeters(positionDeltaMeters);
                 },
                 () -> {
                     this.rollersGoal = RollersGoal.IDLE;
                     rollersPositionSetpointRad = null;
-                }
+                },
+                this::atPositionSetpoint
         );
     }
 
