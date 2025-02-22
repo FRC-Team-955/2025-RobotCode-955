@@ -23,7 +23,10 @@ public class EndEffectorConstants {
             40,
             9,
             PIDF.ofP(1),
-            PIDF.ofPSV(0.01, 0.60171, 0.30060)
+            switch (Constants.identity) {
+                case COMPBOT -> PIDF.ofPSV(0.01, 0.60171, 0.30060);
+                case SIMBOT, ALPHABOT -> PIDF.ofSV(0.00995, 0.17859);
+            }
     );
 
     protected static RollersIO createRollersIO() {
