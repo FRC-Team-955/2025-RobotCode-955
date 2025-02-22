@@ -119,11 +119,11 @@ public class EndEffector extends SubsystemBaseExt {
     }
 
     /** Goes positionDeltaMeters forward (or backwards) from current position */
-    public Command moveByAndWaitUntilDone(double positionDeltaMeters) {
+    public Command moveByAndWaitUntilDone(DoubleSupplier positionDeltaMeters) {
         return startEndWaitUntil(
                 () -> {
                     this.rollersGoal = RollersGoal.GO_TO_POSITION;
-                    rollersPositionSetpointRad = rollersInputs.positionRad + rollersRadiansForMeters(positionDeltaMeters);
+                    rollersPositionSetpointRad = rollersInputs.positionRad + rollersRadiansForMeters(positionDeltaMeters.getAsDouble());
                 },
                 () -> {
                     this.rollersGoal = RollersGoal.IDLE;

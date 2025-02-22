@@ -27,6 +27,8 @@ import java.util.function.Supplier;
 
 import static frc.robot.subsystems.superstructure.AutoAlignLocations.*;
 import static frc.robot.subsystems.superstructure.SuperstructureConstants.createIO;
+import static frc.robot.subsystems.superstructure.SuperstructureConstants.scoreCoralSettleSeconds;
+import static frc.robot.subsystems.superstructure.SuperstructureTuning.funnelIntakeFinalizeInches;
 
 public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
@@ -271,7 +273,7 @@ public class Superstructure extends SubsystemBaseExt {
                         : waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
         );
         // Wait for coral to settle
-        Command finalize = Commands.waitSeconds(0.5);
+        Command finalize = Commands.waitSeconds(scoreCoralSettleSeconds);
         if (duringAuto) {
             return Commands.sequence(raiseElevator, waitConfirm, score, finalize);
         } else {
@@ -319,7 +321,7 @@ public class Superstructure extends SubsystemBaseExt {
         );
         Command finalize = Commands.parallel(
                 setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
-                endEffector.moveByAndWaitUntilDone(Units.inchesToMeters(0.5))
+                endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeFinalizeInches.get()))
         );
         if (duringAuto) {
             return Commands.sequence(intake, finalize);
@@ -392,7 +394,7 @@ public class Superstructure extends SubsystemBaseExt {
                 waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
         );
         // Wait for coral to settle
-        Command finalize = Commands.waitSeconds(0.25);
+        Command finalize = Commands.waitSeconds(scoreCoralSettleSeconds);
         if (duringAuto) {
             return Commands.sequence(
                     driveInitial,

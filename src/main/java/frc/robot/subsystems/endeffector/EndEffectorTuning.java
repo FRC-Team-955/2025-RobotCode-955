@@ -12,7 +12,7 @@ public class EndEffectorTuning {
     public static final PIDF.Tunable velocityGainsTunable = rollersConfig.velocityGains().tunable("EndEffector/Velocity");
 
     public static final LoggedTunableNumber funnelIntakeGoalSetpoint =
-            new LoggedTunableNumber("EndEffector/Goal/FunnelIntake", Units.rotationsPerMinuteToRadiansPerSecond(600));
+            new LoggedTunableNumber("EndEffector/Goal/FunnelIntake", Units.rotationsPerMinuteToRadiansPerSecond(500));
     public static final LoggedTunableNumber scoreCoralGoalSetpoint =
             new LoggedTunableNumber("EndEffector/Goal/ScoreCoral", Units.rotationsPerMinuteToRadiansPerSecond(300));
     public static final LoggedTunableNumber descoreAlgaeGoalSetpoint =
