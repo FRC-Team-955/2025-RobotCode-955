@@ -60,7 +60,7 @@
     "exp":"15.5 in",
     "val":0.3937
    },
-   "reefZoneSide":{
+   "side":{
     "exp":"15.5 in",
     "val":0.3937
    },
