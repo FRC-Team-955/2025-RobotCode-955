@@ -8,9 +8,9 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.OperatorDashboard.LocalReefSide;
 import frc.robot.OperatorDashboard.ReefZoneSide;
-import frc.robot.subsystems.drive.DriveConstants;
 
 import static frc.robot.Util.shouldFlip;
+import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
 
 public class AutoAlignLocations {
     /**
@@ -26,7 +26,8 @@ public class AutoAlignLocations {
 
     private static final AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-    private static final Transform2d initialAlignOffset = new Transform2d(0.5, 0, new Rotation2d());
+    private static final Transform2d initialAlignOffset = new Transform2d(0.25, 0, new Rotation2d());
+    private static final Transform2d finalAlignOffset = new Transform2d(driveConfig.bumperLengthMeters() / 2.0, 0, new Rotation2d());
 
     // Very rough - 30 cm and 30 degrees
     public static final double initialAlignToleranceMeters = 0.3;
@@ -63,7 +64,7 @@ public class AutoAlignLocations {
 
     // See notes above, also accounts for robot size
     private static Pose2d getAprilTagPoseAdjusted(ReefZoneSide reefZoneSide) {
-        return getAprilTagPoseSide(reefZoneSide.aprilTagOffset).plus(new Transform2d(Units.inchesToMeters(DriveConstants.driveConfig.bumperLengthMeters()), 0, new Rotation2d()));
+        return getAprilTagPoseSide(reefZoneSide.aprilTagOffset).plus(finalAlignOffset);
     }
 
     private static Pose2d getAprilTagPoseSide(int side) {

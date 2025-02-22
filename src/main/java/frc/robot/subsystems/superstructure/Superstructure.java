@@ -71,8 +71,6 @@ public class Superstructure extends SubsystemBaseExt {
     @Getter
     private Goal goal = Goal.IDLE;
 
-    private final AutoAlign autoAlign = new AutoAlign();
-
     private final Debouncer endEffectorBeamBreakDebouncerShort = new Debouncer(3 * 0.02);
     private final Debouncer endEffectorBeamBreakDebouncerLong = new Debouncer(0.15);
 
@@ -407,7 +405,7 @@ public class Superstructure extends SubsystemBaseExt {
                                 Commands.parallel(
                                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_FINAL),
                                         endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                                        elevator.setGoalAndWaitUntilAtGoal(() -> elevatorGoal),
+                                        elevator.setGoalAndWaitUntilAtGoal(() -> elevatorGoal).andThen(Commands.waitSeconds(0.25)),
                                         waitUntilAtFinalPosition(() -> reefZoneSide, () -> localSide)
                                 ),
                                 Commands.parallel(
@@ -445,7 +443,7 @@ public class Superstructure extends SubsystemBaseExt {
                         Commands.parallel(
                                 setGoal(Goal.AUTO_SCORE_CORAL_WAIT_FINAL),
                                 endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                                elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier),
+                                elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier).andThen(Commands.waitSeconds(0.25)),
                                 waitUntilAtFinalPosition(reefSideSupplier, sideSupplier)
                         )
                 ),
