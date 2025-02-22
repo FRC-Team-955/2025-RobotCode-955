@@ -44,7 +44,7 @@ import java.util.function.Supplier;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 import static frc.robot.subsystems.drive.DriveTuning.*;
-import static frc.robot.util.HighFrequencySamplingThread.odometryLock;
+import static frc.robot.util.HighFrequencySamplingThread.highFrequencyLock;
 
 public class Drive extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
@@ -158,7 +158,7 @@ public class Drive extends SubsystemBaseExt {
 
     @Override
     public void periodicBeforeCommands() {
-        odometryLock.lock();
+        highFrequencyLock.lock();
 
         gyroIO.updateInputs(gyroInputs);
         Logger.processInputs("Inputs/Drive/Gyro", gyroInputs);
@@ -167,7 +167,7 @@ public class Drive extends SubsystemBaseExt {
             module.updateAndProcessInputs();
         }
 
-        odometryLock.unlock();
+        highFrequencyLock.unlock();
 
         for (var module : modules) {
             module.periodicBeforeCommands();

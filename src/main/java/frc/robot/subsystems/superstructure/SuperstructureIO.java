@@ -13,6 +13,9 @@ public class SuperstructureIO {
 
         /** If triggered is true, the beam is broken */
         public boolean endEffectorBeamBreakTriggered = false;
+
+        public double[] highFrequencyTimestamps = new double[]{};
+        public boolean[] highFrequencyEndEffectorBeamBreakTriggered = new boolean[]{};
     }
 
     public void updateInputs(SuperstructureIOInputs inputs) {

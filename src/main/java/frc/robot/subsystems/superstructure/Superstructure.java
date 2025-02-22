@@ -29,6 +29,7 @@ import static frc.robot.subsystems.superstructure.AutoAlignLocations.*;
 import static frc.robot.subsystems.superstructure.SuperstructureConstants.createIO;
 import static frc.robot.subsystems.superstructure.SuperstructureConstants.scoreCoralSettleSeconds;
 import static frc.robot.subsystems.superstructure.SuperstructureTuning.funnelIntakeFinalizeInches;
+import static frc.robot.util.HighFrequencySamplingThread.highFrequencyLock;
 
 public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
@@ -74,7 +75,7 @@ public class Superstructure extends SubsystemBaseExt {
     private Goal goal = Goal.IDLE;
 
     private final Debouncer endEffectorBeamBreakDebouncerShort = new Debouncer(3 * 0.02);
-    private final Debouncer endEffectorBeamBreakDebouncerLong = new Debouncer(0.15);
+    private final Debouncer endEffectorBeamBreakDebouncerLong = new Debouncer(0.25);
 
     private Command withGoal(Goal goal, Command command) {
         return new WrapperCommand(command) {
@@ -106,9 +107,12 @@ public class Superstructure extends SubsystemBaseExt {
 
     @Override
     public void periodicBeforeCommands() {
+        highFrequencyLock.lock();
+
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Superstructure", inputs);
-        // TODO: alerts for everything - not just superstructure
+
+        highFrequencyLock.unlock();
 
 //        robotMechanism.coralIntake.rangeLigament.setColor(
 //                intakeRangeTriggered()
@@ -385,7 +389,7 @@ public class Superstructure extends SubsystemBaseExt {
         Command waitFinalWhileRaising = Commands.parallel(
                 setGoal(Goal.AUTO_SCORE_CORAL_WAIT_FINAL),
                 endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier).andThen(Commands.waitSeconds(0.25)),
+                elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier),
                 waitUntilAtFinalPosition(reefSideSupplier, sideSupplier)
         );
         Command score = Commands.parallel(

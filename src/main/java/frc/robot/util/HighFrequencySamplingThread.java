@@ -26,6 +26,7 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 /**
@@ -40,7 +41,7 @@ public class HighFrequencySamplingThread extends Thread {
         case ALPHABOT -> 100.0;
     };
 
-    public static final Lock odometryLock = new ReentrantLock();
+    public static final Lock highFrequencyLock = new ReentrantLock();
     private final Lock signalsLock = new ReentrantLock(); // Prevents conflicts when registering signals
 
     private BaseStatusSignal[] phoenixSignals = new BaseStatusSignal[0];
@@ -50,8 +51,11 @@ public class HighFrequencySamplingThread extends Thread {
     private final List<DoubleSupplier> sparkSignals = new ArrayList<>();
     private final List<Queue<Double>> sparkQueues = new ArrayList<>();
 
-    private final List<DoubleSupplier> genericSignals = new ArrayList<>();
-    private final List<Queue<Double>> genericQueues = new ArrayList<>();
+    private final List<DoubleSupplier> genericDoubleSignals = new ArrayList<>();
+    private final List<Queue<Double>> genericDoubleQueues = new ArrayList<>();
+
+    private final List<BooleanSupplier> genericBooleanSignals = new ArrayList<>();
+    private final List<Queue<Boolean>> genericBooleanQueues = new ArrayList<>();
 
     private final List<Queue<Double>> timestampQueues = new ArrayList<>();
 
@@ -81,7 +85,7 @@ public class HighFrequencySamplingThread extends Thread {
     public Queue<Double> registerPhoenixSignal(StatusSignal<Angle> signal) {
         Queue<Double> queue = new ArrayBlockingQueue<>(20);
         signalsLock.lock();
-        odometryLock.lock();
+        highFrequencyLock.lock();
         try {
             BaseStatusSignal[] newSignals = new BaseStatusSignal[phoenixSignals.length + 1];
             System.arraycopy(phoenixSignals, 0, newSignals, 0, phoenixSignals.length);
@@ -90,7 +94,7 @@ public class HighFrequencySamplingThread extends Thread {
             phoenixQueues.add(queue);
         } finally {
             signalsLock.unlock();
-            odometryLock.unlock();
+            highFrequencyLock.unlock();
         }
         return queue;
     }
@@ -101,14 +105,14 @@ public class HighFrequencySamplingThread extends Thread {
     public Queue<Double> registerSparkSignal(SparkBase spark, DoubleSupplier signal) {
         Queue<Double> queue = new ArrayBlockingQueue<>(20);
         signalsLock.lock();
-        odometryLock.lock();
+        highFrequencyLock.lock();
         try {
             sparks.add(spark);
             sparkSignals.add(signal);
             sparkQueues.add(queue);
         } finally {
             signalsLock.unlock();
-            odometryLock.unlock();
+            highFrequencyLock.unlock();
         }
         return queue;
     }
@@ -119,13 +123,30 @@ public class HighFrequencySamplingThread extends Thread {
     public Queue<Double> registerGenericSignal(DoubleSupplier signal) {
         Queue<Double> queue = new ArrayBlockingQueue<>(20);
         signalsLock.lock();
-        odometryLock.lock();
+        highFrequencyLock.lock();
         try {
-            genericSignals.add(signal);
-            genericQueues.add(queue);
+            genericDoubleSignals.add(signal);
+            genericDoubleQueues.add(queue);
         } finally {
             signalsLock.unlock();
-            odometryLock.unlock();
+            highFrequencyLock.unlock();
+        }
+        return queue;
+    }
+
+    /**
+     * Registers a generic signal to be read from the thread.
+     */
+    public Queue<Boolean> registerGenericSignal(BooleanSupplier signal) {
+        Queue<Boolean> queue = new ArrayBlockingQueue<>(20);
+        signalsLock.lock();
+        highFrequencyLock.lock();
+        try {
+            genericBooleanSignals.add(signal);
+            genericBooleanQueues.add(queue);
+        } finally {
+            signalsLock.unlock();
+            highFrequencyLock.unlock();
         }
         return queue;
     }
@@ -135,11 +156,11 @@ public class HighFrequencySamplingThread extends Thread {
      */
     public Queue<Double> makeTimestampQueue() {
         Queue<Double> queue = new ArrayBlockingQueue<>(20);
-        odometryLock.lock();
+        highFrequencyLock.lock();
         try {
             timestampQueues.add(queue);
         } finally {
-            odometryLock.unlock();
+            highFrequencyLock.unlock();
         }
         return queue;
     }
@@ -166,7 +187,7 @@ public class HighFrequencySamplingThread extends Thread {
             }
 
             // Save new data to queues
-            odometryLock.lock();
+            highFrequencyLock.lock();
             try {
                 // Sample timestamp is current FPGA time minus average CAN latency
                 //     Default timestamps from Phoenix are NOT compatible with
@@ -192,14 +213,17 @@ public class HighFrequencySamplingThread extends Thread {
                     sparkQueues.get(i).offer(value);
 //                    }
                 }
-                for (int i = 0; i < genericSignals.size(); i++) {
-                    genericQueues.get(i).offer(genericSignals.get(i).getAsDouble());
+                for (int i = 0; i < genericDoubleSignals.size(); i++) {
+                    genericDoubleQueues.get(i).offer(genericDoubleSignals.get(i).getAsDouble());
+                }
+                for (int i = 0; i < genericBooleanSignals.size(); i++) {
+                    genericBooleanQueues.get(i).offer(genericBooleanSignals.get(i).getAsBoolean());
                 }
                 for (Queue<Double> timestampQueue : timestampQueues) {
                     timestampQueue.offer(timestamp);
                 }
             } finally {
-                odometryLock.unlock();
+                highFrequencyLock.unlock();
             }
         }
     }
