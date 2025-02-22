@@ -14,7 +14,7 @@ public class EndEffectorConstants {
     public static final double rollersRadiusMeters = Units.inchesToMeters(2.25 / 2.0);
 
     public static double rollersRadiansForMeters(double meters) {
-        return Units.rotationsToRadians(meters / rollersRadiusMeters);
+        return meters / rollersRadiusMeters;
     }
 
     public static final RollersConfig rollersConfig = new RollersConfig(
