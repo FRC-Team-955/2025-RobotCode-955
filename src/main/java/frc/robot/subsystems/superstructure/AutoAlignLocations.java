@@ -35,8 +35,8 @@ public class AutoAlignLocations {
     // very little tolerance - 2 cm, 2 deg
     public static final double finalAlignToleranceMeters = 0.04;
     public static final double finalAlignToleranceRad = 0.03;
-    public static final double finalAlignToleranceMetersPerSecond = 0.02;
-    public static final double finalAlignToleranceRadPerSecond = 0.02;
+    public static final double finalAlignToleranceMetersPerSecond = 0.04;
+    public static final double finalAlignToleranceRadPerSecond = 0.03;
 
     /**
      * Checks whether moving to the side will intersect with the reef, and refuses to do so if it does.
