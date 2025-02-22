@@ -26,7 +26,7 @@ public class AutoAlignLocations {
 
     private static final AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-    private static final Transform2d initialAlignOffset = new Transform2d(0.25, 0, new Rotation2d());
+    private static final Transform2d initialAlignOffset = new Transform2d(0.75, 0, new Rotation2d());
     private static final Transform2d finalAlignOffset = new Transform2d(driveConfig.bumperLengthMeters() / 2.0, 0, new Rotation2d());
 
     // Very rough - 50 cm and 30 degrees
@@ -35,8 +35,8 @@ public class AutoAlignLocations {
     // very little tolerance - 2 cm, 2 deg
     public static final double finalAlignToleranceMeters = 0.04;
     public static final double finalAlignToleranceRad = 0.03;
-    public static final double finalAlignToleranceMetersPerSecond = 0.04;
-    public static final double finalAlignToleranceRadPerSecond = 0.03;
+    public static final double finalAlignToleranceMetersPerSecond = 0.02;
+    public static final double finalAlignToleranceRadPerSecond = 0.02;
 
     /**
      * Checks whether moving to the side will intersect with the reef, and refuses to do so if it does.
