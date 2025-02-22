@@ -232,5 +232,13 @@ public class Vision extends SubsystemBaseExt {
             var asPose3d = new Pose3d(translation2d.getX(), translation2d.getY(), 0, new Rotation3d());
             Logger.recordOutput("Vision/Summary/ClosestGamepiece/Pose", asPose3d);
         });
+
+        // Log camera poses for debugging
+        var robotPose = new Pose3d(robotState.getPose());
+        Logger.recordOutput(
+                "Vision/CameraPoses",
+                robotPose.transformBy(reefCamRobotToCamera),
+                robotPose.transformBy(stationCamRobotToCamera)
+        );
     }
 }
