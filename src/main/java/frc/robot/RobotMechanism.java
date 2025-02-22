@@ -162,7 +162,7 @@ public class RobotMechanism {
                 "ligament",
                 Units.inchesToMeters(15),
                 0,
-                1,
+                5,
                 new Color8Bit(Color.kCyan)
         ));
 
