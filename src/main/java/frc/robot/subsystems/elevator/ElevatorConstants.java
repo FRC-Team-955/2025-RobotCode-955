@@ -21,8 +21,8 @@ public class ElevatorConstants {
     public static final double setpointToleranceMeters = Units.inchesToMeters(5);
 
     public static final double maxHeightMeters = Units.inchesToMeters(67.5);
-    public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 1.4);
-    public static final ElevatorLimit lowerLimit = new ElevatorLimit(0.25, -1.7);
+    public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 2.5);
+    public static final ElevatorLimit lowerLimit = new ElevatorLimit(0.25, -1.75);
 
     public static final double hardstopMeters = Units.inchesToMeters(10.66);
     public static final double gentleMaxVelocityMetersPerSecond = 0.75;
