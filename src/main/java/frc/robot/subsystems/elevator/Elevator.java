@@ -70,7 +70,7 @@ public class Elevator extends SubsystemBaseExt {
                     maxAccelerationMetersPerSecondSquared
             )
     );
-    private TrapezoidProfile.State previousStateMeters = new TrapezoidProfile.State();
+    private TrapezoidProfile.State previousStateMeters = null;
 
     public final SysIdRoutine sysId;
 
@@ -183,6 +183,7 @@ public class Elevator extends SubsystemBaseExt {
         if (DriverStation.isDisabled()) {
             Logger.recordOutput("Elevator/ClosedLoop", false);
             io.setOpenLoop(0);
+            previousStateMeters = null;
         } else if (goal.setpointMeters != null) {
             double positionMeters = getPositionMeters();
             double velocityMetersPerSec = getVelocityMetersPerSec();
@@ -210,7 +211,7 @@ public class Elevator extends SubsystemBaseExt {
 
             // Sometimes the profile outruns the elevator, so failsafe if it does
             var usingRealStateAsCurrent = operatorDashboard.useRealElevatorState.get();
-            var currentState = usingRealStateAsCurrent
+            var currentState = previousStateMeters == null || usingRealStateAsCurrent
                     ? new TrapezoidProfile.State(positionMeters, velocityMetersPerSec)
                     : previousStateMeters;
             if (usingRealStateAsCurrent) {
@@ -239,6 +240,7 @@ public class Elevator extends SubsystemBaseExt {
             Logger.recordOutput("Elevator/Setpoint/VelocityMetersPerSec", previousStateMeters.velocity);
         } else {
             Logger.recordOutput("Elevator/ClosedLoop", false);
+            previousStateMeters = null;
         }
 
         // Check limit switch and zero if needed
