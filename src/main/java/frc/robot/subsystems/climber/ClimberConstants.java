@@ -9,7 +9,7 @@ public class ClimberConstants {
 
     // 0 = parallel to ground
     public static final double initialPositionRad = Units.degreesToRadians(90);
-    public static final double upperLimitRad = Units.degreesToRadians(120);
+    public static final double upperLimitRad = Units.degreesToRadians(135);
     public static final double lowerLimitRad = Units.degreesToRadians(-30);
 
     protected static ClimberIO createIO() {
