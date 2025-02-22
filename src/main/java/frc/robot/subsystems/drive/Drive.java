@@ -119,9 +119,9 @@ public class Drive extends SubsystemBaseExt {
     private final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackOmega = driveConfig.choreoFeedbackOmega().toPIDWrapRadians();
 
-    private final PIDController moveToX = moveToXY.toPID();
-    private final PIDController moveToY = moveToXY.toPID();
-    private final PIDController moveToOmega = DriveConstants.moveToOmega.toPIDWrapRadians();
+    private PIDController moveToX = moveToXY.toPID();
+    private PIDController moveToY = moveToXY.toPID();
+    private PIDController moveToOmega = DriveConstants.moveToOmega.toPIDWrapRadians();
 
     private static Drive instance;
 
@@ -264,6 +264,9 @@ public class Drive extends SubsystemBaseExt {
                 module.setTurnPIDF(gains);
             }
         });
+
+        moveToXYTunable.ifChanged(hashCode(), gains -> {moveToX = gains.toPID(); moveToY = gains.toPID();});
+        moveToOmegaTunable.ifChanged(hashCode(), gains -> moveToOmega = gains.toPIDWrapRadians());
 
         Logger.recordOutput("Drive/Goal", goal);
 
