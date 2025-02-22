@@ -22,6 +22,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.Constants;
+import frc.robot.util.HighFrequencySamplingThread;
 
 import java.util.Queue;
 
@@ -46,11 +47,11 @@ public class GyroIOPigeon2 extends GyroIO {
         tryUntilOk(5, () -> pigeon.getConfigurator().setYaw(0.0));
         pigeon.optimizeBusUtilization();
 
-        yaw.setUpdateFrequency(DriveConstants.phoenixFrequencyHz);
+        yaw.setUpdateFrequency(HighFrequencySamplingThread.frequencyHz);
         yawVelocity.setUpdateFrequency(50.0);
 
-        yawTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
-        yawPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(pigeon.getYaw());
+        yawTimestampQueue = HighFrequencySamplingThread.get().makeTimestampQueue();
+        yawPositionQueue = HighFrequencySamplingThread.get().registerPhoenixSignal(pigeon.getYaw());
     }
 
     @Override
@@ -63,7 +64,7 @@ public class GyroIOPigeon2 extends GyroIO {
                 yawTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryYawPositionsRad =
                 yawPositionQueue.stream()
-                        .mapToDouble((Double value) -> Units.degreesToRadians(value))
+                        .mapToDouble(Units::degreesToRadians)
                         .toArray();
 
         yawTimestampQueue.clear();

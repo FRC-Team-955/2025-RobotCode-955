@@ -28,6 +28,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
+import frc.robot.util.HighFrequencySamplingThread;
 import frc.robot.util.PIDF;
 
 import java.util.Queue;
@@ -151,12 +152,11 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         tryUntilOk(5, () -> cancoder.getConfigurator().apply(cancoderConfig));
 
         // Create timestamp queue
-        timestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
+        timestampQueue = HighFrequencySamplingThread.get().makeTimestampQueue();
 
         // Create drive status signals
         drivePosition = driveTalon.getPosition();
-        drivePositionQueue =
-                PhoenixOdometryThread.getInstance().registerSignal(driveTalon.getPosition());
+        drivePositionQueue = HighFrequencySamplingThread.get().registerPhoenixSignal(driveTalon.getPosition());
         driveVelocity = driveTalon.getVelocity();
         driveAppliedVolts = driveTalon.getMotorVoltage();
         driveCurrentAmps = driveTalon.getStatorCurrent();
@@ -165,15 +165,14 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         // Create turn status signals
         turnAbsolutePosition = cancoder.getAbsolutePosition();
         turnPosition = turnTalon.getPosition();
-        turnPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(turnTalon.getPosition());
+        turnPositionQueue = HighFrequencySamplingThread.get().registerPhoenixSignal(turnTalon.getPosition());
         turnVelocity = turnTalon.getVelocity();
         turnAppliedVolts = turnTalon.getMotorVoltage();
         turnCurrentAmps = turnTalon.getStatorCurrent();
         turnTemperatureCelsius = driveTalon.getDeviceTemp();
 
         // Configure periodic frames
-        BaseStatusSignal.setUpdateFrequencyForAll(
-                DriveConstants.phoenixFrequencyHz, drivePosition, turnPosition);
+        BaseStatusSignal.setUpdateFrequencyForAll(HighFrequencySamplingThread.frequencyHz, drivePosition, turnPosition);
         BaseStatusSignal.setUpdateFrequencyForAll(
                 50.0,
                 driveVelocity,
@@ -215,12 +214,10 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         inputs.turnTemperatureCelsius = turnTemperatureCelsius.getValueAsDouble();
 
         // Update odometry inputs
-        inputs.odometryDriveTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+        inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryDrivePositionsRad = drivePositionQueue.stream()
                 .mapToDouble(Units::rotationsToRadians)
                 .toArray();
-
-        inputs.odometryTurnTimestamps = inputs.odometryDriveTimestamps;
         inputs.odometryTurnPositionsRad = turnPositionQueue.stream()
                 .mapToDouble(Units::rotationsToRadians)
                 .toArray();

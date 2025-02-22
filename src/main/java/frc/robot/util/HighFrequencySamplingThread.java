@@ -11,14 +11,14 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.util.sampling;
+package frc.robot.util;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.revrobotics.spark.SparkBase;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
-import frc.robot.subsystems.drive.DriveConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,49 +30,58 @@ import java.util.function.DoubleSupplier;
 
 /**
  * Provides an interface for asynchronously reading high-frequency measurements to a set of queues.
- *
- * <p>This version is intended for Phoenix 6 devices on both the RIO and CANivore buses. When using
- * a CANivore, the thread uses the "waitForAll" blocking method to enable more consistent sampling.
- * This also allows Phoenix Pro users to benefit from lower latency between devices using CANivore
- * time synchronization.
+ * Ensures all timestamps are synchronized, using the CANivore as the source of truth if connected.
+ * <p>
+ * When using a CANivore, the thread uses the "waitForAll" blocking method to enable more consistent sampling. This also allows Phoenix Pro users to benefit from lower latency between devices using CANivore time synchronization.
  */
-public class PhoenixOdometryThread extends Thread {
-    static final Lock phoenixLock = new ReentrantLock();
+public class HighFrequencySamplingThread extends Thread {
+    public static final double frequencyHz = switch (Constants.identity) {
+        case COMPBOT, SIMBOT -> 250.0;
+        case ALPHABOT -> 100.0;
+    };
 
+    public static final Lock odometryLock = new ReentrantLock();
     private final Lock signalsLock = new ReentrantLock(); // Prevents conflicts when registering signals
-    private BaseStatusSignal[] phoenixSignals = new BaseStatusSignal[0];
-    private final List<DoubleSupplier> genericSignals = new ArrayList<>();
-    private final List<Queue<Double>> phoenixQueues = new ArrayList<>();
-    private final List<Queue<Double>> genericQueues = new ArrayList<>();
-    private final List<Queue<Double>> timestampQueues = new ArrayList<>();
-    private static PhoenixOdometryThread instance = null;
 
-    public static PhoenixOdometryThread getInstance() {
+    private BaseStatusSignal[] phoenixSignals = new BaseStatusSignal[0];
+    private final List<Queue<Double>> phoenixQueues = new ArrayList<>();
+
+    private final List<SparkBase> sparks = new ArrayList<>();
+    private final List<DoubleSupplier> sparkSignals = new ArrayList<>();
+    private final List<Queue<Double>> sparkQueues = new ArrayList<>();
+
+    private final List<DoubleSupplier> genericSignals = new ArrayList<>();
+    private final List<Queue<Double>> genericQueues = new ArrayList<>();
+
+    private final List<Queue<Double>> timestampQueues = new ArrayList<>();
+
+    private static HighFrequencySamplingThread instance = null;
+
+    public static HighFrequencySamplingThread get() {
         if (instance == null) {
-            instance = new PhoenixOdometryThread();
+            instance = new HighFrequencySamplingThread();
         }
         return instance;
     }
 
-    private PhoenixOdometryThread() {
-        setName("PhoenixOdometryThread");
+    private HighFrequencySamplingThread() {
+        setName("HighFrequencySamplingThread");
         setDaemon(true);
+        super.start();
     }
 
     @Override
-    public void start() {
-        if (timestampQueues.size() > 0) {
-            super.start();
-        }
+    public synchronized void start() {
+        // Already started
     }
 
     /**
      * Registers a Phoenix signal to be read from the thread.
      */
-    public Queue<Double> registerSignal(StatusSignal<Angle> signal) {
+    public Queue<Double> registerPhoenixSignal(StatusSignal<Angle> signal) {
         Queue<Double> queue = new ArrayBlockingQueue<>(20);
         signalsLock.lock();
-        phoenixLock.lock();
+        odometryLock.lock();
         try {
             BaseStatusSignal[] newSignals = new BaseStatusSignal[phoenixSignals.length + 1];
             System.arraycopy(phoenixSignals, 0, newSignals, 0, phoenixSignals.length);
@@ -81,7 +90,25 @@ public class PhoenixOdometryThread extends Thread {
             phoenixQueues.add(queue);
         } finally {
             signalsLock.unlock();
-            phoenixLock.unlock();
+            odometryLock.unlock();
+        }
+        return queue;
+    }
+
+    /**
+     * Registers a Spark signal to be read from the thread.
+     */
+    public Queue<Double> registerSparkSignal(SparkBase spark, DoubleSupplier signal) {
+        Queue<Double> queue = new ArrayBlockingQueue<>(20);
+        signalsLock.lock();
+        odometryLock.lock();
+        try {
+            sparks.add(spark);
+            sparkSignals.add(signal);
+            sparkQueues.add(queue);
+        } finally {
+            signalsLock.unlock();
+            odometryLock.unlock();
         }
         return queue;
     }
@@ -89,16 +116,16 @@ public class PhoenixOdometryThread extends Thread {
     /**
      * Registers a generic signal to be read from the thread.
      */
-    public Queue<Double> registerSignal(DoubleSupplier signal) {
+    public Queue<Double> registerGenericSignal(DoubleSupplier signal) {
         Queue<Double> queue = new ArrayBlockingQueue<>(20);
         signalsLock.lock();
-        phoenixLock.lock();
+        odometryLock.lock();
         try {
             genericSignals.add(signal);
             genericQueues.add(queue);
         } finally {
             signalsLock.unlock();
-            phoenixLock.unlock();
+            odometryLock.unlock();
         }
         return queue;
     }
@@ -108,11 +135,11 @@ public class PhoenixOdometryThread extends Thread {
      */
     public Queue<Double> makeTimestampQueue() {
         Queue<Double> queue = new ArrayBlockingQueue<>(20);
-        phoenixLock.lock();
+        odometryLock.lock();
         try {
             timestampQueues.add(queue);
         } finally {
-            phoenixLock.unlock();
+            odometryLock.unlock();
         }
         return queue;
     }
@@ -124,12 +151,12 @@ public class PhoenixOdometryThread extends Thread {
             signalsLock.lock();
             try {
                 if (Constants.CANivore.isCANFD && phoenixSignals.length > 0) {
-                    BaseStatusSignal.waitForAll(2.0 / DriveConstants.phoenixFrequencyHz, phoenixSignals);
+                    BaseStatusSignal.waitForAll(2.0 / frequencyHz, phoenixSignals);
                 } else {
                     // "waitForAll" does not support blocking on multiple signals with a bus
                     // that is not CAN FD, regardless of Pro licensing. No reasoning for this
                     // behavior is provided by the documentation.
-                    Thread.sleep((long) (1000.0 / DriveConstants.phoenixFrequencyHz));
+                    Thread.sleep((long) (1000.0 / frequencyHz));
                     if (phoenixSignals.length > 0) BaseStatusSignal.refreshAll(phoenixSignals);
                 }
             } catch (InterruptedException e) {
@@ -139,12 +166,12 @@ public class PhoenixOdometryThread extends Thread {
             }
 
             // Save new data to queues
-            phoenixLock.lock();
+            odometryLock.lock();
             try {
                 // Sample timestamp is current FPGA time minus average CAN latency
                 //     Default timestamps from Phoenix are NOT compatible with
                 //     FPGA timestamps, this solution is imperfect but close
-                double timestamp = RobotController.getFPGATime() / 1e6;
+                double timestamp = Timer.getFPGATimestamp();
                 double totalLatency = 0.0;
                 for (BaseStatusSignal signal : phoenixSignals) {
                     totalLatency += signal.getTimestamp().getLatency();
@@ -153,18 +180,26 @@ public class PhoenixOdometryThread extends Thread {
                     timestamp -= totalLatency / phoenixSignals.length;
                 }
 
+
                 // Add new samples to queues
                 for (int i = 0; i < phoenixSignals.length; i++) {
                     phoenixQueues.get(i).offer(phoenixSignals[i].getValueAsDouble());
                 }
+                for (int i = 0; i < sparkSignals.size(); i++) {
+                    double value = sparkSignals.get(i).getAsDouble();
+                    // If we don't give a value, things will get desynced
+//                    if (sparks.get(i).getLastError() == REVLibError.kOk) {
+                    sparkQueues.get(i).offer(value);
+//                    }
+                }
                 for (int i = 0; i < genericSignals.size(); i++) {
                     genericQueues.get(i).offer(genericSignals.get(i).getAsDouble());
                 }
-                for (int i = 0; i < timestampQueues.size(); i++) {
-                    timestampQueues.get(i).offer(timestamp);
+                for (Queue<Double> timestampQueue : timestampQueues) {
+                    timestampQueue.offer(timestamp);
                 }
             } finally {
-                phoenixLock.unlock();
+                odometryLock.unlock();
             }
         }
     }

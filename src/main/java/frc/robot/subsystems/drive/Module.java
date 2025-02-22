@@ -159,15 +159,8 @@ public class Module {
     /**
      * Returns the timestamps of the samples received this cycle.
      */
-    public double[] getOdometryDriveTimestamps() {
-        return inputs.odometryDriveTimestamps;
-    }
-
-    /**
-     * Returns the timestamps of the samples received this cycle.
-     */
-    public double[] getOdometryTurnTimestamps() {
-        return inputs.odometryTurnTimestamps;
+    public double[] getOdometryTimestamps() {
+        return inputs.odometryTimestamps;
     }
 
     public double[] getOdometryDrivePositionsRad() {

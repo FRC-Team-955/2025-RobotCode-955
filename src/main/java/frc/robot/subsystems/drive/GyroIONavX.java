@@ -16,22 +16,21 @@ package frc.robot.subsystems.drive;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 import edu.wpi.first.math.util.Units;
+import frc.robot.util.HighFrequencySamplingThread;
 
 import java.util.Queue;
-
-import static frc.robot.subsystems.drive.DriveConstants.phoenixFrequencyHz;
 
 /**
  * IO implementation for NavX.
  */
 public class GyroIONavX extends GyroIO {
-    private final AHRS navX = new AHRS(NavXComType.kMXP_SPI, (byte) phoenixFrequencyHz);
+    private final AHRS navX = new AHRS(NavXComType.kMXP_SPI, (byte) HighFrequencySamplingThread.frequencyHz);
     private final Queue<Double> yawPositionQueue;
     private final Queue<Double> yawTimestampQueue;
 
     public GyroIONavX() {
-        yawTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
-        yawPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(navX::getYaw);
+        yawTimestampQueue = HighFrequencySamplingThread.get().makeTimestampQueue();
+        yawPositionQueue = HighFrequencySamplingThread.get().registerGenericSignal(navX::getYaw);
     }
 
     @Override

@@ -39,6 +39,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
+import frc.robot.util.HighFrequencySamplingThread;
 import frc.robot.util.PIDF;
 import frc.robot.util.PhoenixUtil;
 import frc.robot.util.SparkUtil;
@@ -81,8 +82,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
             new VelocityTorqueCurrentFOC(0.0);
 
     // Timestamp inputs from Phoenix thread
-    private final Queue<Double> phoenixTimestampQueue;
-    private final Queue<Double> sparkTimestampQueue;
+    private final Queue<Double> timestampQueue;
 
     // Inputs from drive motor
     private final StatusSignal<Angle> drivePosition;
@@ -151,7 +151,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
         turnConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
-                .primaryEncoderPositionPeriodMs((int) (1000.0 / DriveConstants.sparkFrequencyHz))
+                .primaryEncoderPositionPeriodMs((int) (1000.0 / HighFrequencySamplingThread.frequencyHz))
                 .primaryEncoderVelocityAlwaysOn(true)
                 .primaryEncoderVelocityPeriodMs(20)
                 .appliedOutputPeriodMs(20)
@@ -173,12 +173,11 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
         PhoenixUtil.tryUntilOk(5, () -> cancoder.getConfigurator().apply(cancoderConfig));
 
         // Create timestamp queue
-        phoenixTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
-        sparkTimestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
+        timestampQueue = HighFrequencySamplingThread.get().makeTimestampQueue();
 
         // Create drive status signals
         drivePosition = driveTalon.getPosition();
-        drivePositionQueue = PhoenixOdometryThread.getInstance().registerSignal(driveTalon.getPosition());
+        drivePositionQueue = HighFrequencySamplingThread.get().registerPhoenixSignal(driveTalon.getPosition());
         driveVelocity = driveTalon.getVelocity();
         driveAppliedVolts = driveTalon.getMotorVoltage();
         driveCurrentAmps = driveTalon.getStatorCurrent();
@@ -186,10 +185,10 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
 
         // Create turn status signals
         turnAbsolutePosition = cancoder.getAbsolutePosition();
-        turnPositionQueue = SparkOdometryThread.getInstance().registerSignal(turnSpark, turnEncoder::getPosition);
+        turnPositionQueue = HighFrequencySamplingThread.get().registerSparkSignal(turnSpark, turnEncoder::getPosition);
 
         // Configure periodic frames
-        BaseStatusSignal.setUpdateFrequencyForAll(DriveConstants.phoenixFrequencyHz, drivePosition);
+        BaseStatusSignal.setUpdateFrequencyForAll(HighFrequencySamplingThread.frequencyHz, drivePosition);
         BaseStatusSignal.setUpdateFrequencyForAll(
                 50.0,
                 driveVelocity,
@@ -237,18 +236,15 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
         inputs.turnAbsolutePositionRad = Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble());
 
         // Update odometry inputs
-        inputs.odometryDriveTimestamps = phoenixTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+        inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryDrivePositionsRad = drivePositionQueue.stream()
                 .mapToDouble(Units::rotationsToRadians)
                 .toArray();
-
-        inputs.odometryTurnTimestamps = sparkTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryTurnPositionsRad = turnPositionQueue.stream()
                 .mapToDouble(Units::rotationsToRadians)
                 .toArray();
 
-        phoenixTimestampQueue.clear();
-        sparkTimestampQueue.clear();
+        timestampQueue.clear();
         drivePositionQueue.clear();
         turnPositionQueue.clear();
     }

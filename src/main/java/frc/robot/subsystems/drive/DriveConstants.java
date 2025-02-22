@@ -7,15 +7,6 @@ import frc.robot.Util;
 import frc.robot.util.PIDF;
 
 public class DriveConstants {
-    public static final double phoenixFrequencyHz = switch (Constants.identity) {
-        case COMPBOT, SIMBOT -> 250.0;
-        case ALPHABOT -> 100.0;
-    };
-    public static final double sparkFrequencyHz = switch (Constants.identity) {
-        case COMPBOT, SIMBOT -> 250.0;
-        case ALPHABOT -> 100.0;
-    };
-
     public static final double assistDirectionToleranceRad = Units.degreesToRadians(50);
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
@@ -25,7 +16,7 @@ public class DriveConstants {
 
     public static final boolean useSetpointGenerator = true;
     public static final boolean disableDriving = false;
-    public static final boolean useHighFrequencyOdometry = false;
+    public static final boolean useHighFrequencyOdometry = true;
 
     // Slow to 30% speed when elevator is at max height
     public static final double elevatorSlowdownScalar = 0.7;

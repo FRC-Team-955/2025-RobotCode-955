@@ -122,12 +122,10 @@ public class ModuleIOSim extends ModuleIO {
         inputs.turnCurrentAmps = Math.abs(moduleSimulation.getSteerMotorStatorCurrent().in(Amps));
 
         // Update odometry inputs
-        inputs.odometryDriveTimestamps = getSimulationOdometryTimeStamps();
+        inputs.odometryTimestamps = getSimulationOdometryTimeStamps();
         inputs.odometryDrivePositionsRad = Arrays.stream(moduleSimulation.getCachedDriveWheelFinalPositions())
                 .mapToDouble(angle -> angle.in(Radians))
                 .toArray();
-
-        inputs.odometryTurnTimestamps = inputs.odometryDriveTimestamps;
         inputs.odometryTurnPositionsRad = Arrays.stream(moduleSimulation.getCachedSteerAbsolutePositions())
                 .mapToDouble(Rotation2d::getRadians)
                 .toArray();
