@@ -181,21 +181,17 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     }
 
     @Override
-    public void setClosedLoop(double positionRad, double velocityRadPerSec, boolean usePositionControl) {
+    public void setClosedLoop(double positionRad, double velocityRadPerSec) {
         if (!emergencyStopped) {
             var ffVolts = ff.calculateWithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
             lastVelocitySetpointRadPerSec = velocityRadPerSec;
-            if (usePositionControl) {
-                controller.setReference(
-                        positionRad,
-                        SparkBase.ControlType.kPosition,
-                        ClosedLoopSlot.kSlot0,
-                        ffVolts,
-                        SparkClosedLoopController.ArbFFUnits.kVoltage
-                );
-            } else {
-                leadMotor.setVoltage(ffVolts);
-            }
+            controller.setReference(
+                    positionRad,
+                    SparkBase.ControlType.kPosition,
+                    ClosedLoopSlot.kSlot0,
+                    ffVolts,
+                    SparkClosedLoopController.ArbFFUnits.kVoltage
+            );
         }
     }
 

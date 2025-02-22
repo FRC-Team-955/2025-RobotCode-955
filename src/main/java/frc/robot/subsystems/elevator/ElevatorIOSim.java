@@ -30,7 +30,6 @@ public class ElevatorIOSim extends ElevatorIO {
     private boolean emergencyStopped = false;
 
     private boolean closedLoop = true;
-    private boolean usePositionControl = false;
     private double setpointPositionRad;
     private double setpointVelocityRadPerSec;
     private double appliedVolts = 0.0;
@@ -43,9 +42,7 @@ public class ElevatorIOSim extends ElevatorIO {
     public void updateInputs(ElevatorIOInputs inputs) {
         // Run closed-loop control
         if (closedLoop) {
-            var pid = usePositionControl
-                    ? pidController.calculate(metersToRad(sim.getPositionMeters()), setpointPositionRad)
-                    : 0;
+            var pid = pidController.calculate(metersToRad(sim.getPositionMeters()), setpointPositionRad);
             var ff = feedforward.calculateWithVelocities(lastVelocitySetpointRadPerSec, setpointVelocityRadPerSec);
             lastVelocitySetpointRadPerSec = setpointVelocityRadPerSec;
             appliedVolts = ff + pid;
@@ -102,10 +99,9 @@ public class ElevatorIOSim extends ElevatorIO {
     }
 
     @Override
-    public void setClosedLoop(double positionRad, double velocityRadPerSec, boolean usePositionControl) {
+    public void setClosedLoop(double positionRad, double velocityRadPerSec) {
         if (!emergencyStopped) {
             closedLoop = true;
-            this.usePositionControl = usePositionControl;
             setpointPositionRad = positionRad;
             setpointVelocityRadPerSec = velocityRadPerSec;
         }
