@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
+import frc.robot.subsystems.drive.DriveConstants;
 import lombok.RequiredArgsConstructor;
 
 import java.util.function.Supplier;
@@ -95,7 +96,7 @@ public class FieldLocations {
 
     // See notes above, also accounts for robot size
     public static Pose2d getAprilTagPoseAdjusted(ReefZoneSide reefZoneSide) {
-        return reefZoneSide.tagPose.get().plus(new Transform2d(Units.inchesToMeters(17.25), 0, new Rotation2d()));
+        return reefZoneSide.tagPose.get().plus(new Transform2d(Units.inchesToMeters(DriveConstants.driveConfig.bumperLengthMeters()), 0, new Rotation2d()));
     }
 
     private static Pose2d getAprilTagPoseSide(int side) {

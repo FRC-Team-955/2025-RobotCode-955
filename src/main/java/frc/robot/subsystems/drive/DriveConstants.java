@@ -20,8 +20,8 @@ public class DriveConstants {
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
     // Ranges: -1 to 1, where 1 is the maximum speed
-    public static final PIDF moveToXY = PIDF.ofPD(0.5, 0);
-    public static final PIDF moveToOmega = PIDF.ofPD(1.5, 0);
+    public static final PIDF moveToXY = PIDF.ofPD(0.7, 0);
+    public static final PIDF moveToOmega = PIDF.ofPD(1.0, 0);
 
     public static final boolean useSetpointGenerator = true;
     public static final boolean disableDriving = false;
