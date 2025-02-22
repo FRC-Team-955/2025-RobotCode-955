@@ -7,7 +7,7 @@ import frc.robot.util.PIDF;
 public class ElevatorConstants {
     /** Gains in radians */
     public static final PIDF gains = switch (Constants.identity) {
-        case COMPBOT -> PIDF.ofPSVAG(0.01, 0.1, 0.17, 0.01, 1.1);
+        case COMPBOT -> PIDF.ofPSVAG(0.03, 0.1, 0.168, 0.01, 1.1);
         case SIMBOT, ALPHABOT -> PIDF.ofPDVAG(0, 0, 0.1, 0.008, 1.5015);
     };
 
