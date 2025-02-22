@@ -65,7 +65,7 @@ public class Superstructure extends SubsystemBaseExt {
     @Getter
     private Goal goal = Goal.IDLE;
 
-    private final Debouncer endEffectorBeamBreakDebouncer = new Debouncer(0.05);
+    private final Debouncer endEffectorBeamBreakDebouncer = new Debouncer(3 * 0.02);
 
     private Command withGoal(Goal goal, Command command) {
         return new WrapperCommand(command) {
@@ -365,8 +365,7 @@ public class Superstructure extends SubsystemBaseExt {
                         Commands.sequence(
                                 Commands.parallel(
                                         setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
-                                        // Go forward 5 inches
-                                        endEffector.moveByAndWaitUntilDone(Units.inchesToMeters(5))
+                                        endEffector.moveByAndWaitUntilDone(Units.inchesToMeters(0.5))
                                 )
                         ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
                 )
