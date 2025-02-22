@@ -13,10 +13,9 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Threads;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -131,6 +130,11 @@ public class Robot extends LoggedRobot {
 
         // Disable controller disconnection alerts since we have our own alert
         DriverStation.silenceJoystickConnectionWarning(true);
+
+        if (RobotBase.isSimulation()) {
+            DriverStationSim.setAllianceStationId(AllianceStationID.Blue1);
+            DriverStationSim.notifyNewData();
+        }
 
         CANLogger.ensureInitialized();
 

@@ -29,8 +29,8 @@ public class AutoAlignLocations {
     private static final Transform2d initialAlignOffset = new Transform2d(0.25, 0, new Rotation2d());
     private static final Transform2d finalAlignOffset = new Transform2d(driveConfig.bumperLengthMeters() / 2.0, 0, new Rotation2d());
 
-    // Very rough - 30 cm and 30 degrees
-    public static final double initialAlignToleranceMeters = 0.3;
+    // Very rough - 50 cm and 30 degrees
+    public static final double initialAlignToleranceMeters = 0.5;
     public static final double initialAlignToleranceRad = 0.5;
     // very little tolerance - 2 cm, 2 deg
     public static final double finalAlignToleranceMeters = 0.04;

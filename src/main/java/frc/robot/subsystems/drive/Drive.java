@@ -339,6 +339,7 @@ public class Drive extends SubsystemBaseExt {
                 Logger.recordOutput("Drive/ChassisSpeeds/SetpointOptimized", prevSetpoint.chassisSpeeds());
             } else {
                 Logger.recordOutput("Drive/SetpointGenerator", false);
+                prevSetpoint = null;
 
                 // Calculate module setpoints
                 ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(closedLoopSetpoint, 0.02);
@@ -533,7 +534,7 @@ public class Drive extends SubsystemBaseExt {
     }
 
     private void runMoveTo(Pose2d pose) {
-        Logger.recordOutput("TargetPose", pose);
+        Logger.recordOutput("Drive/MoveTo/Target", pose);
         var currentPose = robotState.getPose();
 
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(

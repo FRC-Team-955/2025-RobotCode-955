@@ -3,6 +3,8 @@ package frc.robot.factories.auto;
 import choreo.auto.AutoRoutine;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.OperatorDashboard.LocalReefSide;
+import frc.robot.OperatorDashboard.ReefZoneSide;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.util.commands.CommandsExt;
@@ -27,31 +29,43 @@ public class BargeSideAuto {
                 )
         );
 
-        tenOclockLeftTraj.atTime("raise").onTrue(
-                superstructure.scoreCoralDuringAuto(
-                        tenOclockLeftTraj.recentlyDone(),
-                        () -> Elevator.Goal.SCORE_L4
-                ).andThen(CommandsExt.schedule(tenOclockRightTraj.cmd())) // schedule so we don't cancel the current traj
+        tenOclockLeftTraj.atTime("score").onTrue(
+                superstructure.autoAlignAndScore(
+                        true,
+                        () -> ReefZoneSide.LeftBack,
+                        () -> LocalReefSide.Left,
+                        () -> Elevator.Goal.SCORE_L4,
+                        () -> false
+                ).andThen(CommandsExt.schedule(tenOclockRightTraj.cmd().alongWith(superstructure.funnelIntake(true)))) // schedule so subsystems run their default commands and so the command doesn't cancel itself
         );
 
-        tenOclockRightTraj.atTime("raise").onTrue(
-                superstructure.scoreCoralDuringAuto(
-                        tenOclockRightTraj.recentlyDone(),
-                        () -> Elevator.Goal.SCORE_L4
-                ).andThen(CommandsExt.schedule(eightOclockLeftTraj.cmd())) // schedule so we don't cancel the current traj
+        tenOclockRightTraj.atTime("score").onTrue(
+                superstructure.autoAlignAndScore(
+                        true,
+                        () -> ReefZoneSide.LeftBack,
+                        () -> LocalReefSide.Right,
+                        () -> Elevator.Goal.SCORE_L4,
+                        () -> false
+                ).andThen(CommandsExt.schedule(eightOclockLeftTraj.cmd().alongWith(superstructure.funnelIntake(true)))) // schedule so subsystems run their default commands and so the command doesn't cancel itself
         );
 
-        eightOclockLeftTraj.atTime("raise").onTrue(
-                superstructure.scoreCoralDuringAuto(
-                        eightOclockLeftTraj.recentlyDone(),
-                        () -> Elevator.Goal.SCORE_L4
-                ).andThen(CommandsExt.schedule(eightOclockRightTraj.cmd())) // schedule so we don't cancel the current traj
+        eightOclockLeftTraj.atTime("score").onTrue(
+                superstructure.autoAlignAndScore(
+                        true,
+                        () -> ReefZoneSide.LeftFront,
+                        () -> LocalReefSide.Left,
+                        () -> Elevator.Goal.SCORE_L4,
+                        () -> false
+                ).andThen(CommandsExt.schedule(eightOclockRightTraj.cmd().alongWith(superstructure.funnelIntake(true)))) // schedule so subsystems run their default commands and so the command doesn't cancel itself
         );
 
-        eightOclockRightTraj.atTime("raise").onTrue(
-                superstructure.scoreCoralDuringAuto(
-                        eightOclockRightTraj.recentlyDone(),
-                        () -> Elevator.Goal.SCORE_L4
+        eightOclockRightTraj.atTime("score").onTrue(
+                superstructure.autoAlignAndScore(
+                        true,
+                        () -> ReefZoneSide.LeftFront,
+                        () -> LocalReefSide.Right,
+                        () -> Elevator.Goal.SCORE_L4,
+                        () -> false
                 ).andThen(Commands.runOnce(() -> ref.isFinished = true))
         );
 

@@ -152,16 +152,18 @@ public class RobotContainer extends VirtualSubsystem {
 
         driverController.x().whileTrue(superstructure.eject());
 
-        driverController.rightTrigger().whileTrue(superstructure.funnelIntake());
+        driverController.rightTrigger().whileTrue(superstructure.funnelIntake(false));
 //        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
 
         driverController.leftTrigger().onTrue(Commands.either(
                 superstructure.scoreCoralManual(
+                        false,
                         driverController.leftTrigger(),
                         driverController.leftBumper(),
                         operatorDashboard::getCoralScoringElevatorGoal
                 ).asProxy(),
                 superstructure.autoAlignAndScore(
+                        false,
                         operatorDashboard::getSelectedReefZoneSide,
                         operatorDashboard::getSelectedLocalReefSide,
                         operatorDashboard::getCoralScoringElevatorGoal,
