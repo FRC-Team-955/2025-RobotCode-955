@@ -15,7 +15,6 @@ public class ClimberIOSim extends ClimberIO {
             0.004,
             0.0
     );
-    ;
     private double appliedVolts;
 
     public ClimberIOSim() {

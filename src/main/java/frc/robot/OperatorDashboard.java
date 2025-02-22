@@ -1,11 +1,12 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.Alert;
+import frc.robot.FieldLocations.LocalReefSide;
+import frc.robot.FieldLocations.ReefZoneSide;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.util.network.LoggedNetworkBooleanExt;
 import frc.robot.util.network.LoggedNetworkNumberExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
-import frc.robot.FieldLocations.*;
 import lombok.Getter;
 
 import java.util.Arrays;
