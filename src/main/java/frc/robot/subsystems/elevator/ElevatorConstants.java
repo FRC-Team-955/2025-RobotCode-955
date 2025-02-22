@@ -7,7 +7,7 @@ import frc.robot.util.PIDF;
 public class ElevatorConstants {
     /** Gains in radians */
     public static final PIDF gains = switch (Constants.identity) {
-        case COMPBOT -> PIDF.ofPSVAG(0.03, 0.1, 0.168, 0.01, 1.1);
+        case COMPBOT -> PIDF.ofPDSVAG(0.06, 0.03, 0.1, 0.18, 0.03, 1.1);
         case SIMBOT, ALPHABOT -> PIDF.ofPDVAG(0, 0, 0.1, 0.008, 1.5015);
     };
 
@@ -18,7 +18,7 @@ public class ElevatorConstants {
     protected static final double sprocketRadiusMeters = Units.inchesToMeters((1.0 + (9.0 / 32.0)) / 2);
     public static final double drumRadiusMeters = sprocketRadiusMeters * 3; // 3 stages
 
-    public static final double setpointToleranceMeters = Units.inchesToMeters(5);
+    public static final double setpointToleranceMeters = Units.inchesToMeters(1);
 
     public static final double maxHeightMeters = Units.inchesToMeters(67.5);
     public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 2.5);
