@@ -51,9 +51,9 @@ public class Superstructure extends SubsystemBaseExt {
         HANDOFF_WAIT_ELEVATOR,
         HANDOFF_HANDING_OFF,
 
-        SCORE_CORAL_WAIT_ELEVATOR,
-        SCORE_CORAL_WAIT_CONFIRM,
-        SCORE_CORAL_SCORING,
+        MANUAL_SCORE_CORAL_WAIT_ELEVATOR,
+        MANUAL_SCORE_CORAL_WAIT_CONFIRM,
+        MANUAL_SCORE_CORAL_SCORING,
 
         AUTO_SCORE_CORAL_WAIT_INITIAL,
         AUTO_SCORE_CORAL_WAIT_FINAL,
@@ -254,16 +254,16 @@ public class Superstructure extends SubsystemBaseExt {
             Supplier<Elevator.Goal> elevatorGoalSupplier
     ) {
         Command raiseElevator = Commands.parallel(
-                setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
+                setGoal(Goal.MANUAL_SCORE_CORAL_WAIT_ELEVATOR),
                 endEffector.setGoal(EndEffector.RollersGoal.IDLE),
                 elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
         );
         Command waitConfirm = Commands.parallel(
-                setGoal(Goal.SCORE_CORAL_WAIT_CONFIRM),
+                setGoal(Goal.MANUAL_SCORE_CORAL_WAIT_CONFIRM),
                 Commands.waitUntil(forwardCondition)
         );
         Command score = Commands.parallel(
-                setGoal(Goal.SCORE_CORAL_SCORING),
+                setGoal(Goal.MANUAL_SCORE_CORAL_SCORING),
                 endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
                 elevator.setGoal(elevatorGoalSupplier),
                 duringAuto
