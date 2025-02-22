@@ -235,7 +235,7 @@ public class Elevator extends SubsystemBaseExt {
             Logger.recordOutput("Elevator/ClosedLoop", true);
             Logger.recordOutput("Elevator/UsingGentleProfile", usingGentleProfile);
             Logger.recordOutput("Elevator/UsingRealStateAsCurrent", usingRealStateAsCurrent);
-            Logger.recordOutput("Elevator/usingPositionControl", usingPositionControl);
+            Logger.recordOutput("Elevator/UsingPositionControl", usingPositionControl);
 
             Logger.recordOutput("Elevator/Setpoint/GoalPositionMeters", setpointMeters);
             Logger.recordOutput("Elevator/Setpoint/PositionMeters", previousStateMeters.position);
