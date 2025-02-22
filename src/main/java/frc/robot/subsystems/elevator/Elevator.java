@@ -263,7 +263,9 @@ public class Elevator extends SubsystemBaseExt {
     @AutoLogOutput(key = "Elevator/AtGoal")
     private boolean atGoal() {
         // if goal.setpointMeters is null, will be false and won't crash
-        return goal.setpointMeters != null && Math.abs(goal.setpointMeters.getAsDouble() - getPositionMeters()) <= setpointToleranceMeters;
+        return goal.setpointMeters != null
+                && Math.abs(goal.setpointMeters.getAsDouble() - getPositionMeters()) <= setpointPositionToleranceMeters
+                && Math.abs(getVelocityMetersPerSec()) <= setpointVelocityToleranceMetersPerSec;
     }
 
     public Command waitUntilAtGoal() {
