@@ -391,18 +391,13 @@ public class Superstructure extends SubsystemBaseExt {
                 ),
                 // Drive to secondary position while raising elevator
                 Commands.race(
-                        drive.moveTo(() -> getSecondaryAlignPose(reefSideSupplier.get(), sideSupplier.get())),
+                        drive.moveTo(() -> getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get())),
                         Commands.parallel(
                                 setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
                                 endEffector.setGoal(EndEffector.RollersGoal.IDLE),
                                 elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier),
-                                waitUntilAtSecondaryPosition(reefSideSupplier, sideSupplier)
+                                waitUntilAtFinalPosition(reefSideSupplier, sideSupplier)
                         )
-                ),
-                // Drive to final position and score
-                Commands.race(
-                        drive.moveTo(() -> getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get())),
-                        waitUntilAtFinalPosition(reefSideSupplier, sideSupplier)
                 ),
                 // don't allow cancelling
                 CommandsExt.schedule(
