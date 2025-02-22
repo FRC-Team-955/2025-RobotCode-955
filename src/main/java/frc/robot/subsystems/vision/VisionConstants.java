@@ -77,10 +77,10 @@ public class VisionConstants {
                     .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-60)))
     );
     public static final Transform3d reefCamRobotToCamera = new Transform3d(
-            Units.inchesToMeters(-7.2), Units.inchesToMeters(8.8), Units.inchesToMeters(26.6),
-            // Rotation order matters
-            new Rotation3d(0.0, 0.0, Units.degreesToRadians(-170))
-                    .rotateBy(new Rotation3d(0.0, Units.degreesToRadians(-35), 0.0))
+            Units.inchesToMeters(-6.7), Units.inchesToMeters(8.8), Units.inchesToMeters(25.5),
+//             Rotation order matters
+            new Rotation3d(0.0, Units.degreesToRadians(35), 0.0)
+                    .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-170)))
     );
 
     public static AprilTagIO[] createAprilTagIO() {
