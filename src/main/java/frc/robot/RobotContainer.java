@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.factories.auto.BargeSideAuto;
+import frc.robot.factories.auto.ProcessorSideAuto;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
@@ -76,6 +77,7 @@ public class RobotContainer extends VirtualSubsystem {
 
         autoChooser.addOption("None", Commands.none());
         autoChooser.addOption("Barge Side", BargeSideAuto.get(factory.newRoutine("Barge Side")));
+        autoChooser.addOption("Processor Side", ProcessorSideAuto.get(factory.newRoutine("Processor Side")));
 
         autoChooser.addOption("Characterization", Commands.deferredProxy(characterizationChooser::get));
     }
