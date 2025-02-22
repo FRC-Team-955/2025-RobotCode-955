@@ -229,11 +229,13 @@ public class Elevator extends SubsystemBaseExt {
             var setpointPositionRad = metersToRad(previousStateMeters.position);
             var setpointVelocityRadPerSec = metersToRad(previousStateMeters.velocity);
 
-            io.setClosedLoop(setpointPositionRad, setpointVelocityRadPerSec);
+            boolean usingPositionControl = Math.abs(velocityMetersPerSec) < minVelocityForPositionControlMetersPerSecond;
+            io.setClosedLoop(setpointPositionRad, setpointVelocityRadPerSec, usingPositionControl);
 
             Logger.recordOutput("Elevator/ClosedLoop", true);
             Logger.recordOutput("Elevator/UsingGentleProfile", usingGentleProfile);
             Logger.recordOutput("Elevator/UsingRealStateAsCurrent", usingRealStateAsCurrent);
+            Logger.recordOutput("Elevator/usingPositionControl", usingPositionControl);
 
             Logger.recordOutput("Elevator/Setpoint/GoalPositionMeters", setpointMeters);
             Logger.recordOutput("Elevator/Setpoint/PositionMeters", previousStateMeters.position);
