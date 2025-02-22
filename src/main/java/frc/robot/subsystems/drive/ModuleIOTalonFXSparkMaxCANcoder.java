@@ -241,7 +241,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
                 .mapToDouble(Units::rotationsToRadians)
                 .toArray();
         inputs.odometryTurnPositionsRad = turnPositionQueue.stream()
-                .mapToDouble(Units::rotationsToRadians)
+                .mapToDouble((Double value) -> value)
                 .toArray();
 
         timestampQueue.clear();
