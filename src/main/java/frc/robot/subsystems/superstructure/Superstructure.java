@@ -1,15 +1,16 @@
 package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.FieldLocations;
 import frc.robot.OperatorDashboard;
+import frc.robot.OperatorDashboard.LocalReefSide;
+import frc.robot.OperatorDashboard.ReefZoneSide;
 import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
@@ -21,9 +22,10 @@ import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
-import static frc.robot.FieldLocations.*;
+import static frc.robot.subsystems.superstructure.AutoAlignLocations.*;
 import static frc.robot.subsystems.superstructure.SuperstructureConstants.createIO;
 
 public class Superstructure extends SubsystemBaseExt {
@@ -53,6 +55,10 @@ public class Superstructure extends SubsystemBaseExt {
         SCORE_CORAL_WAIT_CONFIRM,
         SCORE_CORAL_SCORING,
 
+        AUTO_SCORE_CORAL_WAIT_INITIAL,
+        AUTO_SCORE_CORAL_WAIT_FINAL,
+        AUTO_SCORE_CORAL_SCORING,
+
         DESCORE_ALGAE_WAIT_ELEVATOR,
         DESCORE_ALGAE_DESCORING,
 
@@ -64,6 +70,8 @@ public class Superstructure extends SubsystemBaseExt {
 
     @Getter
     private Goal goal = Goal.IDLE;
+
+    private final AutoAlign autoAlign = new AutoAlign();
 
     private final Debouncer endEffectorBeamBreakDebouncerShort = new Debouncer(3 * 0.02);
     private final Debouncer endEffectorBeamBreakDebouncerLong = new Debouncer(0.15);
@@ -122,16 +130,6 @@ public class Superstructure extends SubsystemBaseExt {
     @Override
     public void periodicAfterCommands() {
         Logger.recordOutput("Superstructure/Goal", goal);
-//        Logger.recordOutput("Superstructure/AprilTagPose6", FieldLocations.getAprilTagPose(6));
-//        Logger.recordOutput("Superstructure/AprilTagPoseAdjusted", FieldLocations.getAprilTagPoseAdjusted(0));
-//        Logger.recordOutput("Superstructure/PrimaryAlignPose", FieldLocations.getPrimaryAlignPose(0));
-        Logger.recordOutput("Superstructure/AtPrimaryPose", FieldLocations.getDistance(robotState.getPose(), FieldLocations.getPrimaryAlignPose(ReefZoneSide.LEFT_FRONT, LocalReefSide.LEFT)));
-        Logger.recordOutput("Superstructure/AtSecondaryPose", getDistance(robotState.getPose(), getSecondaryAlignPose(ReefZoneSide.LEFT_FRONT, LocalReefSide.LEFT)) < secondaryAlignToleranceMeters
-                && Math.abs(getAngle(robotState.getPose(), getSecondaryAlignPose(ReefZoneSide.LEFT_FRONT, LocalReefSide.LEFT)).getRadians()) < secondaryAlignToleranceRad
-        );
-//        Logger.recordOutput("Superstructure/SecondaryAlignPose", FieldLocations.getSecondaryAlignPose(0, true));
-//        Logger.recordOutput("Superstructure/FinalAlignPose", FieldLocations.getFinalAlignPose(0, true));
-        Logger.recordOutput("Superstructure/Alignable", FieldLocations.alignable(ReefZoneSide.LEFT_FRONT, robotState.getPose()));
     }
 
 //    private boolean intakeRangeTriggered() {
@@ -175,32 +173,6 @@ public class Superstructure extends SubsystemBaseExt {
                 ifIngored,
                 Commands.waitUntil(() -> !endEffectorTriggeredShort()),
                 operatorDashboard.ignoreEndEffectorBeamBreak::get
-        );
-    }
-
-    public Command waitUntilAtPrimaryPosition(Supplier<ReefZoneSide> reefSideSupplier, Supplier<LocalReefSide> sideSupplier) {
-        // This should not require the superstructure because we don't want to conflict with setGoal
-        return Commands.waitUntil(
-                () -> getDistance(robotState.getPose(), getPrimaryAlignPose(reefSideSupplier.get(), sideSupplier.get())) < primaryAlignToleranceMeters
-                        && Math.abs(getAngle(robotState.getPose(), getPrimaryAlignPose(reefSideSupplier.get(), sideSupplier.get())).getRadians()) < primaryAlignToleranceRad
-        );
-    }
-
-    public Command waitUntilAtSecondaryPosition(Supplier<ReefZoneSide> reefSideSupplier, Supplier<LocalReefSide> sideSupplier) {
-        // This should not require the superstructure because we don't want to conflict with setGoal
-        return Commands.waitUntil(
-                () -> getDistance(robotState.getPose(), getSecondaryAlignPose(reefSideSupplier.get(), sideSupplier.get())) < secondaryAlignToleranceMeters
-                        && Math.abs(getAngle(robotState.getPose(), getSecondaryAlignPose(reefSideSupplier.get(), sideSupplier.get())).getRadians()) < secondaryAlignToleranceRad
-        );
-    }
-
-    public Command waitUntilAtFinalPosition(Supplier<ReefZoneSide> reefSideSupplier, Supplier<LocalReefSide> sideSupplier) {
-        // This should not require the superstructure because we don't want to conflict with setGoal
-        return Commands.waitUntil(
-                () -> getDistance(robotState.getPose(), getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get())) < finalAlignToleranceMeters
-                        && Math.abs(getAngle(robotState.getPose(), getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get())).getRadians()) < finalAlignToleranceRad
-                        && Math.abs(drive.getMeasuredChassisLinearVelocityMetersPerSec()) < finalAlignToleranceMetersPerSecond
-                        && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < finalAlignToleranceRadPerSecond
         );
     }
 
@@ -279,7 +251,7 @@ public class Superstructure extends SubsystemBaseExt {
 
     /** NOT FOR TELEOP USE */
     public Command scoreCoralDuringAuto(
-            Trigger forwardTrigger,
+            BooleanSupplier forwardCondition,
             Supplier<Elevator.Goal> elevatorGoalSupplier
     ) {
 
@@ -291,7 +263,7 @@ public class Superstructure extends SubsystemBaseExt {
                 ),
                 Commands.parallel(
                         setGoal(Goal.SCORE_CORAL_WAIT_CONFIRM),
-                        Commands.waitUntil(forwardTrigger)
+                        Commands.waitUntil(forwardCondition)
                 ),
                 Commands.parallel(
                         setGoal(Goal.SCORE_CORAL_SCORING),
@@ -304,8 +276,8 @@ public class Superstructure extends SubsystemBaseExt {
     }
 
     public Command scoreCoralManual(
-            Trigger forwardTrigger,
-            Trigger cancelTrigger,
+            BooleanSupplier forwardCondition,
+            BooleanSupplier cancelCondition,
             Supplier<Elevator.Goal> elevatorGoalSupplier
     ) {
         Command cmd = Commands.sequence(
@@ -316,7 +288,7 @@ public class Superstructure extends SubsystemBaseExt {
                 ),
                 Commands.parallel(
                         setGoal(Goal.SCORE_CORAL_WAIT_CONFIRM),
-                        Commands.waitUntil(forwardTrigger)
+                        Commands.waitUntil(forwardCondition)
                 ),
                 // Don't allow canceling
                 CommandsExt.schedule(
@@ -335,7 +307,7 @@ public class Superstructure extends SubsystemBaseExt {
         return CommandsExt.onlyIf(
                 () -> endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                 CommandsExt.cancelOnTrigger(
-                        cancelTrigger,
+                        cancelCondition,
                         cmd
                 )
         );
@@ -384,23 +356,94 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
+    private boolean isAtPoseWithTolerance(Pose2d desiredPose, double linearToleranceMeters, double angularToleranceRad) {
+        Pose2d currentPose = robotState.getPose();
+        return desiredPose.getTranslation().getDistance(currentPose.getTranslation()) < linearToleranceMeters
+                && Math.abs(desiredPose.getRotation().minus(currentPose.getRotation()).getRadians()) < angularToleranceRad;
+    }
+
+    public Command waitUntilAtInitialPosition(Supplier<ReefZoneSide> reefSideSupplier, Supplier<LocalReefSide> sideSupplier) {
+        // This should not require the superstructure because we don't want to conflict with setGoal
+        return Commands.waitUntil(() -> isAtPoseWithTolerance(
+                getInitialAlignPose(reefSideSupplier.get(), sideSupplier.get()),
+                initialAlignToleranceMeters,
+                initialAlignToleranceRad
+        ));
+    }
+
+    public Command waitUntilAtFinalPosition(Supplier<ReefZoneSide> reefSideSupplier, Supplier<LocalReefSide> sideSupplier) {
+        // This should not require the superstructure because we don't want to conflict with setGoal
+        return Commands.waitUntil(() -> isAtPoseWithTolerance(
+                        getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get()),
+                        finalAlignToleranceMeters,
+                        finalAlignToleranceRad
+                )
+                        && Math.abs(drive.getMeasuredChassisLinearVelocityMetersPerSec()) < finalAlignToleranceMetersPerSecond
+                        && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < finalAlignToleranceRadPerSecond
+        );
+    }
+
+    /** NOT FOR TELEOP USE */
+    public Command autoAlignAndScoreDuringAuto(
+            ReefZoneSide reefZoneSide,
+            LocalReefSide localSide,
+            Elevator.Goal elevatorGoal
+    ) {
+        return Commands.sequence(
+                // Drive to primary position and intake
+                Commands.race(
+                        drive.moveTo(() -> getInitialAlignPose(reefZoneSide, localSide)),
+                        Commands.parallel(
+                                setGoal(Goal.AUTO_SCORE_CORAL_WAIT_INITIAL),
+                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                elevator.setGoal(() -> Elevator.Goal.STOW),
+                                waitUntilAtInitialPosition(() -> reefZoneSide, () -> localSide)
+                        )
+                ),
+                // Drive to secondary position while raising elevator and scoring once within tolerance
+                Commands.race(
+                        drive.moveTo(() -> getFinalAlignPose(reefZoneSide, localSide)),
+                        Commands.sequence(
+                                Commands.parallel(
+                                        setGoal(Goal.AUTO_SCORE_CORAL_WAIT_FINAL),
+                                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                        elevator.setGoalAndWaitUntilAtGoal(() -> elevatorGoal),
+                                        waitUntilAtFinalPosition(() -> reefZoneSide, () -> localSide)
+                                ),
+                                Commands.parallel(
+                                        setGoal(Goal.AUTO_SCORE_CORAL_SCORING),
+                                        endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
+                                        waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
+                                ),
+                                // Wait for coral to settle
+                                Commands.waitSeconds(0.75)
+                        )
+                )
+        );
+    }
+
     public Command autoAlignAndScore(
             Supplier<ReefZoneSide> reefSideSupplier,
             Supplier<LocalReefSide> sideSupplier,
             Supplier<Elevator.Goal> elevatorGoalSupplier,
-            Trigger cancelTrigger
+            BooleanSupplier cancelCondition
     ) {
         Command cmd = Commands.sequence(
                 // Drive to primary position and intake
                 Commands.race(
-                        drive.moveTo(() -> getPrimaryAlignPose(reefSideSupplier.get(), sideSupplier.get())),
-                        waitUntilAtPrimaryPosition(reefSideSupplier, sideSupplier)
+                        drive.moveTo(() -> getInitialAlignPose(reefSideSupplier.get(), sideSupplier.get())),
+                        Commands.parallel(
+                                setGoal(Goal.AUTO_SCORE_CORAL_WAIT_INITIAL),
+                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                elevator.setGoal(() -> Elevator.Goal.STOW),
+                                waitUntilAtInitialPosition(reefSideSupplier, sideSupplier)
+                        )
                 ),
                 // Drive to secondary position while raising elevator
                 Commands.race(
                         drive.moveTo(() -> getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get())),
                         Commands.parallel(
-                                setGoal(Goal.SCORE_CORAL_WAIT_ELEVATOR),
+                                setGoal(Goal.AUTO_SCORE_CORAL_WAIT_FINAL),
                                 endEffector.setGoal(EndEffector.RollersGoal.IDLE),
                                 elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier),
                                 waitUntilAtFinalPosition(reefSideSupplier, sideSupplier)
@@ -412,14 +455,14 @@ public class Superstructure extends SubsystemBaseExt {
                                 drive.moveTo(() -> getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get())),
                                 Commands.sequence(
                                         Commands.parallel(
-                                                setGoal(Goal.SCORE_CORAL_SCORING),
+                                                setGoal(Goal.AUTO_SCORE_CORAL_SCORING),
                                                 endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
                                                 waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
                                         ),
                                         // Wait for coral to settle
                                         Commands.waitSeconds(0.75)
-                                ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
-                        )
+                                )
+                        ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
                 )
         );
         return CommandsExt.onlyIf(
@@ -427,7 +470,7 @@ public class Superstructure extends SubsystemBaseExt {
                 () -> (endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
                         && alignable(reefSideSupplier.get(), RobotState.get().getPose()),
                 CommandsExt.cancelOnTrigger(
-                        cancelTrigger,
+                        cancelCondition,
                         cmd
                 )
         );

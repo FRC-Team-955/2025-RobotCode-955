@@ -1,13 +1,12 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.Alert;
-import frc.robot.FieldLocations.LocalReefSide;
-import frc.robot.FieldLocations.ReefZoneSide;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.util.network.LoggedNetworkBooleanExt;
 import frc.robot.util.network.LoggedNetworkNumberExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -36,9 +35,9 @@ public class OperatorDashboard extends VirtualSubsystem {
     private final Map<AlgaeDescoringLevel, LoggedNetworkBooleanExt> algaeDescoringLevels = generateTogglesForEnum("AlgaeDescoringLevels", AlgaeDescoringLevel.values());
 
     @Getter
-    private ReefZoneSide selectedReefZoneSide = ReefZoneSide.LEFT_FRONT;
+    private ReefZoneSide selectedReefZoneSide = ReefZoneSide.LeftFront;
     @Getter
-    private LocalReefSide selectedLocalReefSide = LocalReefSide.LEFT;
+    private LocalReefSide selectedLocalReefSide = LocalReefSide.Left;
     @Getter
     private CoralScoringLevel selectedCoralScoringLevel = CoralScoringLevel.L4;
     @Getter
@@ -92,6 +91,24 @@ public class OperatorDashboard extends VirtualSubsystem {
             case L2 -> Elevator.Goal.DESCORE_L2;
             case L3 -> Elevator.Goal.DESCORE_L3;
         };
+    }
+
+    @RequiredArgsConstructor
+    public enum ReefZoneSide {
+        LeftFront(0),
+        MiddleFront(1),
+        RightFront(2),
+        RightBack(3),
+        MiddleBack(4),
+        LeftBack(5);
+
+        public final int aprilTagOffset;
+    }
+
+    @RequiredArgsConstructor
+    public enum LocalReefSide {
+        Left,
+        Right,
     }
 
     public enum CoralScoringLevel {
