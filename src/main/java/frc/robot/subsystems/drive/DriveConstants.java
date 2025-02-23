@@ -70,7 +70,7 @@ public class DriveConstants {
         case COMPBOT -> new ModuleConfig(
                 PIDF.ofPDSV(
                         0.0, 0.0,
-                        0.14, 0.12
+                        0.183, 0.1205
                 ),
                 PIDF.ofPD(2.2, 0.04),
                 Mk4iGearRatios.L2,

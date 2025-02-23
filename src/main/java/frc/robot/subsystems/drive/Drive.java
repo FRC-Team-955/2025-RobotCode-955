@@ -62,7 +62,8 @@ public class Drive extends SubsystemBaseExt {
         DRIVE_JOYSTICK(ControlMode.CLOSED_LOOP_OPTIMIZED),
         DRIVE_JOYSTICK_ASSISTED(ControlMode.CLOSED_LOOP_OPTIMIZED),
         MOVE_TO(ControlMode.CLOSED_LOOP_OPTIMIZED),
-        FOLLOW_TRAJECTORY(ControlMode.CLOSED_LOOP_DIRECT);
+        FOLLOW_TRAJECTORY(ControlMode.CLOSED_LOOP_DIRECT),
+        VELOCITY_ROBOT_RELATIVE(ControlMode.CLOSED_LOOP_OPTIMIZED);
 
         public final ControlMode controlMode;
     }
@@ -265,7 +266,10 @@ public class Drive extends SubsystemBaseExt {
             }
         });
 
-        moveToXYTunable.ifChanged(hashCode(), gains -> {moveToX = gains.toPID(); moveToY = gains.toPID();});
+        moveToXYTunable.ifChanged(hashCode(), gains -> {
+            moveToX = gains.toPID();
+            moveToY = gains.toPID();
+        });
         moveToOmegaTunable.ifChanged(hashCode(), gains -> moveToOmega = gains.toPIDWrapRadians());
 
         Logger.recordOutput("Drive/Goal", goal);
@@ -632,6 +636,13 @@ public class Drive extends SubsystemBaseExt {
                 runDrive(linearVelocity, omegaMagnitude);
             }
         }).withName("Drive Joystick");
+    }
+
+    public Command runRobotRelative(Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
+        return withGoal(
+                Goal.VELOCITY_ROBOT_RELATIVE,
+                run(() -> closedLoopSetpoint = chassisSpeedsSupplier.get())
+        ).withName("Drive Run Velocity");
     }
 
     public Command feedforwardCharacterization() {

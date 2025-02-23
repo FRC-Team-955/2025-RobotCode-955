@@ -397,8 +397,11 @@ public class Superstructure extends SubsystemBaseExt {
                 endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
                 waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
         );
-        // Wait for coral to settle
-        Command finalize = Commands.waitSeconds(scoreCoralSettleSeconds);
+        // Wait for coral to settle and send the elevator back down
+        Command finalize = Commands.parallel(
+                elevator.setGoal(() -> Elevator.Goal.STOW),
+                Commands.waitSeconds(scoreCoralSettleSeconds)
+        );
         if (duringAuto) {
             return Commands.sequence(
                     driveInitial,
