@@ -2,7 +2,9 @@ package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -331,7 +333,10 @@ public class Superstructure extends SubsystemBaseExt {
                 endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeFinalizeInches.get()))
         );
         if (duringAuto) {
-            return Commands.sequence(intake, finalize);
+            return CommandsExt.onlyIf(
+                    () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
+                    Commands.sequence(intake, finalize)
+            );
         } else {
             return CommandsExt.onlyIf(
                     () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
