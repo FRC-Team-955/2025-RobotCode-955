@@ -169,6 +169,7 @@ public class RobotContainer extends VirtualSubsystem {
                         operatorDashboard::getSelectedReefZoneSide,
                         operatorDashboard::getSelectedLocalReefSide,
                         operatorDashboard::getCoralScoringElevatorGoal,
+                        driverController.leftTrigger(),
                         driverController.leftBumper()
                 ).asProxy(),
                 operatorDashboard.manualScoring::get

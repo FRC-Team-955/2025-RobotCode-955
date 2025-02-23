@@ -382,10 +382,11 @@ public class Superstructure extends SubsystemBaseExt {
             Supplier<ReefZoneSide> reefSideSupplier,
             Supplier<LocalReefSide> sideSupplier,
             Supplier<Elevator.Goal> elevatorGoalSupplier,
+            BooleanSupplier forceCondition,
             BooleanSupplier cancelCondition
     ) {
         // Drive to initial position
-        Command driveInitial = Commands.race(
+        Command driveInitialAndWait = Commands.race(
                 drive.moveTo(() -> getInitialAlignPose(reefSideSupplier.get(), sideSupplier.get())),
                 Commands.parallel(
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_INITIAL),
@@ -407,6 +408,8 @@ public class Superstructure extends SubsystemBaseExt {
                         elevator.waitUntilAtGoal()
                 )
         );
+        // Don't allow forcing for three seconds
+        Command waitForForce = Commands.waitSeconds(3).andThen(Commands.waitUntil(forceCondition));
         Command score = Commands.parallel(
                 setGoal(Goal.AUTO_SCORE_CORAL_SCORING),
                 endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
@@ -419,11 +422,14 @@ public class Superstructure extends SubsystemBaseExt {
         );
         if (duringAuto) {
             return Commands.sequence(
-                    driveInitial,
+                    driveInitialAndWait,
                     Commands.race(
                             driveFinal.get(),
                             Commands.sequence(
-                                    waitFinalAndElevator,
+                                    Commands.race(
+                                            waitFinalAndElevator,
+                                            waitForForce
+                                    ),
                                     score,
                                     finalize
                             )
@@ -437,10 +443,11 @@ public class Superstructure extends SubsystemBaseExt {
                     CommandsExt.cancelOnTrigger(
                             cancelCondition,
                             Commands.sequence(
-                                    driveInitial,
+                                    driveInitialAndWait,
                                     Commands.race(
                                             driveFinal.get(),
-                                            waitFinalAndElevator
+                                            waitFinalAndElevator,
+                                            waitForForce
                                     ),
                                     // don't allow cancelling
                                     CommandsExt.schedule(Commands.race(

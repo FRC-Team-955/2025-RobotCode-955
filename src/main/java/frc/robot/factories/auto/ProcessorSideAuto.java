@@ -38,6 +38,7 @@ public class ProcessorSideAuto {
                         () -> ReefZoneSide.RightBack,
                         () -> LocalReefSide.Right,
                         () -> Elevator.Goal.SCORE_L4,
+                        () -> false,
                         () -> false
                         // schedule so subsystems run their default commands and so the command doesn't cancel itself
                 ).andThen(CommandsExt.schedule(twoOclockRightStationTraj.cmd().alongWith(superstructure.funnelIntake(true, false))))
@@ -56,6 +57,7 @@ public class ProcessorSideAuto {
                         () -> ReefZoneSide.RightBack,
                         () -> LocalReefSide.Left,
                         () -> Elevator.Goal.SCORE_L4,
+                        () -> false,
                         () -> false
                         // schedule so subsystems run their default commands and so the command doesn't cancel itself
                 ),
@@ -75,6 +77,7 @@ public class ProcessorSideAuto {
                         () -> ReefZoneSide.RightFront,
                         () -> LocalReefSide.Right,
                         () -> Elevator.Goal.SCORE_L4,
+                        () -> false,
                         () -> false
                         // schedule so subsystems run their default commands and so the command doesn't cancel itself
                 ),
@@ -94,6 +97,7 @@ public class ProcessorSideAuto {
                         () -> ReefZoneSide.RightFront,
                         () -> LocalReefSide.Left,
                         () -> Elevator.Goal.SCORE_L4,
+                        () -> false,
                         () -> false
                 ).andThen(Commands.runOnce(() -> ref.isFinished = true))
         ));

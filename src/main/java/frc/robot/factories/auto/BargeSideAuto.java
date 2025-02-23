@@ -35,6 +35,7 @@ public class BargeSideAuto {
                         () -> ReefZoneSide.LeftBack,
                         () -> LocalReefSide.Left,
                         () -> Elevator.Goal.SCORE_L4,
+                        () -> false,
                         () -> false
                 ).andThen(CommandsExt.schedule(tenOclockRightTraj.cmd().alongWith(superstructure.funnelIntake(true, false)))) // schedule so subsystems run their default commands and so the command doesn't cancel itself
         );
@@ -45,6 +46,7 @@ public class BargeSideAuto {
                         () -> ReefZoneSide.LeftBack,
                         () -> LocalReefSide.Right,
                         () -> Elevator.Goal.SCORE_L4,
+                        () -> false,
                         () -> false
                 ).andThen(CommandsExt.schedule(eightOclockLeftTraj.cmd().alongWith(superstructure.funnelIntake(true, false)))) // schedule so subsystems run their default commands and so the command doesn't cancel itself
         );
@@ -55,6 +57,7 @@ public class BargeSideAuto {
                         () -> ReefZoneSide.LeftFront,
                         () -> LocalReefSide.Left,
                         () -> Elevator.Goal.SCORE_L4,
+                        () -> false,
                         () -> false
                 ).andThen(CommandsExt.schedule(eightOclockRightTraj.cmd().alongWith(superstructure.funnelIntake(true, false)))) // schedule so subsystems run their default commands and so the command doesn't cancel itself
         );
@@ -65,6 +68,7 @@ public class BargeSideAuto {
                         () -> ReefZoneSide.LeftFront,
                         () -> LocalReefSide.Right,
                         () -> Elevator.Goal.SCORE_L4,
+                        () -> false,
                         () -> false
                 ).andThen(Commands.runOnce(() -> ref.isFinished = true))
         );
