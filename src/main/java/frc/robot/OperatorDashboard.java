@@ -33,7 +33,6 @@ public class OperatorDashboard extends VirtualSubsystem {
     private final Map<ReefZoneSide, LoggedNetworkBooleanExt> reefZoneSides = generateTogglesForEnum("ReefZoneSides", ReefZoneSide.values());
     private final Map<LocalReefSide, LoggedNetworkBooleanExt> localReefSides = generateTogglesForEnum("LocalReefSides", LocalReefSide.values());
     private final Map<CoralScoringLevel, LoggedNetworkBooleanExt> coralScoringLevels = generateTogglesForEnum("CoralScoringLevels", CoralScoringLevel.values());
-    private final Map<AlgaeDescoringLevel, LoggedNetworkBooleanExt> algaeDescoringLevels = generateTogglesForEnum("AlgaeDescoringLevels", AlgaeDescoringLevel.values());
 
     @Getter
     private ReefZoneSide selectedReefZoneSide = ReefZoneSide.LeftFront;
@@ -41,8 +40,6 @@ public class OperatorDashboard extends VirtualSubsystem {
     private LocalReefSide selectedLocalReefSide = LocalReefSide.Left;
     @Getter
     private CoralScoringLevel selectedCoralScoringLevel = CoralScoringLevel.L4;
-    @Getter
-    private AlgaeDescoringLevel selectedAlgaeDescoringLevel = AlgaeDescoringLevel.L3;
 
     private final Alert coastOverrideAlert = new Alert("Coast override is enabled.", Alert.AlertType.kWarning);
     private final Alert coralStuckInRobotModeAlert = new Alert("Coral stuck in robot mode is enabled.", Alert.AlertType.kWarning);
@@ -96,7 +93,6 @@ public class OperatorDashboard extends VirtualSubsystem {
             handleEnumToggles(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);
             handleEnumToggles(coralScoringLevels, selectedCoralScoringLevel, selectNew -> selectedCoralScoringLevel = selectNew);
         }
-        handleEnumToggles(algaeDescoringLevels, selectedAlgaeDescoringLevel, selectNew -> selectedAlgaeDescoringLevel = selectNew);
 
     }
 
@@ -110,9 +106,9 @@ public class OperatorDashboard extends VirtualSubsystem {
     }
 
     public Elevator.Goal getAlgaeDescoringElevatorGoal() {
-        return switch (selectedAlgaeDescoringLevel) {
-            case L2 -> Elevator.Goal.DESCORE_L2;
-            case L3 -> Elevator.Goal.DESCORE_L3;
+        return switch (selectedReefZoneSide) {
+            case LeftFront, RightFront, MiddleBack -> Elevator.Goal.DESCORE_L2;
+            case MiddleFront, RightBack, LeftBack -> Elevator.Goal.DESCORE_L3;
         };
     }
 
@@ -139,11 +135,6 @@ public class OperatorDashboard extends VirtualSubsystem {
         L2,
         L3,
         L4,
-    }
-
-    public enum AlgaeDescoringLevel {
-        L2,
-        L3,
     }
 
     private static <E extends Enum<E>> void updateToggles(
