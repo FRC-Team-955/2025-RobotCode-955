@@ -4,7 +4,7 @@ import frc.robot.Constants;
 
 public class LoggedTunableNumber {
     private final LoggedNetworkNumberExt inner;
-    private double defaultValue;
+    private final double defaultValue;
 
     public LoggedTunableNumber(String key, double defaultValue) {
         if (Constants.tuningMode) {
