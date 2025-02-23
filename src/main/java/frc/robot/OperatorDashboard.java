@@ -1,6 +1,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.GenericHID;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.util.network.LoggedNetworkBooleanExt;
 import frc.robot.util.network.LoggedNetworkNumberExt;
@@ -48,6 +49,9 @@ public class OperatorDashboard extends VirtualSubsystem {
     private final Alert manualScoringAlert = new Alert("Manual scoring is enabled.", Alert.AlertType.kWarning);
     private final Alert ignoreEndEffectorBeamBreakAlert = new Alert("Ignore end effector beam break is enabled.", Alert.AlertType.kWarning);
 
+    private final OperatorKeypad operatorKeypad = new OperatorKeypad();
+    private final Alert operatorKeypadDisconnectedAlert = new Alert("Operator keypad is not connected!", Alert.AlertType.kWarning);
+
     private static OperatorDashboard instance;
 
     public static OperatorDashboard get() {
@@ -71,10 +75,26 @@ public class OperatorDashboard extends VirtualSubsystem {
         manualScoringAlert.set(manualScoring.get());
         ignoreEndEffectorBeamBreakAlert.set(ignoreEndEffectorBeamBreak.get());
 
-        handleEnumToggles(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
-        handleEnumToggles(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);
-        handleEnumToggles(coralScoringLevels, selectedCoralScoringLevel, selectNew -> selectedCoralScoringLevel = selectNew);
+        if (operatorKeypad.isConnected()) {
+            operatorKeypadDisconnectedAlert.set(false);
+
+            ReefZoneSide newReefZoneSide = operatorKeypad.getReefZoneSide();
+            if (newReefZoneSide != null) selectedReefZoneSide = newReefZoneSide;
+
+            CoralScoringLevel newCoralScoringLevel = operatorKeypad.getCoralScoringLevel();
+            if (newCoralScoringLevel != null) selectedCoralScoringLevel = newCoralScoringLevel;
+
+            LocalReefSide newLocalReefSide = operatorKeypad.getLocalReefSide();
+            if (newLocalReefSide != null) selectedLocalReefSide = newLocalReefSide;
+        } else {
+            operatorKeypadDisconnectedAlert.set(true);
+
+            handleEnumToggles(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
+            handleEnumToggles(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);
+            handleEnumToggles(coralScoringLevels, selectedCoralScoringLevel, selectNew -> selectedCoralScoringLevel = selectNew);
+        }
         handleEnumToggles(algaeDescoringLevels, selectedAlgaeDescoringLevel, selectNew -> selectedAlgaeDescoringLevel = selectNew);
+
     }
 
     public Elevator.Goal getCoralScoringElevatorGoal() {
@@ -165,5 +185,37 @@ public class OperatorDashboard extends VirtualSubsystem {
                         ))
                         .toArray((IntFunction<Map.Entry<E, LoggedNetworkBooleanExt>[]>) Map.Entry[]::new)
         );
+    }
+
+    private static class OperatorKeypad {
+        private final GenericHID hid = new GenericHID(1);
+
+        public boolean isConnected() {
+            return hid.isConnected();
+        }
+
+        public ReefZoneSide getReefZoneSide() {
+            if (hid.getRawButton(1)) return ReefZoneSide.LeftFront;
+            if (hid.getRawButton(2)) return ReefZoneSide.MiddleFront;
+            if (hid.getRawButton(3)) return ReefZoneSide.RightFront;
+            if (hid.getRawButton(4)) return ReefZoneSide.RightBack;
+            if (hid.getRawButton(5)) return ReefZoneSide.MiddleBack;
+            if (hid.getRawButton(6)) return ReefZoneSide.LeftBack;
+            return null;
+        }
+
+        public CoralScoringLevel getCoralScoringLevel() {
+            if (hid.getRawButton(7)) return CoralScoringLevel.L1;
+            if (hid.getRawButton(8)) return CoralScoringLevel.L2;
+            if (hid.getRawButton(9)) return CoralScoringLevel.L3;
+            if (hid.getRawButton(10)) return CoralScoringLevel.L4;
+            return null;
+        }
+
+        public LocalReefSide getLocalReefSide() {
+            if (hid.getRawButton(11)) return LocalReefSide.Left;
+            if (hid.getRawButton(12)) return LocalReefSide.Right;
+            return null;
+        }
     }
 }
