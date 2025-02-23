@@ -80,12 +80,15 @@ public class OperatorDashboard extends VirtualSubsystem {
 
             ReefZoneSide newReefZoneSide = operatorKeypad.getReefZoneSide();
             if (newReefZoneSide != null) selectedReefZoneSide = newReefZoneSide;
+            updateToggles(reefZoneSides, selectedReefZoneSide);
 
             CoralScoringLevel newCoralScoringLevel = operatorKeypad.getCoralScoringLevel();
             if (newCoralScoringLevel != null) selectedCoralScoringLevel = newCoralScoringLevel;
+            updateToggles(coralScoringLevels, selectedCoralScoringLevel);
 
             LocalReefSide newLocalReefSide = operatorKeypad.getLocalReefSide();
             if (newLocalReefSide != null) selectedLocalReefSide = newLocalReefSide;
+            updateToggles(localReefSides, selectedLocalReefSide);
         } else {
             operatorKeypadDisconnectedAlert.set(true);
 
@@ -143,6 +146,21 @@ public class OperatorDashboard extends VirtualSubsystem {
         L3,
     }
 
+    private static <E extends Enum<E>> void updateToggles(
+            Map<E, LoggedNetworkBooleanExt> map,
+            E currentlySelected
+    ) {
+        LoggedNetworkBooleanExt toggle = map.get(currentlySelected);
+        // Set the corresponding toggle to true
+        toggle.set(true);
+        // Set the rest to false
+        for (var entry1 : map.entrySet()) {
+            if (entry1.getKey() != currentlySelected) {
+                entry1.getValue().set(false);
+            }
+        }
+    }
+
     private static <E extends Enum<E>> void handleEnumToggles(
             Map<E, LoggedNetworkBooleanExt> map,
             E currentlySelected,
@@ -158,14 +176,14 @@ public class OperatorDashboard extends VirtualSubsystem {
                 LoggedNetworkBooleanExt toggle = entry.getValue();
                 // If it's toggled
                 if (toggle.get()) {
-                    E side = entry.getKey();
+                    E key = entry.getKey();
                     // If it wasn't already selected
-                    if (side != currentlySelected) {
+                    if (key != currentlySelected) {
                         // Select the new value
-                        select.accept(side);
+                        select.accept(key);
                         // Set the rest to false
                         for (var entry1 : map.entrySet()) {
-                            if (entry1.getKey() != side) {
+                            if (entry1.getKey() != key) {
                                 entry1.getValue().set(false);
                             }
                         }
