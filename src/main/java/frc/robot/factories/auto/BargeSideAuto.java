@@ -36,7 +36,7 @@ public class BargeSideAuto {
                         () -> LocalReefSide.Left,
                         () -> Elevator.Goal.SCORE_L4,
                         () -> false
-                ).andThen(CommandsExt.schedule(tenOclockRightTraj.cmd().alongWith(superstructure.funnelIntake(true)))) // schedule so subsystems run their default commands and so the command doesn't cancel itself
+                ).andThen(CommandsExt.schedule(tenOclockRightTraj.cmd().alongWith(superstructure.funnelIntake(true, false)))) // schedule so subsystems run their default commands and so the command doesn't cancel itself
         );
 
         tenOclockRightTraj.atTime("score").onTrue(
@@ -46,7 +46,7 @@ public class BargeSideAuto {
                         () -> LocalReefSide.Right,
                         () -> Elevator.Goal.SCORE_L4,
                         () -> false
-                ).andThen(CommandsExt.schedule(eightOclockLeftTraj.cmd().alongWith(superstructure.funnelIntake(true)))) // schedule so subsystems run their default commands and so the command doesn't cancel itself
+                ).andThen(CommandsExt.schedule(eightOclockLeftTraj.cmd().alongWith(superstructure.funnelIntake(true, false)))) // schedule so subsystems run their default commands and so the command doesn't cancel itself
         );
 
         eightOclockLeftTraj.atTime("score").onTrue(
@@ -56,7 +56,7 @@ public class BargeSideAuto {
                         () -> LocalReefSide.Left,
                         () -> Elevator.Goal.SCORE_L4,
                         () -> false
-                ).andThen(CommandsExt.schedule(eightOclockRightTraj.cmd().alongWith(superstructure.funnelIntake(true)))) // schedule so subsystems run their default commands and so the command doesn't cancel itself
+                ).andThen(CommandsExt.schedule(eightOclockRightTraj.cmd().alongWith(superstructure.funnelIntake(true, false)))) // schedule so subsystems run their default commands and so the command doesn't cancel itself
         );
 
         eightOclockRightTraj.atTime("score").onTrue(

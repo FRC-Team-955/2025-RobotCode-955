@@ -317,11 +317,14 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
-    public Command funnelIntake(boolean duringAuto) {
-        Command intake = Commands.parallel(
+    public Command funnelIntake(boolean duringAuto, boolean wiggle) {
+        Command intake = Commands.deadline(
+                waitUntilEndEffectorTriggered(Commands.idle()),
                 setGoal(Goal.FUNNEL_INTAKE_WAITING),
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                waitUntilEndEffectorTriggered(Commands.idle())
+                wiggle
+                        ? drive.runRobotRelative(() -> Timer.getTimestamp() % 0.25 < 0.125 ? new ChassisSpeeds(-0.1, -0.1, 0) : new ChassisSpeeds(0.1, 0.1, 0))
+                        : Commands.none()
         );
         Command finalize = Commands.parallel(
                 setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
