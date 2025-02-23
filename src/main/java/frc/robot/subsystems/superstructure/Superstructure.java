@@ -62,6 +62,7 @@ public class Superstructure extends SubsystemBaseExt {
 
         AUTO_SCORE_CORAL_WAIT_INITIAL,
         AUTO_SCORE_CORAL_WAIT_FINAL,
+        AUTO_SCORE_CORAL_WAIT_ELEVATOR,
         AUTO_SCORE_CORAL_SCORING,
 
         DESCORE_ALGAE_WAIT_ELEVATOR,
@@ -394,11 +395,17 @@ public class Superstructure extends SubsystemBaseExt {
                 )
         );
         Supplier<Command> driveFinal = () -> drive.moveTo(() -> getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get()));
-        Command waitFinalWhileRaising = Commands.parallel(
-                setGoal(Goal.AUTO_SCORE_CORAL_WAIT_FINAL),
-                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier),
-                waitUntilAtFinalPosition(reefSideSupplier, sideSupplier)
+        Command waitFinalAndElevator = Commands.sequence(
+                Commands.parallel(
+                        setGoal(Goal.AUTO_SCORE_CORAL_WAIT_FINAL),
+                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                        elevator.setGoal(elevatorGoalSupplier),
+                        waitUntilAtFinalPosition(reefSideSupplier, sideSupplier)
+                ),
+                Commands.parallel(
+                        setGoal(Goal.AUTO_SCORE_CORAL_WAIT_ELEVATOR),
+                        elevator.waitUntilAtGoal()
+                )
         );
         Command score = Commands.parallel(
                 setGoal(Goal.AUTO_SCORE_CORAL_SCORING),
@@ -416,7 +423,7 @@ public class Superstructure extends SubsystemBaseExt {
                     Commands.race(
                             driveFinal.get(),
                             Commands.sequence(
-                                    waitFinalWhileRaising,
+                                    waitFinalAndElevator,
                                     score,
                                     finalize
                             )
@@ -433,7 +440,7 @@ public class Superstructure extends SubsystemBaseExt {
                                     driveInitial,
                                     Commands.race(
                                             driveFinal.get(),
-                                            waitFinalWhileRaising
+                                            waitFinalAndElevator
                                     ),
                                     // don't allow cancelling
                                     CommandsExt.schedule(Commands.race(
