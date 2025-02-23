@@ -31,7 +31,7 @@ public class AutoAlignLocations {
 
     // Very rough - 50 cm and 30 degrees
     public static final double initialAlignToleranceMeters = 0.5;
-    public static final double initialAlignToleranceRad = 0.5;
+    public static final double initialAlignToleranceRad = Units.degreesToRadians(20);
     // very little tolerance - 2 cm, 2 deg
     public static final double finalAlignToleranceMeters = 0.04;
     public static final double finalAlignToleranceRad = 0.03;
