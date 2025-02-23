@@ -322,7 +322,8 @@ public class Drive extends SubsystemBaseExt {
 
                 // Send setpoints to modules
                 for (int i = 0; i < modules.length; i++) {
-                    modules[i].runSetpointUnoptimized(setpointStates[i]);
+                    // The module sets setpointStates[i] to the cosine scaled setpoint, useful for logging
+                    modules[i].runSetpoint(setpointStates[i], false);
                 }
 
                 // Log setpoint states
@@ -342,7 +343,7 @@ public class Drive extends SubsystemBaseExt {
                 // Send setpoints to modules
                 for (int i = 0; i < modules.length; i++) {
                     // The module sets setpointStates[i] to the optimized setpoint, useful for logging
-                    modules[i].runSetpointOptimized(setpointStates[i]);
+                    modules[i].runSetpoint(setpointStates[i], true);
                 }
 
                 // Log setpoint states
