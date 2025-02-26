@@ -359,7 +359,7 @@ public class Superstructure extends SubsystemBaseExt {
                 waitUntilEndEffectorTriggered(Commands.idle()),
                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING),
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                autoAlign.asProxy()
+                autoAlign
         );
         Command finalize = Commands.parallel(
                 setGoal(Goal.AUTO_FUNNEL_INTAKE_FINALIZING),

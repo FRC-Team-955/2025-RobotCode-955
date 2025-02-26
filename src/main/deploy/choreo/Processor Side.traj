@@ -331,7 +331,7 @@
  },
  "events":[
    {"name":"score", "from":{"target":1, "targetTimestamp":0.93124, "offset":{"exp":"-0.7 s", "val":-0.7}}, "event":{"type":"named", "data":{"name":"score"}}},
-   {"name":"score", "from":{"target":4, "targetTimestamp":3.6999, "offset":{"exp":"-0.7 s", "val":-0.7}}, "event":{"type":"named", "data":{"name":"score"}}},
-   {"name":"score", "from":{"target":8, "targetTimestamp":6.96531, "offset":{"exp":"-0.7 s", "val":-0.7}}, "event":{"type":"named", "data":{"name":"score"}}},
-   {"name":"score", "from":{"target":10, "targetTimestamp":9.55039, "offset":{"exp":"-0.7 s", "val":-0.7}}, "event":{"type":"named", "data":{"name":"score"}}}]
+   {"name":"score", "from":{"target":4, "targetTimestamp":3.6999, "offset":{"exp":"-0.4 s", "val":-0.4}}, "event":{"type":"named", "data":{"name":"score"}}},
+   {"name":"score", "from":{"target":8, "targetTimestamp":6.96531, "offset":{"exp":"-0.5 s", "val":-0.5}}, "event":{"type":"named", "data":{"name":"score"}}},
+   {"name":"score", "from":{"target":10, "targetTimestamp":9.55039, "offset":{"exp":"-0.5 s", "val":-0.5}}, "event":{"type":"named", "data":{"name":"score"}}}]
 }
