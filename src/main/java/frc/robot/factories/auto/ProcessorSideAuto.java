@@ -38,26 +38,24 @@ public class ProcessorSideAuto {
                         () -> ReefZoneSide.RightBack,
                         () -> LocalReefSide.Right,
                         () -> Elevator.Goal.SCORE_L4,
-                        () -> false,
+                        () -> true,
                         () -> false
                         // schedule so subsystems run their default commands and so the command doesn't cancel itself
                 ).andThen(CommandsExt.schedule(twoOclockRightStationTraj.cmd().alongWith(superstructure.funnelIntake(true, false))))
         );
 
         twoOclockRightStationTraj.done().onTrue(Commands.sequence(
-                Commands.waitSeconds(1.5)
-                        .raceWith(superstructure.funnelIntake(true, true)),
+                superstructure.funnelIntakeWithAutoAlign(true).withTimeout(1),
                 twoOclockRightScoreTraj.cmd()
                         .alongWith(superstructure.funnelIntake(true, false))
         ));
         twoOclockRightScoreTraj.atTime("score").onTrue(Commands.sequence(
-                superstructure.funnelIntake(true, true),
                 superstructure.autoAlignAndScore(
                         true,
                         () -> ReefZoneSide.RightBack,
                         () -> LocalReefSide.Left,
                         () -> Elevator.Goal.SCORE_L4,
-                        () -> false,
+                        () -> true,
                         () -> false
                         // schedule so subsystems run their default commands and so the command doesn't cancel itself
                 ),
@@ -65,41 +63,39 @@ public class ProcessorSideAuto {
         ));
 
         fourOclockLeftStationTraj.done().onTrue(Commands.sequence(
-                Commands.waitSeconds(1.5)
-                        .raceWith(superstructure.funnelIntake(true, true)),
+                superstructure.funnelIntakeWithAutoAlign(true).withTimeout(1),
                 fourOclockLeftScoreTraj.cmd()
                         .alongWith(superstructure.funnelIntake(true, false))
         ));
         fourOclockLeftScoreTraj.atTime("score").onTrue(Commands.sequence(
-                superstructure.funnelIntake(true, true),
                 superstructure.autoAlignAndScore(
                         true,
                         () -> ReefZoneSide.RightFront,
                         () -> LocalReefSide.Right,
                         () -> Elevator.Goal.SCORE_L4,
-                        () -> false,
+                        () -> true,
                         () -> false
                         // schedule so subsystems run their default commands and so the command doesn't cancel itself
                 ),
-                CommandsExt.schedule(fourOclockRightStationTraj.cmd().alongWith(superstructure.funnelIntake(true, false)))
+                Commands.runOnce(() -> ref.isFinished = true)
+//                CommandsExt.schedule(fourOclockRightStationTraj.cmd().alongWith(superstructure.funnelIntake(true, false)))
         ));
 
         fourOclockRightStationTraj.done().onTrue(Commands.sequence(
-                Commands.waitSeconds(1.5)
-                        .raceWith(superstructure.funnelIntake(true, true)),
+                superstructure.funnelIntakeWithAutoAlign(true).withTimeout(1),
                 fourOclockRightScoreTraj.cmd()
                         .alongWith(superstructure.funnelIntake(true, false))
         ));
         fourOclockRightScoreTraj.atTime("score").onTrue(Commands.sequence(
-                superstructure.funnelIntake(true, true),
                 superstructure.autoAlignAndScore(
                         true,
                         () -> ReefZoneSide.RightFront,
                         () -> LocalReefSide.Left,
                         () -> Elevator.Goal.SCORE_L4,
-                        () -> false,
+                        () -> true,
                         () -> false
-                ).andThen(Commands.runOnce(() -> ref.isFinished = true))
+                ),
+                Commands.runOnce(() -> ref.isFinished = true)
         ));
 
         return routine.cmd(() -> ref.isFinished).beforeStarting(() -> ref.isFinished = false);

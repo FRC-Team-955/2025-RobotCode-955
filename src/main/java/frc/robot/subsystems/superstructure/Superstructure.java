@@ -71,6 +71,9 @@ public class Superstructure extends SubsystemBaseExt {
         FUNNEL_INTAKE_WAITING,
         FUNNEL_INTAKE_FINALIZING,
 
+        AUTO_FUNNEL_INTAKE_WAITING,
+        AUTO_FUNNEL_INTAKE_FINALIZING,
+
         EJECT,
     }
 
@@ -331,6 +334,35 @@ public class Superstructure extends SubsystemBaseExt {
         );
         Command finalize = Commands.parallel(
                 setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
+                endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeFinalizeInches.get()))
+        );
+        if (duringAuto) {
+            return CommandsExt.onlyIf(
+                    () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
+                    Commands.sequence(intake, finalize)
+            );
+        } else {
+            return CommandsExt.onlyIf(
+                    () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
+                    Commands.sequence(
+                            intake,
+                            // Don't allow canceling
+                            CommandsExt.schedule(finalize.withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming))
+                    )
+            );
+        }
+    }
+
+    public Command funnelIntakeWithAutoAlign(boolean duringAuto) {
+        Command autoAlign = drive.moveTo(() -> getSourceAlignPose(robotState.getPose()));
+        Command intake = Commands.deadline(
+                waitUntilEndEffectorTriggered(Commands.idle()),
+                setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING),
+                endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
+                autoAlign.asProxy()
+        );
+        Command finalize = Commands.parallel(
+                setGoal(Goal.AUTO_FUNNEL_INTAKE_FINALIZING),
                 endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeFinalizeInches.get()))
         );
         if (duringAuto) {

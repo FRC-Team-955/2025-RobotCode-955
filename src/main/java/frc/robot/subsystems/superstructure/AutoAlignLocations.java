@@ -1,5 +1,6 @@
 package frc.robot.subsystems.superstructure;
 
+import choreo.util.ChoreoAllianceFlipUtil;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -8,6 +9,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.OperatorDashboard.LocalReefSide;
 import frc.robot.OperatorDashboard.ReefZoneSide;
+import frc.robot.Util;
 
 import static frc.robot.Util.shouldFlip;
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
@@ -80,5 +82,27 @@ public class AutoAlignLocations {
     @SuppressWarnings("OptionalGetWithoutIsPresent") // better for our code to crash than to fail silently
     private static Pose2d getAprilTagPose(int id) {
         return aprilTagLayout.getTagPose(id).get().toPose2d();
+    }
+
+    private static final double sourceX = 1.53;
+    private static final double sourceYLower = 0.7;
+    private static final double sourceYUpper = 7.35;
+    private static final double sourceTheta = 2.2;
+    private static final Pose2d lowerSource = new Pose2d(
+            sourceX,
+            sourceYLower,
+            Rotation2d.fromRadians(-sourceTheta)
+    );
+    private static final Pose2d upperSource = new Pose2d(
+            sourceX,
+            sourceYUpper,
+            Rotation2d.fromRadians(sourceTheta)
+    );
+
+    public static Pose2d getSourceAlignPose(Pose2d currentPose) {
+        double lowerDistance = lowerSource.getTranslation().getDistance(currentPose.getTranslation());
+        double upperDistance = upperSource.getTranslation().getDistance(currentPose.getTranslation());
+        Pose2d alignPose = lowerDistance < upperDistance ? lowerSource : upperSource;
+        return Util.shouldFlip() ? ChoreoAllianceFlipUtil.flip(alignPose) : alignPose;
     }
 }

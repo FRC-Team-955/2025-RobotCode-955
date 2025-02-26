@@ -7,11 +7,11 @@ public class LoggedTunableNumber {
     private final double defaultValue;
 
     public LoggedTunableNumber(String key, double defaultValue) {
+        this.defaultValue = defaultValue;
         if (Constants.tuningMode) {
             inner = new LoggedNetworkNumberExt(key, defaultValue);
         } else {
             inner = null;
-            this.defaultValue = defaultValue;
         }
     }
 
