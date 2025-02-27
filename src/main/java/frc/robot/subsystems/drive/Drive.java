@@ -525,28 +525,34 @@ public class Drive extends SubsystemBaseExt {
         ));
     }
 
-    private void runMoveTo(Pose2d pose) {
-        Logger.recordOutput("Drive/MoveTo/Target", pose);
-        var currentPose = robotState.getPose();
-
-        closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
-                // Limit to 100% max linear speed
-                MathUtil.clamp(moveToX.calculate(currentPose.getX(), pose.getX()), -1, 1)
-                        * driveConfig.maxDriveVelocityMetersPerSec(),
-                // Limit to 100% max linear speed
-                MathUtil.clamp(moveToY.calculate(currentPose.getY(), pose.getY()), -1, 1)
-                        * driveConfig.maxDriveVelocityMetersPerSec(),
-                // Limit to 100% max angular speed
-                MathUtil.clamp(moveToOmega.calculate(currentPose.getRotation().getRadians(), pose.getRotation().getRadians()), -1, 1)
-                        * maxAngularVelocityRadPerSec,
-                currentPose.getRotation() // Move to is absolute, don't flip
-        );
-    }
-
     public Command moveTo(Supplier<Pose2d> poseSupplier) {
         return withGoal(
                 Goal.MOVE_TO,
-                run(() -> runMoveTo(poseSupplier.get()))
+                startRun(
+                        () -> {
+                            moveToX.reset();
+                            moveToY.reset();
+                            moveToOmega.reset();
+                        },
+                        () -> {
+                            var goalPose = poseSupplier.get();
+                            Logger.recordOutput("Drive/MoveTo/Goal", goalPose);
+                            var currentPose = robotState.getPose();
+
+                            closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
+                                    // Limit to 100% max linear speed
+                                    MathUtil.clamp(moveToX.calculate(currentPose.getX(), goalPose.getX()), -1, 1)
+                                            * driveConfig.maxDriveVelocityMetersPerSec(),
+                                    // Limit to 100% max linear speed
+                                    MathUtil.clamp(moveToY.calculate(currentPose.getY(), goalPose.getY()), -1, 1)
+                                            * driveConfig.maxDriveVelocityMetersPerSec(),
+                                    // Limit to 100% max angular speed
+                                    MathUtil.clamp(moveToOmega.calculate(currentPose.getRotation().getRadians(), goalPose.getRotation().getRadians()), -1, 1)
+                                            * maxAngularVelocityRadPerSec,
+                                    currentPose.getRotation() // Move to is absolute, don't flip
+                            );
+                        }
+                )
         ).withName("Drive Move To");
     }
 
