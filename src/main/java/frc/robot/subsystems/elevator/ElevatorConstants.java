@@ -25,7 +25,7 @@ public class ElevatorConstants {
     public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 2.5);
     public static final ElevatorLimit lowerLimit = new ElevatorLimit(0.25, -1.75);
 
-    public static final double hardstopMeters = Units.inchesToMeters(10.66);
+    public static final double hardstopMeters = Units.inchesToMeters(20);
     public static final double gentleMaxVelocityMetersPerSecond = 0.75;
     /**
      * While we could calculate this based on the current velocity, it caused the gentle profile to be used
@@ -34,9 +34,8 @@ public class ElevatorConstants {
     public static double hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecond);
 
     public static double calculateHardstopSlowdownMeters(double currentVelocityMetersPerSec) {
-        // Not actually the max acceleration, just the max acceleration we assume when calculating slowdown
-        // height in order to be a little conservative.
-        double assumedMaxAccelerationMetersPerSecondSquared = maxAccelerationMetersPerSecondSquared * 0.95;
+        // In reality, max acceleration is a lot higher, especially with an aggressive kG
+        double assumedMaxAccelerationMetersPerSecondSquared = maxAccelerationMetersPerSecondSquared * 1.25;
 
         // If we are going down at v:
         //     x = -v * t
