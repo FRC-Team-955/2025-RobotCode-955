@@ -30,9 +30,9 @@ public class DriveConstants {
                 Units.inchesToMeters(35),
                 PIDF.ofPD(1.5, 0),
                 PIDF.ofPD(1.5, 0),
-                4.38,
-                15,
-                Units.degreesToRadians(1080)
+                4.58,
+                20,
+                20
         );
         case ALPHABOT -> new DriveConfig(
                 Units.inchesToMeters(2),
