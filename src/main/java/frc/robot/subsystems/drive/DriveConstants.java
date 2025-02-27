@@ -72,7 +72,7 @@ public class DriveConstants {
                         0.0, 0.0,
                         0.183, 0.1205
                 ),
-                PIDF.ofPD(2.2, 0.04),
+                PIDF.ofPD(5, 0.04),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,

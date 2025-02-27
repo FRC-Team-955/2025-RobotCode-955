@@ -45,9 +45,8 @@ public class ProcessorSideAuto {
         );
 
         twoOclockRightStationTraj.done().onTrue(Commands.sequence(
-                superstructure.funnelIntakeWithAutoAlign(true).withTimeout(1),
+                superstructure.funnelIntakeWithAutoAlign(true),
                 twoOclockRightScoreTraj.cmd()
-                        .alongWith(superstructure.funnelIntake(true, false))
         ));
         twoOclockRightScoreTraj.atTime("score").onTrue(Commands.sequence(
                 superstructure.autoAlignAndScore(
@@ -63,9 +62,8 @@ public class ProcessorSideAuto {
         ));
 
         fourOclockLeftStationTraj.done().onTrue(Commands.sequence(
-                superstructure.funnelIntakeWithAutoAlign(true).withTimeout(1),
+                superstructure.funnelIntakeWithAutoAlign(true),
                 fourOclockLeftScoreTraj.cmd()
-                        .alongWith(superstructure.funnelIntake(true, false))
         ));
         fourOclockLeftScoreTraj.atTime("score").onTrue(Commands.sequence(
                 superstructure.autoAlignAndScore(
@@ -82,9 +80,8 @@ public class ProcessorSideAuto {
         ));
 
         fourOclockRightStationTraj.done().onTrue(Commands.sequence(
-                superstructure.funnelIntakeWithAutoAlign(true).withTimeout(1),
+                superstructure.funnelIntakeWithAutoAlign(true),
                 fourOclockRightScoreTraj.cmd()
-                        .alongWith(superstructure.funnelIntake(true, false))
         ));
         fourOclockRightScoreTraj.atTime("score").onTrue(Commands.sequence(
                 superstructure.autoAlignAndScore(
