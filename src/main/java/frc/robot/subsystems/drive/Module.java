@@ -75,7 +75,11 @@ public class Module {
         } else {
             io.setDriveVelocity(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
         }
-        io.setTurnPosition(state.angle.getRadians());
+        if (state.speedMetersPerSecond < 1e-3 && getAngle().minus(state.angle).getRadians() < 0.1) {
+            io.setTurnOpenLoop(0.0);
+        } else {
+            io.setTurnPosition(state.angle.getRadians());
+        }
     }
 
     /**
