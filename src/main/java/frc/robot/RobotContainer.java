@@ -180,7 +180,9 @@ public class RobotContainer extends VirtualSubsystem {
                         driverController.leftTrigger(),
                         driverController.leftBumper()
                 ).asProxy(),
-                operatorDashboard.manualScoring::get
+                // Use manual scoring if override enabled or when scoring L1
+                () -> operatorDashboard.manualScoring.get()
+                        || operatorDashboard.getSelectedCoralScoringLevel() == OperatorDashboard.CoralScoringLevel.L1
         ));
         driverController.rightBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
 
