@@ -2,7 +2,6 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -79,7 +78,6 @@ public class RobotContainer extends VirtualSubsystem {
         autoChooser.addOption("None", Commands.none());
         autoChooser.addOption("Barge Side", BargeSideAuto.get(factory.newRoutine("Barge Side")));
         autoChooser.addOption("Processor Side", ProcessorSideAuto.get(factory.newRoutine("Processor Side")));
-        autoChooser.addOption("Leave", drive.runRobotRelative(() -> new ChassisSpeeds(-0.5, 0, 0)).withTimeout(5));
 
         autoChooser.addOption("Characterization", Commands.deferredProxy(characterizationChooser::get));
     }
