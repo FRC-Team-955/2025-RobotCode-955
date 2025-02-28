@@ -18,8 +18,6 @@ public class ProcessorSideAuto {
         final var secondScoreTraj = routine.trajectory("Processor Side", 2);
         final var thirdStationTraj = routine.trajectory("Processor Side", 3);
         final var thirdScoreTraj = routine.trajectory("Processor Side", 4);
-        final var fourthStationTraj = routine.trajectory("Processor Side", 5);
-        final var fourthScoreTraj = routine.trajectory("Processor Side", 6);
 
         var ref = new Object() {
             boolean isFinished = false;
@@ -36,7 +34,7 @@ public class ProcessorSideAuto {
                 superstructure.autoAlignAndScore(
                         true,
                         () -> ReefZoneSide.RightBack,
-                        () -> LocalReefSide.Right,
+                        () -> LocalReefSide.Left,
                         () -> Elevator.Goal.SCORE_L4,
                         () -> true,
                         () -> false
@@ -51,8 +49,8 @@ public class ProcessorSideAuto {
         secondScoreTraj.atTime("score").onTrue(Commands.sequence(
                 superstructure.autoAlignAndScore(
                         true,
-                        () -> ReefZoneSide.RightBack,
-                        () -> LocalReefSide.Left,
+                        () -> ReefZoneSide.RightFront,
+                        () -> LocalReefSide.Right,
                         () -> Elevator.Goal.SCORE_L4,
                         () -> true,
                         () -> false
@@ -68,28 +66,11 @@ public class ProcessorSideAuto {
                 superstructure.autoAlignAndScore(
                         true,
                         () -> ReefZoneSide.RightFront,
-                        () -> LocalReefSide.Right,
-                        () -> Elevator.Goal.SCORE_L4,
-                        () -> true,
-                        () -> false
-
-                ),
-                Commands.runOnce(() -> ref.isFinished = true)
-//                CommandsExt.schedule(fourthStationTraj.cmd().alongWith(superstructure.funnelIntake(true))) // schedule so subsystems run their default commands and so the command doesn't cancel itself
-        ));
-
-        fourthStationTraj.atTime("intake").onTrue(Commands.sequence(
-                superstructure.funnelIntakeWithAutoAlign(true),
-                fourthScoreTraj.cmd()
-        ));
-        fourthScoreTraj.atTime("score").onTrue(Commands.sequence(
-                superstructure.autoAlignAndScore(
-                        true,
-                        () -> ReefZoneSide.RightFront,
                         () -> LocalReefSide.Left,
                         () -> Elevator.Goal.SCORE_L4,
                         () -> true,
                         () -> false
+
                 ),
                 Commands.runOnce(() -> ref.isFinished = true)
         ));
