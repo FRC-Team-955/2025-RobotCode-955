@@ -86,7 +86,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
         switch (coralState) {
             case NO_CORAL -> {
                 var current = robotState.getPose().getTranslation();
-                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 1) && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
+                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 0.7) && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
                     coralState = CoralState.IN_END_EFFECTOR;
                 }
             }

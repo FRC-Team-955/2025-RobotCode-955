@@ -35,10 +35,10 @@ public class AutoAlignLocations {
     public static final double initialAlignToleranceMeters = 0.5;
     public static final double initialAlignToleranceRad = Units.degreesToRadians(20);
     // very little tolerance - 2 cm, 2 deg
-    public static final double finalAlignToleranceMeters = 0.04;
-    public static final double finalAlignToleranceRad = 0.03;
-    public static final double finalAlignToleranceMetersPerSecond = 0.04;
-    public static final double finalAlignToleranceRadPerSecond = 0.03;
+    public static final double finalAlignToleranceMeters = 0.05;
+    public static final double finalAlignToleranceRad = Units.degreesToRadians(2);
+    public static final double finalAlignToleranceMetersPerSecond = 0.05;
+    public static final double finalAlignToleranceRadPerSecond = Units.degreesToRadians(2);
 
     /**
      * Checks whether moving to the side will intersect with the reef, and refuses to do so if it does.
@@ -83,6 +83,9 @@ public class AutoAlignLocations {
     private static Pose2d getAprilTagPose(int id) {
         return aprilTagLayout.getTagPose(id).get().toPose2d();
     }
+
+    public static final double stationAlignToleranceXYMeters = 0.05;
+    public static final double stationAlignToleranceOmegaRad = Units.degreesToRadians(15);
 
     private static final double sourceX = 1.53;
     private static final double sourceYLower = 0.7;

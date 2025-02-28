@@ -41,7 +41,7 @@ public class ProcessorSideAuto {
                         () -> true,
                         () -> false
                         // schedule so subsystems run their default commands and so the command doesn't cancel itself
-                ).andThen(CommandsExt.schedule(twoOclockRightStationTraj.cmd().alongWith(superstructure.funnelIntake(true, false))))
+                ).andThen(CommandsExt.schedule(twoOclockRightStationTraj.cmd().alongWith(superstructure.funnelIntake(true))))
         );
 
         twoOclockRightStationTraj.done().onTrue(Commands.sequence(
@@ -58,7 +58,7 @@ public class ProcessorSideAuto {
                         () -> false
                         // schedule so subsystems run their default commands and so the command doesn't cancel itself
                 ),
-                CommandsExt.schedule(fourOclockLeftStationTraj.cmd().alongWith(superstructure.funnelIntake(true, false)))
+                CommandsExt.schedule(fourOclockLeftStationTraj.cmd().alongWith(superstructure.funnelIntake(true)))
         ));
 
         fourOclockLeftStationTraj.done().onTrue(Commands.sequence(
@@ -76,7 +76,7 @@ public class ProcessorSideAuto {
                         // schedule so subsystems run their default commands and so the command doesn't cancel itself
                 ),
                 Commands.runOnce(() -> ref.isFinished = true)
-//                CommandsExt.schedule(fourOclockRightStationTraj.cmd().alongWith(superstructure.funnelIntake(true, false)))
+//                CommandsExt.schedule(fourOclockRightStationTraj.cmd().alongWith(superstructure.funnelIntake(true)))
         ));
 
         fourOclockRightStationTraj.done().onTrue(Commands.sequence(

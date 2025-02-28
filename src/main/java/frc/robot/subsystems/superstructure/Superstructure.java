@@ -323,14 +323,11 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
-    public Command funnelIntake(boolean duringAuto, boolean wiggle) {
+    public Command funnelIntake(boolean duringAuto) {
         Command intake = Commands.deadline(
                 waitUntilEndEffectorTriggered(Commands.idle()),
                 setGoal(Goal.FUNNEL_INTAKE_WAITING),
-                endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                wiggle
-                        ? drive.runRobotRelative(() -> Timer.getTimestamp() % 0.25 < 0.125 ? new ChassisSpeeds(-0.1, -0.1, 0) : new ChassisSpeeds(0.1, 0.1, 0))
-                        : Commands.none()
+                endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE)
         );
         Command finalize = Commands.parallel(
                 setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
@@ -359,7 +356,14 @@ public class Superstructure extends SubsystemBaseExt {
                 waitUntilEndEffectorTriggered(Commands.idle()),
                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING),
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                autoAlign
+                Commands.sequence(
+                        autoAlign.until(() -> isAtPoseWithTolerance(
+                                getSourceAlignPose(robotState.getPose()),
+                                stationAlignToleranceXYMeters,
+                                stationAlignToleranceOmegaRad
+                        )),
+                        drive.runRobotRelative(() -> Timer.getTimestamp() % 0.25 < 0.125 ? new ChassisSpeeds(-0.1, -0.1, -0.1) : new ChassisSpeeds(0.1, 0.1, 0.1))
+                )
         );
         Command finalize = Commands.parallel(
                 setGoal(Goal.AUTO_FUNNEL_INTAKE_FINALIZING),
@@ -388,27 +392,6 @@ public class Superstructure extends SubsystemBaseExt {
                 && Math.abs(desiredPose.getRotation().minus(currentPose.getRotation()).getRadians()) < angularToleranceRad;
     }
 
-    public Command waitUntilAtInitialPosition(Supplier<ReefZoneSide> reefSideSupplier, Supplier<LocalReefSide> sideSupplier) {
-        // This should not require the superstructure because we don't want to conflict with setGoal
-        return Commands.waitUntil(() -> isAtPoseWithTolerance(
-                getInitialAlignPose(reefSideSupplier.get(), sideSupplier.get()),
-                initialAlignToleranceMeters,
-                initialAlignToleranceRad
-        ));
-    }
-
-    public Command waitUntilAtFinalPosition(Supplier<ReefZoneSide> reefSideSupplier, Supplier<LocalReefSide> sideSupplier) {
-        // This should not require the superstructure because we don't want to conflict with setGoal
-        return Commands.waitUntil(() -> isAtPoseWithTolerance(
-                        getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get()),
-                        finalAlignToleranceMeters,
-                        finalAlignToleranceRad
-                )
-                        && Math.abs(drive.getMeasuredChassisLinearVelocityMetersPerSec()) < finalAlignToleranceMetersPerSecond
-                        && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < finalAlignToleranceRadPerSecond
-        );
-    }
-
     public Command autoAlignAndScore(
             boolean duringAuto,
             Supplier<ReefZoneSide> reefSideSupplier,
@@ -424,7 +407,11 @@ public class Superstructure extends SubsystemBaseExt {
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_INITIAL),
                         endEffector.setGoal(EndEffector.RollersGoal.IDLE),
                         elevator.setGoal(() -> Elevator.Goal.STOW),
-                        waitUntilAtInitialPosition(reefSideSupplier, sideSupplier)
+                        Commands.waitUntil(() -> isAtPoseWithTolerance(
+                                getInitialAlignPose(reefSideSupplier.get(), sideSupplier.get()),
+                                initialAlignToleranceMeters,
+                                initialAlignToleranceRad
+                        ))
                 )
         );
         Supplier<Command> driveFinal = () -> drive.moveTo(() -> getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get()));
@@ -433,7 +420,14 @@ public class Superstructure extends SubsystemBaseExt {
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_FINAL),
                         endEffector.setGoal(EndEffector.RollersGoal.IDLE),
                         elevator.setGoal(elevatorGoalSupplier),
-                        waitUntilAtFinalPosition(reefSideSupplier, sideSupplier)
+                        Commands.waitUntil(() -> isAtPoseWithTolerance(
+                                        getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get()),
+                                        finalAlignToleranceMeters,
+                                        finalAlignToleranceRad
+                                )
+                                        && Math.abs(drive.getMeasuredChassisLinearVelocityMetersPerSec()) < finalAlignToleranceMetersPerSecond
+                                        && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < finalAlignToleranceRadPerSecond
+                        )
                 ),
                 Commands.parallel(
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_ELEVATOR),
