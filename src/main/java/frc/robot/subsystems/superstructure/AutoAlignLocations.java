@@ -8,7 +8,10 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.OperatorDashboard.LocalReefSide;
 import frc.robot.OperatorDashboard.ReefZoneSide;
+import frc.robot.Util;
 import lombok.RequiredArgsConstructor;
+
+import java.util.function.Supplier;
 
 import static frc.robot.Util.shouldFlip;
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
@@ -87,25 +90,23 @@ public class AutoAlignLocations {
     public static final double stationAlignToleranceOmegaRad = Units.degreesToRadians(15);
 
     private static final double stationX = 1.53;
-    private static final double stationYLower = 0.7;
-    private static final double stationYUpper = 7.35;
     private static final double stationTheta = 2.2;
-    private static final Pose2d lowerStation = new Pose2d(
+    private static final Pose2d processorSideStation = new Pose2d(
             stationX,
-            stationYLower,
+            0.7,
             Rotation2d.fromRadians(-stationTheta)
     );
-    private static final Pose2d upperStation = new Pose2d(
+    private static final Pose2d bargeSideStation = new Pose2d(
             stationX,
-            stationYUpper,
+            7.35,
             Rotation2d.fromRadians(stationTheta)
     );
 
     @RequiredArgsConstructor
     public enum Station {
-        BargeSide(upperStation),
-        ProcessorSide(lowerStation);
+        BargeSide(() -> Util.flipIfNeeded(bargeSideStation)),
+        ProcessorSide(() -> Util.flipIfNeeded(processorSideStation));
 
-        public final Pose2d alignPose;
+        public final Supplier<Pose2d> alignPoseSupplier;
     }
 }

@@ -1,5 +1,7 @@
 package frc.robot;
 
+import choreo.util.ChoreoAllianceFlipUtil;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.VoltageUnit;
@@ -27,6 +29,12 @@ public class Util {
         return shouldFlip()
                 ? rotation2d.plus(Rotation2d.kPi)
                 : rotation2d;
+    }
+
+    public static Pose2d flipIfNeeded(Pose2d pose2d) {
+        return shouldFlip()
+                ? ChoreoAllianceFlipUtil.flip(pose2d)
+                : pose2d;
     }
 
     /**
