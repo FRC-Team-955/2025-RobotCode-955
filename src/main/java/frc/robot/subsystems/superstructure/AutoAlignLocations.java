@@ -84,7 +84,7 @@ public class AutoAlignLocations {
         return aprilTagLayout.getTagPose(id).get().toPose2d();
     }
 
-    public static final double stationAlignToleranceXYMeters = 0.05;
+    public static final double stationAlignToleranceXYMeters = 0.15;
     public static final double stationAlignToleranceOmegaRad = Units.degreesToRadians(15);
 
     private static final double sourceX = 1.53;
