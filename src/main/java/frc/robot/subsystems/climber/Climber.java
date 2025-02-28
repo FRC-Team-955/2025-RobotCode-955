@@ -92,7 +92,7 @@ public class Climber extends SubsystemBaseExt {
         // Check force zero and zero if needed
         var forceZero = operatorDashboard.forceZeroClimber.get();
         if (forceZero) {
-            io.setEncoder(0);
+            io.setEncoder(initialPositionRad);
             hasZeroed = true;
             // Turn off the toggle instantly so it's like a button
             operatorDashboard.forceZeroClimber.set(false);
