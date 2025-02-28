@@ -351,8 +351,8 @@ public class Superstructure extends SubsystemBaseExt {
         }
     }
 
-    public Command funnelIntakeWithAutoAlign(boolean duringAuto) {
-        Command autoAlign = drive.moveTo(() -> getSourceAlignPose(robotState.getPose()));
+    public Command funnelIntakeWithAutoAlign(boolean duringAuto, Station station) {
+        Command autoAlign = drive.moveTo(() -> station.alignPose);
         Command intake = Commands.deadline(
                 waitUntilEndEffectorTriggered(Commands.idle()),
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
@@ -360,7 +360,7 @@ public class Superstructure extends SubsystemBaseExt {
                         Commands.parallel(
                                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_ALIGN),
                                 autoAlign.until(() -> isAtPoseWithTolerance(
-                                        getSourceAlignPose(robotState.getPose()),
+                                        station.alignPose,
                                         stationAlignToleranceXYMeters,
                                         stationAlignToleranceOmegaRad
                                 ))

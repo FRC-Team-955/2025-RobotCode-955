@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.OperatorDashboard.LocalReefSide;
 import frc.robot.OperatorDashboard.ReefZoneSide;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.superstructure.AutoAlignLocations;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.util.commands.CommandsExt;
 
@@ -43,7 +44,7 @@ public class BargeSideAuto {
         ));
 
         secondStationTraj.atTime("intake").onTrue(Commands.sequence(
-                superstructure.funnelIntakeWithAutoAlign(true),
+                superstructure.funnelIntakeWithAutoAlign(true, AutoAlignLocations.Station.BargeSide),
                 secondScoreTraj.cmd()
         ));
         secondScoreTraj.atTime("score").onTrue(Commands.sequence(
@@ -59,7 +60,7 @@ public class BargeSideAuto {
         ));
 
         thirdStationTraj.atTime("intake").onTrue(Commands.sequence(
-                superstructure.funnelIntakeWithAutoAlign(true),
+                superstructure.funnelIntakeWithAutoAlign(true, AutoAlignLocations.Station.BargeSide),
                 thirdScoreTraj.cmd()
         ));
         thirdScoreTraj.atTime("score").onTrue(Commands.sequence(
