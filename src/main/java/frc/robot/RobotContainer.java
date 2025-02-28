@@ -176,8 +176,8 @@ public class RobotContainer extends VirtualSubsystem {
         ));
         driverController.rightBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
 
-        driverController.povUp().whileTrue(climber.towardsRobot());
-        driverController.povDown().whileTrue(climber.awayFromRobot());
+        driverController.povDown().whileTrue(climber.towardsRobot());
+        driverController.povUp().whileTrue(climber.awayFromRobot());
 
         if (mode == Constants.Mode.SIM) {
             driverController.x().onTrue(Commands.runOnce(() ->
