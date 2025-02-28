@@ -62,7 +62,7 @@ public class Climber extends SubsystemBaseExt {
         Logger.processInputs("Inputs/Climber", inputs);
 
         disconnectedAlert.set(!inputs.connected);
-        temperatureAlert.set(inputs.temperatureCelsius > 30);
+        temperatureAlert.set(inputs.temperatureCelsius > 35);
 
         bypassLimitsAlert.set(operatorDashboard.bypassClimberLimits.get());
 
