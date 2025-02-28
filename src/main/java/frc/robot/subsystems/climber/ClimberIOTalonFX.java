@@ -48,7 +48,7 @@ public class ClimberIOTalonFX extends ClimberIO {
                         ? InvertedValue.Clockwise_Positive
                         : InvertedValue.CounterClockwise_Positive;
         tryUntilOk(5, () -> talon.getConfigurator().apply(talonConfig, 0.25));
-        tryUntilOk(5, () -> talon.setPosition(initialPositionRad, 0.25));
+        tryUntilOk(5, () -> talon.setPosition(Units.radiansToRotations(initialPositionRad), 0.25));
 
         position = talon.getPosition();
         velocity = talon.getVelocity();
