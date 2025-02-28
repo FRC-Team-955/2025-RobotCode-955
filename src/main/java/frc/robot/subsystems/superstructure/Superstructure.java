@@ -71,7 +71,8 @@ public class Superstructure extends SubsystemBaseExt {
         FUNNEL_INTAKE_WAITING,
         FUNNEL_INTAKE_FINALIZING,
 
-        AUTO_FUNNEL_INTAKE_WAITING,
+        AUTO_FUNNEL_INTAKE_WAITING_ALIGN,
+        AUTO_FUNNEL_INTAKE_WAITING_SHAKE,
         AUTO_FUNNEL_INTAKE_FINALIZING,
 
         EJECT,
@@ -354,15 +355,22 @@ public class Superstructure extends SubsystemBaseExt {
         Command autoAlign = drive.moveTo(() -> getSourceAlignPose(robotState.getPose()));
         Command intake = Commands.deadline(
                 waitUntilEndEffectorTriggered(Commands.idle()),
-                setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING),
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
                 Commands.sequence(
-                        autoAlign.until(() -> isAtPoseWithTolerance(
-                                getSourceAlignPose(robotState.getPose()),
-                                stationAlignToleranceXYMeters,
-                                stationAlignToleranceOmegaRad
-                        )),
-                        drive.runRobotRelative(() -> Timer.getTimestamp() % 0.25 < 0.125 ? new ChassisSpeeds(-0.1, -0.1, -0.1) : new ChassisSpeeds(0.1, 0.1, 0.1))
+                        Commands.parallel(
+                                setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_ALIGN),
+                                autoAlign.until(() -> isAtPoseWithTolerance(
+                                        getSourceAlignPose(robotState.getPose()),
+                                        stationAlignToleranceXYMeters,
+                                        stationAlignToleranceOmegaRad
+                                ))
+                        ),
+                        Commands.parallel(
+                                setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_SHAKE),
+                                drive.runRobotRelative(() -> Timer.getTimestamp() % 0.25 < 0.125
+                                        ? new ChassisSpeeds(-0.1, -0.1, -0.1)
+                                        : new ChassisSpeeds(0.1, 0.1, 0.1))
+                        )
                 )
         );
         Command finalize = Commands.parallel(
