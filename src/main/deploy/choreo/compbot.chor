@@ -5,6 +5,20 @@
  "variables":{
   "expressions":{},
   "poses":{
+   "bargeSource":{
+    "x":{
+     "exp":"1.53 m",
+     "val":1.53
+    },
+    "y":{
+     "exp":"7.35 m",
+     "val":7.35
+    },
+    "heading":{
+     "exp":"2.2 rad",
+     "val":2.2
+    }
+   },
    "processorSource":{
     "x":{
      "exp":"1.5291827917099 m",
