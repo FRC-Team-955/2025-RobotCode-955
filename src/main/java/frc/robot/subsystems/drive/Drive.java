@@ -203,7 +203,7 @@ public class Drive extends SubsystemBaseExt {
 
                 // Update gyro angle
                 // Sanity check in case gyro is connected but not giving timestamps
-                if (gyroInputs.connected && gyroInputs.odometryYawTimestamps.length > sample) {
+                if (false && gyroInputs.odometryYawTimestamps.length > sample) {
                     // Use the real gyro angle
                     rawGyroRotation = new Rotation2d(gyroInputs.odometryYawPositionsRad[sample]);
                 } else {
