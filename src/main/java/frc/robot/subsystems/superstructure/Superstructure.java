@@ -439,7 +439,8 @@ public class Superstructure extends SubsystemBaseExt {
                                         )
                                                 && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < initialAlignToleranceRadPerSecond
                                 )
-                        )
+                        ),
+                        Commands.waitSeconds(0.3)
                 )
         );
         DoubleSupplier elevatorPercentageSupplier = () -> operatorDashboard.disableInterpolateAutoAlign.get()
@@ -464,7 +465,8 @@ public class Superstructure extends SubsystemBaseExt {
                 Commands.parallel(
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_ELEVATOR),
                         elevator.waitUntilAtGoal()
-                )
+                ),
+                Commands.waitSeconds(0.3)
         );
         // Don't allow forcing for a bit, then check if force is true
         Command waitForForce = Commands.waitSeconds(2).andThen(Commands.waitUntil(forceCondition));
