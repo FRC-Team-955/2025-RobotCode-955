@@ -369,8 +369,8 @@ public class Superstructure extends SubsystemBaseExt {
                         Commands.parallel(
                                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_SHAKE),
                                 drive.runRobotRelative(() -> Timer.getTimestamp() % 0.25 < 0.125
-                                        ? new ChassisSpeeds(-0.1, -0.1, -0.1)
-                                        : new ChassisSpeeds(0.1, 0.1, 0.1))
+                                        ? new ChassisSpeeds(-0.1, -0.1, -0.2)
+                                        : new ChassisSpeeds(0.1, 0.1, 0.2))
                         )
                 )
         );
