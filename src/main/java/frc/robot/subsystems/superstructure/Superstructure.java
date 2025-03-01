@@ -17,6 +17,7 @@ import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
@@ -25,6 +26,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static frc.robot.subsystems.superstructure.AutoAlignLocations.*;
@@ -440,7 +442,10 @@ public class Superstructure extends SubsystemBaseExt {
                         )
                 )
         );
-        Supplier<Command> driveFinal = () -> drive.moveTo(() -> getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get()));
+        DoubleSupplier elevatorPercentageSupplier = () -> operatorDashboard.disableInterpolateAutoAlign.get()
+                ? 1
+                : elevator.getPositionMeters() / ElevatorConstants.maxHeightMeters;
+        Supplier<Command> driveFinal = () -> drive.moveTo(() -> getFinalAlignPose(elevatorPercentageSupplier.getAsDouble(), reefSideSupplier.get(), sideSupplier.get()));
         Command waitFinalAndElevator = Commands.sequence(
                 Commands.parallel(
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_FINAL),
@@ -448,7 +453,7 @@ public class Superstructure extends SubsystemBaseExt {
                         elevator.setGoal(elevatorGoalSupplier),
                         Commands.waitUntil(() ->
                                 isAtPoseWithTolerance(
-                                        getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get()),
+                                        getFinalAlignPose(elevatorPercentageSupplier.getAsDouble(), reefSideSupplier.get(), sideSupplier.get()),
                                         finalAlignToleranceMeters,
                                         finalAlignToleranceRad
                                 )

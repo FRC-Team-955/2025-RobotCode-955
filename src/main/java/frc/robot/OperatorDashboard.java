@@ -21,6 +21,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     public final LoggedNetworkBooleanExt coralStuckInRobotMode = new LoggedNetworkBooleanExt(prefix + "CoralStuckInRobotMode", false);
     public final LoggedNetworkBooleanExt manualScoring = new LoggedNetworkBooleanExt(prefix + "ManualScoring", false);
     public final LoggedNetworkBooleanExt ignoreEndEffectorBeamBreak = new LoggedNetworkBooleanExt(prefix + "IgnoreEndEffectorBeamBreak", false);
+    public final LoggedNetworkBooleanExt disableInterpolateAutoAlign = new LoggedNetworkBooleanExt(prefix + "DisableInterpolateAutoAlign", false);
 
     public final LoggedNetworkBooleanExt forceZeroClimber = new LoggedNetworkBooleanExt(prefix + "ForceZeroClimber", false);
     public final LoggedNetworkBooleanExt bypassClimberLimits = new LoggedNetworkBooleanExt(prefix + "BypassClimberLimits", false);

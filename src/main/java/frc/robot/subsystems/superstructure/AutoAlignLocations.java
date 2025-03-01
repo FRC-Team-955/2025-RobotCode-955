@@ -34,7 +34,7 @@ public class AutoAlignLocations {
     private static final Transform2d finalAlignOffset = new Transform2d(driveConfig.bumperLengthMeters() / 2.0, 0, new Rotation2d());
 
     // Very rough
-    public static final double initialElevatorRaiseToleranceMeters = 1.3;
+    public static final double initialElevatorRaiseToleranceMeters = 1.5;
     public static final double initialAlignToleranceMeters = 0.7;
     public static final double initialAlignToleranceRad = Units.degreesToRadians(20);
     public static final double initialAlignToleranceRadPerSecond = Units.degreesToRadians(20);
@@ -52,8 +52,14 @@ public class AutoAlignLocations {
         return currentPose.relativeTo(getAprilTagPoseAdjusted(reefZoneSide)).getX() > 0;
     }
 
-    public static Pose2d getFinalAlignPose(ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
-        return getAprilTagPoseAdjusted(reefZoneSide).plus(localReefSideAdjustment(localReefSide));
+    public static Pose2d getFinalAlignPose(double elevatorPercentage, ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
+        Pose2d finalAlign = getAprilTagPoseAdjusted(reefZoneSide).plus(localReefSideAdjustment(localReefSide));
+        if (elevatorPercentage >= 0.9) return finalAlign;
+        // If we aren't high enough, interpolate the pose from the initial align pose to the final based on elevator percentage
+        Pose2d initialAlign = getInitialAlignPose(reefZoneSide, localReefSide);
+        // Fully at final when 100% raised, fully at initial when 0% raised
+        // .interpolate will handle values >1 or <0
+        return initialAlign.interpolate(finalAlign, elevatorPercentage);
     }
 
     public static Pose2d getInitialAlignPose(ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
