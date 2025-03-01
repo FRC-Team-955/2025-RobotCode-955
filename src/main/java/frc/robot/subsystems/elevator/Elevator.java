@@ -281,14 +281,16 @@ public class Elevator extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Elevator/Measurement/PositionMeters")
     public double getPositionMeters() {
-        var avgPositionRad = (inputs.leaderPositionRad + inputs.followerPositionRad) / 2.0;
-        return radToMeters(avgPositionRad);
+        return radToMeters(inputs.leaderPositionRad);
+//        var avgPositionRad = (inputs.leaderPositionRad + inputs.followerPositionRad) / 2.0;
+//        return radToMeters(avgPositionRad);
     }
 
     @AutoLogOutput(key = "Elevator/Measurement/VelocityMetersPerSec")
     public double getVelocityMetersPerSec() {
-        var avgVelocityRadPerSec = (inputs.leaderVelocityRadPerSec + inputs.followerVelocityRadPerSec) / 2.0;
-        return radToMeters(avgVelocityRadPerSec);
+        return radToMeters(inputs.leaderVelocityRadPerSec);
+//        var avgVelocityRadPerSec = (inputs.leaderVelocityRadPerSec + inputs.followerVelocityRadPerSec) / 2.0;
+//        return radToMeters(avgVelocityRadPerSec);
     }
 
     public Command feedforwardCharacterization() {
