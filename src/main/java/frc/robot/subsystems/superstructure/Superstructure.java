@@ -17,7 +17,6 @@ import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
@@ -445,7 +444,7 @@ public class Superstructure extends SubsystemBaseExt {
         );
         DoubleSupplier elevatorPercentageSupplier = () -> operatorDashboard.disableInterpolateAutoAlign.get()
                 ? 1
-                : elevator.getPositionMeters() / ElevatorConstants.maxHeightMeters;
+                : elevator.getPositionMeters() / elevatorGoalSupplier.get().setpointMeters.getAsDouble();
         Supplier<Command> driveFinal = () -> drive.moveTo(() -> getFinalAlignPose(elevatorPercentageSupplier.getAsDouble(), reefSideSupplier.get(), sideSupplier.get()));
         Command waitFinalAndElevator = Commands.sequence(
                 Commands.parallel(
