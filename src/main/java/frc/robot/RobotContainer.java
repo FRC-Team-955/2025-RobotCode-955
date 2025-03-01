@@ -156,12 +156,6 @@ public class RobotContainer extends VirtualSubsystem {
 
         driverController.x().whileTrue(superstructure.eject());
 
-        driverController.a().onTrue(Commands.runOnce(() -> {
-            Command auto = autoChooser.get();
-            if (auto != null)
-                auto.schedule();
-        }));
-
         driverController.rightTrigger().whileTrue(superstructure.funnelIntake(false));
 //        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
 
