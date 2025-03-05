@@ -27,6 +27,8 @@ public class ElevatorIOSim extends ElevatorIO {
     private ElevatorFeedforward feedforward = gains.toElevatorFF();
     private PIDController pidController = gains.toPID();
 
+    private boolean emergencyStopped = false;
+
     private boolean closedLoop = true;
     private double setpointPositionRad;
     private double setpointVelocityRadPerSec;
@@ -64,7 +66,6 @@ public class ElevatorIOSim extends ElevatorIO {
         inputs.followerAppliedVolts = inputs.leaderAppliedVolts;
         inputs.followerCurrentAmps = inputs.leaderCurrentAmps;
 
-        inputs.limitSwitchConnected = true;
         inputs.limitSwitchTriggered = sim.getPositionMeters() < Units.inchesToMeters(1);
     }
 
@@ -81,16 +82,29 @@ public class ElevatorIOSim extends ElevatorIO {
     }
 
     @Override
+    public void setEmergencyStopped(boolean emergencyStopped) {
+        this.emergencyStopped = emergencyStopped;
+        if (emergencyStopped) {
+            closedLoop = false;
+            appliedVolts = 0;
+        }
+    }
+
+    @Override
     public void setOpenLoop(double output) {
-        closedLoop = false;
-        appliedVolts = output;
+        if (!emergencyStopped) {
+            closedLoop = false;
+            appliedVolts = output;
+        }
     }
 
     @Override
     public void setClosedLoop(double positionRad, double velocityRadPerSec) {
-        closedLoop = true;
-        setpointPositionRad = positionRad;
-        setpointVelocityRadPerSec = velocityRadPerSec;
+        if (!emergencyStopped) {
+            closedLoop = true;
+            setpointPositionRad = positionRad;
+            setpointVelocityRadPerSec = velocityRadPerSec;
+        }
     }
 
     @Override

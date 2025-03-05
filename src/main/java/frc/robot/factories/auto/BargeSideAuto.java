@@ -3,6 +3,8 @@ package frc.robot.factories.auto;
 import choreo.auto.AutoRoutine;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.OperatorDashboard.LocalReefSide;
+import frc.robot.OperatorDashboard.ReefZoneSide;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.util.commands.CommandsExt;
@@ -11,10 +13,13 @@ public class BargeSideAuto {
     public static Command get(AutoRoutine routine) {
         final var superstructure = Superstructure.get();
 
-        final var tenOclockLeftTraj = routine.trajectory("Barge Side", 0);
-        final var tenOclockRightTraj = routine.trajectory("Barge Side", 1);
-        final var eightOclockLeftTraj = routine.trajectory("Barge Side", 2);
-        final var eightOclockRightTraj = routine.trajectory("Barge Side", 3);
+        final var firstScoreTraj = routine.trajectory("Barge Side", 0);
+        final var secondStationTraj = routine.trajectory("Barge Side", 1);
+        final var secondScoreTraj = routine.trajectory("Barge Side", 2);
+        final var thirdStationTraj = routine.trajectory("Barge Side", 3);
+        final var thirdScoreTraj = routine.trajectory("Barge Side", 4);
+        final var fourthStationTraj = routine.trajectory("Barge Side", 5);
+        final var fourthScoreTraj = routine.trajectory("Barge Side", 6);
 
         var ref = new Object() {
             boolean isFinished = false;
@@ -22,38 +27,72 @@ public class BargeSideAuto {
 
         routine.active().onTrue(
                 Commands.sequence(
-                        tenOclockLeftTraj.resetOdometry(),
-                        tenOclockLeftTraj.cmd()
+                        firstScoreTraj.resetOdometry(),
+                        firstScoreTraj.cmd()
                 )
         );
 
-        tenOclockLeftTraj.atTime("raise").onTrue(
-                superstructure.scoreCoralDuringAuto(
-                        tenOclockLeftTraj.recentlyDone(),
-                        () -> Elevator.Goal.SCORE_L4
-                ).andThen(CommandsExt.schedule(tenOclockRightTraj.cmd())) // schedule so we don't cancel the current traj
-        );
+        firstScoreTraj.atTime("score").onTrue(Commands.sequence(
+                superstructure.autoAlignAndScore(
+                        true,
+                        () -> ReefZoneSide.LeftBack,
+                        () -> LocalReefSide.Left,
+                        () -> Elevator.Goal.SCORE_L4,
+                        () -> true,
+                        () -> false
+                ),
+                CommandsExt.schedule(secondStationTraj.cmd()) // schedule so subsystems run their default commands and so the command doesn't cancel itself
+        ));
 
-        tenOclockRightTraj.atTime("raise").onTrue(
-                superstructure.scoreCoralDuringAuto(
-                        tenOclockRightTraj.recentlyDone(),
-                        () -> Elevator.Goal.SCORE_L4
-                ).andThen(CommandsExt.schedule(eightOclockLeftTraj.cmd())) // schedule so we don't cancel the current traj
-        );
+        secondStationTraj.atTime("intake").onTrue(Commands.sequence(
+                superstructure.funnelIntakeWithAutoAlign(true),
+                secondScoreTraj.cmd()
+        ));
+        secondScoreTraj.atTime("score").onTrue(Commands.sequence(
+                superstructure.autoAlignAndScore(
+                        true,
+                        () -> ReefZoneSide.LeftBack,
+                        () -> LocalReefSide.Right,
+                        () -> Elevator.Goal.SCORE_L4,
+                        () -> true,
+                        () -> false
+                ),
+                CommandsExt.schedule(thirdStationTraj.cmd()) // schedule so subsystems run their default commands and so the command doesn't cancel itself
+        ));
 
-        eightOclockLeftTraj.atTime("raise").onTrue(
-                superstructure.scoreCoralDuringAuto(
-                        eightOclockLeftTraj.recentlyDone(),
-                        () -> Elevator.Goal.SCORE_L4
-                ).andThen(CommandsExt.schedule(eightOclockRightTraj.cmd())) // schedule so we don't cancel the current traj
-        );
+        thirdStationTraj.atTime("intake").onTrue(Commands.sequence(
+                superstructure.funnelIntakeWithAutoAlign(true),
+                thirdScoreTraj.cmd()
+        ));
+        thirdScoreTraj.atTime("score").onTrue(Commands.sequence(
+                superstructure.autoAlignAndScore(
+                        true,
+                        () -> ReefZoneSide.LeftFront,
+                        () -> LocalReefSide.Left,
+                        () -> Elevator.Goal.SCORE_L4,
+                        () -> true,
+                        () -> false
 
-        eightOclockRightTraj.atTime("raise").onTrue(
-                superstructure.scoreCoralDuringAuto(
-                        eightOclockRightTraj.recentlyDone(),
-                        () -> Elevator.Goal.SCORE_L4
-                ).andThen(Commands.runOnce(() -> ref.isFinished = true))
-        );
+                ),
+                Commands.runOnce(() -> ref.isFinished = true)
+//                CommandsExt.schedule(fourthStationTraj.cmd().alongWith(superstructure.funnelIntake(true))) // schedule so subsystems run their default commands and so the command doesn't cancel itself
+        ));
+
+        fourthStationTraj.atTime("intake").onTrue(Commands.sequence(
+                superstructure.funnelIntakeWithAutoAlign(true),
+                fourthScoreTraj.cmd()
+        ));
+        fourthScoreTraj.atTime("score").onTrue(Commands.sequence(
+                superstructure.autoAlignAndScore(
+                        true,
+                        () -> ReefZoneSide.LeftFront,
+                        () -> LocalReefSide.Right,
+                        () -> Elevator.Goal.SCORE_L4,
+                        () -> true,
+                        () -> false
+                ),
+                Commands.runOnce(() -> ref.isFinished = true)
+        ));
 
         return routine.cmd(() -> ref.isFinished).beforeStarting(() -> ref.isFinished = false);
     }

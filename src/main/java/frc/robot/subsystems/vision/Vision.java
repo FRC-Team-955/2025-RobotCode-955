@@ -35,10 +35,11 @@ import static frc.robot.subsystems.vision.VisionConstants.*;
 public class Vision extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
 
-    private final AprilTagIO[] aprilTagIo = VisionConstants.aprilTagIO;
-    private final GamepieceIO[] gamepieceIo = VisionConstants.gamepieceIO;
+    private final AprilTagIO[] aprilTagIo = createAprilTagIO();
+    private final GamepieceIO[] gamepieceIo = createGamepieceIO();
     private final AprilTagIOInputsAutoLogged[] atInputs;
     private final GamepieceIOInputsAutoLogged[] gpInputs;
+
     private final Alert[] atDisconnectedAlerts;
     private final Alert[] gpDisconnectedAlerts;
 
@@ -231,5 +232,13 @@ public class Vision extends SubsystemBaseExt {
             var asPose3d = new Pose3d(translation2d.getX(), translation2d.getY(), 0, new Rotation3d());
             Logger.recordOutput("Vision/Summary/ClosestGamepiece/Pose", asPose3d);
         });
+
+        // Log camera poses for debugging
+        var robotPose = new Pose3d(robotState.getPose());
+        Logger.recordOutput(
+                "Vision/CameraPoses",
+                robotPose.transformBy(reefCamRobotToCamera),
+                robotPose.transformBy(stationCamRobotToCamera)
+        );
     }
 }

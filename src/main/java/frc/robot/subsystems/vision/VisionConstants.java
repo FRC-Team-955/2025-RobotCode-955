@@ -45,49 +45,52 @@ public class VisionConstants {
     public static double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
     public static double angularStdDevMegatag2Factor = Double.POSITIVE_INFINITY; // No rotation data available
 
-    public static final GamepieceIO[] gamepieceIO = switch (Constants.identity) {
+    public static GamepieceIO[] createGamepieceIO() {
+        return switch (Constants.identity) {
         /*
         case COMPBOT -> Constants.isReplay
                 ? new GamepieceIO[]{new GamepieceIO()}
                 : new GamepieceIO[]{new GamepieceIOLimelight("limelight", new Transform3d())};
          */
-        case COMPBOT -> new GamepieceIO[]{};
-        case ALPHABOT -> Constants.isReplay
-                ? new GamepieceIO[]{new GamepieceIO()}
-                : new GamepieceIO[]{
-                new GamepieceIOLimelight(
-                        "limelight",
-                        // 2 inches back, 2 inches right, 37 inches up, 40 degrees down from horizontal
-                        new Transform3d(Units.inchesToMeters(-2), Units.inchesToMeters(-2), Units.inchesToMeters(37),
-                                new Rotation3d(0, Units.degreesToRadians(-40), 0)
-                        )
-                )
+            case COMPBOT -> new GamepieceIO[]{};
+            case ALPHABOT -> Constants.isReplay
+                    ? new GamepieceIO[]{new GamepieceIO()}
+                    : new GamepieceIO[]{
+                    new GamepieceIOLimelight(
+                            "limelight",
+                            // 2 inches back, 2 inches right, 37 inches up, 40 degrees down from horizontal
+                            new Transform3d(Units.inchesToMeters(-2), Units.inchesToMeters(-2), Units.inchesToMeters(37),
+                                    new Rotation3d(0, Units.degreesToRadians(-40), 0)
+                            )
+                    )
+            };
+            case SIMBOT -> Constants.isReplay
+                    ? new GamepieceIO[]{new GamepieceIO()}
+                    : new GamepieceIO[]{new GamepieceIOSim()};
         };
-        case SIMBOT -> Constants.isReplay
-                ? new GamepieceIO[]{new GamepieceIO()}
-                : new GamepieceIO[]{new GamepieceIOSim()};
-    };
+    }
 
-    private static final Transform3d stationCamRobotToCamera = new Transform3d(
+    public static final Transform3d stationCamRobotToCamera = new Transform3d(
             Units.inchesToMeters(-6.7), Units.inchesToMeters(-9.4), Units.inchesToMeters(27.3),
             // Rotation order matters
-            new Rotation3d(0.0, 0.0, Units.degreesToRadians(-60))
-                    .rotateBy(new Rotation3d(0.0, Units.degreesToRadians(15), 0.0))
+            new Rotation3d(0.0, Units.degreesToRadians(-15), 0.0)
+                    .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-60)))
     );
-    private static final Transform3d reefCamRobotToCamera = new Transform3d(
-            Units.inchesToMeters(-7.2), Units.inchesToMeters(8.8), Units.inchesToMeters(26.6),
-            // Rotation order matters
-            new Rotation3d(0.0, 0.0, Units.degreesToRadians(-170))
-                    .rotateBy(new Rotation3d(0.0, Units.degreesToRadians(-35), 0.0))
+    public static final Transform3d reefCamRobotToCamera = new Transform3d(
+            Units.inchesToMeters(-8.5), Units.inchesToMeters(8.8), Units.inchesToMeters(25.5),
+//             Rotation order matters
+            new Rotation3d(0.0, Units.degreesToRadians(35), 0.0)
+                    .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-170)))
     );
 
-    public static final AprilTagIO[] aprilTagIO = switch (Constants.identity) {
-        case COMPBOT -> Constants.isReplay
-                ? new AprilTagIO[]{new AprilTagIO(), new AprilTagIO()}
-                : new AprilTagIO[]{
-                new AprilTagIOPhotonVision("StationCam", stationCamRobotToCamera),
-                new AprilTagIOPhotonVision("ReefCam", reefCamRobotToCamera)
-        };
+    public static AprilTagIO[] createAprilTagIO() {
+        return switch (Constants.identity) {
+            case COMPBOT -> Constants.isReplay
+                    ? new AprilTagIO[]{new AprilTagIO(), new AprilTagIO()}
+                    : new AprilTagIO[]{
+                    new AprilTagIOPhotonVision("StationCam", stationCamRobotToCamera),
+                    new AprilTagIOPhotonVision("ReefCam", reefCamRobotToCamera)
+            };
 //        case ALPHABOT -> Constants.isReplay
 //                ? new VisionIO[]{new VisionIO()}
 //                : new VisionIO[]{
@@ -96,18 +99,19 @@ public class VisionConstants {
 //                        new Transform3d(0.2, 0.0, 0.2, new Rotation3d(0.0, -0.4, 0.0))
 //                )
 //        };
-        case ALPHABOT -> new AprilTagIO[]{};
-        case SIMBOT -> Constants.isReplay
-                ? new AprilTagIO[]{new AprilTagIO(), new AprilTagIO()}
-                : new AprilTagIO[]{
-                new AprilTagIOPhotonVisionSim(
-                        "StationCam",
-                        stationCamRobotToCamera
-                ),
-                new AprilTagIOPhotonVisionSim(
-                        "ReefCam",
-                        reefCamRobotToCamera
-                )
+            case ALPHABOT -> new AprilTagIO[]{};
+            case SIMBOT -> Constants.isReplay
+                    ? new AprilTagIO[]{new AprilTagIO(), new AprilTagIO()}
+                    : new AprilTagIO[]{
+                    new AprilTagIOPhotonVisionSim(
+                            "StationCam",
+                            stationCamRobotToCamera
+                    ),
+                    new AprilTagIOPhotonVisionSim(
+                            "ReefCam",
+                            reefCamRobotToCamera
+                    )
+            };
         };
-    };
+    }
 }

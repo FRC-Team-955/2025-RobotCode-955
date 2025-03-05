@@ -12,7 +12,7 @@ import org.littletonrobotics.junction.Logger;
 import java.util.ArrayList;
 
 public class SparkCANcoderHelper {
-    private static final Alert turnRelativeEncoderNotReset = new Alert("One or more drive modules has not successfully reset their relative turn encoder", Alert.AlertType.kError);
+    private static final Alert turnRelativeEncoderNotResetAlert = new Alert("One or more drive modules has not successfully reset their relative turn encoder", Alert.AlertType.kError);
     private static final ArrayList<Integer> resetFailedCANcoderIDs = new ArrayList<>();
 
     public static void resetTurnSpark(
@@ -51,7 +51,7 @@ public class SparkCANcoderHelper {
             System.out.printf("Drive module with cancoder ID %d GAVE UP setting initial position of turn relative encoder%n", cancoderCanID);
             resetFailedCANcoderIDs.add(cancoderCanID);
             Logger.recordOutput("Drive/SparkResetFailedCANcoderIDs", resetFailedCANcoderIDs.stream().mapToInt((val) -> val).toArray());
-            turnRelativeEncoderNotReset.set(true);
+            turnRelativeEncoderNotResetAlert.set(true);
         }
     }
 }

@@ -14,6 +14,7 @@
 //    public static final double pivotMaxVelocityRadPerSec = Units.degreesToRadians(500);
 //    public static final double pivotMaxAccelerationRadPerSecSquared = Units.degreesToRadians(1500);
 //
+//    protected static RollersIO createRollersIO() {}
 //    protected static final RollersIO rollersIo = Constants.isReplay
 //            ? new RollersIO()
 //            : switch (Constants.identity) {
@@ -52,6 +53,7 @@
 //        );
 //    };
 //
+//    protected static PivotIO createPivotIO() {}
 //    protected static final PivotIO pivotIo = Constants.isReplay
 //            ? new PivotIO()
 //            : switch (Constants.identity) {

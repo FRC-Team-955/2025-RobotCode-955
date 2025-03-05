@@ -23,4 +23,16 @@ public interface SubsystemExt extends Subsystem {
     default Command runOnceAndWaitUntil(Runnable initialize, BooleanSupplier isFinished) {
         return CommandsExt.runOnceAndWaitUntil(initialize, isFinished, this);
     }
+
+    default Command startIdle(Runnable initialize) {
+        return CommandsExt.startIdle(initialize, this);
+    }
+
+    default Command startIdleWaitUntil(Runnable initialize, BooleanSupplier isFinished) {
+        return CommandsExt.startIdleWaitUntil(initialize, isFinished, this);
+    }
+
+    default Command startEndWaitUntil(Runnable initialize, Runnable end, BooleanSupplier isFinished) {
+        return CommandsExt.startEndWaitUntil(initialize, end, isFinished, this);
+    }
 }

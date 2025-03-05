@@ -4,13 +4,14 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 import java.util.HashSet;
 
+/** Note: automatically adds <code>/Tuning</code> to key */
 public class LoggedNetworkBooleanExt extends LoggedNetworkBoolean {
     private final HashSet<Integer> hashCodesGottenChange = new HashSet<>();
     private boolean lastValue;
     private boolean hasChangedOnce = false;
 
     public LoggedNetworkBooleanExt(String key, boolean defaultValue) {
-        super(key, defaultValue);
+        super("/Tuning/" + removeSlash(key), defaultValue);
         lastValue = defaultValue;
     }
 

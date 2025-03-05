@@ -1,32 +1,39 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
 import org.littletonrobotics.junction.Logger;
 
 public enum RobotIdentity {
-    COMPBOT("00-80-2F-22-AE-61"),
-    ALPHABOT("00-80-2F-38-8E-B8"),
+    COMPBOT("0329F35E"),
+    ALPHABOT(""),
     SIMBOT(null);
 
-    public final String macAddress;
+    public final String serialNumber;
 
-    RobotIdentity(String macAddress) {
-        this.macAddress = macAddress;
+    RobotIdentity(String serialNumber) {
+        this.serialNumber = serialNumber;
     }
+
+    private static final Alert unmatchedSerialNumberAlert = new Alert("Serial number did not match any robot identities. Assuming COMPBOT.", Alert.AlertType.kWarning);
 
     public static RobotIdentity determine() {
         if (RobotBase.isReal()) {
-            final var macAddress = Util.getMacAddress();
+            final var serialNumber = RobotController.getSerialNumber();
 
-            Logger.recordMetadata("MacAddress", macAddress);
+            Logger.recordMetadata("SerialNumber", serialNumber);
 
-            if (macAddress.equals(COMPBOT.macAddress))
+            if (serialNumber.equals(COMPBOT.serialNumber))
                 return COMPBOT;
 
-            if (macAddress.equals(ALPHABOT.macAddress))
+            if (serialNumber.equals(ALPHABOT.serialNumber))
                 return ALPHABOT;
 
-            System.out.println("Mac address " + macAddress + " did not match any robot identities. Assuming COMPBOT");
+            String msg = "Serial number " + serialNumber + " did not match any robot identities. Assuming COMPBOT.";
+            unmatchedSerialNumberAlert.setText(msg);
+            System.out.println(msg);
+            unmatchedSerialNumberAlert.set(true);
             return COMPBOT;
         } else {
             if (Constants.Simulation.shouldReplay)

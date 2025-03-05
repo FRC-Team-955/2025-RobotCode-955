@@ -35,6 +35,8 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     private final Debouncer leadConnectedDebounce = new Debouncer(0.5);
     private final Debouncer followConnectedDebounce = new Debouncer(0.5);
 
+    private boolean emergencyStopped = false;
+
     /** Used when calculating feedforward */
     private double lastVelocitySetpointRadPerSec = 0;
 
@@ -109,6 +111,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
                 (values) -> inputs.leaderAppliedVolts = values[0] * values[1]
         );
         ifOk(leadMotor, leadMotor::getOutputCurrent, (value) -> inputs.leaderCurrentAmps = value);
+        ifOk(leadMotor, leadMotor::getMotorTemperature, (value) -> inputs.leaderTemperatureCelsius = value);
         inputs.leaderConnected = leadConnectedDebounce.calculate(!sparkStickyFault);
 
         // Update follow inputs
@@ -121,9 +124,9 @@ public class ElevatorIOSparkMax extends ElevatorIO {
                 (values) -> inputs.followerAppliedVolts = values[0] * values[1]
         );
         ifOk(followMotor, followMotor::getOutputCurrent, (value) -> inputs.followerCurrentAmps = value);
+        ifOk(followMotor, followMotor::getMotorTemperature, (value) -> inputs.followerTemperatureCelsius = value);
         inputs.followerConnected = followConnectedDebounce.calculate(!sparkStickyFault);
 
-        inputs.limitSwitchConnected = true;
         inputs.limitSwitchTriggered = !limitSwitch.get();
     }
 
@@ -161,27 +164,40 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     }
 
     @Override
+    public void setEmergencyStopped(boolean emergencyStopped) {
+        this.emergencyStopped = emergencyStopped;
+        if (emergencyStopped) {
+            lastVelocitySetpointRadPerSec = 0;
+            leadMotor.setVoltage(0);
+        }
+    }
+
+    @Override
     public void setOpenLoop(double output) {
-        lastVelocitySetpointRadPerSec = 0;
-        leadMotor.setVoltage(output);
+        if (!emergencyStopped) {
+            lastVelocitySetpointRadPerSec = 0;
+            leadMotor.setVoltage(output);
+        }
     }
 
     @Override
     public void setClosedLoop(double positionRad, double velocityRadPerSec) {
-        var ffVolts = ff.calculateWithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
-        lastVelocitySetpointRadPerSec = velocityRadPerSec;
-        controller.setReference(
-                positionRad,
-                SparkBase.ControlType.kPosition,
-                ClosedLoopSlot.kSlot0,
-                ffVolts,
-                SparkClosedLoopController.ArbFFUnits.kVoltage
-        );
+        if (!emergencyStopped) {
+            var ffVolts = ff.calculateWithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
+            lastVelocitySetpointRadPerSec = velocityRadPerSec;
+            controller.setReference(
+                    positionRad,
+                    SparkBase.ControlType.kPosition,
+                    ClosedLoopSlot.kSlot0,
+                    ffVolts,
+                    SparkClosedLoopController.ArbFFUnits.kVoltage
+            );
+        }
     }
 
     @Override
     public void setEncoder(double positionRad) {
-        tryUntilOk(5, () -> leadEncoder.setPosition(positionRad));
-        tryUntilOk(5, () -> followEncoder.setPosition(positionRad));
+        tryUntilOkAsync(5, () -> leadEncoder.setPosition(positionRad));
+        tryUntilOkAsync(5, () -> followEncoder.setPosition(positionRad));
     }
 }

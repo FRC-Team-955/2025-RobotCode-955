@@ -30,6 +30,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
+import frc.robot.util.HighFrequencySamplingThread;
 import frc.robot.util.PIDF;
 
 import java.util.Queue;
@@ -101,7 +102,7 @@ public class ModuleIOSparkMax extends ModuleIO {
         driveConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
-                .primaryEncoderPositionPeriodMs((int) (1000.0 / DriveConstants.sparkFrequencyHz))
+                .primaryEncoderPositionPeriodMs((int) (1000.0 / HighFrequencySamplingThread.frequencyHz))
                 .primaryEncoderVelocityAlwaysOn(true)
                 .primaryEncoderVelocityPeriodMs(20)
                 .appliedOutputPeriodMs(20)
@@ -136,7 +137,7 @@ public class ModuleIOSparkMax extends ModuleIO {
         turnConfig
                 .signals
                 .absoluteEncoderPositionAlwaysOn(true)
-                .absoluteEncoderPositionPeriodMs((int) (1000.0 / DriveConstants.sparkFrequencyHz))
+                .absoluteEncoderPositionPeriodMs((int) (1000.0 / HighFrequencySamplingThread.frequencyHz))
                 .absoluteEncoderVelocityAlwaysOn(true)
                 .absoluteEncoderVelocityPeriodMs(20)
                 .appliedOutputPeriodMs(20)
@@ -149,11 +150,9 @@ public class ModuleIOSparkMax extends ModuleIO {
         ));
 
         // Create odometry queues
-        timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
-        drivePositionQueue =
-                SparkOdometryThread.getInstance().registerSignal(driveSpark, driveEncoder::getPosition);
-        turnPositionQueue =
-                SparkOdometryThread.getInstance().registerSignal(turnSpark, turnEncoder::getPosition);
+        timestampQueue = HighFrequencySamplingThread.get().makeTimestampQueue();
+        drivePositionQueue = HighFrequencySamplingThread.get().registerSparkSignal(driveSpark, driveEncoder::getPosition);
+        turnPositionQueue = HighFrequencySamplingThread.get().registerSparkSignal(turnSpark, turnEncoder::getPosition);
     }
 
     @Override
@@ -168,6 +167,7 @@ public class ModuleIOSparkMax extends ModuleIO {
                 (values) -> inputs.driveAppliedVolts = values[0] * values[1]
         );
         ifOk(driveSpark, driveSpark::getOutputCurrent, (value) -> inputs.driveCurrentAmps = value);
+        ifOk(driveSpark, driveSpark::getMotorTemperature, (value) -> inputs.driveTemperatureCelsius = value);
         inputs.driveConnected = driveConnectedDebounce.calculate(!sparkStickyFault);
 
         // Update turn inputs
@@ -184,13 +184,12 @@ public class ModuleIOSparkMax extends ModuleIO {
                 (values) -> inputs.turnAppliedVolts = values[0] * values[1]
         );
         ifOk(turnSpark, turnSpark::getOutputCurrent, (value) -> inputs.turnCurrentAmps = value);
+        ifOk(turnSpark, turnSpark::getMotorTemperature, (value) -> inputs.turnTemperatureCelsius = value);
         inputs.turnConnected = turnConnectedDebounce.calculate(!sparkStickyFault);
 
         // Update odometry inputs
-        inputs.odometryDriveTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+        inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryDrivePositionsRad = drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
-
-        inputs.odometryTurnTimestamps = inputs.odometryDriveTimestamps;
         inputs.odometryTurnPositionsRad =
                 turnPositionQueue.stream()
                         .mapToDouble((Double value) -> value - absoluteEncoderOffsetRad)

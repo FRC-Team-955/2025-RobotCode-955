@@ -7,42 +7,32 @@ import frc.robot.Util;
 import frc.robot.util.PIDF;
 
 public class DriveConstants {
-    public static final double phoenixFrequencyHz = switch (Constants.identity) {
-        case COMPBOT, SIMBOT -> 250.0;
-        case ALPHABOT -> 100.0;
-    };
-    public static final double sparkFrequencyHz = switch (Constants.identity) {
-        case COMPBOT, SIMBOT -> 250.0;
-        case ALPHABOT -> 100.0;
-    };
-
     public static final double assistDirectionToleranceRad = Units.degreesToRadians(50);
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
     // Ranges: -1 to 1, where 1 is the maximum speed
-    public static final PIDF moveToXY = PIDF.ofPD(2.7, 0.2);
-    public static final PIDF moveToOmega = PIDF.ofPD(1.5, 0);
+    public static final PIDF moveToXY = PIDF.ofPD(0.6, 0);
+    public static final PIDF moveToOmega = PIDF.ofPD(0.5, 0);
 
     public static final boolean useSetpointGenerator = true;
     public static final boolean disableDriving = false;
+    public static final boolean useHighFrequencyOdometry = true;
 
     // Slow to 30% speed when elevator is at max height
     public static final double elevatorSlowdownScalar = 0.7;
 
     public static final DriveConfig driveConfig = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> new DriveConfig(
-                Units.inchesToMeters(2),
+                Units.inchesToMeters(1.935948620917915),
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(22.75),
-                Units.inchesToMeters(34.625),
-                Units.inchesToMeters(34.625),
+                Units.inchesToMeters(35),
+                Units.inchesToMeters(35),
                 PIDF.ofPD(1.5, 0),
                 PIDF.ofPD(1.5, 0),
-                4.022, // from Choreo
-                15,
-                11.580, // from Choreo
-                55.116, // from Choreo
-                Units.degreesToRadians(1080)
+                4.58,
+                20,
+                20
         );
         case ALPHABOT -> new DriveConfig(
                 Units.inchesToMeters(2),
@@ -52,11 +42,9 @@ public class DriveConstants {
                 Units.inchesToMeters(30),
                 PIDF.ofPD(1.5, 0),
                 PIDF.ofPD(1.5, 0),
-                4.637, // from Choreo
+                4.637,
                 20,
-                12.442, // from Choreo
-                31.923, // from Choreo
-                Units.degreesToRadians(1080) // not from Choreo
+                Units.degreesToRadians(1080)
         );
     };
 
@@ -70,25 +58,28 @@ public class DriveConstants {
             new Translation2d(-driveConfig.trackWidthMeters / 2.0, -driveConfig.trackLengthMeters / 2.0)
     };
 
-    public static final double drivebaseRadius = Math.hypot(driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0);
+    public static final double drivebaseRadiusMeters = Math.hypot(driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0);
 
-    public static final double joystickMaxAngularSpeedRadPerSec = Math.min(Units.degreesToRadians(315), driveConfig.maxAngularSpeedRadPerSec());
+    /** Maximum angular velocity of the whole drivetrain if all drive motors/wheels are going at full speed. */
+    public static final double maxAngularVelocityRadPerSec = driveConfig.maxDriveVelocityMetersPerSec() / drivebaseRadiusMeters;
+
+    public static final double joystickMaxAngularSpeedRadPerSec = Math.min(Units.degreesToRadians(315), maxAngularVelocityRadPerSec);
     public static final double joystickDriveDeadband = 0.1;
 
     public static final ModuleConfig moduleConfig = switch (Constants.identity) {
         case COMPBOT -> new ModuleConfig(
                 PIDF.ofPDSV(
                         0.0, 0.0,
-                        0.14, 0.8
+                        0.183, 0.1205
                 ),
-                PIDF.ofPD(4, 0.0),
+                PIDF.ofPD(5, 0.04),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
                 false,
                 false,
                 120,
-                20
+                60
         );
         case ALPHABOT -> new ModuleConfig(
                 PIDF.ofPDSVA(
@@ -105,7 +96,7 @@ public class DriveConstants {
                 false,
                 false,
                 60,
-                20
+                60
         );
         case SIMBOT -> new ModuleConfig(
                 PIDF.ofPDSV(0.05, 0.0, 0.02522, 0.14115),
@@ -116,47 +107,51 @@ public class DriveConstants {
                 false,
                 false,
                 120,
-                20
+                60
         );
     };
 
-    // IO layers should go at the bottom in case they reference constants that aren't yet initialized
+    public static ModuleIO[] createModuleIO() {
+        if (Constants.isReplay) {
+            return new ModuleIO[]{new ModuleIO(), new ModuleIO(), new ModuleIO(), new ModuleIO()};
+        }
+        return switch (Constants.identity) {
+            // To calibrate the absolute encoder offsets, point the modules straight (such that forward
+            // motion on the drive motor will propel the robot forward) and copy the reported values from the
+            // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
+            case COMPBOT -> new ModuleIO[]{
+                    // FL, FR, BL, BR
+                    new ModuleIOTalonFXSparkMaxCANcoder(1, 1, 5, 1.577),
+                    new ModuleIOTalonFXSparkMaxCANcoder(2, 2, 6, 1.770),
+                    new ModuleIOTalonFXSparkMaxCANcoder(3, 3, 7, 3.105),
+                    new ModuleIOTalonFXSparkMaxCANcoder(4, 4, 8, -2.817),
+            };
+            case ALPHABOT -> new ModuleIO[]{
+                    // FL, FR, BL, BR
+                    new ModuleIOSparkMaxCANcoder(4, 5, 6, -2.115),
+                    new ModuleIOSparkMaxCANcoder(2, 3, 1, -2.161),
+                    new ModuleIOSparkMaxCANcoder(9, 10, 8, 0.255),
+                    new ModuleIOSparkMaxCANcoder(12, 13, 11, 0.852),
+            };
+            case SIMBOT -> new ModuleIO[]{
+                    new ModuleIOSim(0),
+                    new ModuleIOSim(1),
+                    new ModuleIOSim(2),
+                    new ModuleIOSim(3)
+            };
+        };
+    }
 
-    public static final ModuleIO[] moduleIO = Constants.isReplay
-            ? new ModuleIO[]{new ModuleIO(), new ModuleIO(), new ModuleIO(), new ModuleIO()}
-            : switch (Constants.identity) {
-        // To calibrate the absolute encoder offsets, point the modules straight (such that forward
-        // motion on the drive motor will propel the robot forward) and copy the reported values from the
-        // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
-        case COMPBOT -> new ModuleIO[]{
-                // FL, FR, BL, BR
-                new ModuleIOTalonFXSparkMaxCANcoder(1, 1, 5, 1.577),
-                new ModuleIOTalonFXSparkMaxCANcoder(2, 2, 6, 1.770),
-                new ModuleIOTalonFXSparkMaxCANcoder(3, 3, 7, 3.105),
-                new ModuleIOTalonFXSparkMaxCANcoder(4, 4, 8, -2.817),
+    public static GyroIO createGyroIO() {
+        if (Constants.isReplay) {
+            return new GyroIO();
+        }
+        return switch (Constants.identity) {
+            case COMPBOT -> new GyroIOPigeon2(9);
+            case ALPHABOT -> new GyroIOPigeon2(7);
+            case SIMBOT -> new GyroIOSim();
         };
-        case ALPHABOT -> new ModuleIO[]{
-                // FL, FR, BL, BR
-                new ModuleIOSparkMaxCANcoder(4, 5, 6, -2.115),
-                new ModuleIOSparkMaxCANcoder(2, 3, 1, -2.161),
-                new ModuleIOSparkMaxCANcoder(9, 10, 8, 0.255),
-                new ModuleIOSparkMaxCANcoder(12, 13, 11, 0.852),
-        };
-        case SIMBOT -> new ModuleIO[]{
-                new ModuleIOSim(0),
-                new ModuleIOSim(1),
-                new ModuleIOSim(2),
-                new ModuleIOSim(3)
-        };
-    };
-
-    public static final GyroIO gyroIO = Constants.isReplay
-            ? new GyroIO()
-            : switch (Constants.identity) {
-        case COMPBOT -> new GyroIOPigeon2(9);
-        case ALPHABOT -> new GyroIOPigeon2(7);
-        case SIMBOT -> new GyroIOSim();
-    };
+    }
 
     public record DriveConfig(
             double wheelRadiusMeters,
@@ -166,10 +161,8 @@ public class DriveConstants {
             double bumperLengthMeters,
             PIDF choreoFeedbackXY,
             PIDF choreoFeedbackOmega,
-            double maxLinearSpeedMetersPerSec,
-            double maxLinearAccelMetersPerSecSquared,
-            double maxAngularSpeedRadPerSec,
-            double maxAngularAccelRadPerSecSquared,
+            double maxDriveVelocityMetersPerSec, // Maximum velocity of the drive motor
+            double maxDriveAccelMetersPerSecSquared, // Maximum acceleration of the drive motor
             double maxTurnVelocityRadPerSec // Maximum velocity of the turn motor
     ) {
     }

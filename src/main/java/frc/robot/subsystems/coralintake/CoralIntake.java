@@ -18,7 +18,10 @@
 //import static frc.robot.subsystems.coralintake.CoralIntakeConstants.pivotSetpointToleranceRad;
 //
 //public class CoralIntake extends SubsystemBaseExt {
-//    private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
+//    private final RobotMechanism robotMechanism = RobotMechanism.get();
+//
+//    private static final PivotIO pivotIO = CoralIntakeConstants.pivotIo;
+//    private static final PivotIOInputsAutoLogged pivotInputs = new PivotIOInputsAutoLogged();
 //
 //    @RequiredArgsConstructor
 //    public enum PivotGoal {
@@ -33,8 +36,8 @@
 //    @Getter
 //    private PivotGoal pivotGoal = PivotGoal.STOW;
 //
-//    private static final PivotIO pivotIO = CoralIntakeConstants.pivotIo;
-//    private static final PivotIOInputsAutoLogged pivotInputs = new PivotIOInputsAutoLogged();
+//    private final RollersIO rollersIO = CoralIntakeConstants.rollersIo;
+//    private final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 //
 //    @RequiredArgsConstructor
 //    public enum RollersGoal {
@@ -48,9 +51,6 @@
 //
 //    @Getter
 //    private RollersGoal rollersGoal = RollersGoal.IDLE;
-//
-//    private static final RollersIO rollersIO = CoralIntakeConstants.rollersIo;
-//    private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 //
 //    private static CoralIntake instance;
 //
@@ -71,6 +71,8 @@
 //        pivotIO.updateInputs(pivotInputs);
 //        Logger.processInputs("Inputs/CoralIntake/Pivot", pivotInputs);
 //
+//        // TODO: connection and zeroed alerts
+//
 //        rollersIO.updateInputs(rollersInputs);
 //        Logger.processInputs("Inputs/CoralIntake/Rollers", rollersInputs);
 //
@@ -86,6 +88,7 @@
 //        // TODO: coast override
 //        ////////////// PIVOT //////////////
 //        Logger.recordOutput("CoralIntake/Pivot/Goal", pivotGoal);
+//        // TODO: disabled check
 //        if (pivotGoal.setpointRad != null) {
 //            var pivotSetpointRad = pivotGoal.setpointRad.getAsDouble();
 //            pivotIO.setClosedLoop(pivotSetpointRad);
@@ -97,6 +100,7 @@
 //
 //        ////////////// ROLLERS //////////////
 //        Logger.recordOutput("CoralIntake/Rollers/Goal", rollersGoal);
+//        // TODO: disabled check
 //        if (rollersGoal.setpointRadPerSec != null) {
 //            var rollersSetpointRadPerSec = rollersGoal.setpointRadPerSec.getAsDouble();
 //            rollersIO.setVelocity(rollersSetpointRadPerSec);

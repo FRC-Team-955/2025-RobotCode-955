@@ -37,20 +37,17 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
+import frc.robot.util.HighFrequencySamplingThread;
 import frc.robot.util.PIDF;
+import frc.robot.util.PhoenixUtil;
 import frc.robot.util.SparkUtil;
 
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
 import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
-import static frc.robot.util.PhoenixUtil.tryUntilOk;
-import static frc.robot.util.SparkUtil.tryUntilOkAsync;
 
 /**
  * Module IO implementation for Talon FX drive motor controller, Spark MAX turn motor controller, and
@@ -85,15 +82,15 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
             new VelocityTorqueCurrentFOC(0.0);
 
     // Timestamp inputs from Phoenix thread
-    private final Queue<Double> phoenixTimestampQueue;
-    private final Queue<Double> sparkTimestampQueue;
+    private final Queue<Double> timestampQueue;
 
     // Inputs from drive motor
     private final StatusSignal<Angle> drivePosition;
     private final Queue<Double> drivePositionQueue;
     private final StatusSignal<AngularVelocity> driveVelocity;
     private final StatusSignal<Voltage> driveAppliedVolts;
-    private final StatusSignal<Current> driveCurrent;
+    private final StatusSignal<Current> driveCurrentAmps;
+    private final StatusSignal<Temperature> driveTemperatureCelsius;
 
     // Inputs from turn motor
     private final StatusSignal<Angle> turnAbsolutePosition;
@@ -129,8 +126,8 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
                 moduleConfig.driveInverted()
                         ? InvertedValue.Clockwise_Positive
                         : InvertedValue.CounterClockwise_Positive;
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
-        tryUntilOk(5, () -> driveTalon.setPosition(0.0, 0.25));
+        PhoenixUtil.tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+        PhoenixUtil.tryUntilOk(5, () -> driveTalon.setPosition(0.0, 0.25));
 
         // Configure turn motor
         turnConfig = new SparkMaxConfig();
@@ -154,7 +151,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
         turnConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
-                .primaryEncoderPositionPeriodMs((int) (1000.0 / DriveConstants.sparkFrequencyHz))
+                .primaryEncoderPositionPeriodMs((int) (1000.0 / HighFrequencySamplingThread.frequencyHz))
                 .primaryEncoderVelocityAlwaysOn(true)
                 .primaryEncoderVelocityPeriodMs(20)
                 .appliedOutputPeriodMs(20)
@@ -173,30 +170,31 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
                 moduleConfig.encoderInverted()
                         ? SensorDirectionValue.Clockwise_Positive
                         : SensorDirectionValue.CounterClockwise_Positive;
-        tryUntilOk(5, () -> cancoder.getConfigurator().apply(cancoderConfig));
+        PhoenixUtil.tryUntilOk(5, () -> cancoder.getConfigurator().apply(cancoderConfig));
 
         // Create timestamp queue
-        phoenixTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
-        sparkTimestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
+        timestampQueue = HighFrequencySamplingThread.get().makeTimestampQueue();
 
         // Create drive status signals
         drivePosition = driveTalon.getPosition();
-        drivePositionQueue = PhoenixOdometryThread.getInstance().registerSignal(driveTalon.getPosition());
+        drivePositionQueue = HighFrequencySamplingThread.get().registerPhoenixSignal(driveTalon.getPosition());
         driveVelocity = driveTalon.getVelocity();
         driveAppliedVolts = driveTalon.getMotorVoltage();
-        driveCurrent = driveTalon.getStatorCurrent();
+        driveCurrentAmps = driveTalon.getStatorCurrent();
+        driveTemperatureCelsius = driveTalon.getDeviceTemp();
 
         // Create turn status signals
         turnAbsolutePosition = cancoder.getAbsolutePosition();
-        turnPositionQueue = SparkOdometryThread.getInstance().registerSignal(turnSpark, turnEncoder::getPosition);
+        turnPositionQueue = HighFrequencySamplingThread.get().registerSparkSignal(turnSpark, turnEncoder::getPosition);
 
         // Configure periodic frames
-        BaseStatusSignal.setUpdateFrequencyForAll(DriveConstants.phoenixFrequencyHz, drivePosition);
+        BaseStatusSignal.setUpdateFrequencyForAll(HighFrequencySamplingThread.frequencyHz, drivePosition);
         BaseStatusSignal.setUpdateFrequencyForAll(
                 50.0,
                 driveVelocity,
                 driveAppliedVolts,
-                driveCurrent,
+                driveCurrentAmps,
+                driveTemperatureCelsius,
                 turnAbsolutePosition
         );
         ParentDevice.optimizeBusUtilizationForAll(driveTalon, cancoder);
@@ -207,12 +205,13 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
     @Override
     public void updateInputs(ModuleIOInputs inputs) {
         // Update drive inputs
-        var driveStatus = BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrent);
+        var driveStatus = BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrentAmps, driveTemperatureCelsius);
         inputs.driveConnected = driveConnectedDebounce.calculate(driveStatus.isOK());
         inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
         inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
         inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
-        inputs.driveCurrentAmps = driveCurrent.getValueAsDouble();
+        inputs.driveCurrentAmps = driveCurrentAmps.getValueAsDouble();
+        inputs.driveTemperatureCelsius = driveTemperatureCelsius.getValueAsDouble();
 
         // Update turn inputs
         SparkUtil.sparkStickyFault = false;
@@ -228,6 +227,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
                 (values) -> inputs.turnAppliedVolts = values[0] * values[1]
         );
         SparkUtil.ifOk(turnSpark, turnSpark::getOutputCurrent, (value) -> inputs.turnCurrentAmps = value);
+        SparkUtil.ifOk(turnSpark, turnSpark::getMotorTemperature, (value) -> inputs.turnTemperatureCelsius = value);
         inputs.turnConnected = turnConnectedDebounce.calculate(!SparkUtil.sparkStickyFault);
 
         // Update absolute encoder
@@ -236,18 +236,15 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
         inputs.turnAbsolutePositionRad = Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble());
 
         // Update odometry inputs
-        inputs.odometryDriveTimestamps = phoenixTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+        inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryDrivePositionsRad = drivePositionQueue.stream()
                 .mapToDouble(Units::rotationsToRadians)
                 .toArray();
-
-        inputs.odometryTurnTimestamps = sparkTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryTurnPositionsRad = turnPositionQueue.stream()
-                .mapToDouble(Units::rotationsToRadians)
+                .mapToDouble((Double value) -> value)
                 .toArray();
 
-        phoenixTimestampQueue.clear();
-        sparkTimestampQueue.clear();
+        timestampQueue.clear();
         drivePositionQueue.clear();
         turnPositionQueue.clear();
     }
@@ -256,7 +253,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
     public void setDrivePIDF(PIDF newGains) {
         System.out.println("Setting drive gains");
         driveConfig.Slot0 = Slot0Configs.from(newGains.toPhoenix());
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+        PhoenixUtil.tryUntilOkAsync(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
     }
 
     @Override
@@ -264,7 +261,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
         System.out.println("Setting turn gains");
         var newConfig = new SparkMaxConfig();
         newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
-        tryUntilOkAsync(5, () -> turnSpark.configure(
+        SparkUtil.tryUntilOkAsync(5, () -> turnSpark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
                 SparkBase.PersistMode.kPersistParameters
@@ -274,7 +271,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
     @Override
     public void setDriveBrakeMode(boolean enable) {
         driveConfig.MotorOutput.NeutralMode = enable ? NeutralModeValue.Brake : NeutralModeValue.Coast;
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+        PhoenixUtil.tryUntilOkAsync(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
     }
 
     @Override

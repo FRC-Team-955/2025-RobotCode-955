@@ -13,15 +13,15 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Threads;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.subsystems.drive.ModuleIOSim;
+import frc.robot.util.CANLogger;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
 import org.ironmaple.simulation.SimulatedArena;
@@ -128,6 +128,16 @@ public class Robot extends LoggedRobot {
         // Configure brownout voltage
         RobotController.setBrownoutVoltage(6.0);
 
+        // Disable controller disconnection alerts since we have our own alert
+        DriverStation.silenceJoystickConnectionWarning(true);
+
+        if (RobotBase.isSimulation()) {
+            DriverStationSim.setAllianceStationId(AllianceStationID.Blue1);
+            DriverStationSim.notifyNewData();
+        }
+
+        CANLogger.ensureInitialized();
+
         // No references to RobotContainer/RobotState/any subsystem should be made before this point!
         System.out.println("********** Initializing RobotContainer **********");
         robotContainer = new RobotContainer();
@@ -176,14 +186,6 @@ public class Robot extends LoggedRobot {
         // and then runs all of the commands.
         CommandScheduler.getInstance().run();
 
-        for (var subsystem : virtualSubsystems) {
-            subsystem.periodicAfterCommands();
-        }
-
-        for (var subsystem : extendedSubsystems) {
-            subsystem.periodicAfterCommands();
-        }
-
         if (DriverStation.isAutonomousEnabled()) {
             // We want this to run after the command scheduler,
             // so this can't go in autonomousPeriodic
@@ -192,6 +194,14 @@ public class Robot extends LoggedRobot {
                 autonomousCommand = null;
                 System.out.printf("********** Auto finished in %.2f seconds **********%n", autonomousEnd - autonomousStart);
             }
+        }
+
+        for (var subsystem : virtualSubsystems) {
+            subsystem.periodicAfterCommands();
+        }
+
+        for (var subsystem : extendedSubsystems) {
+            subsystem.periodicAfterCommands();
         }
 
         // Return to normal thread priority
@@ -258,7 +268,6 @@ public class Robot extends LoggedRobot {
                 .andThen(Commands.runOnce(() -> ModuleIOSim.driveSimulation.setSimulationWorldPose(RobotState.get().getPose()))));
         RobotState.get().setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
     }
-
 
     @Override
     public void simulationPeriodic() {

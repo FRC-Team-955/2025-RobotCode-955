@@ -26,17 +26,16 @@ import com.ctre.phoenix6.signals.*;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
+import frc.robot.util.HighFrequencySamplingThread;
 import frc.robot.util.PIDF;
 
 import java.util.Queue;
 
 import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
+import static frc.robot.util.PhoenixUtil.tryUntilOkAsync;
 
 /**
  * Module IO implementation for Talon FX drive motor controller, Talon FX turn motor controller, and
@@ -78,7 +77,8 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
     private final Queue<Double> drivePositionQueue;
     private final StatusSignal<AngularVelocity> driveVelocity;
     private final StatusSignal<Voltage> driveAppliedVolts;
-    private final StatusSignal<Current> driveCurrent;
+    private final StatusSignal<Current> driveCurrentAmps;
+    private final StatusSignal<Temperature> driveTemperatureCelsius;
 
     // Inputs from turn motor
     private final StatusSignal<Angle> turnAbsolutePosition;
@@ -86,7 +86,8 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
     private final Queue<Double> turnPositionQueue;
     private final StatusSignal<AngularVelocity> turnVelocity;
     private final StatusSignal<Voltage> turnAppliedVolts;
-    private final StatusSignal<Current> turnCurrent;
+    private final StatusSignal<Current> turnCurrentAmps;
+    private final StatusSignal<Temperature> turnTemperatureCelsius;
 
     // Connection debouncers
     private final Debouncer driveConnectedDebounce = new Debouncer(0.5);
@@ -151,44 +152,47 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         tryUntilOk(5, () -> cancoder.getConfigurator().apply(cancoderConfig));
 
         // Create timestamp queue
-        timestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
+        timestampQueue = HighFrequencySamplingThread.get().makeTimestampQueue();
 
         // Create drive status signals
         drivePosition = driveTalon.getPosition();
-        drivePositionQueue =
-                PhoenixOdometryThread.getInstance().registerSignal(driveTalon.getPosition());
+        drivePositionQueue = HighFrequencySamplingThread.get().registerPhoenixSignal(driveTalon.getPosition());
         driveVelocity = driveTalon.getVelocity();
         driveAppliedVolts = driveTalon.getMotorVoltage();
-        driveCurrent = driveTalon.getStatorCurrent();
+        driveCurrentAmps = driveTalon.getStatorCurrent();
+        driveTemperatureCelsius = driveTalon.getDeviceTemp();
 
         // Create turn status signals
         turnAbsolutePosition = cancoder.getAbsolutePosition();
         turnPosition = turnTalon.getPosition();
-        turnPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(turnTalon.getPosition());
+        turnPositionQueue = HighFrequencySamplingThread.get().registerPhoenixSignal(turnTalon.getPosition());
         turnVelocity = turnTalon.getVelocity();
         turnAppliedVolts = turnTalon.getMotorVoltage();
-        turnCurrent = turnTalon.getStatorCurrent();
+        turnCurrentAmps = turnTalon.getStatorCurrent();
+        turnTemperatureCelsius = driveTalon.getDeviceTemp();
 
         // Configure periodic frames
-        BaseStatusSignal.setUpdateFrequencyForAll(
-                DriveConstants.phoenixFrequencyHz, drivePosition, turnPosition);
+        BaseStatusSignal.setUpdateFrequencyForAll(HighFrequencySamplingThread.frequencyHz, drivePosition, turnPosition);
         BaseStatusSignal.setUpdateFrequencyForAll(
                 50.0,
                 driveVelocity,
                 driveAppliedVolts,
-                driveCurrent,
+                driveCurrentAmps,
+                driveTemperatureCelsius,
                 turnAbsolutePosition,
                 turnVelocity,
                 turnAppliedVolts,
-                turnCurrent);
+                turnCurrentAmps,
+                turnTemperatureCelsius
+        );
         ParentDevice.optimizeBusUtilizationForAll(driveTalon, turnTalon, cancoder);
     }
 
     @Override
     public void updateInputs(ModuleIOInputs inputs) {
         // Refresh all signals
-        var driveStatus = BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrent);
-        var turnStatus = BaseStatusSignal.refreshAll(turnPosition, turnVelocity, turnAppliedVolts, turnCurrent);
+        var driveStatus = BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrentAmps, driveTemperatureCelsius);
+        var turnStatus = BaseStatusSignal.refreshAll(turnPosition, turnVelocity, turnAppliedVolts, turnCurrentAmps, turnTemperatureCelsius);
         var turnEncoderStatus = BaseStatusSignal.refreshAll(turnAbsolutePosition);
 
         // Update drive inputs
@@ -196,7 +200,8 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
         inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
         inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
-        inputs.driveCurrentAmps = driveCurrent.getValueAsDouble();
+        inputs.driveCurrentAmps = driveCurrentAmps.getValueAsDouble();
+        inputs.driveTemperatureCelsius = driveTemperatureCelsius.getValueAsDouble();
 
         // Update turn inputs
         inputs.turnConnected = turnConnectedDebounce.calculate(turnStatus.isOK());
@@ -205,15 +210,14 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         inputs.turnPositionRad = Units.rotationsToRadians(turnPosition.getValueAsDouble());
         inputs.turnVelocityRadPerSec = Units.rotationsToRadians(turnVelocity.getValueAsDouble());
         inputs.turnAppliedVolts = turnAppliedVolts.getValueAsDouble();
-        inputs.turnCurrentAmps = turnCurrent.getValueAsDouble();
+        inputs.turnCurrentAmps = turnCurrentAmps.getValueAsDouble();
+        inputs.turnTemperatureCelsius = turnTemperatureCelsius.getValueAsDouble();
 
         // Update odometry inputs
-        inputs.odometryDriveTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+        inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryDrivePositionsRad = drivePositionQueue.stream()
                 .mapToDouble(Units::rotationsToRadians)
                 .toArray();
-
-        inputs.odometryTurnTimestamps = inputs.odometryDriveTimestamps;
         inputs.odometryTurnPositionsRad = turnPositionQueue.stream()
                 .mapToDouble(Units::rotationsToRadians)
                 .toArray();
@@ -227,26 +231,26 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
     public void setDrivePIDF(PIDF newGains) {
         System.out.println("Setting drive gains");
         driveConfig.Slot0 = Slot0Configs.from(newGains.toPhoenix());
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+        tryUntilOkAsync(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
     }
 
     @Override
     public void setTurnPIDF(PIDF newGains) {
         System.out.println("Setting turn gains");
         turnConfig.Slot0 = Slot0Configs.from(newGains.toPhoenix());
-        tryUntilOk(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));
+        tryUntilOkAsync(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));
     }
 
     @Override
     public void setDriveBrakeMode(boolean enable) {
         driveConfig.MotorOutput.NeutralMode = enable ? NeutralModeValue.Brake : NeutralModeValue.Coast;
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+        tryUntilOkAsync(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
     }
 
     @Override
     public void setTurnBrakeMode(boolean enable) {
         turnConfig.MotorOutput.NeutralMode = enable ? NeutralModeValue.Brake : NeutralModeValue.Coast;
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(turnConfig, 0.25));
+        tryUntilOkAsync(5, () -> driveTalon.getConfigurator().apply(turnConfig, 0.25));
     }
 
     @Override

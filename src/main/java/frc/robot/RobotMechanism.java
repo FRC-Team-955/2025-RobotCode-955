@@ -12,6 +12,20 @@ import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
 /** Holds the Mechanism2d and all roots and ligaments that visualizes the robot state */
 public class RobotMechanism {
+    private static RobotMechanism instance;
+
+    public static RobotMechanism get() {
+        if (instance == null)
+            synchronized (RobotMechanism.class) {
+                instance = new RobotMechanism();
+            }
+
+        return instance;
+    }
+
+    private RobotMechanism() {
+    }
+
     /** Middle of the robot in the mechanism */
     public static final double middleOfRobot = 0.75;
 
@@ -20,6 +34,7 @@ public class RobotMechanism {
 
     public final Elevator elevator = new Elevator();
     public final EndEffector endEffector = new EndEffector();
+    public final Climber climber = new Climber();
 //    public final Indexer indexer = new Indexer();
 //    public final CoralIntake coralIntake = new CoralIntake();
 
@@ -27,6 +42,11 @@ public class RobotMechanism {
         public final LoggedMechanismRoot2d stage1Root = mechanism.getRoot("elevator_stage1", 0, 0);
         public final LoggedMechanismRoot2d stage2Root = mechanism.getRoot("elevator_stage2", 0, 0);
         public final LoggedMechanismRoot2d stage3Root = mechanism.getRoot("elevator_stage3", 0, 0);
+        private final LoggedMechanismRoot2d hardstopSlowdownRoot = mechanism.getRoot("elevator_hardstopSlowdown", 0, 0);
+
+        public void updateHardstopSlowdownPosition() {
+            hardstopSlowdownRoot.setPosition(middleOfRobot - Units.inchesToMeters(15), Units.inchesToMeters(2.85) + hardstopSlowdownMeters);
+        }
 
         private Elevator() {
             var baseRoot = mechanism.getRoot(
@@ -75,7 +95,7 @@ public class RobotMechanism {
                     new Color8Bit(Color.kGray)
             ));
 
-            var hardstopSlowdownRoot = mechanism.getRoot("elevator_hardstopSlowdown", middleOfRobot - Units.inchesToMeters(15), Units.inchesToMeters(2.85) + hardstopSlowdownMeters);
+            updateHardstopSlowdownPosition();
             hardstopSlowdownRoot.append(new LoggedMechanismLigament2d(
                     "hardstopSlowdown",
                     Units.inchesToMeters(1),
@@ -133,6 +153,21 @@ public class RobotMechanism {
         ));
 
         private EndEffector() {
+        }
+    }
+
+    public class Climber {
+        public final LoggedMechanismRoot2d root = mechanism.getRoot("climber", middleOfRobot, 0.5);
+        public final LoggedMechanismLigament2d ligament = root.append(new LoggedMechanismLigament2d(
+                "ligament",
+                Units.inchesToMeters(15),
+                0,
+                5,
+                new Color8Bit(Color.kCyan)
+        ));
+
+        private Climber() {
+
         }
     }
 

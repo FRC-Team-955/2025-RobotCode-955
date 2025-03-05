@@ -14,7 +14,10 @@
 //import java.util.function.DoubleSupplier;
 //
 //public class Indexer extends SubsystemBaseExt {
-//    private final RobotMechanism robotMechanism = RobotState.get().getMechanism();
+//    private final RobotMechanism robotMechanism = RobotMechanism.get();
+//
+//    private final RollersIO rollersIO = IndexerConstants.rollersIO;
+//    private final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 //
 //    @RequiredArgsConstructor
 //    public enum RollersGoal {
@@ -29,9 +32,6 @@
 //
 //    @Getter
 //    private RollersGoal rollersGoal = RollersGoal.IDLE;
-//
-//    private static final RollersIO rollersIO = IndexerConstants.rollersIO;
-//    private static final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 //
 //    private static Indexer instance;
 //
@@ -52,6 +52,8 @@
 //        rollersIO.updateInputs(rollersInputs);
 //        Logger.processInputs("Inputs/Indexer/Rollers", rollersInputs);
 //
+//        // TODO: connection alerts
+//
 //        // side rollers are reversed relative to motor
 //        robotMechanism.indexer.rollersLigament.setAngle(Units.radiansToDegrees(-rollersInputs.positionRad));
 //    }
@@ -61,6 +63,7 @@
 //        // TODO: coast override
 //        ////////////// ROLLERS //////////////
 //        Logger.recordOutput("Indexer/Rollers/Goal", rollersGoal);
+//        // TODO: disabled check
 //        if (rollersGoal.setpointRadPerSec != null) {
 //            var rollersSetpointRadPerSec = rollersGoal.setpointRadPerSec.getAsDouble();
 //            rollersIO.setVelocity(rollersSetpointRadPerSec);

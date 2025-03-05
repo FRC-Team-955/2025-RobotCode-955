@@ -49,7 +49,7 @@
 //    private final StatusSignal<Angle> position;
 //    private final StatusSignal<AngularVelocity> velocity;
 //    private final StatusSignal<Voltage> appliedVolts;
-//    private final StatusSignal<Current> current;
+//    private final StatusSignal<Current> currentAmps;
 //
 //    // Connection debouncers
 //    private final Debouncer driveConnectedDebounce = new Debouncer(0.5);
@@ -93,6 +93,18 @@
 //        appliedVolts = talon.getMotorVoltage();
 //        current = talon.getStatorCurrent();
 //
+//        BaseStatusSignal.setUpdateFrequencyForAll(
+//                50.0,
+//                driveVelocity,
+//                driveAppliedVolts,
+//                driveCurrentAmps,
+//                driveTemperatureCelsius,
+//                turnAbsolutePosition,
+//                turnVelocity,
+//                turnAppliedVolts,
+//                turnCurrentAmps,
+//                turnTemperatureCelsius
+//                );
 //        ParentDevice.optimizeBusUtilizationForAll(talon);
 //    }
 //
@@ -114,7 +126,7 @@
 //    @Override
 //    public void setBrakeMode(boolean enable) {
 //        motorConfig.MotorOutput.NeutralMode = enable ? NeutralModeValue.Brake : NeutralModeValue.Coast;
-//        tryUntilOk(5, () -> talon.getConfigurator().apply(motorConfig, 0.25));
+//        tryUntilOkAsync(5, () -> talon.getConfigurator().apply(motorConfig, 0.25));
 //    }
 //
 //    @Override

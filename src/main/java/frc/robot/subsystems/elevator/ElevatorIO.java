@@ -11,14 +11,15 @@ public class ElevatorIO {
         public double leaderVelocityRadPerSec = 0.0;
         public double leaderAppliedVolts = 0.0;
         public double leaderCurrentAmps = 0.0;
+        public double leaderTemperatureCelsius = 0.0;
 
         public boolean followerConnected = false;
         public double followerPositionRad = 0.0;
         public double followerVelocityRadPerSec = 0.0;
         public double followerAppliedVolts = 0.0;
         public double followerCurrentAmps = 0.0;
+        public double followerTemperatureCelsius = 0.0;
 
-        public boolean limitSwitchConnected = false;
         public boolean limitSwitchTriggered = false;
     }
 
@@ -36,6 +37,13 @@ public class ElevatorIO {
      * Enable or disable brake mode on the drive motor.
      */
     public void setBrakeMode(boolean enable) {
+    }
+
+    /**
+     * Set the emergency stopped value. IO layers should expect this only to be called when the value changes.
+     * If true, the IO layer should ignore all commands and stop the motor until set back to false.
+     */
+    public void setEmergencyStopped(boolean emergencyStopped) {
     }
 
     /**

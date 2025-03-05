@@ -61,27 +61,25 @@ public class Module {
     /**
      * Runs the module with the specified setpoint state. Mutates the state to optimize it.
      */
-    public void runSetpointOptimized(SwerveModuleState state) {
+    public void runSetpoint(SwerveModuleState state, boolean optimize) {
         // Optimize velocity setpoint
         var currentAngle = new Rotation2d(inputs.turnPositionRad);
-        state.optimize(currentAngle);
+        if (optimize) {
+            state.optimize(currentAngle);
+        }
         state.cosineScale(currentAngle);
 
-        // Apply setpoints
-        runSetpointUnoptimized(state);
-    }
-
-    /**
-     * Runs the module with the specified setpoint state.
-     */
-    public void runSetpointUnoptimized(SwerveModuleState state) {
         // Apply setpoints
         if (disableDriving) {
             io.setDriveOpenLoop(0.0);
         } else {
             io.setDriveVelocity(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
         }
-        io.setTurnPosition(state.angle.getRadians());
+        if (Math.abs(state.speedMetersPerSecond) < 1e-4) {
+            io.setTurnOpenLoop(0.0);
+        } else {
+            io.setTurnPosition(state.angle.getRadians());
+        }
     }
 
     /**
@@ -159,15 +157,8 @@ public class Module {
     /**
      * Returns the timestamps of the samples received this cycle.
      */
-    public double[] getOdometryDriveTimestamps() {
-        return inputs.odometryDriveTimestamps;
-    }
-
-    /**
-     * Returns the timestamps of the samples received this cycle.
-     */
-    public double[] getOdometryTurnTimestamps() {
-        return inputs.odometryTurnTimestamps;
+    public double[] getOdometryTimestamps() {
+        return inputs.odometryTimestamps;
     }
 
     public double[] getOdometryDrivePositionsRad() {

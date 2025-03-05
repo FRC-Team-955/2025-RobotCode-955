@@ -52,6 +52,8 @@ public class SuperstructureIOSim extends SuperstructureIO {
     private static final double indexTime = 1;
     private final Timer sinceStartedHandoff = new Timer();
     private static final double handoffTime = 0.5;
+    private final Timer sinceAtStation = new Timer();
+    private static final double stationIntakeTime = 1.5;
     private CoralState coralState = CoralState.IN_END_EFFECTOR; // preload
 
     private enum CoralState {
@@ -86,8 +88,12 @@ public class SuperstructureIOSim extends SuperstructureIO {
         switch (coralState) {
             case NO_CORAL -> {
                 var current = robotState.getPose().getTranslation();
-                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 1)) {
-                    coralState = CoralState.IN_END_EFFECTOR;
+                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 0.7) && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
+                    if (!sinceAtStation.isRunning()) sinceAtStation.restart();
+                    if (sinceAtStation.hasElapsed(stationIntakeTime))
+                        coralState = CoralState.IN_END_EFFECTOR;
+                } else {
+                    sinceAtStation.stop();
                 }
             }
             case INDEXING -> {
@@ -139,7 +145,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 var coralOffsetX = Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angle);
                 // TODO: fix the trig, it doesn't actually work but is good enough for sim
                 var coralOffsetZ = Units.inchesToMeters(13.5) + elevator.getPositionMeters() + Units.inchesToMeters(4) * Math.tan(angle);
-                if (endEffector.getRollersGoal() == EndEffector.RollersGoal.SCORE_CORAL) {
+                if (endEffector.getRollersGoal() == EndEffector.RollersGoal.SCORE_CORAL || endEffector.getRollersGoal() == EndEffector.RollersGoal.EJECT) {
                     coralState = CoralState.NO_CORAL;
                     SimulatedArena.getInstance()
                             .addGamePieceProjectile(new ReefscapeCoralOnFly(
@@ -198,9 +204,5 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 inputs.endEffectorBeamBreakTriggered = false;
             }
         }
-
-//        inputs.intakeRangeConnected = true;
-//        inputs.indexerBeamBreakConnected = true;
-        inputs.endEffectorBeamBreakConnected = true;
     }
 }

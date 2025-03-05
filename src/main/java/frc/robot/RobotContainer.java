@@ -3,6 +3,7 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.XboxController;
@@ -11,12 +12,15 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.factories.auto.BargeSideAuto;
+import frc.robot.factories.auto.ProcessorSideAuto;
+import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.leds.LEDs;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
+import frc.robot.util.subsystem.VirtualSubsystem;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -31,15 +35,18 @@ import static frc.robot.Constants.mode;
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
-public class RobotContainer {
+public class RobotContainer extends VirtualSubsystem {
     // Controller
     private final CommandXboxController driverController = RobotBase.isSimulation()
             ? Constants.Simulation.simController.apply(0)
             : new CommandXboxController(0);
+    private final Alert driverControllerDisconnectedAlert = new Alert("Driver controller is not connected!", Alert.AlertType.kError);
 
     // Dashboard inputs
+    /** THERE SHOULD NOT BE A DEFAULT OPTION OR THE ALERT WILL BREAK!! */
     private final LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Choices");
     private final LoggedDashboardChooser<Command> characterizationChooser = new LoggedDashboardChooser<>("Characterization Choices");
+    private final Alert autoNotChosenAlert = new Alert("Auto is not chosen!", Alert.AlertType.kError);
 
     private final RobotState robotState = RobotState.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
@@ -54,6 +61,7 @@ public class RobotContainer {
     private final Drive drive = Drive.get();
     private final Superstructure superstructure = Superstructure.get();
     private final LEDs leds = LEDs.get();
+    private final Climber climber = Climber.get();
 
     public RobotContainer() {
         addAutos();
@@ -65,8 +73,11 @@ public class RobotContainer {
     private void addAutos() {
         final var factory = drive.createAutoFactory();
 
+        // THERE SHOULD NOT BE A DEFAULT OPTION OR THE ALERT WILL BREAK!!
+
         autoChooser.addOption("None", Commands.none());
-        autoChooser.addDefaultOption("Barge Side", BargeSideAuto.get(factory.newRoutine("Barge Side")));
+        autoChooser.addOption("Barge Side", BargeSideAuto.get(factory.newRoutine("Barge Side")));
+        autoChooser.addOption("Processor Side", ProcessorSideAuto.get(factory.newRoutine("Processor Side")));
 
         autoChooser.addOption("Characterization", Commands.deferredProxy(characterizationChooser::get));
     }
@@ -75,6 +86,7 @@ public class RobotContainer {
         ////////////////////// DRIVE //////////////////////
 
         characterizationChooser.addOption("Drive Feedforward Characterization", drive.feedforwardCharacterization());
+        characterizationChooser.addOption("Drive Full Speed Characterization", drive.fullSpeedCharacterization());
         characterizationChooser.addOption("Drive Wheel Radius Characterization", drive.wheelRadiusCharacterization(Drive.WheelRadiusCharacterization.Direction.CLOCKWISE));
         characterizationChooser.addOption("Drive SysId (Quasistatic Forward)", drive.sysId.quasistatic(SysIdRoutine.Direction.kForward));
         characterizationChooser.addOption("Drive SysId (Quasistatic Reverse)", drive.sysId.quasistatic(SysIdRoutine.Direction.kReverse));
@@ -128,6 +140,7 @@ public class RobotContainer {
 //        indexer.setDefaultCommand(superstructure.indexerIdle().ignoringDisable(true));
         elevator.setDefaultCommand(superstructure.elevatorIdle().ignoringDisable(true));
         endEffector.setDefaultCommand(superstructure.endEffectorIdle().ignoringDisable(true));
+        climber.setDefaultCommand(climber.idle());
     }
 
     /**
@@ -139,22 +152,32 @@ public class RobotContainer {
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
 
-        driverController.rightTrigger().whileTrue(superstructure.funnelIntake());
+        driverController.x().whileTrue(superstructure.eject());
+
+        driverController.rightTrigger().whileTrue(superstructure.funnelIntake(false));
 //        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
 
-        driverController.leftTrigger().onTrue(superstructure.scoreCoralManual(
-                driverController.leftTrigger(),
-                driverController.leftBumper(),
-                operatorDashboard::getCoralScoringElevatorGoal
+        driverController.leftTrigger().onTrue(Commands.either(
+                superstructure.scoreCoralManual(
+                        false,
+                        driverController.leftTrigger(),
+                        driverController.leftBumper(),
+                        operatorDashboard::getCoralScoringElevatorGoal
+                ).asProxy(),
+                superstructure.autoAlignAndScore(
+                        false,
+                        operatorDashboard::getSelectedReefZoneSide,
+                        operatorDashboard::getSelectedLocalReefSide,
+                        operatorDashboard::getCoralScoringElevatorGoal,
+                        driverController.leftTrigger(),
+                        driverController.leftBumper()
+                ).asProxy(),
+                operatorDashboard.manualScoring::get
         ));
         driverController.rightBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
 
-//        driverController.leftTrigger().toggleOnTrue(superstructure.autoAlignAndScore(
-//                operatorDashboard::getSide,
-//                operatorDashboard::getLeftSide,
-//                operatorDashboard::getElevatorLevel,
-//                driverController.leftBumper()
-//        ));
+        driverController.povDown().whileTrue(climber.towardsRobot());
+        driverController.povUp().whileTrue(climber.awayFromRobot());
 
         if (mode == Constants.Mode.SIM) {
             driverController.x().onTrue(Commands.runOnce(() ->
@@ -162,7 +185,7 @@ public class RobotContainer {
                             new Pose2d(Units.inchesToMeters(650), Units.inchesToMeters(30), new Rotation2d(Math.random() * 2 * Math.PI))
                     ))
             ));
-            driverController.y().onTrue(Commands.runOnce(() ->
+            driverController.a().onTrue(Commands.runOnce(() ->
                     SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(
                             new Pose2d(Units.inchesToMeters(650), Units.inchesToMeters(285), new Rotation2d(Math.random() * 2 * Math.PI))
                     ))
@@ -190,5 +213,12 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         return autoChooser.get();
+    }
+
+    @Override
+    public void periodicBeforeCommands() {
+        driverControllerDisconnectedAlert.set(!driverController.isConnected());
+
+        autoNotChosenAlert.set(autoChooser.get() == null);
     }
 }

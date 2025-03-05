@@ -112,6 +112,42 @@ public class CommandSteamInputController extends CommandXboxController {
         return MathUtil.clamp(getRawAxis(Axis.RightTrigger.value), 0.0, 1.0);
     }
 
+    public Trigger povUp() {
+        return button(Button.DpadUp.value, CommandScheduler.getInstance().getDefaultButtonLoop());
+    }
+
+    public Trigger povUpRight() {
+        return povUp().and(povRight());
+    }
+
+    public Trigger povRight() {
+        return button(Button.DpadRight.value, CommandScheduler.getInstance().getDefaultButtonLoop());
+    }
+
+    public Trigger povDownRight() {
+        return povDown().and(povRight());
+    }
+
+    public Trigger povDown() {
+        return button(Button.DpadDown.value, CommandScheduler.getInstance().getDefaultButtonLoop());
+    }
+
+    public Trigger povDownLeft() {
+        return povDown().and(povLeft());
+    }
+
+    public Trigger povLeft() {
+        return button(Button.DpadLeft.value, CommandScheduler.getInstance().getDefaultButtonLoop());
+    }
+
+    public Trigger povUpLeft() {
+        return povUp().and(povLeft());
+    }
+
+    public Trigger povCenter() {
+        return povUpLeft().and(povDownRight()).negate();
+    }
+
     public enum Button {
         LeftBumper(5),
         RightBumper(6),
@@ -126,7 +162,11 @@ public class CommandSteamInputController extends CommandXboxController {
         // note: Y is really 4, but having it as 3 matches the button position with an xbox controller
         Y(3),
         Plus(9),
-        Minus(10);
+        Minus(10),
+        DpadUp(12),
+        DpadRight(13),
+        DpadDown(14),
+        DpadLeft(15);
 
         public final int value;
 
