@@ -1,6 +1,5 @@
 package frc.robot.subsystems.superstructure;
 
-import choreo.util.ChoreoAllianceFlipUtil;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -10,6 +9,9 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.OperatorDashboard.LocalReefSide;
 import frc.robot.OperatorDashboard.ReefZoneSide;
 import frc.robot.Util;
+import lombok.RequiredArgsConstructor;
+
+import java.util.function.Supplier;
 
 import static frc.robot.Util.shouldFlip;
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
@@ -31,10 +33,12 @@ public class AutoAlignLocations {
     private static final Transform2d initialAlignOffset = new Transform2d(0.75, 0, new Rotation2d());
     private static final Transform2d finalAlignOffset = new Transform2d(driveConfig.bumperLengthMeters() / 2.0, 0, new Rotation2d());
 
-    // Very rough - 50 cm and 30 degrees
-    public static final double initialAlignToleranceMeters = 0.5;
+    // Very rough
+    public static final double initialElevatorRaiseToleranceMeters = 1.5;
+    public static final double initialAlignToleranceMeters = 0.7;
     public static final double initialAlignToleranceRad = Units.degreesToRadians(20);
-    // very little tolerance - 2 cm, 2 deg
+    public static final double initialAlignToleranceRadPerSecond = Units.degreesToRadians(20);
+    // very little tolerance
     public static final double finalAlignToleranceMeters = 0.05;
     public static final double finalAlignToleranceRad = Units.degreesToRadians(2);
     public static final double finalAlignToleranceMetersPerSecond = 0.05;
@@ -48,8 +52,14 @@ public class AutoAlignLocations {
         return currentPose.relativeTo(getAprilTagPoseAdjusted(reefZoneSide)).getX() > 0;
     }
 
-    public static Pose2d getFinalAlignPose(ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
-        return getAprilTagPoseAdjusted(reefZoneSide).plus(localReefSideAdjustment(localReefSide));
+    public static Pose2d getFinalAlignPose(double elevatorPercentage, ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
+        Pose2d finalAlign = getAprilTagPoseAdjusted(reefZoneSide).plus(localReefSideAdjustment(localReefSide));
+        if (elevatorPercentage >= 0.9) return finalAlign;
+        // If we aren't high enough, interpolate the pose from the initial align pose to the final based on elevator percentage
+        Pose2d initialAlign = getInitialAlignPose(reefZoneSide, localReefSide);
+        // Fully at final when 100% raised, fully at initial when 0% raised
+        // .interpolate will handle values >1 or <0
+        return initialAlign.interpolate(finalAlign, elevatorPercentage);
     }
 
     public static Pose2d getInitialAlignPose(ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
@@ -84,28 +94,27 @@ public class AutoAlignLocations {
         return aprilTagLayout.getTagPose(id).get().toPose2d();
     }
 
-    public static final double stationAlignToleranceXYMeters = 0.05;
+    public static final double stationAlignToleranceXYMeters = 0.15;
     public static final double stationAlignToleranceOmegaRad = Units.degreesToRadians(15);
 
-    private static final double sourceX = 1.53;
-    private static final double sourceYLower = 0.7;
-    private static final double sourceYUpper = 7.35;
-    private static final double sourceTheta = 2.2;
-    private static final Pose2d lowerSource = new Pose2d(
-            sourceX,
-            sourceYLower,
-            Rotation2d.fromRadians(-sourceTheta)
+    private static final double stationX = 1.53;
+    private static final double stationTheta = 2.2;
+    private static final Pose2d processorSideStation = new Pose2d(
+            stationX,
+            0.7,
+            Rotation2d.fromRadians(-stationTheta)
     );
-    private static final Pose2d upperSource = new Pose2d(
-            sourceX,
-            sourceYUpper,
-            Rotation2d.fromRadians(sourceTheta)
+    private static final Pose2d bargeSideStation = new Pose2d(
+            stationX,
+            7.35,
+            Rotation2d.fromRadians(stationTheta)
     );
 
-    public static Pose2d getSourceAlignPose(Pose2d currentPose) {
-        double lowerDistance = lowerSource.getTranslation().getDistance(currentPose.getTranslation());
-        double upperDistance = upperSource.getTranslation().getDistance(currentPose.getTranslation());
-        Pose2d alignPose = lowerDistance < upperDistance ? lowerSource : upperSource;
-        return Util.shouldFlip() ? ChoreoAllianceFlipUtil.flip(alignPose) : alignPose;
+    @RequiredArgsConstructor
+    public enum Station {
+        BargeSide(() -> Util.flipIfNeeded(bargeSideStation)),
+        ProcessorSide(() -> Util.flipIfNeeded(processorSideStation));
+
+        public final Supplier<Pose2d> alignPoseSupplier;
     }
 }

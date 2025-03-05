@@ -78,7 +78,8 @@ public class Elevator extends SubsystemBaseExt {
     private final Alert notZeroedAlert = new Alert("Elevator is not zeroed.", Alert.AlertType.kWarning);
     private final Alert leaderDisconnectedAlert = new Alert("Elevator leader motor is disconnected.", Alert.AlertType.kError);
     private final Alert followerDisconnectedAlert = new Alert("Elevator follower motor is disconnected.", Alert.AlertType.kError);
-    private final Alert elevatorOffsetSetAlert = new Alert("Elevator offset is not zero, bad things may happen.", Alert.AlertType.kWarning);
+    private final Alert offsetSetAlert = new Alert("Elevator offset is not zero, bad things may happen.", Alert.AlertType.kWarning);
+    private final Alert temperatureAlert = new Alert("Elevator motor temperature is high.", Alert.AlertType.kWarning);
 
     private static Elevator instance;
 
@@ -110,6 +111,8 @@ public class Elevator extends SubsystemBaseExt {
 
         leaderDisconnectedAlert.set(!inputs.leaderConnected);
         followerDisconnectedAlert.set(!inputs.followerConnected);
+
+        temperatureAlert.set(Math.max(inputs.leaderTemperatureCelsius, inputs.followerTemperatureCelsius) > 60);
 
         // Check emergency stop and limits for auto stop
         var positionMeters = getPositionMeters();
@@ -192,9 +195,9 @@ public class Elevator extends SubsystemBaseExt {
             double offsetMeters = operatorDashboard.elevatorOffsetMeters.get();
             if (offsetMeters != 0.0) {
                 setpointMeters += offsetMeters; // Offset should override clamping
-                elevatorOffsetSetAlert.set(true);
+                offsetSetAlert.set(true);
             } else {
-                elevatorOffsetSetAlert.set(false);
+                offsetSetAlert.set(false);
             }
 
             if (goal == Goal.STOW && operatorDashboard.coralStuckInRobotMode.get()) {
@@ -278,14 +281,16 @@ public class Elevator extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Elevator/Measurement/PositionMeters")
     public double getPositionMeters() {
-        var avgPositionRad = (inputs.leaderPositionRad + inputs.followerPositionRad) / 2.0;
-        return radToMeters(avgPositionRad);
+        return radToMeters(inputs.leaderPositionRad);
+//        var avgPositionRad = (inputs.leaderPositionRad + inputs.followerPositionRad) / 2.0;
+//        return radToMeters(avgPositionRad);
     }
 
     @AutoLogOutput(key = "Elevator/Measurement/VelocityMetersPerSec")
     public double getVelocityMetersPerSec() {
-        var avgVelocityRadPerSec = (inputs.leaderVelocityRadPerSec + inputs.followerVelocityRadPerSec) / 2.0;
-        return radToMeters(avgVelocityRadPerSec);
+        return radToMeters(inputs.leaderVelocityRadPerSec);
+//        var avgVelocityRadPerSec = (inputs.leaderVelocityRadPerSec + inputs.followerVelocityRadPerSec) / 2.0;
+//        return radToMeters(avgVelocityRadPerSec);
     }
 
     public Command feedforwardCharacterization() {

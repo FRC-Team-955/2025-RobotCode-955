@@ -62,7 +62,7 @@ public class Climber extends SubsystemBaseExt {
         Logger.processInputs("Inputs/Climber", inputs);
 
         disconnectedAlert.set(!inputs.connected);
-        temperatureAlert.set(inputs.temperatureCelsius > 30);
+        temperatureAlert.set(inputs.temperatureCelsius > 35);
 
         bypassLimitsAlert.set(operatorDashboard.bypassClimberLimits.get());
 
@@ -92,7 +92,7 @@ public class Climber extends SubsystemBaseExt {
         // Check force zero and zero if needed
         var forceZero = operatorDashboard.forceZeroClimber.get();
         if (forceZero) {
-            io.setEncoder(0);
+            io.setEncoder(initialPositionRad);
             hasZeroed = true;
             // Turn off the toggle instantly so it's like a button
             operatorDashboard.forceZeroClimber.set(false);
