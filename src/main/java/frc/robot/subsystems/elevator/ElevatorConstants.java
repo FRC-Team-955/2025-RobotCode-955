@@ -7,12 +7,12 @@ import frc.robot.util.PIDF;
 public class ElevatorConstants {
     /** Gains in radians */
     public static final PIDF gains = switch (Constants.identity) {
-        case COMPBOT -> PIDF.ofPDSVAG(0.06, 0.03, 0, 0.172, 0.0105, 1.5);
+        case COMPBOT -> PIDF.ofPDSVAG(0.05, 0, 0.1, 0.1, 0.005, 0.8);
         case SIMBOT, ALPHABOT -> PIDF.ofPDVAG(0, 0, 0.1, 0.008, 1.5015);
     };
 
-    public static final double maxVelocityMetersPerSecond = 2;
-    public static final double maxAccelerationMetersPerSecondSquared = 3;
+    public static final double maxVelocityMetersPerSecond = 3;
+    public static final double maxAccelerationMetersPerSecondSquared = 12;
 
     public static final double gearRatio = 5;
     protected static final double sprocketRadiusMeters = Units.inchesToMeters((1.0 + (9.0 / 32.0)) / 2);
