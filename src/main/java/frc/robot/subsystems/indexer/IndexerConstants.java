@@ -12,8 +12,8 @@
 //    protected static final RollersIO rollersIO = Constants.isReplay
 //            ? new RollersIO()
 //            : switch (Constants.identity) {
-//        case COMPBOT -> null;
-//        case SIMBOT, ALPHABOT -> new RollersIOSim(
+//        case COMPBOT -> new RollersIO();
+//        case SIMBOT -> new RollersIOSim(
 //                new RollersConfig(
 //                        false,
 //                        true,
@@ -25,6 +25,7 @@
 //                0.01,
 //                DCMotor.getNEO(1)
 //        );
+//        case ALPHABOT -> new RollersIO();
 //    };
 //
 //    public static final double setpointToleranceRadPerSec = 0;

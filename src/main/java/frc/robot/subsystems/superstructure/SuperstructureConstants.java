@@ -14,7 +14,8 @@ public class SuperstructureConstants {
         }
         return switch (Constants.identity) {
             case COMPBOT -> new SuperstructureIOReal();
-            case SIMBOT, ALPHABOT -> new SuperstructureIOSim();
+            case SIMBOT -> new SuperstructureIOSim();
+            case ALPHABOT -> new SuperstructureIO();
         };
     }
 }

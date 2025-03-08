@@ -18,8 +18,8 @@
 //    protected static final RollersIO rollersIo = Constants.isReplay
 //            ? new RollersIO()
 //            : switch (Constants.identity) {
-//        case COMPBOT -> null;
-//        case SIMBOT, ALPHABOT -> new RollersIOSim(
+//        case COMPBOT -> new RollersIOSparkMax();
+//        case SIMBOT -> new RollersIOSim(
 //                new RollersConfig(
 //                        false,
 //                        true,
@@ -31,6 +31,7 @@
 //                0.01,
 //                DCMotor.getNEO(1)
 //        );
+//        case ALPHABOT -> new RollersIO();
 //    };
 //
 //    public static final PivotConfig pivotConfig = switch (Constants.identity) {
@@ -43,8 +44,17 @@
 //                false,
 //                40
 //        );
-//        case SIMBOT, ALPHABOT -> new PivotConfig(
+//        case SIMBOT -> new PivotConfig(
 //                PIDF.ofPSVAG(0.2, 0, 1.2, 1.2, 1.2),
+//                60,
+//                false,
+//                // TODO: Figure this out
+//                false,
+//                40
+//        );
+//        case ALPHABOT -> new PivotConfig(
+//                // TODO: Tune PID
+//                PIDF.ofPIDSVAG(1, 0.0, 0.0, 0, 0, 0, 0),
 //                60,
 //                false,
 //                // TODO: Figure this out
@@ -57,8 +67,9 @@
 //    protected static final PivotIO pivotIo = Constants.isReplay
 //            ? new PivotIO()
 //            : switch (Constants.identity) {
-//        case COMPBOT -> null;
-//        case SIMBOT, ALPHABOT -> new PivotIOSim();
+//        case COMPBOT -> new PivotIOTalonFX();
+//        case SIMBOT -> new PivotIOSim();
+//        case ALPHABOT -> new PivotIO();
 //    };
 //
 //    public record PivotConfig(

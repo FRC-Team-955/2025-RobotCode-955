@@ -15,7 +15,8 @@ public class LEDConstants {
         }
         return switch (Constants.identity) {
             case COMPBOT -> new LEDsIOReal();
-            case SIMBOT, ALPHABOT -> new LEDsIOSim();
+            case SIMBOT -> new LEDsIOSim();
+            case ALPHABOT -> new LEDsIO();
         };
     }
 }

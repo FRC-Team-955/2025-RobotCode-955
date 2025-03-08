@@ -16,7 +16,7 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
 
-import static frc.robot.subsystems.funnel.FunnelConstants.createRollersIO;
+import static frc.robot.subsystems.funnel.FunnelConstants.createBeltIO;
 import static frc.robot.subsystems.funnel.FunnelTuning.funnelIntakeGoalSetpoint;
 import static frc.robot.subsystems.funnel.FunnelTuning.velocityGainsTunable;
 
@@ -24,7 +24,7 @@ public class Funnel extends SubsystemBaseExt {
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final RobotMechanism robotMechanism = RobotMechanism.get();
 
-    private final RollersIO beltIO = createRollersIO();
+    private final RollersIO beltIO = createBeltIO();
     private final RollersIOInputsAutoLogged beltInputs = new RollersIOInputsAutoLogged();
 
     @RequiredArgsConstructor

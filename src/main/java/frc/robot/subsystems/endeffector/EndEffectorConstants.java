@@ -25,7 +25,8 @@ public class EndEffectorConstants {
             PIDF.ofP(1),
             switch (Constants.identity) {
                 case COMPBOT -> PIDF.ofPSV(0.01, 0.42461, 0.18272);
-                case SIMBOT, ALPHABOT -> PIDF.ofSV(0.00995, 0.17859);
+                case SIMBOT -> PIDF.ofSV(0.00995, 0.17859);
+                case ALPHABOT -> PIDF.ofP(0);
             }
     );
 
@@ -35,11 +36,12 @@ public class EndEffectorConstants {
         }
         return switch (Constants.identity) {
             case COMPBOT -> new RollersIOSparkMax(7, rollersConfig);
-            case SIMBOT, ALPHABOT -> new RollersIOSim(
+            case SIMBOT -> new RollersIOSim(
                     rollersConfig,
                     0.01,
                     DCMotor.getNEO(1)
             );
+            case ALPHABOT -> new RollersIO();
         };
     }
 }
