@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.subsystems.drive.ModuleIOSim;
+import frc.robot.subsystems.leds.LEDs;
 import frc.robot.util.CANLogger;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
@@ -73,6 +74,9 @@ public class Robot extends LoggedRobot {
 //    }
 
     public Robot() {
+        @SuppressWarnings("resource")
+        Notifier startupNotifier = LEDs.get().createAndStartStartupNotifier();
+
         AutoLogOutputManager.addPackage("frc");
 
         Logger.recordMetadata("* ProjectName", BuildConstants.MAVEN_NAME);
@@ -142,6 +146,8 @@ public class Robot extends LoggedRobot {
         System.out.println("********** Initializing RobotContainer **********");
         robotContainer = new RobotContainer();
 
+        startupNotifier.stop();
+
 //        CommandScheduler.getInstance().onCommandFinish(Robot::onCommandEnd);
 //        CommandScheduler.getInstance().onCommandInterrupt(Robot::onCommandEnd);
     }
@@ -192,6 +198,7 @@ public class Robot extends LoggedRobot {
             if (autonomousCommand != null && !autonomousCommand.isScheduled()) {
                 var autonomousEnd = Timer.getTimestamp();
                 autonomousCommand = null;
+                robotContainer.leds.autonomousRunning = false;
                 System.out.printf("********** Auto finished in %.2f seconds **********%n", autonomousEnd - autonomousStart);
             }
         }
@@ -223,6 +230,7 @@ public class Robot extends LoggedRobot {
         if (autonomousCommand != null) {
             autonomousCommand.schedule();
             autonomousStart = Timer.getTimestamp();
+            robotContainer.leds.autonomousRunning = true;
             System.out.println("********** Auto started **********");
         }
     }
@@ -238,6 +246,7 @@ public class Robot extends LoggedRobot {
             var autonomousEnd = Timer.getTimestamp();
             autonomousCommand.cancel();
             autonomousCommand = null;
+            robotContainer.leds.autonomousRunning = false;
             System.out.printf("********** Auto cancelled in %.2f seconds **********%n", autonomousEnd - autonomousStart);
         }
     }

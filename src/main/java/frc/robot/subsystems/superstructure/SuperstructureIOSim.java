@@ -13,6 +13,7 @@ import frc.robot.RobotState;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
+import frc.robot.subsystems.funnel.Funnel;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
@@ -47,11 +48,12 @@ public class SuperstructureIOSim extends SuperstructureIO {
 //    private final Indexer indexer = Indexer.get();
     private final EndEffector endEffector = EndEffector.get();
     private final Elevator elevator = Elevator.get();
+    private final Funnel funnel = Funnel.get();
 
     private final Timer sinceCoralIntaked = new Timer();
     private static final double indexTime = 1;
-    private final Timer sinceStartedHandoff = new Timer();
-    private static final double handoffTime = 0.5;
+    //    private final Timer sinceStartedHandoff = new Timer();
+//    private static final double handoffTime = 0.5;
     private final Timer sinceAtStation = new Timer();
     private static final double stationIntakeTime = 1.5;
     private CoralState coralState = CoralState.IN_END_EFFECTOR; // preload
@@ -59,8 +61,8 @@ public class SuperstructureIOSim extends SuperstructureIO {
     private enum CoralState {
         NO_CORAL,
         INDEXING,
-        IN_INDEXER,
-        HANDING_OFF,
+        //        IN_INDEXER,
+//        HANDING_OFF,
         IN_END_EFFECTOR
     }
 
@@ -91,14 +93,15 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 0.7) && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
                     if (!sinceAtStation.isRunning()) sinceAtStation.restart();
                     if (sinceAtStation.hasElapsed(stationIntakeTime))
-                        coralState = CoralState.IN_END_EFFECTOR;
+                        coralState = CoralState.INDEXING;
                 } else {
                     sinceAtStation.stop();
                 }
             }
             case INDEXING -> {
-                if (sinceCoralIntaked.hasElapsed(indexTime)) {
-                    coralState = CoralState.IN_INDEXER;
+                if (sinceCoralIntaked.hasElapsed(indexTime) && funnel.getGoal() == Funnel.Goal.INTAKE) {
+                    coralState = CoralState.IN_END_EFFECTOR;
+//                    coralState = CoralState.IN_INDEXER;
                 }
                 var interp = MathUtil.clamp(sinceCoralIntaked.get() / indexTime, 0, 1);
                 coralRobotRelative = new Transform3d(
@@ -116,30 +119,30 @@ public class SuperstructureIOSim extends SuperstructureIO {
                         )
                 );
             }
-            case IN_INDEXER -> {
+//            case IN_INDEXER -> {
 //                if (indexer.getRollersGoal() == Indexer.RollersGoal.HANDOFF) {
 //                    coralState = CoralState.HANDING_OFF;
 //                    sinceStartedHandoff.restart();
 //                }
-                coralRobotRelative = new Transform3d(
-                        Units.inchesToMeters(5),
-                        0,
-                        Units.inchesToMeters(11),
-                        new Rotation3d(0, Units.degreesToRadians(13), 0)
-                );
-            }
-            case HANDING_OFF -> {
-                if (sinceStartedHandoff.hasElapsed(handoffTime)) {
-                    coralState = CoralState.IN_END_EFFECTOR;
-                }
-                var interp = MathUtil.clamp(sinceStartedHandoff.get() / handoffTime, 0, 1);
-                coralRobotRelative = new Transform3d(
-                        Units.inchesToMeters(5) - Units.inchesToMeters(9) * interp,
-                        0,
-                        Units.inchesToMeters(11) + Units.inchesToMeters(1) * interp,
-                        new Rotation3d(0, Units.degreesToRadians(7), 0)
-                );
-            }
+//                coralRobotRelative = new Transform3d(
+//                        Units.inchesToMeters(5),
+//                        0,
+//                        Units.inchesToMeters(11),
+//                        new Rotation3d(0, Units.degreesToRadians(13), 0)
+//                );
+//            }
+//            case HANDING_OFF -> {
+//                if (sinceStartedHandoff.hasElapsed(handoffTime)) {
+//                    coralState = CoralState.IN_END_EFFECTOR;
+//                }
+//                var interp = MathUtil.clamp(sinceStartedHandoff.get() / handoffTime, 0, 1);
+//                coralRobotRelative = new Transform3d(
+//                        Units.inchesToMeters(5) - Units.inchesToMeters(9) * interp,
+//                        0,
+//                        Units.inchesToMeters(11) + Units.inchesToMeters(1) * interp,
+//                        new Rotation3d(0, Units.degreesToRadians(7), 0)
+//                );
+//            }
             case IN_END_EFFECTOR -> {
                 var angle = Units.degreesToRadians(-endEffector.getAngleDegrees() - 90);
                 var coralOffsetX = Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angle);
@@ -183,11 +186,12 @@ public class SuperstructureIOSim extends SuperstructureIO {
         }
 
         switch (coralState) {
-//            case INDEXING -> {
+            case INDEXING -> {
 //                inputs.intakeRangeMeters = 0;
 //                inputs.indexerBeamBreakTriggered = false;
-//                inputs.endEffectorBeamBreakTriggered = false;
-//            }
+                inputs.funnelBeamBreakTriggered = true;
+                inputs.endEffectorBeamBreakTriggered = false;
+            }
 //            case IN_INDEXER, HANDING_OFF -> {
 //                inputs.intakeRangeMeters = Double.MAX_VALUE;
 //                inputs.indexerBeamBreakTriggered = true;
@@ -196,11 +200,13 @@ public class SuperstructureIOSim extends SuperstructureIO {
             case IN_END_EFFECTOR -> {
 //                inputs.intakeRangeMeters = Double.MAX_VALUE;
 //                inputs.indexerBeamBreakTriggered = false;
+                inputs.funnelBeamBreakTriggered = false;
                 inputs.endEffectorBeamBreakTriggered = true;
             }
-            default -> {
+            case NO_CORAL -> {
 //                inputs.intakeRangeMeters = Double.MAX_VALUE;
 //                inputs.indexerBeamBreakTriggered = false;
+                inputs.funnelBeamBreakTriggered = false;
                 inputs.endEffectorBeamBreakTriggered = false;
             }
         }

@@ -48,23 +48,22 @@ public class RobotContainer extends VirtualSubsystem {
     /** THERE SHOULD NOT BE A DEFAULT OPTION OR THE ALERT WILL BREAK!! */
     private final LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Choices");
     private final LoggedDashboardChooser<Command> characterizationChooser = new LoggedDashboardChooser<>("Characterization Choices");
-    private final Alert autoNotChosenAlert = new Alert("Auto is not chosen!", Alert.AlertType.kError);
 
-    private final RobotState robotState = RobotState.get();
-    private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
+    public final RobotState robotState = RobotState.get();
+    public final OperatorDashboard operatorDashboard = OperatorDashboard.get();
 
     /* Subsystems */
     // Note: order does matter
-    private final Elevator elevator = Elevator.get();
+    public final Elevator elevator = Elevator.get();
     //    private final CoralIntake coralIntake = CoralIntake.get();
 //    private final Indexer indexer = Indexer.get();
-    private final EndEffector endEffector = EndEffector.get();
-    private final Vision vision = Vision.get();
-    private final Drive drive = Drive.get();
-    private final Superstructure superstructure = Superstructure.get();
-    private final LEDs leds = LEDs.get();
-    private final Climber climber = Climber.get();
-    private final Funnel funnel = Funnel.get();
+    public final EndEffector endEffector = EndEffector.get();
+    public final Funnel funnel = Funnel.get();
+    public final Vision vision = Vision.get();
+    public final Drive drive = Drive.get();
+    public final Superstructure superstructure = Superstructure.get();
+    public final LEDs leds = LEDs.get();
+    public final Climber climber = Climber.get();
 
     public RobotContainer() {
         addAutos();
@@ -108,6 +107,10 @@ public class RobotContainer extends VirtualSubsystem {
         ////////////////////// END EFFECTOR //////////////////////
 
         characterizationChooser.addOption("End Effector Rollers Feedforward Characterization", endEffector.rollersFeedforwardCharacterization());
+
+        ////////////////////// FUNNEL //////////////////////
+
+        characterizationChooser.addOption("Funnel Belt Feedforward Characterization", funnel.beltFeedforwardCharacterization());
     }
 
     private void setDefaultCommands() {
@@ -144,6 +147,7 @@ public class RobotContainer extends VirtualSubsystem {
 //        indexer.setDefaultCommand(superstructure.indexerIdle().ignoringDisable(true));
         elevator.setDefaultCommand(superstructure.elevatorIdle().ignoringDisable(true));
         endEffector.setDefaultCommand(superstructure.endEffectorIdle().ignoringDisable(true));
+        funnel.setDefaultCommand(superstructure.funnelIdle().ignoringDisable(true));
         climber.setDefaultCommand(climber.idle());
     }
 
@@ -224,7 +228,5 @@ public class RobotContainer extends VirtualSubsystem {
     @Override
     public void periodicBeforeCommands() {
         driverControllerDisconnectedAlert.set(!driverController.isConnected());
-
-        autoNotChosenAlert.set(autoChooser.get() == null);
     }
 }

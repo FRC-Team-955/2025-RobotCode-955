@@ -22,6 +22,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     public final LoggedNetworkBooleanExt manualScoring = new LoggedNetworkBooleanExt(prefix + "ManualScoring", false);
     public final LoggedNetworkBooleanExt ignoreEndEffectorBeamBreak = new LoggedNetworkBooleanExt(prefix + "IgnoreEndEffectorBeamBreak", false);
     public final LoggedNetworkBooleanExt disableInterpolateAutoAlign = new LoggedNetworkBooleanExt(prefix + "DisableInterpolateAutoAlign", false);
+    public final LoggedNetworkBooleanExt autoChosen = new LoggedNetworkBooleanExt(prefix + "AutoChosen", false);
 
     public final LoggedNetworkBooleanExt forceZeroClimber = new LoggedNetworkBooleanExt(prefix + "ForceZeroClimber", false);
     public final LoggedNetworkBooleanExt bypassClimberLimits = new LoggedNetworkBooleanExt(prefix + "BypassClimberLimits", false);
@@ -46,9 +47,10 @@ public class OperatorDashboard extends VirtualSubsystem {
     private final Alert coralStuckInRobotModeAlert = new Alert("Coral stuck in robot mode is enabled.", Alert.AlertType.kWarning);
     private final Alert manualScoringAlert = new Alert("Manual scoring is enabled.", Alert.AlertType.kWarning);
     private final Alert ignoreEndEffectorBeamBreakAlert = new Alert("Ignore end effector beam break is enabled.", Alert.AlertType.kWarning);
+    private final Alert autoNotChosenAlert = new Alert("Auto is not chosen!", Alert.AlertType.kError);
 
     private final OperatorKeypad operatorKeypad = new OperatorKeypad();
-    private final Alert operatorKeypadDisconnectedAlert = new Alert("Operator keypad is not connected!", Alert.AlertType.kWarning);
+    private final Alert operatorKeypadDisconnectedAlert = new Alert("Operator keypad is not connected!", Alert.AlertType.kError);
 
     private static OperatorDashboard instance;
 
@@ -72,6 +74,7 @@ public class OperatorDashboard extends VirtualSubsystem {
         coralStuckInRobotModeAlert.set(coralStuckInRobotMode.get());
         manualScoringAlert.set(manualScoring.get());
         ignoreEndEffectorBeamBreakAlert.set(ignoreEndEffectorBeamBreak.get());
+        autoNotChosenAlert.set(!autoChosen.get());
 
         if (operatorKeypad.isConnected()) {
             operatorKeypadDisconnectedAlert.set(false);

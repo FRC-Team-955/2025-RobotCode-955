@@ -52,12 +52,12 @@ public class Superstructure extends SubsystemBaseExt {
     public enum Goal {
         IDLE,
 
-        INTAKE_CORAL_WAIT_PIVOT,
-        INTAKE_CORAL_INTAKING,
-        INDEXING_PIVOT_DOWN,
-        INDEXING_PIVOT_UP,
-        HANDOFF_WAIT_ELEVATOR,
-        HANDOFF_HANDING_OFF,
+//        INTAKE_CORAL_WAIT_PIVOT,
+//        INTAKE_CORAL_INTAKING,
+//        INDEXING_PIVOT_DOWN,
+//        INDEXING_PIVOT_UP,
+//        HANDOFF_WAIT_ELEVATOR,
+//        HANDOFF_HANDING_OFF,
 
         MANUAL_SCORE_CORAL_WAIT_ELEVATOR,
         MANUAL_SCORE_CORAL_WAIT_CONFIRM,
@@ -87,6 +87,9 @@ public class Superstructure extends SubsystemBaseExt {
 
     private final Debouncer endEffectorBeamBreakDebouncerShort = new Debouncer(3 * 0.02);
     private final Debouncer endEffectorBeamBreakDebouncerLong = new Debouncer(0.25);
+
+    private final Debouncer funnelBeamBreakDebouncerShort = new Debouncer(3 * 0.02);
+    private final Debouncer funnelBeamBreakDebouncerLong = new Debouncer(0.25);
 
     private Command withGoal(Goal goal, Command command) {
         return new WrapperCommand(command) {
@@ -136,7 +139,9 @@ public class Superstructure extends SubsystemBaseExt {
 //                        : new Color8Bit(Color.kRed)
 //        );
         robotMechanism.funnel.beamBreakLigament.setColor(
-                inputs.funnelBeamBreakTriggered ? new Color8Bit(Color.kGreen) : new Color8Bit(Color.kRed)
+                funnelTriggeredLong()
+                        ? new Color8Bit(Color.kGreen)
+                        : new Color8Bit(Color.kRed)
         );
         robotMechanism.endEffector.beamBreakLigament.setColor(
                 endEffectorTriggeredShort() || operatorDashboard.ignoreEndEffectorBeamBreak.get()
@@ -156,14 +161,26 @@ public class Superstructure extends SubsystemBaseExt {
 
     /** Reacts quickly to change so better for waiting for the beam break */
     @AutoLogOutput(key = "Superstructure/EndEffectorTriggeredShort")
-    private boolean endEffectorTriggeredShort() {
+    public boolean endEffectorTriggeredShort() {
         return endEffectorBeamBreakDebouncerShort.calculate(inputs.endEffectorBeamBreakTriggered);
     }
 
     /** Reacts slowly to change so better for gating commands */
     @AutoLogOutput(key = "Superstructure/EndEffectorTriggeredLong")
-    private boolean endEffectorTriggeredLong() {
+    public boolean endEffectorTriggeredLong() {
         return endEffectorBeamBreakDebouncerLong.calculate(inputs.endEffectorBeamBreakTriggered);
+    }
+
+    /** Reacts quickly to change so better for waiting for the beam break */
+    @AutoLogOutput(key = "Superstructure/FunnelTriggeredShort")
+    public boolean funnelTriggeredShort() {
+        return funnelBeamBreakDebouncerShort.calculate(inputs.funnelBeamBreakTriggered);
+    }
+
+    /** Reacts slowly to change so better for gating commands */
+    @AutoLogOutput(key = "Superstructure/FunnelTriggeredLong")
+    public boolean funnelTriggeredLong() {
+        return funnelBeamBreakDebouncerLong.calculate(inputs.funnelBeamBreakTriggered);
     }
 
 //    public Command waitUntilIntakeTriggered() {
@@ -411,6 +428,9 @@ public class Superstructure extends SubsystemBaseExt {
                 && Math.abs(desiredPose.getRotation().minus(currentPose.getRotation()).getRadians()) < angularToleranceRad;
     }
 
+    @Getter
+    private boolean autoScoreForceable = false;
+
     public Command autoAlignAndScore(
             boolean duringAuto,
             Supplier<ReefZoneSide> reefSideSupplier,
@@ -477,7 +497,10 @@ public class Superstructure extends SubsystemBaseExt {
                 Commands.waitSeconds(0.3)
         );
         // Don't allow forcing for a bit, then check if force is true
-        Command waitForForce = Commands.waitSeconds(2).andThen(Commands.waitUntil(forceCondition));
+        Command waitForForce = Commands.waitSeconds(2)
+                .alongWith(Commands.runOnce(() -> autoScoreForceable = false))
+                .andThen(Commands.waitUntil(forceCondition)
+                        .alongWith(Commands.runOnce(() -> autoScoreForceable = true)));
         Command score = Commands.parallel(
                 setGoal(Goal.AUTO_SCORE_CORAL_SCORING),
                 endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),

@@ -10,6 +10,7 @@ public class SuperstructureIO {
 //
 //        /** If triggered is true, the beam is broken */
 //        public boolean indexerBeamBreakTriggered = false;
+        
         public boolean funnelBeamBreakTriggered = false;
 
         /** If triggered is true, the beam is broken */

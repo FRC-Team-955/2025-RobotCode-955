@@ -10,12 +10,7 @@ import frc.robot.subsystems.rollers.RollersIOSparkMax;
 import frc.robot.util.PIDF;
 
 public class FunnelConstants {
-    public static final double rollersPositionToleranceRad = Units.degreesToRadians(30);
     public static final double rollersRadiusMeters = Units.inchesToMeters(2.25 / 2.0);
-
-    public static double rollersRadiansForMeters(double meters) {
-        return meters / rollersRadiusMeters;
-    }
 
     // TODO: Tune this
     public static final RollersConfig rollersConfig = new RollersConfig(

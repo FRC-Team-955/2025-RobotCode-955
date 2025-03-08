@@ -30,12 +30,12 @@ public class RobotMechanism {
     public static final double middleOfRobot = 0.75;
 
     @AutoLogOutput(key = "RobotState/Mechanism")
-    private final LoggedMechanism2d mechanism = new LoggedMechanism2d(1.5, 2.1, new Color8Bit(Color.kBlack));
+    public final LoggedMechanism2d mechanism = new LoggedMechanism2d(1.5, 2.1, new Color8Bit(Color.kBlack));
 
     public final Elevator elevator = new Elevator();
     public final EndEffector endEffector = new EndEffector();
-    public final Climber climber = new Climber();
     public final Funnel funnel = new Funnel();
+    public final Climber climber = new Climber();
 //    public final Indexer indexer = new Indexer();
 //    public final CoralIntake coralIntake = new CoralIntake();
 
