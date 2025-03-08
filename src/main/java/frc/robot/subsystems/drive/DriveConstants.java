@@ -28,8 +28,8 @@ public class DriveConstants {
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(35),
                 Units.inchesToMeters(35),
-                PIDF.ofPD(1.5, 0),
-                PIDF.ofPD(1.5, 0),
+                PIDF.ofPD(5, 0),
+                PIDF.ofPD(5, 0),
                 4.58,
                 20,
                 20
