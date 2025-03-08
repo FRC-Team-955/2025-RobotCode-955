@@ -1,5 +1,6 @@
 package frc.robot.subsystems.leds;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.RobotController;
@@ -57,9 +58,9 @@ public class LEDPatterns {
 
                 double interp = Math.sin(sinMultiplier * Math.PI * localPercent);
 
-                double r = backgroundColor.red + (waveColor.red - backgroundColor.red) * interp;
-                double g = backgroundColor.green + (waveColor.green - backgroundColor.green) * interp;
-                double b = backgroundColor.blue + (waveColor.blue - backgroundColor.blue) * interp;
+                double r = MathUtil.interpolate(backgroundColor.red, waveColor.red, interp);
+                double g = MathUtil.interpolate(backgroundColor.green, waveColor.green, interp);
+                double b = MathUtil.interpolate(backgroundColor.blue, waveColor.blue, interp);
                 writer.setLED(i, new Color(r, g, b));
             }
         };
@@ -84,13 +85,12 @@ public class LEDPatterns {
     public static final LEDPattern autoFinished = LEDPattern.solid(Color.kGreen).blink(Seconds.of(0.5));
 
     public static final LEDPattern eject = LEDPattern.solid(Color.kRed).blink(Seconds.of(0.1));
-    public static final LEDPattern finalizing = LEDPattern.solid(Color.kGreen);
+    public static final LEDPattern finalizing = LEDPattern.solid(Color.kGreen).blink(Seconds.of(0.1));
     public static final LEDPattern driverConfirm = LEDPattern.solid(Color.kYellow).blink(Seconds.of(0.1));
     public static final LEDPattern autoScoring = LEDPattern.rainbow(255, 255).scrollAtRelativeSpeed(Percent.per(Second).of(150));
     public static final LEDPattern waitElevator = LEDPattern.solid(Color.kOrange).blink(Seconds.of(0.25));
     public static final LEDPattern funnelIntaking = LEDPattern.solid(Color.kOrange).blink(Seconds.of(0.1));
     public static final LEDPattern endgameAlert = LEDPattern.solid(Color.kAqua).blink(Seconds.of(0.1));
-    public static final LEDPattern funnelTriggered = LEDPattern.solid(Color.kGreen).blink(Seconds.of(0.1));
     public static final LEDPattern endEffectorTriggered = LEDPattern.solid(Color.kGreen);
     public static final LEDPattern idle = LEDPattern.kOff;
 
