@@ -18,6 +18,7 @@ import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
+import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.leds.LEDs;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
@@ -63,6 +64,7 @@ public class RobotContainer extends VirtualSubsystem {
     private final Superstructure superstructure = Superstructure.get();
     private final LEDs leds = LEDs.get();
     private final Climber climber = Climber.get();
+    private final Funnel funnel = Funnel.get();
 
     public RobotContainer() {
         addAutos();

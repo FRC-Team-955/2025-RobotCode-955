@@ -18,6 +18,7 @@ import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
+import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
@@ -43,6 +44,7 @@ public class Superstructure extends SubsystemBaseExt {
 //    private final Indexer indexer = Indexer.get();
     private final Elevator elevator = Elevator.get();
     private final EndEffector endEffector = EndEffector.get();
+    private final Funnel funnel = Funnel.get();
 
     private final SuperstructureIO io = createIO();
     private final SuperstructureIOInputsAutoLogged inputs = new SuperstructureIOInputsAutoLogged();
@@ -133,6 +135,9 @@ public class Superstructure extends SubsystemBaseExt {
 //                        ? new Color8Bit(Color.kGreen)
 //                        : new Color8Bit(Color.kRed)
 //        );
+        robotMechanism.funnel.beamBreakLigament.setColor(
+                inputs.funnelBeamBreakTriggered ? new Color8Bit(Color.kGreen) : new Color8Bit(Color.kRed)
+        );
         robotMechanism.endEffector.beamBreakLigament.setColor(
                 endEffectorTriggeredShort() || operatorDashboard.ignoreEndEffectorBeamBreak.get()
                         ? new Color8Bit(Color.kGreen)
@@ -207,6 +212,10 @@ public class Superstructure extends SubsystemBaseExt {
 
     public Command endEffectorIdle() {
         return endEffector.setGoal(EndEffector.RollersGoal.IDLE).andThen(Commands.idle());
+    }
+
+    public Command funnelIdle() {
+        return funnel.setGoal(Funnel.Goal.IDLE).andThen(Commands.idle());
     }
 
 //    public Command intakeCoral() {

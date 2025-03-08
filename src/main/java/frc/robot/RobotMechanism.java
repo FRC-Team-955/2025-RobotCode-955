@@ -35,8 +35,53 @@ public class RobotMechanism {
     public final Elevator elevator = new Elevator();
     public final EndEffector endEffector = new EndEffector();
     public final Climber climber = new Climber();
+    public final Funnel funnel = new Funnel();
 //    public final Indexer indexer = new Indexer();
 //    public final CoralIntake coralIntake = new CoralIntake();
+
+    public class Funnel {
+        private static final double x = middleOfRobot + Units.inchesToMeters(12.2);
+        private static final double y = Units.inchesToMeters(6);
+        private static final double angle = 90;
+
+        public final LoggedMechanismRoot2d root = mechanism.getRoot("funnel", x, y + 0.065);
+
+        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot(
+                "funnel_beamBreak",
+                x - Units.inchesToMeters(9.5),
+                y + Units.inchesToMeters(5)
+        );
+        public final LoggedMechanismLigament2d beamBreakLigament = beamBreakRoot.append(new LoggedMechanismLigament2d(
+                "funnel_beamBreak",
+                Units.inchesToMeters(1),
+                angle,
+                11,
+                new Color8Bit(Color.kRed)
+        ));
+
+        public final LoggedMechanismRoot2d beltRoot = mechanism.getRoot(
+                "funnel_belt",
+                x - Units.inchesToMeters(5),
+                y + Units.inchesToMeters(7)
+        );
+        public final LoggedMechanismLigament2d beltLigament = beltRoot.append(new LoggedMechanismLigament2d(
+                "funnel_belt",
+                Units.inchesToMeters(1),
+                0,
+                12,
+                new Color8Bit(Color.kOrange)
+        ));
+
+        private Funnel() {
+            root.append(new LoggedMechanismLigament2d(
+                    "ligament",
+                    Units.inchesToMeters(14.75),
+                    angle,
+                    10,
+                    new Color8Bit(Color.kBlue)
+            ));
+        }
+    }
 
     public class Elevator {
         public final LoggedMechanismRoot2d stage1Root = mechanism.getRoot("elevator_stage1", 0, 0);
