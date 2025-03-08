@@ -123,6 +123,8 @@ public class LEDs extends SubsystemBaseExt {
                 set(pattern, endgameAlert);
             } else if (lowBattery) {
                 set(pattern, lowBatteryAlert);
+            } else if (constantSet) {
+                set(pattern, constantSetAlert);
             } else if (overrideSet) {
                 set(pattern, overrideAlert);
             } else {
@@ -134,6 +136,8 @@ public class LEDs extends SubsystemBaseExt {
                     : patternForAlliance(disabled, disabledUnknown);
             if (lowBattery) {
                 set(pattern, lowBatteryAlert);
+            } else if (constantSet) {
+                set(pattern, constantSetAlert);
             } else if (!operatorDashboard.autoChosen.get()) {
                 set(pattern, autoNotChosen);
             } else {

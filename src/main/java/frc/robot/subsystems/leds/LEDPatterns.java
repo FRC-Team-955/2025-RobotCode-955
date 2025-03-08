@@ -5,11 +5,15 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.util.Color;
+import frc.robot.Constants;
+import frc.robot.subsystems.drive.DriveConstants;
 
 import static edu.wpi.first.units.Units.*;
 
 public class LEDPatterns {
     private static final Color pink749 = new Color(255, 0, 128);
+
+    public static final boolean constantSet = Constants.tuningMode || DriveConstants.disableDriving || DriveConstants.disableGyro;
 
     /**
      * LEDPattern.breathe uses RobotController.getTime(), which doesn't really
@@ -17,7 +21,7 @@ public class LEDPatterns {
      * the breathe algorithm ourselves. This is based off of 749's 2024 code.
      */
     public static LEDPattern startup() {
-        Color color1 = Color.kRed;
+        Color color1 = constantSet ? Color.kGreen : Color.kRed;
         Color color2 = Color.kBlack;
         double period = 1.0;
 
@@ -68,6 +72,7 @@ public class LEDPatterns {
 
     public static final LEDPattern lowBatteryAlert = LEDPattern.solid(Color.kRed).blink(Seconds.of(0.5));
     public static final LEDPattern overrideAlert = LEDPattern.solid(Color.kBlue).blink(Seconds.of(0.5));
+    public static final LEDPattern constantSetAlert = LEDPattern.solid(Color.kGreen).blink(Seconds.of(0.5));
 
     public static final LEDPattern disabled = LEDPattern.gradient(LEDPattern.GradientType.kContinuous, Color.kRed, pink749)
             .scrollAtRelativeSpeed(Percent.per(Second).of(50));
