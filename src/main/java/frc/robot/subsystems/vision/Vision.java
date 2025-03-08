@@ -71,16 +71,12 @@ public class Vision extends SubsystemBaseExt {
         // Initialize disconnected alerts
         this.atDisconnectedAlerts = new Alert[aprilTagIo.length];
         for (int i = 0; i < atInputs.length; i++) {
-            atDisconnectedAlerts[i] =
-                    new Alert(
-                            "Vision camera " + i + " is disconnected.", AlertType.kWarning);
+            atDisconnectedAlerts[i] = new Alert("Vision camera " + i + " is disconnected.", AlertType.kError);
         }
 
         this.gpDisconnectedAlerts = new Alert[gamepieceIo.length];
         for (int i = 0; i < gpInputs.length; i++) {
-            gpDisconnectedAlerts[i] =
-                    new Alert(
-                            "Gampiece camera " + i + " is disconnected.", AlertType.kWarning);
+            gpDisconnectedAlerts[i] = new Alert("Gamepiece camera " + i + " is disconnected.", AlertType.kError);
         }
     }
 

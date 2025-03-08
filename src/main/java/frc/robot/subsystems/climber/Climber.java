@@ -36,10 +36,10 @@ public class Climber extends SubsystemBaseExt {
     @AutoLogOutput(key = "Climber/HasZeroed")
     private boolean hasZeroed = false;
 
-    private final Alert disconnectedAlert = new Alert("Climber motor motor is disconnected.", Alert.AlertType.kError);
+    private final Alert disconnectedAlert = new Alert("Climber motor is disconnected.", Alert.AlertType.kError);
     private final Alert temperatureAlert = new Alert("Climber motor temperature is high.", Alert.AlertType.kWarning);
     private final Alert notZeroedAlert = new Alert("Climber is not zeroed.", Alert.AlertType.kWarning);
-    private final Alert hitLimitAlert = new Alert("Climber has hit its limit.", Alert.AlertType.kWarning);
+    private final Alert hitLimitAlert = new Alert("Climber has hit its limit.", Alert.AlertType.kInfo);
     private final Alert bypassLimitsAlert = new Alert("Climber limits are being bypassed.", Alert.AlertType.kWarning);
 
     private static Climber instance;
