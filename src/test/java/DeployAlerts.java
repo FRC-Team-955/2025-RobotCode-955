@@ -10,6 +10,9 @@ class DeployAlerts {
 
         if (DriveConstants.disableDriving)
             confirmDeploy("Disable driving is enabled.");
+
+        if (DriveConstants.disableGyro)
+            confirmDeploy("Disable gyro is enabled.");
     }
 
     private static void confirmDeploy(String message) {

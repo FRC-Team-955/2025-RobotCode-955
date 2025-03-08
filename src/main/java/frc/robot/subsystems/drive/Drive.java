@@ -233,7 +233,7 @@ public class Drive extends SubsystemBaseExt {
             }
 
             // Update gyro angle
-            if (gyroInputs.connected) {
+            if (gyroInputs.connected && !disableGyro) {
                 // Use the real gyro angle
                 rawGyroRotation = new Rotation2d(gyroInputs.yawPositionRad);
             } else {

@@ -16,6 +16,7 @@ public class DriveConstants {
 
     public static final boolean useSetpointGenerator = true;
     public static final boolean disableDriving = false;
+    public static final boolean disableGyro = false;
     public static final boolean useHighFrequencyOdometry = true;
 
     // Slow to 30% speed when elevator is at max height
