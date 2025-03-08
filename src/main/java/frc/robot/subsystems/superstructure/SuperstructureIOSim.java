@@ -55,7 +55,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
     //    private final Timer sinceStartedHandoff = new Timer();
 //    private static final double handoffTime = 0.5;
     private final Timer sinceAtStation = new Timer();
-    private static final double stationIntakeTime = 1.5;
+    private static final double stationIntakeTime = 1.5 - indexTime;
     private CoralState coralState = CoralState.IN_END_EFFECTOR; // preload
 
     private enum CoralState {
@@ -90,10 +90,12 @@ public class SuperstructureIOSim extends SuperstructureIO {
         switch (coralState) {
             case NO_CORAL -> {
                 var current = robotState.getPose().getTranslation();
-                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 0.7) && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
+                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 1.5) && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
                     if (!sinceAtStation.isRunning()) sinceAtStation.restart();
-                    if (sinceAtStation.hasElapsed(stationIntakeTime))
+                    if (sinceAtStation.hasElapsed(stationIntakeTime)) {
                         coralState = CoralState.INDEXING;
+                        sinceCoralIntaked.restart();
+                    }
                 } else {
                     sinceAtStation.stop();
                 }

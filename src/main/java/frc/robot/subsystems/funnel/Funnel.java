@@ -89,8 +89,8 @@ public class Funnel extends SubsystemBaseExt {
         }
     }
 
-    public Command setGoal(Goal rollersGoal) {
-        return runOnce(() -> goal = rollersGoal);
+    public Command setGoal(Goal goal) {
+        return runOnce(() -> this.goal = goal);
     }
 
     public Command beltFeedforwardCharacterization() {

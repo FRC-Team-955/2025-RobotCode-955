@@ -356,11 +356,13 @@ public class Superstructure extends SubsystemBaseExt {
         Command intake = Commands.deadline(
                 waitUntilEndEffectorTriggered(Commands.idle()),
                 setGoal(Goal.FUNNEL_INTAKE_WAITING),
-                endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE)
+                endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
+                funnel.setGoal(Funnel.Goal.INTAKE)
         );
         Command finalize = Commands.parallel(
                 setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
-                endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeFinalizeInches.get()))
+                endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeFinalizeInches.get())),
+                funnel.setGoal(Funnel.Goal.IDLE)
         );
         if (duringAuto) {
             return CommandsExt.onlyIf(
@@ -384,6 +386,7 @@ public class Superstructure extends SubsystemBaseExt {
         Command intake = Commands.deadline(
                 waitUntilEndEffectorTriggered(Commands.idle()),
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
+                funnel.setGoal(Funnel.Goal.INTAKE),
                 Commands.sequence(
                         Commands.parallel(
                                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_ALIGN),
@@ -403,7 +406,8 @@ public class Superstructure extends SubsystemBaseExt {
         );
         Command finalize = Commands.parallel(
                 setGoal(Goal.AUTO_FUNNEL_INTAKE_FINALIZING),
-                endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeFinalizeInches.get()))
+                endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeFinalizeInches.get())),
+                funnel.setGoal(Funnel.Goal.IDLE)
         );
         if (duringAuto) {
             return CommandsExt.onlyIf(
