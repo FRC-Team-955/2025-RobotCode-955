@@ -2,16 +2,15 @@ package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.OperatorDashboard.LocalReefSide;
 import frc.robot.OperatorDashboard.ReefZoneSide;
-import frc.robot.Util;
 import lombok.RequiredArgsConstructor;
-
-import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 import static frc.robot.Util.shouldFlip;
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
@@ -26,22 +25,33 @@ public class AutoAlignLocations {
      * Finally, it will move forward the remaining amount and place the gamepiece
      */
 
-    private static final double distanceCenterOfReefToBranchMeters = Units.inchesToMeters(6.5);
-
     private static final AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-    private static final Transform2d initialAlignOffset = new Transform2d(0.75, 0, new Rotation2d());
-    private static final Transform2d finalAlignOffset = new Transform2d(driveConfig.bumperLengthMeters() / 2.0, 0, new Rotation2d());
+    @SuppressWarnings("OptionalGetWithoutIsPresent") // better for our code to crash than to fail silently
+    private static Pose2d getAprilTagPose(int id) {
+        return aprilTagLayout.getTagPose(id).get().toPose2d();
+    }
+
+    private static final Transform2d bumperOffset = new Transform2d(driveConfig.bumperLengthMeters() / 2.0, 0, new Rotation2d());
+
+    private static final double distanceCenterOfReefToBranchMeters = Units.inchesToMeters(6.5);
+    private static final double distanceCenterOfReefToElevatorClearanceMeters = distanceCenterOfReefToBranchMeters + Units.inchesToMeters(8);
+
+    private static final Transform2d initialAlignStartOffset = new Transform2d(1, 0, new Rotation2d());
+    private static final Transform2d initialAlignEndOffset = new Transform2d(0.2, 0, new Rotation2d());
+    private static final double initialAlignDistYForStartMeters = 2.0;
 
     // Very rough
-    public static final double initialElevatorRaiseToleranceMeters = 1.5;
-    public static final double initialAlignToleranceMeters = 0.7;
+    public static final double initialAlignToleranceXMeters = 0.2;
+    public static final double initialAlignToleranceYOuterMeters = 0.2;
+    public static final double initialAlignToleranceYInnerMeters = 0.1;
     public static final double initialAlignToleranceRad = Units.degreesToRadians(20);
     public static final double initialAlignToleranceRadPerSecond = Units.degreesToRadians(20);
+
     // very little tolerance
     public static final double finalAlignToleranceMeters = 0.05;
-    public static final double finalAlignToleranceRad = Units.degreesToRadians(2);
-    public static final double finalAlignToleranceMetersPerSecond = 0.05;
+    public static final double finalAlignToleranceRad = Units.degreesToRadians(4);
+    public static final double finalAlignToleranceMetersPerSecond = 0.03;
     public static final double finalAlignToleranceRadPerSecond = Units.degreesToRadians(2);
 
     /**
@@ -49,72 +59,86 @@ public class AutoAlignLocations {
      * A bit rudimentary and imperfect, but definitely plenty good
      */
     public static boolean alignable(ReefZoneSide reefZoneSide, Pose2d currentPose) {
-        return currentPose.relativeTo(getAprilTagPoseAdjusted(reefZoneSide)).getX() > 0;
+        return currentPose.relativeTo(getReefAprilTagPoseAdjusted(reefZoneSide)).getX() > 0;
     }
 
     public static Pose2d getFinalAlignPose(double elevatorPercentage, ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
-        Pose2d finalAlign = getAprilTagPoseAdjusted(reefZoneSide).plus(localReefSideAdjustment(localReefSide));
-        if (elevatorPercentage >= 0.9) return finalAlign;
-        // If we aren't high enough, interpolate the pose from the initial align pose to the final based on elevator percentage
-        Pose2d initialAlign = getInitialAlignPose(reefZoneSide, localReefSide);
+        Pose2d base = getReefAprilTagPoseAdjusted(reefZoneSide);
+        Pose2d end = base.plus(finalLocalReefSideAdjustment(localReefSide));
+        if (elevatorPercentage >= 0.9) return end;
+        // If we aren't high enough, interpolate the pose from the start pose to the end pose based on elevator percentage
+        Pose2d start = base.plus(initialLocalReefSideAdjustment(localReefSide)).plus(initialAlignEndOffset);
         // Fully at final when 100% raised, fully at initial when 0% raised
         // .interpolate will handle values >1 or <0
-        return initialAlign.interpolate(finalAlign, elevatorPercentage);
+        return start.interpolate(end, elevatorPercentage);
     }
 
-    public static Pose2d getInitialAlignPose(ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
-        // TODO: Maybe adjust this so you get closer to your pose?
-        return getAprilTagPoseAdjusted(reefZoneSide).plus(localReefSideAdjustment(localReefSide)).plus(initialAlignOffset);
+    public static Pose2d getInitialAlignPose(Pose2d currentPose, ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
+        Pose2d base = getReefAprilTagPoseAdjusted(reefZoneSide).plus(initialLocalReefSideAdjustment(localReefSide));
+        Pose2d start = base.plus(initialAlignStartOffset);
+        Pose2d end = base.plus(initialAlignEndOffset);
+        // Interpolate to end based on y distance (left/right distance)
+        double distY = Math.abs(new Transform2d(end, currentPose).getY());
+        double t = MathUtil.clamp(distY / initialAlignDistYForStartMeters, 0, 1);
+        return end.interpolate(start, t);
     }
 
-    private static Transform2d localReefSideAdjustment(LocalReefSide localReefSide) {
-        return new Transform2d(0, switch (localReefSide) {
-            case Left -> -distanceCenterOfReefToBranchMeters;
-            case Right -> distanceCenterOfReefToBranchMeters;
-        }, new Rotation2d());
+    private static final Transform2d adjustmentLeft = new Transform2d(0, -distanceCenterOfReefToBranchMeters, new Rotation2d());
+    private static final Transform2d adjustmentRight = new Transform2d(0, distanceCenterOfReefToBranchMeters, new Rotation2d());
+    private static final Transform2d adjustmentLeftRaise = new Transform2d(0, -distanceCenterOfReefToElevatorClearanceMeters, new Rotation2d());
+    private static final Transform2d adjustmentRightRaise = new Transform2d(0, distanceCenterOfReefToElevatorClearanceMeters, new Rotation2d());
+
+    private static Transform2d finalLocalReefSideAdjustment(LocalReefSide localReefSide) {
+        return switch (localReefSide) {
+            case Left -> adjustmentLeft;
+            case Right -> adjustmentRight;
+        };
     }
 
-    // See notes above, also accounts for robot size
-    private static Pose2d getAprilTagPoseAdjusted(ReefZoneSide reefZoneSide) {
-        return getAprilTagPoseSide(reefZoneSide.aprilTagOffset).plus(finalAlignOffset);
+    private static Transform2d initialLocalReefSideAdjustment(LocalReefSide localReefSide) {
+        return switch (localReefSide) {
+            case Left -> adjustmentLeftRaise;
+            case Right -> adjustmentRightRaise;
+        };
     }
 
-    private static Pose2d getAprilTagPoseSide(int side) {
+    private static Pose2d getReefAprilTagPoseAdjusted(ReefZoneSide reefZoneSide) {
         if (!shouldFlip()) {
             // blue
-            return getAprilTagPose(22 - ((side + 3) % 6));
+            return getAprilTagPose(22 - ((reefZoneSide.aprilTagOffset + 3) % 6)).plus(bumperOffset);
         } else {
             // red
-            return getAprilTagPose(side + 6);
+            return getAprilTagPose(reefZoneSide.aprilTagOffset + 6).plus(bumperOffset);
         }
     }
 
-    @SuppressWarnings("OptionalGetWithoutIsPresent") // better for our code to crash than to fail silently
-    private static Pose2d getAprilTagPose(int id) {
-        return aprilTagLayout.getTagPose(id).get().toPose2d();
-    }
+    public static final double stationAlignToleranceXYMeters = 0.1;
+    public static final double stationAlignToleranceOmegaRad = Units.degreesToRadians(10);
 
-    public static final double stationAlignToleranceXYMeters = 0.15;
-    public static final double stationAlignToleranceOmegaRad = Units.degreesToRadians(15);
-
-    private static final double stationX = 1.53;
-    private static final double stationTheta = 2.2;
-    private static final Pose2d processorSideStation = new Pose2d(
-            stationX,
-            0.7,
-            Rotation2d.fromRadians(-stationTheta)
-    );
-    private static final Pose2d bargeSideStation = new Pose2d(
-            stationX,
-            7.35,
-            Rotation2d.fromRadians(stationTheta)
-    );
+    private static final Transform2d stationAlignOffset = new Transform2d(0, 0.6, Rotation2d.k180deg);
 
     @RequiredArgsConstructor
     public enum Station {
-        BargeSide(() -> Util.flipIfNeeded(bargeSideStation)),
-        ProcessorSide(() -> Util.flipIfNeeded(processorSideStation));
+        BargeSide(1),
+        ProcessorSide(0);
 
-        public final Supplier<Pose2d> alignPoseSupplier;
+        private final int aprilTagOffset;
+    }
+
+    private static Pose2d getStationAprilTagPoseAdjusted(Station station) {
+        if (!shouldFlip()) {
+            // blue
+            // 12 = processor side, 13 = barge side
+            return getAprilTagPose(12 + (station.aprilTagOffset % 2)).plus(bumperOffset);
+        } else {
+            // red
+            // 2 = processor side, 1 = barge side
+            return getAprilTagPose(1 + ((1 - station.aprilTagOffset) % 2)).plus(bumperOffset);
+        }
+    }
+
+    public static Pose2d getStationAlignPose(Station station) {
+        Logger.recordOutput("Superstructrue/align", getStationAprilTagPoseAdjusted(station));
+        return getStationAprilTagPoseAdjusted(station).plus(stationAlignOffset);
     }
 }

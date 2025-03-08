@@ -2,6 +2,7 @@ package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
@@ -63,7 +64,6 @@ public class Superstructure extends SubsystemBaseExt {
         MANUAL_SCORE_CORAL_SCORING,
 
         AUTO_SCORE_CORAL_WAIT_INITIAL,
-        AUTO_SCORE_CORAL_WAIT_INITIAL_RAISING,
         AUTO_SCORE_CORAL_WAIT_FINAL,
         AUTO_SCORE_CORAL_WAIT_ELEVATOR,
         AUTO_SCORE_CORAL_SCORING,
@@ -179,17 +179,14 @@ public class Superstructure extends SubsystemBaseExt {
     }
 
 //    public Command waitUntilIntakeTriggered() {
-//        // This should not require the superstructure because we don't want to conflict with setGoal
 //        return Commands.waitUntil(this::intakeRangeTriggered);
 //    }
 //
 //    public Command waitUntilIndexerTriggered() {
-//        // This should not require the superstructure because we don't want to conflict with setGoal
 //        return Commands.waitUntil(() -> inputs.indexerBeamBreakTriggered);
 //    }
 
     public Command waitUntilEndEffectorTriggered(Command ifIgnored) {
-        // This should not require the superstructure because we don't want to conflict with setGoal
         return Commands.either(
                 ifIgnored,
                 Commands.waitUntil(this::endEffectorTriggeredShort),
@@ -197,8 +194,11 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
+    public Command waitUntilFunnelTriggered() {
+        return Commands.waitUntil(this::funnelTriggeredShort);
+    }
+
     public Command waitUntilEndEffectorNotTriggered(Command ifIngored) {
-        // This should not require the superstructure because we don't want to conflict with setGoal
         return Commands.either(
                 ifIngored,
                 Commands.waitUntil(() -> !endEffectorTriggeredShort()),
@@ -348,16 +348,25 @@ public class Superstructure extends SubsystemBaseExt {
     }
 
     public Command funnelIntake(boolean duringAuto) {
-        Command intake = Commands.deadline(
+        Command intake = Commands.race(
                 waitUntilEndEffectorTriggered(Commands.idle()),
+                waitUntilFunnelTriggered()
+        ).deadlineFor(
                 setGoal(Goal.FUNNEL_INTAKE_WAITING),
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
                 funnel.setGoal(Funnel.Goal.INTAKE)
         );
-        Command finalize = Commands.parallel(
-                setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
-                endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeFinalizeInches.get())),
-                funnel.setGoal(Funnel.Goal.IDLE)
+        Command finalize = Commands.sequence(
+                waitUntilEndEffectorTriggered(Commands.idle()).deadlineFor(
+                        setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
+                        endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
+                        funnel.setGoal(Funnel.Goal.INTAKE)
+                ),
+                Commands.parallel(
+                        setGoal(Goal.FUNNEL_INTAKE_FINALIZING),
+                        endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeFinalizeInches.get())),
+                        funnel.setGoal(Funnel.Goal.IDLE)
+                )
         );
         if (duringAuto) {
             return CommandsExt.onlyIf(
@@ -377,16 +386,18 @@ public class Superstructure extends SubsystemBaseExt {
     }
 
     public Command funnelIntakeWithAutoAlign(boolean duringAuto, Station station) {
-        Command autoAlign = drive.moveTo(station.alignPoseSupplier);
-        Command intake = Commands.deadline(
+        Supplier<Pose2d> alignPoseSupplier = () -> getStationAlignPose(station);
+        Command intake = Commands.race(
                 waitUntilEndEffectorTriggered(Commands.idle()),
+                waitUntilFunnelTriggered()
+        ).deadlineFor(
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
                 funnel.setGoal(Funnel.Goal.INTAKE),
                 Commands.sequence(
                         Commands.parallel(
                                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_ALIGN),
-                                autoAlign.until(() -> isAtPoseWithTolerance(
-                                        station.alignPoseSupplier.get(),
+                                drive.moveTo(alignPoseSupplier).until(() -> isAtPoseWithTolerance(
+                                        alignPoseSupplier.get(),
                                         stationAlignToleranceXYMeters,
                                         stationAlignToleranceOmegaRad
                                 ))
@@ -399,10 +410,16 @@ public class Superstructure extends SubsystemBaseExt {
                         )
                 )
         );
-        Command finalize = Commands.parallel(
-                setGoal(Goal.AUTO_FUNNEL_INTAKE_FINALIZING),
-                endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeFinalizeInches.get())),
-                funnel.setGoal(Funnel.Goal.IDLE)
+        Command finalize = Commands.sequence(
+                waitUntilEndEffectorTriggered(Commands.idle()).deadlineFor(
+                        setGoal(Goal.AUTO_FUNNEL_INTAKE_FINALIZING),
+                        endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
+                        funnel.setGoal(Funnel.Goal.INTAKE)
+                ),
+                Commands.parallel(
+                        endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeFinalizeInches.get())),
+                        funnel.setGoal(Funnel.Goal.IDLE)
+                )
         );
         if (duringAuto) {
             return CommandsExt.onlyIf(
@@ -427,6 +444,14 @@ public class Superstructure extends SubsystemBaseExt {
                 && Math.abs(desiredPose.getRotation().minus(currentPose.getRotation()).getRadians()) < angularToleranceRad;
     }
 
+    private boolean isAtPoseWithTolerance(Pose2d desiredPose, double toleranceXMeters, double toleranceYPositiveMeters, double toleranceYNegativeMeters, double angularToleranceRad) {
+        Pose2d currentPose = robotState.getPose();
+        Transform2d relative = new Transform2d(desiredPose, currentPose);
+        return Math.abs(relative.getX()) < toleranceXMeters
+                && relative.getY() < toleranceYPositiveMeters && relative.getX() > -toleranceYNegativeMeters
+                && Math.abs(relative.getRotation().getRadians()) < angularToleranceRad;
+    }
+
     @Getter
     private boolean autoScoreForceable = false;
 
@@ -438,42 +463,32 @@ public class Superstructure extends SubsystemBaseExt {
             BooleanSupplier forceCondition,
             BooleanSupplier cancelCondition
     ) {
+        Supplier<Pose2d> initialPoseSupplier = () -> getInitialAlignPose(robotState.getPose(), reefSideSupplier.get(), sideSupplier.get());
         Command initial = Commands.race(
                 // Drive to initial position
-                drive.moveTo(() -> getInitialAlignPose(reefSideSupplier.get(), sideSupplier.get())),
-                Commands.sequence(
-                        // Wait until we are within elevator raise tolerance
-                        Commands.parallel(
-                                setGoal(Goal.AUTO_SCORE_CORAL_WAIT_INITIAL),
-                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                                elevator.setGoal(() -> Elevator.Goal.STOW),
-                                Commands.waitUntil(() -> isAtPoseWithTolerance(
-                                        getInitialAlignPose(reefSideSupplier.get(), sideSupplier.get()),
-                                        initialElevatorRaiseToleranceMeters,
+                drive.moveTo(initialPoseSupplier),
+                Commands.parallel(
+                        setGoal(Goal.AUTO_SCORE_CORAL_WAIT_INITIAL),
+                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                        elevator.setGoal(() -> Elevator.Goal.STOW),
+                        Commands.waitUntil(() ->
+                                isAtPoseWithTolerance(
+                                        initialPoseSupplier.get(),
+                                        initialAlignToleranceXMeters,
+                                        initialAlignToleranceYInnerMeters,
+                                        initialAlignToleranceYOuterMeters,
                                         initialAlignToleranceRad
-                                )) // We don't care about velocity at this point
-                        ),
-                        // Start raising elevator and wait until we are within align tolerance
-                        Commands.parallel(
-                                setGoal(Goal.AUTO_SCORE_CORAL_WAIT_INITIAL_RAISING),
-                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                                elevator.setGoal(elevatorGoalSupplier),
-                                Commands.waitUntil(() ->
-                                        isAtPoseWithTolerance(
-                                                getInitialAlignPose(reefSideSupplier.get(), sideSupplier.get()),
-                                                initialAlignToleranceMeters,
-                                                initialAlignToleranceRad
-                                        )
-                                                && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < initialAlignToleranceRadPerSecond
                                 )
-                        ),
-                        Commands.waitSeconds(0.3)
+                                        && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < initialAlignToleranceRadPerSecond
+                        )
                 )
         );
+
         DoubleSupplier elevatorPercentageSupplier = () -> operatorDashboard.disableInterpolateAutoAlign.get()
                 ? 1
                 : elevator.getPositionMeters() / elevatorGoalSupplier.get().setpointMeters.getAsDouble();
-        Supplier<Command> driveFinal = () -> drive.moveTo(() -> getFinalAlignPose(elevatorPercentageSupplier.getAsDouble(), reefSideSupplier.get(), sideSupplier.get()));
+        Supplier<Pose2d> finalPoseSupplier = () -> getFinalAlignPose(elevatorPercentageSupplier.getAsDouble(), reefSideSupplier.get(), sideSupplier.get());
+        Supplier<Command> driveFinal = () -> drive.moveTo(finalPoseSupplier);
         Command waitFinalAndElevator = Commands.sequence(
                 Commands.parallel(
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_FINAL),
@@ -481,7 +496,7 @@ public class Superstructure extends SubsystemBaseExt {
                         elevator.setGoal(elevatorGoalSupplier),
                         Commands.waitUntil(() ->
                                 isAtPoseWithTolerance(
-                                        getFinalAlignPose(elevatorPercentageSupplier.getAsDouble(), reefSideSupplier.get(), sideSupplier.get()),
+                                        finalPoseSupplier.get(),
                                         finalAlignToleranceMeters,
                                         finalAlignToleranceRad
                                 )
@@ -496,10 +511,17 @@ public class Superstructure extends SubsystemBaseExt {
                 Commands.waitSeconds(0.3)
         );
         // Don't allow forcing for a bit, then check if force is true
-        Command waitForForce = Commands.waitSeconds(2)
-                .alongWith(Commands.runOnce(() -> autoScoreForceable = false))
-                .andThen(Commands.waitUntil(forceCondition)
-                        .alongWith(Commands.runOnce(() -> autoScoreForceable = true)));
+        Command waitForForce = Commands.sequence(
+                Commands.parallel(
+                        Commands.waitSeconds(2),
+                        Commands.runOnce(() -> autoScoreForceable = false)
+                ),
+                Commands.parallel(
+                        Commands.waitUntil(forceCondition),
+                        Commands.runOnce(() -> autoScoreForceable = true)
+                )
+        );
+
         Command score = Commands.parallel(
                 setGoal(Goal.AUTO_SCORE_CORAL_SCORING),
                 endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),

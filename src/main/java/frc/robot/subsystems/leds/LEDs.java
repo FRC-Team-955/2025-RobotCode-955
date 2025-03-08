@@ -94,7 +94,7 @@ public class LEDs extends SubsystemBaseExt {
             }
         } else if (DriverStation.isTeleopEnabled()) {
             LEDPattern pattern = switch (superstructure.getGoal()) {
-                case AUTO_SCORE_CORAL_WAIT_INITIAL, AUTO_SCORE_CORAL_WAIT_INITIAL_RAISING, AUTO_SCORE_CORAL_SCORING,
+                case AUTO_SCORE_CORAL_WAIT_INITIAL, AUTO_SCORE_CORAL_SCORING,
                      AUTO_FUNNEL_INTAKE_WAITING_ALIGN, AUTO_FUNNEL_INTAKE_WAITING_SHAKE -> autoScoring;
 
                 case AUTO_SCORE_CORAL_WAIT_FINAL, AUTO_SCORE_CORAL_WAIT_ELEVATOR ->
@@ -112,9 +112,7 @@ public class LEDs extends SubsystemBaseExt {
                 case EJECT -> eject;
 
                 case IDLE -> {
-                    if (superstructure.funnelTriggeredLong()) {
-                        yield funnelTriggered;
-                    } else if (superstructure.endEffectorTriggeredLong()) {
+                    if (superstructure.endEffectorTriggeredLong()) {
                         yield endEffectorTriggered;
                     } else {
                         yield idle;
