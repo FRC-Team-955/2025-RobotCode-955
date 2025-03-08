@@ -33,7 +33,6 @@ import static frc.robot.subsystems.superstructure.AutoAlignLocations.*;
 import static frc.robot.subsystems.superstructure.SuperstructureConstants.createIO;
 import static frc.robot.subsystems.superstructure.SuperstructureConstants.scoreCoralSettleSeconds;
 import static frc.robot.subsystems.superstructure.SuperstructureTuning.funnelIntakeFinalizeInches;
-import static frc.robot.util.HighFrequencySamplingThread.highFrequencyLock;
 
 public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
@@ -121,12 +120,8 @@ public class Superstructure extends SubsystemBaseExt {
 
     @Override
     public void periodicBeforeCommands() {
-        highFrequencyLock.lock();
-
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Superstructure", inputs);
-
-        highFrequencyLock.unlock();
 
 //        robotMechanism.coralIntake.rangeLigament.setColor(
 //                intakeRangeTriggered()

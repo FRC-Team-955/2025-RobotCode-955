@@ -10,15 +10,11 @@ public class SuperstructureIO {
 //
 //        /** If triggered is true, the beam is broken */
 //        public boolean indexerBeamBreakTriggered = false;
-        
+
         public boolean funnelBeamBreakTriggered = false;
 
         /** If triggered is true, the beam is broken */
         public boolean endEffectorBeamBreakTriggered = false;
-
-        public double[] highFrequencyTimestamps = new double[]{};
-        public boolean[] highFrequencyEndEffectorBeamBreakTriggered = new boolean[]{};
-        public boolean[] highFrequencyFunnelBeamBreakTriggered = new boolean[]{};
     }
 
     public void updateInputs(SuperstructureIOInputs inputs) {
