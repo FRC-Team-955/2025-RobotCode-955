@@ -1,8 +1,8 @@
 package frc.robot.subsystems.leds;
 
-import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.util.Color;
 
 import static edu.wpi.first.units.Units.*;
@@ -10,32 +10,59 @@ import static edu.wpi.first.units.Units.*;
 public class LEDPatterns {
     private static final Color pink749 = new Color(255, 0, 128);
 
-    private static final Color startupColor1 = Color.kRed;
-    private static final Color startupColor2 = Color.kBlack;
-    private static final double startupBreatheDuration = 1.0;
-
     /**
      * LEDPattern.breathe uses RobotController.getTime(), which doesn't really
      * work when the robot hasn't started up yet. Therefore, we must implement
      * the breathe algorithm ourselves. This is based off of 749's 2024 code.
      */
-    public static void startup(AddressableLEDBuffer buffer) {
-        double timestamp = System.currentTimeMillis() / 1000.0;
-        double percent = timestamp % startupBreatheDuration / (startupBreatheDuration / 2.0);
-        if (percent > 1) {
-            percent = 1 - (percent - 1);
-        }
+    public static LEDPattern startup() {
+        Color color1 = Color.kRed;
+        Color color2 = Color.kBlack;
+        double period = 1.0;
 
-        double interp = (Math.tanh((percent - 0.5) * 3.0) / Math.tanh(0.5 * 3.0)) * 0.5 + 0.5;
+        return (reader, writer) -> {
+            double timestamp = System.currentTimeMillis() / 1000.0;
+            double percent = timestamp % period / (period / 2.0);
+            if (percent > 1) {
+                percent = 1 - (percent - 1);
+            }
 
-        double r = startupColor2.red + (startupColor1.red - startupColor2.red) * interp;
-        double g = startupColor2.green + (startupColor1.green - startupColor2.green) * interp;
-        double b = startupColor2.blue + (startupColor1.blue - startupColor2.blue) * interp;
+            double interp = (Math.tanh((percent - 0.5) * 3.0) / Math.tanh(0.5 * 3.0)) * 0.5 + 0.5;
 
-        Color color = new Color(r, g, b);
-        for (int i = 0; i < buffer.getLength(); i++) {
-            buffer.setLED(i, color);
-        }
+            double r = color2.red + (color1.red - color2.red) * interp;
+            double g = color2.green + (color1.green - color2.green) * interp;
+            double b = color2.blue + (color1.blue - color2.blue) * interp;
+
+            Color color = new Color(r, g, b);
+            for (int i = 0; i < reader.getLength(); i++) {
+                writer.setLED(i, color);
+            }
+        };
+    }
+
+    /** Based on 749's 2024 code */
+    private static LEDPattern wave(Color backgroundColor, Color waveColor, double periodSeconds) {
+        double lengthMultiplier = 4.0;
+        double sinMultiplier = 2.0 / lengthMultiplier;
+        double periodMicros = periodSeconds * 1_000_000.0;
+
+        return (reader, writer) -> {
+            int length = reader.getLength();
+            double extendedLength = lengthMultiplier * length;
+
+            double percent = RobotController.getTime() % periodMicros / periodMicros;
+            long offset = Math.round(percent * extendedLength);
+            for (int i = 0; i < length; i++) {
+                double localPercent = (i - offset) % (extendedLength) / length;
+
+                double interp = Math.sin(sinMultiplier * Math.PI * localPercent);
+
+                double r = backgroundColor.red + (waveColor.red - backgroundColor.red) * interp;
+                double g = backgroundColor.green + (waveColor.green - backgroundColor.green) * interp;
+                double b = backgroundColor.blue + (waveColor.blue - backgroundColor.blue) * interp;
+                writer.setLED(i, new Color(r, g, b));
+            }
+        };
     }
 
     public static final LEDPattern lowBatteryAlert = LEDPattern.solid(Color.kRed).blink(Seconds.of(0.5));
@@ -48,8 +75,7 @@ public class LEDPatterns {
     public static final LEDPattern autoNotChosen = LEDPattern.solid(Color.kOrange).blink(Seconds.of(1));
 
     private static LEDPattern auto(Color allianceColor) {
-        return LEDPattern.gradient(LEDPattern.GradientType.kContinuous, allianceColor, Color.kWhite, Color.kWhite, Color.kWhite)
-                .scrollAtRelativeSpeed(Percent.per(Second).of(250));
+        return wave(Color.kWhite, allianceColor, 0.4);
     }
 
     public static final LEDPattern autoRed = auto(Color.kRed);

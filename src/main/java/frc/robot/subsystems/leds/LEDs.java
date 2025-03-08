@@ -55,8 +55,9 @@ public class LEDs extends SubsystemBaseExt {
     }
 
     public Notifier createAndStartStartupNotifier() {
+        LEDPattern pattern = startup();
         Notifier notifier = new Notifier(() -> {
-            startup(buffer);
+            pattern.applyTo(buffer);
             io.setData(buffer);
         });
         notifier.startPeriodic(0.02);
