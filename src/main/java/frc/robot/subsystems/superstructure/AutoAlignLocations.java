@@ -35,16 +35,15 @@ public class AutoAlignLocations {
     private static final Transform2d bumperOffset = new Transform2d(driveConfig.bumperLengthMeters() / 2.0, 0, new Rotation2d());
 
     private static final double distanceCenterOfReefToBranchMeters = Units.inchesToMeters(6.5);
-    private static final double distanceCenterOfReefToElevatorClearanceMeters = distanceCenterOfReefToBranchMeters + Units.inchesToMeters(8);
+    private static final double distanceCenterOfReefToElevatorClearanceMeters = distanceCenterOfReefToBranchMeters + Units.inchesToMeters(10);
 
     private static final Transform2d initialAlignStartOffset = new Transform2d(1, 0, new Rotation2d());
-    private static final Transform2d initialAlignEndOffset = new Transform2d(0.2, 0, new Rotation2d());
+    private static final Transform2d initialAlignEndOffset = new Transform2d(0.3, 0, new Rotation2d());
     private static final double initialAlignDistYForStartMeters = 2.0;
 
     // Very rough
-    public static final double initialAlignToleranceXMeters = 0.2;
-    public static final double initialAlignToleranceYOuterMeters = 0.2;
-    public static final double initialAlignToleranceYInnerMeters = 0.1;
+    public static final double initialAlignToleranceXMeters = 0.5;
+    public static final double initialAlignToleranceYMeters = 0.2;
     public static final double initialAlignToleranceRad = Units.degreesToRadians(20);
     public static final double initialAlignToleranceRadPerSecond = Units.degreesToRadians(20);
 

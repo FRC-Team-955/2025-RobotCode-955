@@ -444,11 +444,11 @@ public class Superstructure extends SubsystemBaseExt {
                 && Math.abs(desiredPose.getRotation().minus(currentPose.getRotation()).getRadians()) < angularToleranceRad;
     }
 
-    private boolean isAtPoseWithTolerance(Pose2d desiredPose, double toleranceXMeters, double toleranceYPositiveMeters, double toleranceYNegativeMeters, double angularToleranceRad) {
+    private boolean isAtPoseWithTolerance(Pose2d desiredPose, double toleranceXMeters, double toleranceYMeters, double angularToleranceRad) {
         Pose2d currentPose = robotState.getPose();
         Transform2d relative = new Transform2d(desiredPose, currentPose);
         return Math.abs(relative.getX()) < toleranceXMeters
-                && relative.getY() < toleranceYPositiveMeters && relative.getX() > -toleranceYNegativeMeters
+                && Math.abs(relative.getY()) < toleranceYMeters
                 && Math.abs(relative.getRotation().getRadians()) < angularToleranceRad;
     }
 
@@ -475,8 +475,7 @@ public class Superstructure extends SubsystemBaseExt {
                                 isAtPoseWithTolerance(
                                         initialPoseSupplier.get(),
                                         initialAlignToleranceXMeters,
-                                        initialAlignToleranceYInnerMeters,
-                                        initialAlignToleranceYOuterMeters,
+                                        initialAlignToleranceYMeters,
                                         initialAlignToleranceRad
                                 )
                                         && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < initialAlignToleranceRadPerSecond
