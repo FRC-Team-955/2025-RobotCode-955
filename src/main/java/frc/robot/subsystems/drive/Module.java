@@ -75,7 +75,7 @@ public class Module {
         } else {
             io.setDriveVelocity(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
         }
-        if (Math.abs(state.speedMetersPerSecond) < 1e-4) {
+        if (Math.abs(state.speedMetersPerSecond) < 1e-4 && Math.abs(currentAngle.minus(state.angle).getRadians()) < 0.1) {
             io.setTurnOpenLoop(0.0);
         } else {
             io.setTurnPosition(state.angle.getRadians());
