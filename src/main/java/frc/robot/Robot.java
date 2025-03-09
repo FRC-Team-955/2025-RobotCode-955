@@ -76,6 +76,12 @@ public class Robot extends LoggedRobot {
     public Robot() {
         @SuppressWarnings("resource")
         Notifier startupNotifier = LEDs.get().createAndStartStartupNotifier();
+        try {
+            // Give some time for startup notifier to actually start
+            // Sleeping isn't the best, but since this just happens on initialization I think it's fine
+            Thread.sleep(200);
+        } catch (InterruptedException ignored) {
+        }
 
         AutoLogOutputManager.addPackage("frc");
 
