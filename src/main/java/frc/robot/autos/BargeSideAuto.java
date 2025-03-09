@@ -3,6 +3,7 @@ package frc.robot.autos;
 import choreo.auto.AutoRoutine;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.OperatorDashboard;
+import frc.robot.autos.AutoBuilder.IntakeScorePair;
 import frc.robot.subsystems.superstructure.AutoAlignLocations;
 
 import java.util.List;
@@ -16,9 +17,9 @@ public class BargeSideAuto {
         final var thirdScoreTraj = routine.trajectory("Barge Side", 4);
 
         return AutoBuilder.createScoring(routine, List.of(
-                new AutoBuilder.IntakeScorePair(null, null, firstScoreTraj, OperatorDashboard.ReefZoneSide.LeftBack, OperatorDashboard.LocalReefSide.Right),
-                new AutoBuilder.IntakeScorePair(secondStationTraj, AutoAlignLocations.Station.BargeSide, secondScoreTraj, OperatorDashboard.ReefZoneSide.LeftFront, OperatorDashboard.LocalReefSide.Left),
-                new AutoBuilder.IntakeScorePair(thirdStationTraj, AutoAlignLocations.Station.BargeSide, thirdScoreTraj, OperatorDashboard.ReefZoneSide.LeftFront, OperatorDashboard.LocalReefSide.Right)
+                new IntakeScorePair(null, null, firstScoreTraj, OperatorDashboard.ReefZoneSide.LeftBack, OperatorDashboard.LocalReefSide.Right),
+                new IntakeScorePair(secondStationTraj, AutoAlignLocations.Station.BargeSide, secondScoreTraj, OperatorDashboard.ReefZoneSide.LeftFront, OperatorDashboard.LocalReefSide.Left),
+                new IntakeScorePair(thirdStationTraj, AutoAlignLocations.Station.BargeSide, thirdScoreTraj, OperatorDashboard.ReefZoneSide.LeftFront, OperatorDashboard.LocalReefSide.Right)
         ));
     }
 }
