@@ -205,29 +205,31 @@ public class Elevator extends SubsystemBaseExt {
                 setpointMeters = 1.1;
             }
 
-            boolean usingGentleProfile = inputs.leaderVelocityRadPerSec < 0.1 // If we are going down
+            boolean usingGentleVelocity = inputs.leaderVelocityRadPerSec < 0.1 // If we are going down
                     // If we are below the hardstop slowdown zone
                     && positionMeters < hardstopSlowdownMeters;
+            // Only actually use the gentle profile if we are close enough to the max velocity xto avoid jumping directly to max velocity
+            boolean usingGentleProfile = usingGentleVelocity && Math.abs(velocityMetersPerSec) < gentleMaxVelocityMetersPerSecond + 0.2;
             var profile = usingGentleProfile
                     ? profileGentleVelocity
                     : profileFullVelocity;
+            // If not using the gentle profile, set the setpoint to the hardstop with the gentle max velocity
+            TrapezoidProfile.State setpointState = usingGentleVelocity && !usingGentleProfile
+                    ? new TrapezoidProfile.State(hardstopMeters, gentleMaxVelocityMetersPerSecond)
+                    : new TrapezoidProfile.State(setpointMeters, 0);
 
             // Sometimes the profile outruns the elevator, so failsafe if it does
             var usingRealStateAsCurrent = operatorDashboard.useRealElevatorState.get();
-            var currentState = previousStateMeters == null || usingRealStateAsCurrent
-                    ? new TrapezoidProfile.State(positionMeters, velocityMetersPerSec)
-                    : previousStateMeters;
             if (usingRealStateAsCurrent) {
                 // Turn the toggle off instantly so it's like a button
                 // We only want to use the real state for one cycle anyways
                 operatorDashboard.useRealElevatorState.set(false);
             }
+            var currentState = previousStateMeters == null || usingRealStateAsCurrent
+                    ? new TrapezoidProfile.State(positionMeters, velocityMetersPerSec)
+                    : previousStateMeters;
 
-            previousStateMeters = profile.calculate(
-                    0.02,
-                    currentState,
-                    new TrapezoidProfile.State(setpointMeters, 0)
-            );
+            previousStateMeters = profile.calculate(0.02, currentState, setpointState);
 
             var setpointPositionRad = metersToRad(previousStateMeters.position);
             var setpointVelocityRadPerSec = metersToRad(previousStateMeters.velocity);
@@ -235,6 +237,7 @@ public class Elevator extends SubsystemBaseExt {
             io.setClosedLoop(setpointPositionRad, setpointVelocityRadPerSec);
 
             Logger.recordOutput("Elevator/ClosedLoop", true);
+            Logger.recordOutput("Elevator/UsingGentleVelocity", usingGentleVelocity);
             Logger.recordOutput("Elevator/UsingGentleProfile", usingGentleProfile);
             Logger.recordOutput("Elevator/UsingRealStateAsCurrent", usingRealStateAsCurrent);
 
