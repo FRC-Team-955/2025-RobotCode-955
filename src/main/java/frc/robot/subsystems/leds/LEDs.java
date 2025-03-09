@@ -8,6 +8,7 @@ import frc.robot.OperatorDashboard;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 
+import static edu.wpi.first.units.Units.Seconds;
 import static frc.robot.subsystems.leds.LEDConstants.*;
 import static frc.robot.subsystems.leds.LEDPatterns.*;
 
@@ -82,10 +83,10 @@ public class LEDs extends SubsystemBaseExt {
                 || operatorDashboard.ignoreEndEffectorBeamBreak.get();
 
         if (viewDebug) {
-            LEDPattern.solid(Color.kRed).applyTo(leftUpperView);
-            LEDPattern.solid(Color.kGreen).applyTo(leftLowerView);
-            LEDPattern.solid(Color.kYellow).applyTo(rightUpperView);
-            LEDPattern.solid(Color.kBlue).applyTo(rightLowerView);
+            LEDPattern.solid(Color.kRed).blink(Seconds.of(1)).applyTo(leftUpperView);
+            LEDPattern.solid(Color.kGreen).blink(Seconds.of(1)).applyTo(leftLowerView);
+            LEDPattern.solid(Color.kYellow).blink(Seconds.of(1)).applyTo(rightUpperView);
+            LEDPattern.solid(Color.kBlue).blink(Seconds.of(1)).applyTo(rightLowerView);
         } else if (DriverStation.isAutonomousEnabled()) {
             if (autonomousRunning) {
                 set(patternForAlliance(autoRed, autoBlue, autoUnknown));
