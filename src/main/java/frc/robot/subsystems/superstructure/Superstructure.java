@@ -233,7 +233,14 @@ public class Superstructure extends SubsystemBaseExt {
         return Commands.parallel(
                 setGoal(Goal.EJECT),
                 endEffector.setGoal(EndEffector.RollersGoal.EJECT),
-                Commands.idle()
+                funnel.run(() -> {
+                    boolean forwards = Timer.getTimestamp() % 1.0 < 0.75;
+                    if (forwards) {
+                        funnel.setGoalInstantaneous(Funnel.Goal.EJECT_FORWARDS);
+                    } else {
+                        funnel.setGoalInstantaneous(Funnel.Goal.EJECT_BACKWARDS);
+                    }
+                })
         );
     }
 

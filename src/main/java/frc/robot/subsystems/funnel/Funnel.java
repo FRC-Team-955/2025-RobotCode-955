@@ -17,8 +17,7 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 
 import static frc.robot.subsystems.funnel.FunnelConstants.createBeltIO;
-import static frc.robot.subsystems.funnel.FunnelTuning.funnelIntakeGoalSetpoint;
-import static frc.robot.subsystems.funnel.FunnelTuning.velocityGainsTunable;
+import static frc.robot.subsystems.funnel.FunnelTuning.*;
 
 public class Funnel extends SubsystemBaseExt {
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
@@ -31,7 +30,9 @@ public class Funnel extends SubsystemBaseExt {
     public enum Goal {
         CHARACTERIZATION(null),
         IDLE(() -> 0),
-        INTAKE(funnelIntakeGoalSetpoint::get);
+        INTAKE(intakeGoalSetpoint::get),
+        EJECT_FORWARDS(ejectGoalSetpoint::get),
+        EJECT_BACKWARDS(() -> -ejectGoalSetpoint.get());
 
         private final DoubleSupplier setpointRadPerSec;
     }
