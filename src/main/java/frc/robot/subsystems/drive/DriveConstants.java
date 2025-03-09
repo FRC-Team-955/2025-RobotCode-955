@@ -12,9 +12,9 @@ public class DriveConstants {
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
     public static final PIDF moveToLinear = PIDF.ofPD(2, 0);
-    public static final TrapezoidProfile.Constraints moveToLinearConstraintsMeters = new TrapezoidProfile.Constraints(3, 3);
+    public static final TrapezoidProfile.Constraints moveToLinearConstraintsMeters = new TrapezoidProfile.Constraints(3, 5);
     public static final PIDF moveToAngular = PIDF.ofPD(5, 0);
-    public static final TrapezoidProfile.Constraints moveToAngularConstraintsRad = new TrapezoidProfile.Constraints(5, 5);
+    public static final TrapezoidProfile.Constraints moveToAngularConstraintsRad = new TrapezoidProfile.Constraints(5, 7);
 
     public static final boolean useSetpointGenerator = true;
     public static final boolean disableDriving = false;
