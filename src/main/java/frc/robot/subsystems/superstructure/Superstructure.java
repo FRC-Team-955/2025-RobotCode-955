@@ -340,6 +340,7 @@ public class Superstructure extends SubsystemBaseExt {
                             CommandsExt.schedule(Commands.parallel(
                                     setGoal(Goal.HANDOFF),
                                     waitUntilIdle().withTimeout(waitUntilIdleTeleopTimeoutSeconds)
+                                            .finallyDo(i -> goal = Goal.IDLE)
                             ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming))
                     )
             );
@@ -383,6 +384,7 @@ public class Superstructure extends SubsystemBaseExt {
                             CommandsExt.schedule(Commands.parallel(
                                     setGoal(Goal.HANDOFF),
                                     waitUntilIdle().withTimeout(waitUntilIdleTeleopTimeoutSeconds)
+                                            .finallyDo(i -> goal = Goal.IDLE)
                             ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming))
                     )
             );
