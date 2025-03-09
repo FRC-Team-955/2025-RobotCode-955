@@ -12,6 +12,7 @@ import static edu.wpi.first.units.Units.*;
 
 public class LEDPatterns {
     private static final Color pink749 = new Color(255, 0, 128);
+    private static final Color unknownAlliance = Color.kPurple;
 
     public static final boolean constantSet = Constants.tuningMode || DriveConstants.disableDriving || DriveConstants.disableGyro;
 
@@ -47,7 +48,7 @@ public class LEDPatterns {
 
     /** Based on 749's 2024 code */
     private static LEDPattern wave(Color backgroundColor, Color waveColor, double periodSeconds) {
-        double lengthMultiplier = 4.0;
+        double lengthMultiplier = 3.0;
         double sinMultiplier = 2.0 / lengthMultiplier;
         double periodMicros = periodSeconds * 1_000_000.0;
 
@@ -76,17 +77,17 @@ public class LEDPatterns {
 
     public static final LEDPattern disabled = LEDPattern.gradient(LEDPattern.GradientType.kContinuous, Color.kRed, Color.kRed, Color.kRed, pink749)
             .scrollAtRelativeSpeed(Percent.per(Second).of(75));
-    public static final LEDPattern disabledUnknown = LEDPattern.solid(Color.kPurple);
+    public static final LEDPattern disabledUnknown = LEDPattern.solid(unknownAlliance);
 
     public static final LEDPattern autoNotChosen = LEDPattern.solid(Color.kOrangeRed).blink(Seconds.of(1));
 
     private static LEDPattern auto(Color allianceColor) {
-        return wave(Color.kWhite, allianceColor, 0.4);
+        return wave(Color.kWhite, allianceColor, 0.5);
     }
 
     public static final LEDPattern autoRed = auto(Color.kRed);
     public static final LEDPattern autoBlue = auto(Color.kBlue);
-    public static final LEDPattern autoUnknown = auto(Color.kPurple);
+    public static final LEDPattern autoUnknown = auto(unknownAlliance);
     public static final LEDPattern autoFinished = LEDPattern.solid(Color.kGreen).blink(Seconds.of(0.5));
 
     public static final LEDPattern eject = LEDPattern.solid(Color.kRed).blink(Seconds.of(0.1));
