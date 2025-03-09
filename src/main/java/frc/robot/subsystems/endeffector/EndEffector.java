@@ -111,14 +111,11 @@ public class EndEffector extends SubsystemBaseExt {
     }
 
     public Command setGoal(RollersGoal rollersGoal) {
-        return runOnce(() -> setGoalInstantaneous(rollersGoal));
+        return runOnce(() -> this.rollersGoal = rollersGoal);
     }
 
     public void setGoalInstantaneous(RollersGoal rollersGoal) {
         this.rollersGoal = rollersGoal;
-        if (rollersGoal != RollersGoal.GO_TO_POSITION) {
-            rollersPositionSetpointRad = null;
-        }
     }
 
     public boolean atPositionSetpoint() {
