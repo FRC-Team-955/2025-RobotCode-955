@@ -38,7 +38,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
     private final Timer sinceCoralIntaked = new Timer();
     private static final double indexTime = 1;
     private final Timer sinceAtStation = new Timer();
-    private static final double stationIntakeTime = 1.5 - indexTime;
+    private static final double stationIntakeTime = 1;
     private CoralState coralState = CoralState.IN_END_EFFECTOR; // preload
 
     private enum CoralState {
@@ -58,7 +58,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
         switch (coralState) {
             case NO_CORAL -> {
                 var current = robotState.getPose().getTranslation();
-                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 1.5) && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
+                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 1.5) && funnel.getGoal() == Funnel.Goal.INTAKE && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
                     if (!sinceAtStation.isRunning()) sinceAtStation.restart();
                     if (sinceAtStation.hasElapsed(stationIntakeTime)) {
                         coralState = CoralState.INTAKING;
@@ -66,11 +66,18 @@ public class SuperstructureIOSim extends SuperstructureIO {
                     }
                 } else {
                     sinceAtStation.stop();
+                    sinceAtStation.reset();
                 }
             }
             case INTAKING -> {
-                if (sinceCoralIntaked.hasElapsed(indexTime) && funnel.getGoal() == Funnel.Goal.INTAKE) {
-                    coralState = CoralState.IN_END_EFFECTOR;
+                if (funnel.getGoal() == Funnel.Goal.INTAKE && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
+                    if (!sinceCoralIntaked.isRunning()) sinceCoralIntaked.restart();
+                    if (sinceCoralIntaked.hasElapsed(indexTime)) {
+                        coralState = CoralState.IN_END_EFFECTOR;
+                    }
+                } else {
+                    sinceCoralIntaked.stop();
+                    sinceCoralIntaked.reset();
                 }
                 var interp = MathUtil.clamp(sinceCoralIntaked.get() / indexTime, 0, 1);
                 coralRobotRelative = new Transform3d(
@@ -109,6 +116,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 }
             }
         }
+        Logger.recordOutput("FieldSimulation/CoralState", coralState);
         if (coralRobotRelative != null) {
             Logger.recordOutput("FieldSimulation/CoralInRobot", new Pose3d[]{
                     new Pose3d(

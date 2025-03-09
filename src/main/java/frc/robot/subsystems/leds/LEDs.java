@@ -107,7 +107,7 @@ public class LEDs extends SubsystemBaseExt {
 
                 case MANUAL_SCORE_CORAL_WAIT_CONFIRM -> driverConfirm;
 
-                case FUNNEL_INTAKE_FINALIZING, AUTO_FUNNEL_INTAKE_FINALIZING,
+                case HOME, HANDOFF,
                      MANUAL_SCORE_CORAL_SCORING, DESCORE_ALGAE_DESCORING -> finalizing;
 
                 case EJECT -> eject;

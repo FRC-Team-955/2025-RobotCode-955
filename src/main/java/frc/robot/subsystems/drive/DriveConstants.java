@@ -11,8 +11,8 @@ public class DriveConstants {
     public static final double assistDirectionToleranceRad = Units.degreesToRadians(50);
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
-    public static final PIDF moveToLinear = PIDF.ofPD(2.5, 0);
-    public static final TrapezoidProfile.Constraints moveToLinearConstraintsMeters = new TrapezoidProfile.Constraints(3, 5);
+    public static final PIDF moveToLinear = PIDF.ofPD(3, 0);
+    public static final TrapezoidProfile.Constraints moveToLinearConstraintsMeters = new TrapezoidProfile.Constraints(3, 3);
     public static final PIDF moveToAngular = PIDF.ofPD(5, 0);
     public static final TrapezoidProfile.Constraints moveToAngularConstraintsRad = new TrapezoidProfile.Constraints(5, 5);
 

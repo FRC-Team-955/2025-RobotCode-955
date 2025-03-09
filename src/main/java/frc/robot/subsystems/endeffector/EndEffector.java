@@ -111,7 +111,14 @@ public class EndEffector extends SubsystemBaseExt {
     }
 
     public Command setGoal(RollersGoal rollersGoal) {
-        return runOnce(() -> this.rollersGoal = rollersGoal);
+        return runOnce(() -> setGoalInstantaneous(rollersGoal));
+    }
+
+    public void setGoalInstantaneous(RollersGoal rollersGoal) {
+        this.rollersGoal = rollersGoal;
+        if (rollersGoal != RollersGoal.GO_TO_POSITION) {
+            rollersPositionSetpointRad = null;
+        }
     }
 
     public boolean atPositionSetpoint() {
@@ -119,18 +126,9 @@ public class EndEffector extends SubsystemBaseExt {
     }
 
     /** Goes positionDeltaMeters forward (or backwards) from current position */
-    public Command moveByAndWaitUntilDone(DoubleSupplier positionDeltaMeters) {
-        return startEndWaitUntil(
-                () -> {
-                    this.rollersGoal = RollersGoal.GO_TO_POSITION;
-                    rollersPositionSetpointRad = rollersInputs.positionRad + rollersRadiansForMeters(positionDeltaMeters.getAsDouble());
-                },
-                () -> {
-                    this.rollersGoal = RollersGoal.IDLE;
-                    rollersPositionSetpointRad = null;
-                },
-                this::atPositionSetpoint
-        );
+    public void moveByInstantaneous(double positionDeltaMeters) {
+        this.rollersGoal = RollersGoal.GO_TO_POSITION;
+        rollersPositionSetpointRad = rollersInputs.positionRad + rollersRadiansForMeters(positionDeltaMeters);
     }
 
     public double getAngleDegrees() {

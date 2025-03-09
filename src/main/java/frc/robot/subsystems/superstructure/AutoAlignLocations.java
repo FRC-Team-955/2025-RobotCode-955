@@ -10,7 +10,6 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.OperatorDashboard.LocalReefSide;
 import frc.robot.OperatorDashboard.ReefZoneSide;
 import lombok.RequiredArgsConstructor;
-import org.littletonrobotics.junction.Logger;
 
 import static frc.robot.Util.shouldFlip;
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
@@ -35,7 +34,7 @@ public class AutoAlignLocations {
     private static final Transform2d bumperOffset = new Transform2d(driveConfig.bumperLengthMeters() / 2.0, 0, new Rotation2d());
 
     private static final double distanceCenterOfReefToBranchMeters = Units.inchesToMeters(6.5);
-    private static final double distanceCenterOfReefToElevatorClearanceMeters = distanceCenterOfReefToBranchMeters + Units.inchesToMeters(10);
+    private static final double distanceCenterOfReefToElevatorClearanceMeters = distanceCenterOfReefToBranchMeters + Units.inchesToMeters(8);
 
     private static final Transform2d initialAlignStartOffset = new Transform2d(1, 0, new Rotation2d());
     private static final Transform2d initialAlignEndOffset = new Transform2d(0.3, 0, new Rotation2d());
@@ -48,10 +47,10 @@ public class AutoAlignLocations {
     public static final double initialAlignToleranceRadPerSecond = Units.degreesToRadians(20);
 
     // very little tolerance
-    public static final double finalAlignToleranceMeters = 0.05;
+    public static final double finalAlignToleranceMeters = 0.04;
     public static final double finalAlignToleranceRad = Units.degreesToRadians(4);
-    public static final double finalAlignToleranceMetersPerSecond = 0.03;
-    public static final double finalAlignToleranceRadPerSecond = Units.degreesToRadians(2);
+    public static final double finalAlignToleranceMetersPerSecond = 0.10;
+    public static final double finalAlignToleranceRadPerSecond = Units.degreesToRadians(8);
 
     /**
      * Checks whether moving to the side will intersect with the reef, and refuses to do so if it does.
@@ -111,17 +110,19 @@ public class AutoAlignLocations {
         }
     }
 
-    public static final double stationAlignToleranceXYMeters = 0.1;
+    public static final double stationAlignToleranceXYMeters = 0.05;
     public static final double stationAlignToleranceOmegaRad = Units.degreesToRadians(10);
 
-    private static final Transform2d stationAlignOffset = new Transform2d(0, 0.6, Rotation2d.k180deg);
+    private static final Transform2d stationAlignOffsetBargeSide = new Transform2d(0, 0.6, Rotation2d.k180deg);
+    private static final Transform2d stationAlignOffsetProcessorSide = new Transform2d(stationAlignOffsetBargeSide.getX(), -stationAlignOffsetBargeSide.getY(), stationAlignOffsetBargeSide.getRotation());
 
     @RequiredArgsConstructor
     public enum Station {
-        BargeSide(1),
-        ProcessorSide(0);
+        BargeSide(1, stationAlignOffsetBargeSide),
+        ProcessorSide(0, stationAlignOffsetProcessorSide);
 
         private final int aprilTagOffset;
+        private final Transform2d alignOffset;
     }
 
     private static Pose2d getStationAprilTagPoseAdjusted(Station station) {
@@ -137,7 +138,6 @@ public class AutoAlignLocations {
     }
 
     public static Pose2d getStationAlignPose(Station station) {
-        Logger.recordOutput("Superstructrue/align", getStationAprilTagPoseAdjusted(station));
-        return getStationAprilTagPoseAdjusted(station).plus(stationAlignOffset);
+        return getStationAprilTagPoseAdjusted(station).plus(station.alignOffset);
     }
 }

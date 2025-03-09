@@ -93,6 +93,10 @@ public class Funnel extends SubsystemBaseExt {
         return runOnce(() -> this.goal = goal);
     }
 
+    public void setGoalInstantaneous(Goal goal) {
+        this.goal = goal;
+    }
+
     public Command beltFeedforwardCharacterization() {
         return setGoal(Goal.CHARACTERIZATION)
                 .andThen(new FeedforwardCharacterization(

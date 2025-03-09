@@ -203,6 +203,8 @@ public class Robot extends LoggedRobot {
             }
         }
 
+        robotContainer.superstructure.periodicAfterCommandsBeforeSubsystems();
+
         for (var subsystem : virtualSubsystems) {
             subsystem.periodicAfterCommands();
         }

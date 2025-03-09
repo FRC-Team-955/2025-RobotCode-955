@@ -2,9 +2,9 @@
   "hubs": [
     {
       "x": 0,
-      "y": 37,
-      "width": 1470,
-      "height": 919,
+      "y": 25,
+      "width": 1920,
+      "height": 1055,
       "state": {
         "sidebar": {
           "width": 399,
@@ -52,7 +52,6 @@
             "/RealOutputs/Elevator/Constraints",
             "/RealOutputs/Elevator/Profile",
             "/RealOutputs/Elevator/Profile/Setpoint",
-            "/RealOutputs/RobotState/Mechanism",
             "/RealOutputs/RobotState/Mechanism/elevator",
             "/RealOutputs/RobotState/Mechanism/elevator/stage1",
             "/RealOutputs/Alerts/warnings",
@@ -113,7 +112,6 @@
             "/RealOutputs/EndEffector/Rollers/Velocity",
             "/RealOutputs/Drive/Assist",
             "/RealOutputs/Drive/MoveTo",
-            "/Inputs",
             "/Tuning/Superstructure",
             "/Tuning/Drive",
             "/Inputs/Superstructure/HighFrequencyEndEffectorBeamBreakTriggered",
@@ -131,11 +129,31 @@
             "/Tuning/OperatorDashboard/ReefZoneSides",
             "/Tuning/OperatorDashboard/LocalReefSides",
             "/DriverStation",
-            "/Inputs/EndEffector"
+            "/Inputs/EndEffector",
+            "/Inputs/Vision",
+            "/RealOutputs/RobotState/Mechanism/LED10",
+            "/RealOutputs/RobotState/Mechanism/LED10/LED10",
+            "/RealOutputs/RobotState/Mechanism/LED12",
+            "/RealOutputs/RobotState/Mechanism/LED12/LED12",
+            "/RealOutputs/Funnel",
+            "/RealOutputs/Superstructure",
+            "/RealOutputs/Superstructrue",
+            "/RealOutputs/Superstructrue/align",
+            "/RealOutputs/Superstructrue/align/translation",
+            "/RealOutputs/Drive",
+            "/RealOutputs/LoggedRobot",
+            "/RealOutputs/RobotState",
+            "/RealOutputs/RobotState/Pose/rotation",
+            "/RealOutputs/Drive/MoveTo/Setpoint",
+            "/RealOutputs/Drive/MoveTo/Setpoint/translation",
+            "/RealOutputs/Drive/MoveTo/Goal",
+            "/RealOutputs/Drive/MoveTo/Goal/translation",
+            "/RealOutputs/RobotState/Pose/translation",
+            "/RealOutputs/Elevator"
           ]
         },
         "tabs": {
-          "selected": 5,
+          "selected": 7,
           "tabs": [
             {
               "type": 0,
@@ -328,6 +346,112 @@
                 "rightFilter": 0
               },
               "controllerUUID": "urvgexky34ymzs4rbn1u5kyru7ypv6js",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
+              "title": "Move To",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Drive/MoveTo/LinearMeasurement",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#2b66a2",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Drive/MoveTo/LinearSetpoint",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#e5b31b",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Drive/MoveTo/AngularSetpoint",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#e48b32",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/RobotState/Pose/rotation/value",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#c0b487",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Drive/MoveTo/LinearSetpointVelocity",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#af2437",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Drive/ChassisSpeeds/MeasuredLinearVelocity",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#80588e",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Drive/MoveTo/AngularSetpointVelocity",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#858584",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Drive/ChassisSpeeds/Measured/omega",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#3b875a",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "discreteSources": [],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "rightUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "eyzpxjmam1ynwq0v90v5xhx95iys9ris",
               "renderer": null,
               "controlsHeight": 200
             },
@@ -538,6 +662,15 @@
                     "options": {
                       "color": "#2b66a2"
                     }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "/RealOutputs/Funnel/Goal",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#c0b487"
+                    }
                   }
                 ],
                 "leftLockedRange": null,
@@ -636,15 +769,6 @@
                   },
                   {
                     "type": "stripes",
-                    "logKey": "/RealOutputs/Elevator/UsingGentleProfile",
-                    "logType": "Boolean",
-                    "visible": true,
-                    "options": {
-                      "color": "#858584"
-                    }
-                  },
-                  {
-                    "type": "stripes",
                     "logKey": "/RealOutputs/Elevator/UsingRealStateAsCurrent",
                     "logType": "Boolean",
                     "visible": true,
@@ -672,7 +796,16 @@
                   },
                   {
                     "type": "stripes",
-                    "logKey": "/RealOutputs/Elevator/UsingPositionControl",
+                    "logKey": "/RealOutputs/Elevator/UsingGentleProfile",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#858584"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "/RealOutputs/Elevator/UsingGentleVelocity",
                     "logType": "Boolean",
                     "visible": true,
                     "options": {
@@ -746,6 +879,16 @@
                     "options": {
                       "color": "#00ff00",
                       "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "swerveStates",
+                    "logKey": "/RealOutputs/Drive/ModuleStates/Setpoints",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "arrangement": "0,1,2,3"
                     }
                   },
                   {
@@ -880,17 +1023,33 @@
                 "cameraIndex": -1,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  4.704010535112877,
-                  6.873125697335673,
-                  -3.675636304812519
+                  9.067140718796239,
+                  4.537485872590144,
+                  1.2416078489523819
                 ],
                 "cameraTarget": [
-                  4.09823689146109,
-                  0.06043182481196417,
-                  1.1435000193521347
+                  1.9304575746310682,
+                  -2.920827888512502,
+                  0.559337886530383
                 ]
               },
               "controlsHeight": 225
+            },
+            {
+              "type": 10,
+              "title": "Mechanism",
+              "controller": [
+                {
+                  "type": "mechanism",
+                  "logKey": "/RealOutputs/RobotState/Mechanism",
+                  "logType": "Mechanism2d",
+                  "visible": true,
+                  "options": {}
+                }
+              ],
+              "controllerUUID": "o0obdfsfo5brm2ko2f7nfzczjuy11p92",
+              "renderer": null,
+              "controlsHeight": 200
             },
             {
               "type": 9,
