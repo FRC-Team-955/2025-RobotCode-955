@@ -74,11 +74,11 @@ public class LEDPatterns {
     public static final LEDPattern overrideAlert = LEDPattern.solid(Color.kBlue).blink(Seconds.of(0.5));
     public static final LEDPattern constantSetAlert = LEDPattern.solid(Color.kGreen).blink(Seconds.of(0.5));
 
-    public static final LEDPattern disabled = LEDPattern.gradient(LEDPattern.GradientType.kContinuous, Color.kRed, pink749)
-            .scrollAtRelativeSpeed(Percent.per(Second).of(50));
+    public static final LEDPattern disabled = LEDPattern.gradient(LEDPattern.GradientType.kContinuous, Color.kRed, Color.kRed, Color.kRed, pink749)
+            .scrollAtRelativeSpeed(Percent.per(Second).of(75));
     public static final LEDPattern disabledUnknown = LEDPattern.solid(Color.kPurple);
 
-    public static final LEDPattern autoNotChosen = LEDPattern.solid(Color.kOrange).blink(Seconds.of(1));
+    public static final LEDPattern autoNotChosen = LEDPattern.solid(Color.kOrangeRed).blink(Seconds.of(1));
 
     private static LEDPattern auto(Color allianceColor) {
         return wave(Color.kWhite, allianceColor, 0.4);
@@ -93,8 +93,8 @@ public class LEDPatterns {
     public static final LEDPattern finalizing = LEDPattern.solid(Color.kGreen).blink(Seconds.of(0.1));
     public static final LEDPattern driverConfirm = LEDPattern.solid(Color.kYellow).blink(Seconds.of(0.1));
     public static final LEDPattern autoScoring = LEDPattern.rainbow(255, 255).scrollAtRelativeSpeed(Percent.per(Second).of(150));
-    public static final LEDPattern waitElevator = LEDPattern.solid(Color.kOrange).blink(Seconds.of(0.25));
-    public static final LEDPattern funnelIntaking = LEDPattern.solid(Color.kOrange).blink(Seconds.of(0.1));
+    public static final LEDPattern waitElevator = LEDPattern.solid(Color.kOrangeRed).blink(Seconds.of(0.25));
+    public static final LEDPattern funnelIntaking = LEDPattern.solid(Color.kOrangeRed).blink(Seconds.of(0.1));
     public static final LEDPattern endgameAlert = LEDPattern.solid(Color.kAqua).blink(Seconds.of(0.1));
     public static final LEDPattern endEffectorTriggered = LEDPattern.solid(Color.kGreen);
     public static final LEDPattern idle = LEDPattern.kOff;
