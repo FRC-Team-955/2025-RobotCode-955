@@ -63,7 +63,7 @@ public class Module {
      */
     public void runSetpoint(SwerveModuleState state, boolean optimize) {
         // Optimize velocity setpoint
-        var currentAngle = new Rotation2d(inputs.turnPositionRad);
+        var currentAngle = getAngle();
         if (optimize) {
             state.optimize(currentAngle);
         }
