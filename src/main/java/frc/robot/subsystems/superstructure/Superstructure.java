@@ -32,8 +32,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static frc.robot.subsystems.superstructure.AutoAlignLocations.*;
-import static frc.robot.subsystems.superstructure.SuperstructureConstants.createIO;
-import static frc.robot.subsystems.superstructure.SuperstructureConstants.scoreCoralSettleSeconds;
+import static frc.robot.subsystems.superstructure.SuperstructureConstants.*;
 import static frc.robot.subsystems.superstructure.SuperstructureTuning.funnelIntakeFinalizeInches;
 
 public class Superstructure extends SubsystemBaseExt {
@@ -244,6 +243,12 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
+    private Command shake() {
+        return drive.runRobotRelative(() -> Timer.getTimestamp() % 0.25 < 0.125
+                ? new ChassisSpeeds(-0.1, -0.1, -0.2)
+                : new ChassisSpeeds(0.1, 0.1, 0.2));
+    }
+
     public Command scoreCoralManual(
             boolean duringAuto,
             BooleanSupplier forwardCondition,
@@ -308,7 +313,7 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
-    public Command waitUntilIdle() {
+    private Command waitUntilIdle() {
         return Commands.waitUntil(() -> goal == Goal.IDLE);
     }
 
@@ -334,7 +339,7 @@ public class Superstructure extends SubsystemBaseExt {
                             // Don't allow canceling
                             CommandsExt.schedule(Commands.parallel(
                                     setGoal(Goal.HANDOFF),
-                                    waitUntilIdle()
+                                    waitUntilIdle().withTimeout(waitUntilIdleTeleopTimeoutSeconds)
                             ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming))
                     )
             );
@@ -360,9 +365,7 @@ public class Superstructure extends SubsystemBaseExt {
                         ),
                         Commands.parallel(
                                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_SHAKE),
-                                drive.runRobotRelative(() -> Timer.getTimestamp() % 0.25 < 0.125
-                                        ? new ChassisSpeeds(-0.1, -0.1, -0.2)
-                                        : new ChassisSpeeds(0.1, 0.1, 0.2))
+                                shake()
                         )
                 )
         );
@@ -379,7 +382,7 @@ public class Superstructure extends SubsystemBaseExt {
                             // Don't allow canceling
                             CommandsExt.schedule(Commands.parallel(
                                     setGoal(Goal.HANDOFF),
-                                    waitUntilIdle()
+                                    waitUntilIdle().withTimeout(waitUntilIdleTeleopTimeoutSeconds)
                             ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming))
                     )
             );
@@ -480,7 +483,14 @@ public class Superstructure extends SubsystemBaseExt {
         );
         if (duringAuto) {
             return Commands.sequence(
-                    waitUntilIdle().raceWith(drive.moveTo(initialPoseSupplier)),
+                    waitUntilIdle().raceWith(Commands.sequence(
+                            drive.moveTo(initialPoseSupplier)
+                                    // We don't really care about position tolerances right now,
+                                    // checking velocity is a good way to approximate "we're at the position we want"
+                                    .until(() -> Math.abs(drive.getMeasuredChassisLinearVelocityMetersPerSec()) < finalAlignToleranceMetersPerSecond
+                                            && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < finalAlignToleranceRadPerSecond),
+                            shake()
+                    )),
                     initial,
                     Commands.race(
                             drive.moveTo(finalPoseSupplier),
