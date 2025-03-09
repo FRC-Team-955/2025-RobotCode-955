@@ -7,6 +7,7 @@ import edu.wpi.first.hal.FRCNetComm;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -120,9 +121,9 @@ public class Drive extends SubsystemBaseExt {
     private final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackOmega = driveConfig.choreoFeedbackOmega().toPIDWrapRadians();
 
-    private PIDController moveToX = moveToXY.toPID();
-    private PIDController moveToY = moveToXY.toPID();
-    private PIDController moveToOmega = DriveConstants.moveToOmega.toPIDWrapRadians();
+    private ProfiledPIDController moveToLinearX = DriveConstants.moveToLinear.toProfiledPID(moveToLinearConstraintsMeters);
+    private ProfiledPIDController moveToLinearY = DriveConstants.moveToLinear.toProfiledPID(moveToLinearConstraintsMeters);
+    private ProfiledPIDController moveToAngular = DriveConstants.moveToAngular.toProfiledPID(moveToAngularConstraintsRad);
 
     private static Drive instance;
 
@@ -266,11 +267,11 @@ public class Drive extends SubsystemBaseExt {
             }
         });
 
-        moveToXYTunable.ifChanged(hashCode(), gains -> {
-            moveToX = gains.toPID();
-            moveToY = gains.toPID();
+        moveToLinearTunable.ifChanged(hashCode(), gains -> {
+            moveToLinearX = gains.toProfiledPID(moveToLinearConstraintsMeters);
+            moveToLinearY = gains.toProfiledPID(moveToLinearConstraintsMeters);
         });
-        moveToOmegaTunable.ifChanged(hashCode(), gains -> moveToOmega = gains.toPIDWrapRadians());
+        moveToAngularTunable.ifChanged(hashCode(), gains -> moveToAngular = gains.toProfiledPIDWrapRadians(moveToAngularConstraintsRad));
 
         Logger.recordOutput("Drive/Goal", goal);
 
@@ -380,6 +381,13 @@ public class Drive extends SubsystemBaseExt {
         return robotState.getKinematics().toChassisSpeeds(getMeasuredModuleStates());
     }
 
+    public ChassisSpeeds getMeasuredChassisSpeedsFieldRelative() {
+        return ChassisSpeeds.fromRobotRelativeSpeeds(
+                robotState.getKinematics().toChassisSpeeds(getMeasuredModuleStates()),
+                robotState.getRotation() // Field are absolute, don't flip
+        );
+    }
+
     /**
      * Returns the module states (turn angles and drive velocities) for all of the modules.
      */
@@ -403,10 +411,12 @@ public class Drive extends SubsystemBaseExt {
         return states;
     }
 
+    @AutoLogOutput(key = "Drive/ChassisSpeeds/MeasuredLinearVelocity")
     public double getMeasuredChassisLinearVelocityMetersPerSec() {
+        ChassisSpeeds measuredChassisSpeeds = getMeasuredChassisSpeeds();
         return Math.sqrt(
-                Math.pow(getMeasuredChassisSpeeds().vxMetersPerSecond, 2) +
-                        Math.pow(getMeasuredChassisSpeeds().vyMetersPerSecond, 2)
+                measuredChassisSpeeds.vxMetersPerSecond * measuredChassisSpeeds.vxMetersPerSecond +
+                        measuredChassisSpeeds.vyMetersPerSecond * measuredChassisSpeeds.vyMetersPerSecond
         );
     }
 
@@ -492,25 +502,30 @@ public class Drive extends SubsystemBaseExt {
         var driverY = linearVelocity.getY() * driveConfig.maxDriveVelocityMetersPerSec();
         var driverOmega = omegaMagnitude * joystickMaxAngularSpeedRadPerSec;
 
-        var assistX = moveToX.calculate(currentPose.getX(), assistPose.getX());
-        assistX = MathUtil.clamp(assistX, -1, 1) // Limit to 100% max linear speed
-                * driveConfig.maxDriveVelocityMetersPerSec()
-                * linearMagnitude; // Limit to the driver's overall linear speed
-        Logger.recordOutput("Drive/Assist/PID/X", assistX);
-
-        var assistY = moveToY.calculate(currentPose.getY(), assistPose.getY());
-        assistY = MathUtil.clamp(assistY, -1, 1) // Limit to 100% max linear speed
-                * driveConfig.maxDriveVelocityMetersPerSec()
-                * linearMagnitude; // Limit to the driver's overall linear speed
-        Logger.recordOutput("Drive/Assist/PID/Y", assistY);
-
-        var assistOmega = moveToOmega.calculate(currentPose.getRotation().getRadians(), assistPose.getRotation().getRadians());
-        assistOmega = MathUtil.clamp(assistOmega, -1, 1) // Limit to 100% max angular speed
-                * maxAngularVelocityRadPerSec
-                // If we are driving fast and not rotating, need fast rotation assist, so limit to driver's overall linear speed
-                // Otherwise, limit to driver omega speed
-                * Math.max(omegaMagnitude, linearMagnitude);
-        Logger.recordOutput("Drive/Assist/PID/Omega", assistOmega);
+        double assistX = 0;
+        double assistY = 0;
+        double assistOmega = 0;
+        // TODO: need to reset the PIDs when assist starts
+        // TODO: log setpoint
+//        double assistX = moveToLinearX.calculate(
+//                currentPose.getX(),
+//                assistPose.getX()
+//        ) + moveToLinearX.getSetpoint().velocity;
+//        assistX *= linearMagnitude; // Limit to the driver's overall linear speed
+//
+//        double assistY = moveToLinearY.calculate(
+//                currentPose.getY(),
+//                assistPose.getY()
+//        ) + moveToLinearY.getSetpoint().velocity;
+//        assistY *= linearMagnitude; // Limit to the driver's overall linear speed
+//
+//        double assistOmega = moveToAngular.calculate(
+//                currentPose.getRotation().getRadians(),
+//                assistPose.getRotation().getRadians()
+//        ) + moveToAngular.getSetpoint().velocity;
+//        // If we are driving fast and not rotating, need fast rotation assist, so limit to driver's overall linear speed
+//        // Otherwise, limit to driver omega speed
+//        assistOmega *= Math.max(omegaMagnitude, linearMagnitude);
 
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
                 0.75 * assistX,
@@ -530,25 +545,51 @@ public class Drive extends SubsystemBaseExt {
                 Goal.MOVE_TO,
                 startRun(
                         () -> {
-                            moveToX.reset();
-                            moveToY.reset();
-                            moveToOmega.reset();
+                            Pose2d currentPose = robotState.getPose();
+                            ChassisSpeeds currentVelocities = getMeasuredChassisSpeedsFieldRelative();
+                            moveToLinearX.reset(
+                                    currentPose.getX(),
+                                    currentVelocities.vxMetersPerSecond
+                            );
+                            moveToLinearY.reset(
+                                    currentPose.getY(),
+                                    currentVelocities.vyMetersPerSecond
+                            );
+                            moveToAngular.reset(
+                                    currentPose.getRotation().getRadians(),
+                                    currentVelocities.omegaRadiansPerSecond
+                            );
                         },
                         () -> {
-                            var goalPose = poseSupplier.get();
+                            Pose2d currentPose = robotState.getPose();
+                            Pose2d goalPose = poseSupplier.get();
                             Logger.recordOutput("Drive/MoveTo/Goal", goalPose);
-                            var currentPose = robotState.getPose();
+
+                            double linearXVelocityMetersPerSec = moveToLinearX.calculate(
+                                    currentPose.getX(),
+                                    goalPose.getX()
+                            ) + moveToLinearX.getSetpoint().velocity;
+
+                            double linearYVelocityMetersPerSec = moveToLinearY.calculate(
+                                    currentPose.getY(),
+                                    goalPose.getY()
+                            ) + moveToLinearY.getSetpoint().velocity;
+
+                            double angularVelocityRadPerSec = moveToAngular.calculate(
+                                    currentPose.getRotation().getRadians(),
+                                    goalPose.getRotation().getRadians()
+                            ) + moveToAngular.getSetpoint().velocity;
+
+                            Logger.recordOutput("Drive/MoveTo/Setpoint", new Pose2d(
+                                    moveToLinearX.getSetpoint().position,
+                                    moveToLinearY.getSetpoint().position,
+                                    new Rotation2d(moveToAngular.getSetpoint().position)
+                            ));
 
                             closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
-                                    // Limit to 100% max linear speed
-                                    MathUtil.clamp(moveToX.calculate(currentPose.getX(), goalPose.getX()), -1, 1)
-                                            * driveConfig.maxDriveVelocityMetersPerSec(),
-                                    // Limit to 100% max linear speed
-                                    MathUtil.clamp(moveToY.calculate(currentPose.getY(), goalPose.getY()), -1, 1)
-                                            * driveConfig.maxDriveVelocityMetersPerSec(),
-                                    // Limit to 100% max angular speed
-                                    MathUtil.clamp(moveToOmega.calculate(currentPose.getRotation().getRadians(), goalPose.getRotation().getRadians()), -1, 1)
-                                            * maxAngularVelocityRadPerSec,
+                                    linearXVelocityMetersPerSec,
+                                    linearYVelocityMetersPerSec,
+                                    angularVelocityRadPerSec,
                                     currentPose.getRotation() // Move to is absolute, don't flip
                             );
                         }
