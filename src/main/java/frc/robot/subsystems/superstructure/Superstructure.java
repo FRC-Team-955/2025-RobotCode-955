@@ -148,7 +148,6 @@ public class Superstructure extends SubsystemBaseExt {
                 endEffector.moveByInstantaneous(Units.inchesToMeters(funnelIntakeFinalizeInches.get()));
             } else if (endEffector.atPositionSetpoint()) {
                 goal = Goal.IDLE;
-                endEffector.setGoalInstantaneous(EndEffector.RollersGoal.IDLE);
             }
         }
     }
