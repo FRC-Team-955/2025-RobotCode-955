@@ -40,8 +40,6 @@ public class Superstructure extends SubsystemBaseExt {
     private final RobotMechanism robotMechanism = RobotMechanism.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final Drive drive = Drive.get();
-    //    private final CoralIntake coralIntake = CoralIntake.get();
-//    private final Indexer indexer = Indexer.get();
     private final Elevator elevator = Elevator.get();
     private final EndEffector endEffector = EndEffector.get();
     private final Funnel funnel = Funnel.get();
@@ -51,13 +49,6 @@ public class Superstructure extends SubsystemBaseExt {
 
     public enum Goal {
         IDLE,
-
-//        INTAKE_CORAL_WAIT_PIVOT,
-//        INTAKE_CORAL_INTAKING,
-//        INDEXING_PIVOT_DOWN,
-//        INDEXING_PIVOT_UP,
-//        HANDOFF_WAIT_ELEVATOR,
-//        HANDOFF_HANDING_OFF,
 
         MANUAL_SCORE_CORAL_WAIT_ELEVATOR,
         MANUAL_SCORE_CORAL_WAIT_CONFIRM,
@@ -123,16 +114,6 @@ public class Superstructure extends SubsystemBaseExt {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Superstructure", inputs);
 
-//        robotMechanism.coralIntake.rangeLigament.setColor(
-//                intakeRangeTriggered()
-//                        ? new Color8Bit(Color.kGreen)
-//                        : new Color8Bit(Color.kRed)
-//        );
-//        robotMechanism.indexer.beamBreakLigament.setColor(
-//                inputs.indexerBeamBreakTriggered
-//                        ? new Color8Bit(Color.kGreen)
-//                        : new Color8Bit(Color.kRed)
-//        );
         robotMechanism.funnel.beamBreakLigament.setColor(
                 funnelTriggeredLong()
                         ? new Color8Bit(Color.kGreen)
@@ -149,10 +130,6 @@ public class Superstructure extends SubsystemBaseExt {
     public void periodicAfterCommands() {
         Logger.recordOutput("Superstructure/Goal", goal);
     }
-
-//    private boolean intakeRangeTriggered() {
-//        return inputs.intakeRangeMeters <= intakeRangeTriggerMeters;
-//    }
 
     /** Reacts quickly to change so better for waiting for the beam break */
     @AutoLogOutput(key = "Superstructure/EndEffectorTriggeredShort")
@@ -178,14 +155,6 @@ public class Superstructure extends SubsystemBaseExt {
         return funnelBeamBreakDebouncerLong.calculate(inputs.funnelBeamBreakTriggered);
     }
 
-//    public Command waitUntilIntakeTriggered() {
-//        return Commands.waitUntil(this::intakeRangeTriggered);
-//    }
-//
-//    public Command waitUntilIndexerTriggered() {
-//        return Commands.waitUntil(() -> inputs.indexerBeamBreakTriggered);
-//    }
-
     public Command waitUntilEndEffectorTriggered(Command ifIgnored) {
         return Commands.either(
                 ifIgnored,
@@ -210,14 +179,6 @@ public class Superstructure extends SubsystemBaseExt {
         return setGoal(Goal.IDLE).andThen(Commands.idle());
     }
 
-//    public Command coralIntakeIdle() {
-//        return coralIntake.setGoals(CoralIntake.PivotGoal.STOW, CoralIntake.RollersGoal.IDLE).andThen(Commands.idle());
-//    }
-
-//    public Command indexerIdle() {
-//        return indexer.setGoal(Indexer.RollersGoal.IDLE).andThen(Commands.idle());
-//    }
-
     public Command elevatorIdle() {
         return elevator.setGoal(() -> Elevator.Goal.STOW).andThen(Commands.idle());
     }
@@ -229,51 +190,6 @@ public class Superstructure extends SubsystemBaseExt {
     public Command funnelIdle() {
         return funnel.setGoal(Funnel.Goal.IDLE).andThen(Commands.idle());
     }
-
-//    public Command intakeCoral() {
-//        return Commands.sequence(
-//                Commands.parallel(
-//                        setGoal(Goal.INTAKE_CORAL_WAIT_PIVOT),
-//                        coralIntake.setGoalsAndWaitUntilAtPivotGoal(CoralIntake.PivotGoal.INTAKE, CoralIntake.RollersGoal.IDLE)
-//                ),
-//                Commands.parallel(
-//                        setGoal(Goal.INTAKE_CORAL_INTAKING),
-//                        coralIntake.setGoals(CoralIntake.PivotGoal.INTAKE, CoralIntake.RollersGoal.INTAKE),
-//                        indexer.setGoal(Indexer.RollersGoal.INDEX)
-//                ),
-//                waitUntilIntakeTriggered(),
-//                // Branch off into an uncancelable sequence to prevent indexing being messed up
-//                CommandsExt.schedule(
-//                        Commands.sequence(
-//                                // Wait at least a small amount of time, or until we are done indexing to bring the intake up
-//                                Commands.parallel(
-//                                        setGoal(Goal.INDEXING_PIVOT_DOWN),
-//                                        Commands.race(
-//                                                Commands.waitSeconds(0.25),
-//                                                waitUntilIndexerTriggered()
-//                                        )
-//                                ),
-//                                Commands.parallel(
-//                                        setGoal(Goal.INDEXING_PIVOT_UP),
-//                                        coralIntake.setGoals(CoralIntake.PivotGoal.STOW, CoralIntake.RollersGoal.IDLE),
-//                                        waitUntilIndexerTriggered()
-//                                ),
-//                                Commands.parallel(
-//                                        setGoal(Goal.HANDOFF_WAIT_ELEVATOR),
-//                                        indexer.setGoal(Indexer.RollersGoal.IDLE),
-//                                        elevator.setGoalAndWaitUntilAtGoal(() -> Elevator.Goal.STOW)
-//                                ),
-//                                Commands.parallel(
-//                                        setGoal(Goal.HANDOFF_HANDING_OFF),
-//                                        indexer.setGoal(Indexer.RollersGoal.HANDOFF),
-//                                        endEffector.setGoal(EndEffector.RollersGoal.HANDOFF),
-//                                        waitUntilEndEffectorTriggered()
-//                                )
-//                                // TODO: move forward X radians
-//                        ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
-//                )
-//        );
-//    }
 
     public Command eject() {
         return Commands.parallel(

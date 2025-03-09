@@ -55,8 +55,6 @@ public class RobotContainer extends VirtualSubsystem {
     /* Subsystems */
     // Note: order does matter
     public final Elevator elevator = Elevator.get();
-    //    private final CoralIntake coralIntake = CoralIntake.get();
-//    private final Indexer indexer = Indexer.get();
     public final EndEffector endEffector = EndEffector.get();
     public final Funnel funnel = Funnel.get();
     public final Vision vision = Vision.get();
@@ -114,6 +112,18 @@ public class RobotContainer extends VirtualSubsystem {
     }
 
     private void setDefaultCommands() {
+        //                            var gamepiece = vision.getClosestGamepiece();
+        //                            return gamepiece.map(gamepieceTranslation -> {
+        //                                var relativeToRobot = gamepieceTranslation.minus(robotState.getTranslation());
+        //                                if (relativeToRobot.getNorm() < Units.feetToMeters(1)) {
+        //                                    // Don't try to face towards it if we are too close
+        //                                    return new Pose2d(gamepieceTranslation, robotState.getRotation());
+        //                                } else {
+        //                                    // Try to face towards the game piece
+        //                                    var toGamepiece = new Rotation2d(relativeToRobot.getX(), relativeToRobot.getY());
+        //                                    return new Pose2d(gamepieceTranslation, toGamepiece);
+        //                                }
+        //                            });
         drive.setDefaultCommand(
                 drive.driveJoystick(
                         // https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
@@ -123,28 +133,11 @@ public class RobotContainer extends VirtualSubsystem {
                         () -> -driverController.getLeftX(),
                         // right on joystick is positive x - we want negative x for right (CCW is positive)
                         () -> -driverController.getRightX(),
-                        () -> {
-//                            if (coralIntake.getRollersGoal() != CoralIntake.RollersGoal.INTAKE)
-                            return Optional.empty();
-//                            var gamepiece = vision.getClosestGamepiece();
-//                            return gamepiece.map(gamepieceTranslation -> {
-//                                var relativeToRobot = gamepieceTranslation.minus(robotState.getTranslation());
-//                                if (relativeToRobot.getNorm() < Units.feetToMeters(1)) {
-//                                    // Don't try to face towards it if we are too close
-//                                    return new Pose2d(gamepieceTranslation, robotState.getRotation());
-//                                } else {
-//                                    // Try to face towards the game piece
-//                                    var toGamepiece = new Rotation2d(relativeToRobot.getX(), relativeToRobot.getY());
-//                                    return new Pose2d(gamepieceTranslation, toGamepiece);
-//                                }
-//                            });
-                        }
+                        Optional::empty
                 )
         );
 
         superstructure.setDefaultCommand(superstructure.idle().ignoringDisable(true));
-//        coralIntake.setDefaultCommand(superstructure.coralIntakeIdle().ignoringDisable(true));
-//        indexer.setDefaultCommand(superstructure.indexerIdle().ignoringDisable(true));
         elevator.setDefaultCommand(superstructure.elevatorIdle().ignoringDisable(true));
         endEffector.setDefaultCommand(superstructure.endEffectorIdle().ignoringDisable(true));
         funnel.setDefaultCommand(superstructure.funnelIdle().ignoringDisable(true));
@@ -163,7 +156,6 @@ public class RobotContainer extends VirtualSubsystem {
         driverController.x().whileTrue(superstructure.eject());
 
         driverController.rightTrigger().whileTrue(superstructure.funnelIntake(false));
-//        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
 
         driverController.leftTrigger().onTrue(Commands.either(
                 superstructure.scoreCoralManual(
