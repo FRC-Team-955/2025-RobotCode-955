@@ -24,9 +24,6 @@ public class OperatorDashboard extends VirtualSubsystem {
     public final LoggedNetworkBooleanExt disableInterpolateAutoAlign = new LoggedNetworkBooleanExt(prefix + "DisableInterpolateAutoAlign", false);
     public final LoggedNetworkBooleanExt autoChosen = new LoggedNetworkBooleanExt(prefix + "AutoChosen", false);
 
-    public final LoggedNetworkBooleanExt forceZeroClimber = new LoggedNetworkBooleanExt(prefix + "ForceZeroClimber", false);
-    public final LoggedNetworkBooleanExt bypassClimberLimits = new LoggedNetworkBooleanExt(prefix + "BypassClimberLimits", false);
-
     public final LoggedNetworkBooleanExt elevatorEStop = new LoggedNetworkBooleanExt(prefix + "ElevatorEStop", false);
     public final LoggedNetworkBooleanExt useRealElevatorState = new LoggedNetworkBooleanExt(prefix + "UseRealElevatorState", false);
     public final LoggedNetworkBooleanExt forceZeroElevator = new LoggedNetworkBooleanExt(prefix + "ForceZeroElevator", false);
@@ -69,7 +66,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     @Override
     public void periodicBeforeCommands() {
         // Note - we only handle alerts for general overrides.
-        // So elevator and climber toggles are handled in their respective subsystems
+        // So subsystem toggles are handled in their respective subsystems
         coastOverrideAlert.set(coastOverride.get());
         coralStuckInRobotModeAlert.set(coralStuckInRobotMode.get());
         manualScoringAlert.set(manualScoring.get());

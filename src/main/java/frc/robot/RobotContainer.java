@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.factories.auto.BargeSideAuto;
 import frc.robot.factories.auto.ProcessorSideAuto;
-import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
@@ -61,7 +60,6 @@ public class RobotContainer extends VirtualSubsystem {
     public final Drive drive = Drive.get();
     public final Superstructure superstructure = Superstructure.get();
     public final LEDs leds = LEDs.get();
-    public final Climber climber = Climber.get();
 
     public RobotContainer() {
         addAutos();
@@ -141,7 +139,6 @@ public class RobotContainer extends VirtualSubsystem {
         elevator.setDefaultCommand(superstructure.elevatorIdle().ignoringDisable(true));
         endEffector.setDefaultCommand(superstructure.endEffectorIdle().ignoringDisable(true));
         funnel.setDefaultCommand(superstructure.funnelIdle().ignoringDisable(true));
-        climber.setDefaultCommand(climber.idle());
     }
 
     /**
@@ -177,9 +174,6 @@ public class RobotContainer extends VirtualSubsystem {
                         || operatorDashboard.getSelectedCoralScoringLevel() == OperatorDashboard.CoralScoringLevel.L1
         ));
         driverController.rightBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
-
-        driverController.povDown().whileTrue(climber.towardsRobot());
-        driverController.povUp().whileTrue(climber.awayFromRobot());
 
         if (mode == Constants.Mode.SIM) {
             driverController.x().onTrue(Commands.runOnce(() ->

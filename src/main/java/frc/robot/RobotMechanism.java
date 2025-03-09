@@ -35,7 +35,6 @@ public class RobotMechanism {
     public final Elevator elevator = new Elevator();
     public final EndEffector endEffector = new EndEffector();
     public final Funnel funnel = new Funnel();
-    public final Climber climber = new Climber();
 
     public class Funnel {
         private static final double x = middleOfRobot + Units.inchesToMeters(12.2);
@@ -196,21 +195,6 @@ public class RobotMechanism {
         ));
 
         private EndEffector() {
-        }
-    }
-
-    public class Climber {
-        public final LoggedMechanismRoot2d root = mechanism.getRoot("climber", middleOfRobot, 0.5);
-        public final LoggedMechanismLigament2d ligament = root.append(new LoggedMechanismLigament2d(
-                "ligament",
-                Units.inchesToMeters(15),
-                0,
-                5,
-                new Color8Bit(Color.kCyan)
-        ));
-
-        private Climber() {
-
         }
     }
 }
