@@ -13,7 +13,7 @@ public class DriveConstants {
 
     public static final PIDF moveToLinear = PIDF.ofPD(2, 0);
     public static final TrapezoidProfile.Constraints moveToLinearConstraintsMeters = new TrapezoidProfile.Constraints(3, 5);
-    public static final PIDF moveToAngular = PIDF.ofPD(5, 0);
+    public static final PIDF moveToAngular = PIDF.ofPD(3.5, 0);
     public static final TrapezoidProfile.Constraints moveToAngularConstraintsRad = new TrapezoidProfile.Constraints(5, 7);
 
     public static final boolean useSetpointGenerator = true;
@@ -31,8 +31,8 @@ public class DriveConstants {
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(35),
                 Units.inchesToMeters(35),
-                PIDF.ofPD(5, 0),
-                PIDF.ofPD(5, 0),
+                PIDF.ofPD(3.5, 0),
+                PIDF.ofPD(3, 0),
                 4.58,
                 20,
                 20
