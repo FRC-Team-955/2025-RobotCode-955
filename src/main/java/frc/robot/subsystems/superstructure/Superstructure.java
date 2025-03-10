@@ -135,7 +135,7 @@ public class Superstructure extends SubsystemBaseExt {
     public void periodicAfterCommandsBeforeSubsystems() {
         if (goal == Goal.HANDOFF) {
             endEffector.setGoalInstantaneous(EndEffector.RollersGoal.FUNNEL_INTAKE);
-            funnel.setGoalInstantaneous(Funnel.Goal.INTAKE);
+            funnelSetGoalIntake();
             if (endEffectorTriggeredShort() || operatorDashboard.ignoreEndEffectorBeamBreak.get()) {
                 goal = Goal.HOME;
             }
@@ -233,7 +233,7 @@ public class Superstructure extends SubsystemBaseExt {
                 setGoal(Goal.EJECT),
                 endEffector.setGoal(EndEffector.RollersGoal.EJECT),
                 funnel.run(() -> {
-                    boolean forwards = Timer.getTimestamp() % 1.0 < 0.75;
+                    boolean forwards = Timer.getTimestamp() % 1.0 < 0.86;
                     if (forwards) {
                         funnel.setGoalInstantaneous(Funnel.Goal.EJECT_FORWARDS);
                     } else {
@@ -243,10 +243,19 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
+    private void funnelSetGoalIntake() {
+        boolean forwards = Timer.getTimestamp() % 1.0 < 0.92;
+        if (forwards) {
+            funnel.setGoalInstantaneous(Funnel.Goal.INTAKE_FORWARDS);
+        } else {
+            funnel.setGoalInstantaneous(Funnel.Goal.INTAKE_BACKWARDS);
+        }
+    }
+
     private Command shake() {
         return drive.runRobotRelative(() -> Timer.getTimestamp() % 0.25 < 0.125
-                ? new ChassisSpeeds(-0.1, -0.1, -0.2)
-                : new ChassisSpeeds(0.1, 0.1, 0.2));
+                ? new ChassisSpeeds(-0.05, -0.05, -0.3)
+                : new ChassisSpeeds(0.05, 0.05, 0.3));
     }
 
     public Command scoreCoralManual(
@@ -324,7 +333,7 @@ public class Superstructure extends SubsystemBaseExt {
         ).deadlineFor(
                 setGoal(Goal.FUNNEL_INTAKE_WAITING),
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                funnel.setGoal(Funnel.Goal.INTAKE)
+                funnel.run(this::funnelSetGoalIntake)
         );
         if (duringAuto) {
             return CommandsExt.onlyIf(
@@ -354,7 +363,7 @@ public class Superstructure extends SubsystemBaseExt {
                 waitUntilFunnelTriggered()
         ).deadlineFor(
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                funnel.setGoal(Funnel.Goal.INTAKE),
+                funnel.run(this::funnelSetGoalIntake),
                 Commands.sequence(
                         Commands.parallel(
                                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_ALIGN),

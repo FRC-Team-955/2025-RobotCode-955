@@ -58,7 +58,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
         switch (coralState) {
             case NO_CORAL -> {
                 var current = robotState.getPose().getTranslation();
-                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 1.5) && funnel.getGoal() == Funnel.Goal.INTAKE && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
+                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 1.5) && (funnel.getGoal() == Funnel.Goal.INTAKE_FORWARDS || funnel.getGoal() == Funnel.Goal.INTAKE_BACKWARDS) && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
                     if (!sinceAtStation.isRunning()) sinceAtStation.restart();
                     if (sinceAtStation.hasElapsed(stationIntakeTime)) {
                         coralState = CoralState.INTAKING;
@@ -70,7 +70,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 }
             }
             case INTAKING -> {
-                if (funnel.getGoal() == Funnel.Goal.INTAKE && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
+                if ((funnel.getGoal() == Funnel.Goal.INTAKE_FORWARDS || funnel.getGoal() == Funnel.Goal.INTAKE_BACKWARDS) && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
                     if (!sinceCoralIntaked.isRunning()) sinceCoralIntaked.restart();
                     if (sinceCoralIntaked.hasElapsed(indexTime)) {
                         coralState = CoralState.IN_END_EFFECTOR;

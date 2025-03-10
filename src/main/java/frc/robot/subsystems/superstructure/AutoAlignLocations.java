@@ -37,7 +37,7 @@ public class AutoAlignLocations {
     private static final double distanceCenterOfReefToElevatorClearanceMeters = distanceCenterOfReefToBranchMeters + Units.inchesToMeters(8);
 
     private static final Transform2d initialAlignStartOffset = new Transform2d(1, 0, new Rotation2d());
-    private static final Transform2d initialAlignEndOffset = new Transform2d(0.3, 0, new Rotation2d());
+    private static final Transform2d initialAlignEndOffset = new Transform2d(0.4, 0, new Rotation2d());
     private static final double initialAlignDistYForStartMeters = 2.0;
 
     // Very rough

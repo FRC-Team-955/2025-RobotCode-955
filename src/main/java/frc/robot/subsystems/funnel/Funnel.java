@@ -30,7 +30,8 @@ public class Funnel extends SubsystemBaseExt {
     public enum Goal {
         CHARACTERIZATION(null),
         IDLE(() -> 0),
-        INTAKE(intakeGoalSetpoint::get),
+        INTAKE_FORWARDS(intakeGoalSetpoint::get),
+        INTAKE_BACKWARDS(() -> -intakeGoalSetpoint.get()),
         EJECT_FORWARDS(ejectGoalSetpoint::get),
         EJECT_BACKWARDS(() -> -ejectGoalSetpoint.get());
 

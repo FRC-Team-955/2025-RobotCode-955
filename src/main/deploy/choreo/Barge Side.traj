@@ -245,9 +245,9 @@
   "splits":[0,29,90,129,158]
  },
  "events":[
-   {"name":"score", "from":{"target":2, "targetTimestamp":1.00627, "offset":{"exp":"-0.5 s", "val":-0.5}}, "event":{"type":"named", "data":{"name":"score"}}},
-   {"name":"score", "from":{"target":7, "targetTimestamp":3.91296, "offset":{"exp":"-0.5 s", "val":-0.5}}, "event":{"type":"named", "data":{"name":"score"}}},
-   {"name":"score", "from":{"target":9, "targetTimestamp":6.5028, "offset":{"exp":"-0.5 s", "val":-0.5}}, "event":{"type":"named", "data":{"name":"score"}}},
-   {"name":"intake", "from":{"target":5, "targetTimestamp":2.60768, "offset":{"exp":"-0.5 s", "val":-0.5}}, "event":{"type":"named", "data":{"name":"intake"}}},
-   {"name":"intake", "from":{"target":8, "targetTimestamp":5.21836, "offset":{"exp":"-0.5 s", "val":-0.5}}, "event":{"type":"named", "data":{"name":"intake"}}}]
+   {"name":"score", "from":{"target":2, "targetTimestamp":1.00627, "offset":{"exp":"-0.6 s", "val":-0.6}}, "event":{"type":"named", "data":{"name":"score"}}},
+   {"name":"score", "from":{"target":7, "targetTimestamp":3.91296, "offset":{"exp":"-0.6 s", "val":-0.6}}, "event":{"type":"named", "data":{"name":"score"}}},
+   {"name":"score", "from":{"target":9, "targetTimestamp":6.5028, "offset":{"exp":"-0.6 s", "val":-0.6}}, "event":{"type":"named", "data":{"name":"score"}}},
+   {"name":"intake", "from":{"target":5, "targetTimestamp":2.60768, "offset":{"exp":"-0.7 s", "val":-0.7}}, "event":{"type":"named", "data":{"name":"intake"}}},
+   {"name":"intake", "from":{"target":8, "targetTimestamp":5.21836, "offset":{"exp":"-0.7 s", "val":-0.7}}, "event":{"type":"named", "data":{"name":"intake"}}}]
 }
