@@ -123,7 +123,7 @@ public class Drive extends SubsystemBaseExt {
 
     private ProfiledPIDController moveToLinearX = DriveConstants.moveToLinear.toProfiledPID(moveToLinearConstraintsMeters);
     private ProfiledPIDController moveToLinearY = DriveConstants.moveToLinear.toProfiledPID(moveToLinearConstraintsMeters);
-    private ProfiledPIDController moveToAngular = DriveConstants.moveToAngular.toProfiledPID(moveToAngularConstraintsRad);
+    private ProfiledPIDController moveToAngular = DriveConstants.moveToAngular.toProfiledPIDWrapRadians(moveToAngularConstraintsRad);
 
     private static Drive instance;
 
