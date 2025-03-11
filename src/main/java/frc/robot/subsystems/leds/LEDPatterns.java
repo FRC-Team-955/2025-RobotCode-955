@@ -85,6 +85,7 @@ public class LEDPatterns {
         return wave(Color.kWhite, allianceColor, 0.5);
     }
 
+    public static final boolean useSpecialAutoPatterns = false;
     public static final LEDPattern autoRed = auto(Color.kRed);
     public static final LEDPattern autoBlue = auto(Color.kBlue);
     public static final LEDPattern autoUnknown = auto(unknownAlliance);
