@@ -28,7 +28,7 @@ public class AutoBuilder {
             return Commands.none();
         }
 
-        IntakeScorePair first = trajectories.stream().findFirst().get();
+        IntakeScorePair first = trajectories.get(0);
 
         routine.active().onTrue(
                 Commands.sequence(
@@ -42,7 +42,7 @@ public class AutoBuilder {
         if (trajectories.size() > 1) {
             for (IntakeScorePair next : trajectories) {
                 // Skip first trajectory
-                if (next == first) continue;
+                if (next == first || next.station == null || next.stationTraj == null) continue;
 
                 last.scoreTraj.atTime("score").onTrue(Commands.sequence(
                         last.scoreCommand(superstructure),

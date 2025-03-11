@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.autos.BargeSideAuto;
+import frc.robot.autos.CenterAuto;
 import frc.robot.autos.ProcessorSideAuto;
 import frc.robot.autos.ProcessorSideFriendlyAuto;
 import frc.robot.subsystems.drive.Drive;
@@ -45,7 +46,6 @@ public class RobotContainer extends VirtualSubsystem {
     private final Alert driverControllerDisconnectedAlert = new Alert("Driver controller is not connected!", Alert.AlertType.kError);
 
     // Dashboard inputs
-    /** THERE SHOULD NOT BE A DEFAULT OPTION OR THE ALERT WILL BREAK!! */
     private final LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Choices");
     private final LoggedDashboardChooser<Command> characterizationChooser = new LoggedDashboardChooser<>("Characterization Choices");
 
@@ -72,13 +72,13 @@ public class RobotContainer extends VirtualSubsystem {
     private void addAutos() {
         final var factory = drive.createAutoFactory();
 
-        // THERE SHOULD NOT BE A DEFAULT OPTION OR THE ALERT WILL BREAK!!
-
         autoChooser.addOption("None", Commands.none());
+        autoChooser.addOption("Leave", drive.runRobotRelative(() -> new ChassisSpeeds(-0.5, 0, 0)).withTimeout(5));
+
         autoChooser.addOption("Barge Side", BargeSideAuto.get(factory.newRoutine("Barge Side")));
         autoChooser.addOption("Processor Side", ProcessorSideAuto.get(factory.newRoutine("Processor Side")));
         autoChooser.addOption("Processor Side Friendly", ProcessorSideFriendlyAuto.get(factory.newRoutine("Processor Side Friendly")));
-        autoChooser.addOption("Leave", drive.runRobotRelative(() -> new ChassisSpeeds(-0.5, 0, 0)).withTimeout(5));
+        autoChooser.addOption("Center", CenterAuto.get(factory.newRoutine("Center")));
 
         autoChooser.addOption("Characterization", Commands.deferredProxy(characterizationChooser::get));
     }
