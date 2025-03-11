@@ -114,12 +114,22 @@ public class AutoAlignLocations {
     public static final double stationAlignToleranceOmegaRad = Units.degreesToRadians(10);
 
     private static final Transform2d stationAlignOffsetBargeSide = new Transform2d(0, 0.6, Rotation2d.k180deg);
-    private static final Transform2d stationAlignOffsetProcessorSide = new Transform2d(stationAlignOffsetBargeSide.getX(), -stationAlignOffsetBargeSide.getY(), stationAlignOffsetBargeSide.getRotation());
+    private static final Transform2d stationAlignOffsetProcessorSide = new Transform2d(
+            stationAlignOffsetBargeSide.getX(),
+            -stationAlignOffsetBargeSide.getY(),
+            stationAlignOffsetBargeSide.getRotation()
+    );
+    private static final Transform2d stationAlignOffsetProcessorSideFriendly = new Transform2d(
+            stationAlignOffsetProcessorSide.getX(),
+            stationAlignOffsetProcessorSide.getY() + 1.15,
+            stationAlignOffsetProcessorSide.getRotation()
+    );
 
     @RequiredArgsConstructor
     public enum Station {
         BargeSide(1, stationAlignOffsetBargeSide),
-        ProcessorSide(0, stationAlignOffsetProcessorSide);
+        ProcessorSide(0, stationAlignOffsetProcessorSide),
+        ProcessorSideFriendly(0, stationAlignOffsetProcessorSideFriendly);
 
         private final int aprilTagOffset;
         private final Transform2d alignOffset;
