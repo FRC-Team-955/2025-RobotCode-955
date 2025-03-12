@@ -63,6 +63,10 @@ public class Superstructure extends SubsystemBaseExt {
         DESCORE_ALGAE_WAIT_ELEVATOR(true),
         DESCORE_ALGAE_DESCORING(true),
 
+        AUTO_DESCORE_ALGAE_WAIT_INITIAL(true),
+        AUTO_DESCORE_ALGAE_WAIT_FINAL(true),
+        AUTO_DESCORE_ALGAE_MOVE_BACK(true),
+
         HANDOFF(false),
         HOME(false),
 
@@ -547,14 +551,13 @@ public class Superstructure extends SubsystemBaseExt {
             BooleanSupplier cancelCondition
     ) {
         Supplier<Pose2d> poseSupplier = () -> getFinalAlignPose(1, reefSideSupplier.get(), LocalReefSide.Middle);
-        // TODO: Make goals
         // TODO: Tune distances
         Command driveTo = Commands.race(
                 // Drive to position
                 drive.moveTo(poseSupplier),
                 Commands.sequence(
                         Commands.parallel(
-                                setGoal(Goal.AUTO_SCORE_CORAL_WAIT_INITIAL),
+                                setGoal(Goal.AUTO_DESCORE_ALGAE_WAIT_INITIAL),
                                 endEffector.setGoal(EndEffector.RollersGoal.IDLE),
                                 elevator.setGoal(() -> Elevator.Goal.STOW),
                                 Commands.waitUntil(() ->
@@ -568,7 +571,7 @@ public class Superstructure extends SubsystemBaseExt {
                                 )
                         ),
                         Commands.parallel(
-                                setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_SHAKE),
+                                setGoal(Goal.AUTO_DESCORE_ALGAE_WAIT_FINAL),
                                 endEffector.setGoal(EndEffector.RollersGoal.DESCORE_ALGAE),
                                 elevator.setGoal(elevatorGoalSupplier),
                                 Commands.waitUntil(() ->
@@ -582,10 +585,11 @@ public class Superstructure extends SubsystemBaseExt {
                         )
                 )
         );
-        Command driveBack = Commands.race(
+        Command driveBack = Commands.parallel(
                 drive.runRobotRelative(
                         () -> new ChassisSpeeds(0.7, 0, 0)
-                ).withTimeout(1)
+                ).withTimeout(0.5),
+                setGoal(Goal.AUTO_DESCORE_ALGAE_MOVE_BACK)
         );
 
         Command waitForForce = Commands.sequence(
@@ -608,7 +612,7 @@ public class Superstructure extends SubsystemBaseExt {
                                 Commands.race(
                                         Commands.sequence(
                                                 driveTo,
-                                                Commands.waitSeconds(0.5)
+                                                Commands.waitSeconds(0)
                                         ),
                                         waitForForce
                                 ),

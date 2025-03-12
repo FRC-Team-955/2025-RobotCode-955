@@ -98,9 +98,11 @@ public class LEDs extends SubsystemBaseExt {
         } else if (DriverStation.isEnabled()) {
             LEDPattern pattern = switch (superstructure.getGoal()) {
                 case AUTO_SCORE_CORAL_WAIT_INITIAL, AUTO_SCORE_CORAL_SCORING,
-                     AUTO_FUNNEL_INTAKE_WAITING_ALIGN, AUTO_FUNNEL_INTAKE_WAITING_SHAKE -> autoScoring;
+                     AUTO_FUNNEL_INTAKE_WAITING_ALIGN, AUTO_FUNNEL_INTAKE_WAITING_SHAKE,
+                     AUTO_DESCORE_ALGAE_WAIT_INITIAL, AUTO_DESCORE_ALGAE_MOVE_BACK -> autoScoring;
 
-                case AUTO_SCORE_CORAL_WAIT_FINAL, AUTO_SCORE_CORAL_WAIT_ELEVATOR ->
+                case AUTO_SCORE_CORAL_WAIT_FINAL, AUTO_SCORE_CORAL_WAIT_ELEVATOR,
+                     AUTO_DESCORE_ALGAE_WAIT_FINAL ->
                         superstructure.isAutoScoreForceable() ? driverConfirm : autoScoring;
 
                 case DESCORE_ALGAE_WAIT_ELEVATOR, MANUAL_SCORE_CORAL_WAIT_ELEVATOR -> waitElevator;
