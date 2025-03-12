@@ -41,7 +41,7 @@ public class AutoAlignLocations {
     private static final double initialAlignDistYForStartMeters = 2.0;
 
     // Distance at which to start raising the elevator
-    public static final double elevatorRaiseDistance = 1.5;
+    public static final double elevatorRaiseDistanceMeters = 1.5;
 
     // Very rough
     public static final double initialAlignToleranceXMeters = 0.5;

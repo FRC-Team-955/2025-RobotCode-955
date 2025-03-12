@@ -23,11 +23,11 @@ public class ElevatorConstants {
     public static final double setpointVelocityToleranceMetersPerSec = Units.inchesToMeters(0.02);
 
     public static final double maxHeightMeters = Units.inchesToMeters(67.5);
-    public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 2.5);
+    public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 3);
     public static final ElevatorLimit lowerLimit = new ElevatorLimit(0.25, -1.75);
 
     public static final double hardstopMeters = Units.inchesToMeters(20);
-    public static final double gentleMaxVelocityMetersPerSecond = 0.75;
+    public static final double gentleMaxVelocityMetersPerSecond = 0.4;
     /**
      * While we could calculate this based on the current velocity, it caused the gentle profile to be used
      * for only half of the loop cycles. This could probably be solved but I don't think it's worth the effort

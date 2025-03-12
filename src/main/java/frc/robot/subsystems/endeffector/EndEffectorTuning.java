@@ -15,6 +15,8 @@ public class EndEffectorTuning {
             new LoggedTunableNumber("EndEffector/Goal/FunnelIntake", Units.rotationsPerMinuteToRadiansPerSecond(500));
     public static final LoggedTunableNumber scoreCoralGoalSetpoint =
             new LoggedTunableNumber("EndEffector/Goal/ScoreCoral", Units.rotationsPerMinuteToRadiansPerSecond(300));
+    public static final LoggedTunableNumber scoreCoralL1GoalSetpoint =
+            new LoggedTunableNumber("EndEffector/Goal/ScoreCoralL1", Units.rotationsPerMinuteToRadiansPerSecond(600));
     public static final LoggedTunableNumber descoreAlgaeGoalSetpoint =
             new LoggedTunableNumber("EndEffector/Goal/DescoreAlgae", Units.rotationsPerMinuteToRadiansPerSecond(-600));
     public static final LoggedTunableNumber ejectGoalSetpoint =

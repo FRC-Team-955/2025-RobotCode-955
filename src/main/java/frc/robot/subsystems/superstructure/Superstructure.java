@@ -247,12 +247,19 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
+    private final Timer funnelIntakeTimer = new Timer();
+
     private void funnelSetGoalIntake() {
-        boolean forwards = Timer.getTimestamp() % 1.0 < 0.92;
-        if (forwards) {
-            funnel.setGoalInstantaneous(Funnel.Goal.INTAKE_FORWARDS);
-        } else {
+        if (funnel.getGoal() != Funnel.Goal.INTAKE_FORWARDS && funnel.getGoal() != Funnel.Goal.INTAKE_BACKWARDS) {
+            funnelIntakeTimer.restart();
+        }
+
+        boolean backwards = funnelIntakeTimer.hasElapsed(0.92);
+        if (backwards) {
             funnel.setGoalInstantaneous(Funnel.Goal.INTAKE_BACKWARDS);
+            funnelIntakeTimer.advanceIfElapsed(1.0);
+        } else {
+            funnel.setGoalInstantaneous(Funnel.Goal.INTAKE_FORWARDS);
         }
     }
 
@@ -279,14 +286,22 @@ public class Superstructure extends SubsystemBaseExt {
         );
         Command score = Commands.parallel(
                 setGoal(Goal.MANUAL_SCORE_CORAL_SCORING),
-                endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
+                Commands.either(
+                        endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL_L1),
+                        endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
+                        () -> elevatorGoalSupplier.get() == Elevator.Goal.SCORE_L1
+                ),
                 elevator.setGoal(elevatorGoalSupplier),
                 duringAuto
                         ? Commands.none()
                         : waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
         );
         // Wait for coral to settle
-        Command finalize = Commands.waitSeconds(scoreCoralSettleSeconds);
+        Command finalize = Commands.either(
+                Commands.waitSeconds(scoreCoralL1SettleSeconds),
+                Commands.waitSeconds(scoreCoralSettleSeconds),
+                () -> elevatorGoalSupplier.get() == Elevator.Goal.SCORE_L1
+        );
         if (duringAuto) {
             return Commands.sequence(raiseElevator, waitConfirm, score, finalize);
         } else {
@@ -472,7 +487,7 @@ public class Superstructure extends SubsystemBaseExt {
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_ELEVATOR),
                         elevator.waitUntilAtGoal()
                 ),
-                Commands.waitSeconds(0.3)
+                Commands.waitSeconds(0.1)
         );
         // Don't allow forcing for a bit, then check if force is true
         Command waitForForce = Commands.sequence(
@@ -488,13 +503,21 @@ public class Superstructure extends SubsystemBaseExt {
 
         Command score = Commands.parallel(
                 setGoal(Goal.AUTO_SCORE_CORAL_SCORING),
-                endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
+                Commands.either(
+                        endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL_L1),
+                        endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
+                        () -> elevatorGoalSupplier.get() == Elevator.Goal.SCORE_L1
+                ),
                 waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
         );
         // Wait for coral to settle and send the elevator back down
         Command finalize = Commands.parallel(
                 elevator.setGoal(() -> Elevator.Goal.STOW),
-                Commands.waitSeconds(scoreCoralSettleSeconds)
+                Commands.either(
+                        Commands.waitSeconds(scoreCoralL1SettleSeconds),
+                        Commands.waitSeconds(scoreCoralSettleSeconds),
+                        () -> elevatorGoalSupplier.get() == Elevator.Goal.SCORE_L1
+                )
         );
         if (duringAuto) {
             return Commands.sequence(
@@ -563,8 +586,7 @@ public class Superstructure extends SubsystemBaseExt {
                                 Commands.waitUntil(() ->
                                         isAtPoseWithTolerance(
                                                 poseSupplier.get(),
-                                                elevatorRaiseDistance,
-                                                elevatorRaiseDistance,
+                                                elevatorRaiseDistanceMeters,
                                                 Units.degreesToRadians(180)
                                         )
                                                 && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < initialAlignToleranceRadPerSecond
@@ -577,7 +599,6 @@ public class Superstructure extends SubsystemBaseExt {
                                 Commands.waitUntil(() ->
                                         isAtPoseWithTolerance(
                                                 poseSupplier.get(),
-                                                finalAlignToleranceMeters,
                                                 finalAlignToleranceMeters,
                                                 finalAlignToleranceRad
                                         )

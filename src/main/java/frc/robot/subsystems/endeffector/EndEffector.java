@@ -36,6 +36,7 @@ public class EndEffector extends SubsystemBaseExt {
         HANDOFF(() -> 0),
         FUNNEL_INTAKE(funnelIntakeGoalSetpoint::get),
         SCORE_CORAL(scoreCoralGoalSetpoint::get),
+        SCORE_CORAL_L1(scoreCoralL1GoalSetpoint::get),
         DESCORE_ALGAE(descoreAlgaeGoalSetpoint::get),
         EJECT(ejectGoalSetpoint::get),
         GO_TO_POSITION(null); // Handled specially in periodic and with rollersPositionSetpointRad
