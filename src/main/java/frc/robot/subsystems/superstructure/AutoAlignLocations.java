@@ -40,6 +40,9 @@ public class AutoAlignLocations {
     private static final Transform2d initialAlignEndOffset = new Transform2d(0.4, 0, new Rotation2d());
     private static final double initialAlignDistYForStartMeters = 2.0;
 
+    // Distance at which to start raising the elevator
+    public static final double elevatorRaiseDistance = 1;
+
     // Very rough
     public static final double initialAlignToleranceXMeters = 0.5;
     public static final double initialAlignToleranceYMeters = 0.2;
@@ -81,6 +84,26 @@ public class AutoAlignLocations {
         return end.interpolate(start, t);
     }
 
+    public static Pose2d getInitialAlignPoseAlgae(Pose2d currentPose, ReefZoneSide reefZoneSide) {
+        Pose2d base = getReefAprilTagPoseAdjusted(reefZoneSide);
+        Pose2d start = base.plus(initialAlignStartOffset);
+        Pose2d end = base.plus(initialAlignEndOffset);
+        // Interpolate to end based on y distance (left/right distance)
+        double distY = Math.abs(new Transform2d(end, currentPose).getY());
+        double t = MathUtil.clamp(distY / initialAlignDistYForStartMeters, 0, 1);
+        return end.interpolate(start, t);
+    }
+
+    public static Pose2d getFinalAlignPoseAlgae(double elevatorPercentage, ReefZoneSide reefZoneSide) {
+        Pose2d base = getReefAprilTagPoseAdjusted(reefZoneSide);
+        if (elevatorPercentage >= 0.9) return base;
+        // If we aren't high enough, interpolate the pose from the start pose to the end pose based on elevator percentage
+        Pose2d start = base.plus(initialAlignEndOffset);
+        // Fully at final when 100% raised, fully at initial when 0% raised
+        // .interpolate will handle values >1 or <0
+        return start.interpolate(base, elevatorPercentage);
+    }
+
     private static final Transform2d adjustmentLeft = new Transform2d(0, -distanceCenterOfReefToBranchMeters, new Rotation2d());
     private static final Transform2d adjustmentRight = new Transform2d(0, distanceCenterOfReefToBranchMeters, new Rotation2d());
     private static final Transform2d adjustmentLeftRaise = new Transform2d(0, -distanceCenterOfReefToElevatorClearanceMeters, new Rotation2d());
@@ -90,6 +113,7 @@ public class AutoAlignLocations {
         return switch (localReefSide) {
             case Left -> adjustmentLeft;
             case Right -> adjustmentRight;
+            case Middle -> new Transform2d();
         };
     }
 
@@ -97,6 +121,7 @@ public class AutoAlignLocations {
         return switch (localReefSide) {
             case Left -> adjustmentLeftRaise;
             case Right -> adjustmentRightRaise;
+            case Middle -> new Transform2d();
         };
     }
 

@@ -129,6 +129,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     public enum LocalReefSide {
         Left,
         Right,
+        Middle
     }
 
     public enum CoralScoringLevel {

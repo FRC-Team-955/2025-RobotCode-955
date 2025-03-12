@@ -175,7 +175,17 @@ public class RobotContainer extends VirtualSubsystem {
                 () -> operatorDashboard.manualScoring.get()
                         || operatorDashboard.getSelectedCoralScoringLevel() == OperatorDashboard.CoralScoringLevel.L1
         ));
-        driverController.rightBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
+
+        driverController.rightBumper().onTrue(Commands.either(
+                superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal).asProxy(),
+                superstructure.autoAlignDescoreAlgae(
+                        operatorDashboard::getSelectedReefZoneSide,
+                        operatorDashboard::getAlgaeDescoringElevatorGoal,
+                        driverController.rightBumper(),
+                        driverController.leftBumper()
+                ).asProxy(),
+                operatorDashboard.manualScoring::get
+        ));
 
         if (mode == Constants.Mode.SIM) {
             driverController.x().onTrue(Commands.runOnce(() ->

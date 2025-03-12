@@ -539,4 +539,82 @@ public class Superstructure extends SubsystemBaseExt {
             );
         }
     }
+
+    public Command autoAlignDescoreAlgae(
+            Supplier<ReefZoneSide> reefSideSupplier,
+            Supplier<Elevator.Goal> elevatorGoalSupplier,
+            BooleanSupplier forceCondition,
+            BooleanSupplier cancelCondition
+    ) {
+        Supplier<Pose2d> poseSupplier = () -> getFinalAlignPose(1, reefSideSupplier.get(), LocalReefSide.Middle);
+        // TODO: Make goals
+        // TODO: Tune distances
+        Command driveTo = Commands.race(
+                // Drive to position
+                drive.moveTo(poseSupplier),
+                Commands.sequence(
+                        Commands.parallel(
+                                setGoal(Goal.AUTO_SCORE_CORAL_WAIT_INITIAL),
+                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                elevator.setGoal(() -> Elevator.Goal.STOW),
+                                Commands.waitUntil(() ->
+                                        isAtPoseWithTolerance(
+                                                poseSupplier.get(),
+                                                elevatorRaiseDistance,
+                                                elevatorRaiseDistance,
+                                                Units.degreesToRadians(180)
+                                        )
+                                                && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < initialAlignToleranceRadPerSecond
+                                )
+                        ),
+                        Commands.parallel(
+                                setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_SHAKE),
+                                endEffector.setGoal(EndEffector.RollersGoal.DESCORE_ALGAE),
+                                elevator.setGoal(elevatorGoalSupplier),
+                                Commands.waitUntil(() ->
+                                        isAtPoseWithTolerance(
+                                                poseSupplier.get(),
+                                                finalAlignToleranceMeters,
+                                                finalAlignToleranceMeters,
+                                                finalAlignToleranceRad
+                                        )
+                                )
+                        )
+                )
+        );
+        Command driveBack = Commands.race(
+                drive.runRobotRelative(
+                        () -> new ChassisSpeeds(0.7, 0, 0)
+                ).withTimeout(1)
+        );
+
+        Command waitForForce = Commands.sequence(
+                Commands.parallel(
+                        Commands.waitSeconds(2),
+                        Commands.runOnce(() -> autoScoreForceable = false)
+                ),
+                Commands.parallel(
+                        Commands.waitUntil(forceCondition),
+                        Commands.runOnce(() -> autoScoreForceable = true)
+                )
+        );
+
+        return CommandsExt.onlyIf(
+                () -> (!endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
+                        && alignable(reefSideSupplier.get(), RobotState.get().getPose()),
+                CommandsExt.cancelOnTrigger(
+                        cancelCondition,
+                        Commands.sequence(
+                                Commands.race(
+                                        Commands.sequence(
+                                                driveTo,
+                                                Commands.waitSeconds(0.5)
+                                        ),
+                                        waitForForce
+                                ),
+                                driveBack
+                        )
+                )
+        );
+    }
 }
