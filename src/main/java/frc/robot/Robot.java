@@ -37,6 +37,8 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import java.lang.reflect.Array;
 import java.util.HashSet;
 
+import static frc.robot.Constants.mode;
+
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
  * each mode, as described in the TimedRobot documentation. If you change the name of this class or
@@ -273,6 +275,9 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void simulationInit() {
+        // In case of replay, don't do sim
+        if (mode != Constants.Mode.SIM) return;
+
         SimulatedArena.getInstance().resetFieldForAuto();
         RobotModeTriggers.autonomous().onTrue(Commands.runOnce(SimulatedArena.getInstance()::resetFieldForAuto));
         RobotModeTriggers.autonomous().onTrue(Commands.waitSeconds(0.05)
@@ -282,6 +287,9 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void simulationPeriodic() {
+        // In case of replay, don't do sim
+        if (mode != Constants.Mode.SIM) return;
+
         SimulatedArena.getInstance().simulationPeriodic();
 
         Logger.recordOutput("FieldSimulation/RobotPosition", ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());

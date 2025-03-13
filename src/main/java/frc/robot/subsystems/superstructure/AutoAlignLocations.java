@@ -1,7 +1,5 @@
 package frc.robot.subsystems.superstructure;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -9,6 +7,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.OperatorDashboard.LocalReefSide;
 import frc.robot.OperatorDashboard.ReefZoneSide;
+import frc.robot.subsystems.vision.VisionConstants;
 import lombok.RequiredArgsConstructor;
 
 import static frc.robot.Util.shouldFlip;
@@ -24,11 +23,9 @@ public class AutoAlignLocations {
      * Finally, it will move forward the remaining amount and place the gamepiece
      */
 
-    private static final AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
-
     @SuppressWarnings("OptionalGetWithoutIsPresent") // better for our code to crash than to fail silently
     private static Pose2d getAprilTagPose(int id) {
-        return aprilTagLayout.getTagPose(id).get().toPose2d();
+        return VisionConstants.aprilTagLayout.getTagPose(id).get().toPose2d();
     }
 
     private static final Transform2d bumperOffset = new Transform2d(driveConfig.bumperLengthMeters() / 2.0, 0, new Rotation2d());

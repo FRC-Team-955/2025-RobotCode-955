@@ -145,7 +145,11 @@ public class Vision extends SubsystemBaseExt {
                 }
 
                 // Calculate standard deviations
-                double stdDevFactor = Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
+                double distancePower = 2.0;
+                if (cameraIndex < cameraStdDevDistancePowers.length) {
+                    distancePower = cameraStdDevDistancePowers[cameraIndex];
+                }
+                double stdDevFactor = Math.pow(observation.averageTagDistance(), distancePower) / observation.tagCount();
                 double linearStdDev = linearStdDevBaseline * stdDevFactor;
                 double angularStdDev = angularStdDevBaseline * stdDevFactor;
                 if (observation.type() == PoseObservationType.MEGATAG_2) {

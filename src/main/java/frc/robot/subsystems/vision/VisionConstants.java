@@ -30,15 +30,22 @@ public class VisionConstants {
 
     // Standard deviation baselines, for 1 meter distance and 1 tag
     // (Adjusted automatically based on distance and # of tags)
-    public static double linearStdDevBaseline = 0.1; // Meters
+    public static double linearStdDevBaseline = 0.15; // Meters
     public static double angularStdDevBaseline = Units.degreesToRadians(15); // Radians
+
+    // Standard deviation distance powers for each camera
+    public static double[] cameraStdDevDistancePowers =
+            new double[]{
+                    2.0, // StationCam
+                    2.5 // ReefCam
+            };
 
     // Standard deviation multipliers for each camera
     // (Adjust to trust some cameras more than others)
     public static double[] cameraStdDevFactors =
             new double[]{
                     1.0, // StationCam
-                    0.5 // ReefCam
+                    0.75 // ReefCam
             };
 
     // Multipliers to apply for MegaTag 2 observations
