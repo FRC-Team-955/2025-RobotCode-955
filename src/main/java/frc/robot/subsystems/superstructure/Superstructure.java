@@ -124,12 +124,12 @@ public class Superstructure extends SubsystemBaseExt {
         Logger.processInputs("Inputs/Superstructure", inputs);
 
         robotMechanism.funnel.beamBreakLigament.setColor(
-                funnelTriggeredLong()
+                inputs.funnelBeamBreakTriggered
                         ? new Color8Bit(Color.kGreen)
                         : new Color8Bit(Color.kRed)
         );
         robotMechanism.endEffector.beamBreakLigament.setColor(
-                endEffectorTriggeredShort() || operatorDashboard.ignoreEndEffectorBeamBreak.get()
+                inputs.endEffectorBeamBreakTriggered || operatorDashboard.ignoreEndEffectorBeamBreak.get()
                         ? new Color8Bit(Color.kGreen)
                         : new Color8Bit(Color.kRed)
         );
