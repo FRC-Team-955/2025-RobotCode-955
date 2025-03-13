@@ -77,14 +77,15 @@ public class AutoBuilder {
             AutoAlignLocations.Station station,
             AutoTrajectory scoreTraj,
             OperatorDashboard.ReefZoneSide reefZoneSide,
-            OperatorDashboard.LocalReefSide localReefSide
+            OperatorDashboard.LocalReefSide localReefSide,
+            Elevator.Goal elevatorGoal
     ) {
         private Command scoreCommand(Superstructure superstructure) {
             return superstructure.autoAlignAndScore(
                     true,
                     () -> reefZoneSide,
                     () -> localReefSide,
-                    () -> Elevator.Goal.SCORE_L4,
+                    () -> elevatorGoal,
                     () -> true,
                     () -> false
             );
