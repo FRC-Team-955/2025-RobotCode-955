@@ -129,7 +129,7 @@ public class Superstructure extends SubsystemBaseExt {
                         : new Color8Bit(Color.kRed)
         );
         robotMechanism.endEffector.beamBreakLigament.setColor(
-                inputs.endEffectorBeamBreakTriggered || operatorDashboard.ignoreEndEffectorBeamBreak.get()
+                inputs.endEffectorBeamBreakTriggered
                         ? new Color8Bit(Color.kGreen)
                         : new Color8Bit(Color.kRed)
         );
