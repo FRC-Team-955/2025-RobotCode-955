@@ -66,8 +66,8 @@ public class ModuleIOSparkMax extends ModuleIO {
     // Connection debouncers
     private final Debouncer driveConnectedDebounce = new Debouncer(0.5);
     private final Debouncer turnConnectedDebounce = new Debouncer(0.5);
-    private double driveReference = 0.0;
-    private double turnReference = 0.0;
+    private double driveArbitraryNonPositionReference = 0.0;
+    private double turnArbitraryNonPositionReference = 0.0;
 
     private SimpleMotorFeedforward driveFF = moduleConfig.driveGains().toSimpleFF();
 
@@ -160,7 +160,7 @@ public class ModuleIOSparkMax extends ModuleIO {
     @Override
     public void updateInputs(ModuleIOInputs inputs) {
         // Update drive inputs
-        sparkStickyFault = false;
+        sparkStickyFault = hasFault(driveSpark);
         ifOk(driveSpark, driveEncoder::getPosition, (value) -> inputs.drivePositionRad = value);
         ifOk(driveSpark, driveEncoder::getVelocity, (value) -> inputs.driveVelocityRadPerSec = value);
         ifOk(
@@ -170,11 +170,11 @@ public class ModuleIOSparkMax extends ModuleIO {
         );
         ifOk(driveSpark, driveSpark::getOutputCurrent, (value) -> inputs.driveCurrentAmps = value);
         ifOk(driveSpark, driveSpark::getMotorTemperature, (value) -> inputs.driveTemperatureCelsius = value);
-        checkAmpsVsVolts(driveReference, inputs.driveAppliedVolts, inputs.driveCurrentAmps);
+        checkAmpsVsVolts(driveArbitraryNonPositionReference, inputs.driveAppliedVolts, inputs.driveCurrentAmps);
         inputs.driveConnected = driveConnectedDebounce.calculate(!sparkStickyFault);
 
         // Update turn inputs
-        sparkStickyFault = false;
+        sparkStickyFault = hasFault(turnSpark);
         ifOk(
                 turnSpark,
                 turnEncoder::getPosition,
@@ -188,7 +188,7 @@ public class ModuleIOSparkMax extends ModuleIO {
         );
         ifOk(turnSpark, turnSpark::getOutputCurrent, (value) -> inputs.turnCurrentAmps = value);
         ifOk(turnSpark, turnSpark::getMotorTemperature, (value) -> inputs.turnTemperatureCelsius = value);
-        checkAmpsVsVolts(turnReference, inputs.turnAppliedVolts, inputs.turnCurrentAmps);
+        checkAmpsVsVolts(turnArbitraryNonPositionReference, inputs.turnAppliedVolts, inputs.turnCurrentAmps);
         inputs.turnConnected = turnConnectedDebounce.calculate(!sparkStickyFault);
 
         // Update odometry inputs
@@ -251,19 +251,19 @@ public class ModuleIOSparkMax extends ModuleIO {
 
     @Override
     public void setDriveOpenLoop(double output) {
-        driveReference = output;
+        driveArbitraryNonPositionReference = output;
         driveSpark.setVoltage(output);
     }
 
     @Override
     public void setTurnOpenLoop(double output) {
-        turnReference = output;
+        turnArbitraryNonPositionReference = output;
         turnSpark.setVoltage(output);
     }
 
     @Override
     public void setDriveVelocity(double velocityRadPerSec) {
-        driveReference = velocityRadPerSec;
+        driveArbitraryNonPositionReference = velocityRadPerSec;
         var ffVolts = driveFF.calculate(velocityRadPerSec);
         driveController.setReference(
                 velocityRadPerSec,
@@ -276,7 +276,7 @@ public class ModuleIOSparkMax extends ModuleIO {
 
     @Override
     public void setTurnPosition(double positionRad) {
-        turnReference = 0; // position references don't really work
+        turnArbitraryNonPositionReference = 0; // position references don't really work
         double setpoint = MathUtil.inputModulus(positionRad + absoluteEncoderOffsetRad, 0.0, 2 * Math.PI);
         turnController.setReference(setpoint, ControlType.kPosition);
     }
