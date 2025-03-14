@@ -286,7 +286,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
     }
 
     @Override
-    public void setDriveVelocity(double velocityRadPerSec) {
+    public void setDriveClosedLoop(double velocityRadPerSec) {
         var ffVolts = driveFF.calculate(velocityRadPerSec);
         driveController.setReference(
                 velocityRadPerSec,
@@ -298,8 +298,18 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
     }
 
     @Override
-    public void setTurnPosition(double positionRad) {
+    public void setTurnClosedLoop(double positionRad) {
         double setpoint = MathUtil.inputModulus(positionRad, 0.0, 2 * Math.PI);
         turnController.setReference(setpoint, ControlType.kPosition);
+    }
+
+    @Override
+    public void setDrivePosition(double positionRad) {
+        driveEncoder.setPosition(positionRad);
+    }
+
+    @Override
+    public void setTurnPosition(double positionRad) {
+        turnEncoder.setPosition(positionRad);
     }
 }

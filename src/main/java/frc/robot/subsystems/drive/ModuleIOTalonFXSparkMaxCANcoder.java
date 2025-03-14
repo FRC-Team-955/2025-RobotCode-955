@@ -298,7 +298,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
     }
 
     @Override
-    public void setDriveVelocity(double velocityRadPerSec) {
+    public void setDriveClosedLoop(double velocityRadPerSec) {
         double velocityRotPerSec = Units.radiansToRotations(velocityRadPerSec);
         driveTalon.setControl(switch (driveClosedLoopOutput) {
             case Voltage -> velocityVoltageRequest.withVelocity(velocityRotPerSec);
@@ -307,8 +307,18 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
     }
 
     @Override
-    public void setTurnPosition(double positionRad) {
+    public void setTurnClosedLoop(double positionRad) {
         double setpoint = MathUtil.inputModulus(positionRad, 0.0, 2 * Math.PI);
         turnController.setReference(setpoint, SparkBase.ControlType.kPosition);
+    }
+
+    @Override
+    public void setDrivePosition(double positionRad) {
+        driveTalon.setPosition(Units.radiansToRotations(positionRad));
+    }
+
+    @Override
+    public void setTurnPosition(double positionRad) {
+        turnEncoder.setPosition(positionRad);
     }
 }

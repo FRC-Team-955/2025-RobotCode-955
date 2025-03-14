@@ -88,11 +88,23 @@ public class ModuleIO {
     /**
      * Run the drive motor at the specified velocity.
      */
-    public void setDriveVelocity(double velocityRadPerSec) {
+    public void setDriveClosedLoop(double velocityRadPerSec) {
     }
 
     /**
      * Run the turn motor to the specified rotation.
+     */
+    public void setTurnClosedLoop(double positionRad) {
+    }
+
+    /**
+     * Zero the drive motor to the specified position.
+     */
+    public void setDrivePosition(double positionRad) {
+    }
+
+    /**
+     * Zero the turn motor to the specified position.
      */
     public void setTurnPosition(double positionRad) {
     }

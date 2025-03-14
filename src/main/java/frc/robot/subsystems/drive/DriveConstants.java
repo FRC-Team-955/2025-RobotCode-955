@@ -21,6 +21,8 @@ public class DriveConstants {
     public static final boolean disableGyro = false;
     public static final boolean useHighFrequencyOdometry = true;
 
+    public static final double odometryPositionDeltaDiscardMeters = 0.3;
+
     // Slow to 30% speed when elevator is at max height
     public static final double elevatorSlowdownScalar = 0.7;
 

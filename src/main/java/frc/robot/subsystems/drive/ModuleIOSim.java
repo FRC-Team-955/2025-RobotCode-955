@@ -167,16 +167,26 @@ public class ModuleIOSim extends ModuleIO {
     }
 
     @Override
-    public void setDriveVelocity(double velocityRadPerSec) {
+    public void setDriveClosedLoop(double velocityRadPerSec) {
         driveClosedLoop = true;
         driveFFVolts = driveFF.calculate(velocityRadPerSec);
         driveController.setSetpoint(velocityRadPerSec);
     }
 
     @Override
-    public void setTurnPosition(double positionRad) {
+    public void setTurnClosedLoop(double positionRad) {
         turnClosedLoop = true;
         turnController.setSetpoint(positionRad);
+    }
+
+    @Override
+    public void setDrivePosition(double positionRad) {
+        System.out.println("Setting drive position in sim");
+    }
+
+    @Override
+    public void setTurnPosition(double positionRad) {
+        System.out.println("Setting turn position in sim");
     }
 
     protected static double[] getSimulationOdometryTimeStamps() {

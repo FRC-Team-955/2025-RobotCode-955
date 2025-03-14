@@ -270,7 +270,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
     }
 
     @Override
-    public void setDriveVelocity(double velocityRadPerSec) {
+    public void setDriveClosedLoop(double velocityRadPerSec) {
         double velocityRotPerSec = Units.radiansToRotations(velocityRadPerSec);
         driveTalon.setControl(switch (driveClosedLoopOutput) {
             case Voltage -> velocityVoltageRequest.withVelocity(velocityRotPerSec);
@@ -279,11 +279,21 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
     }
 
     @Override
-    public void setTurnPosition(double positionRad) {
+    public void setTurnClosedLoop(double positionRad) {
         double positionRot = Units.radiansToRotations(positionRad);
         turnTalon.setControl(switch (steerClosedLoopOutput) {
             case Voltage -> positionVoltageRequest.withPosition(positionRot);
             case TorqueCurrentFOC -> positionTorqueCurrentRequest.withPosition(positionRot);
         });
+    }
+
+    @Override
+    public void setDrivePosition(double positionRad) {
+        driveTalon.setPosition(Units.radiansToRotations(positionRad));
+    }
+
+    @Override
+    public void setTurnPosition(double positionRad) {
+        turnTalon.setPosition(Units.radiansToRotations(positionRad));
     }
 }
