@@ -507,7 +507,7 @@ public class Superstructure extends SubsystemBaseExt {
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_ELEVATOR),
                         elevator.waitUntilAtGoal()
                 ),
-                Commands.waitSeconds(0.1)
+                Commands.waitSeconds(0.3)
         );
         // Don't allow forcing for a bit, then check if force is true
         Command waitForForce = Commands.sequence(
@@ -602,7 +602,6 @@ public class Superstructure extends SubsystemBaseExt {
             BooleanSupplier cancelCondition
     ) {
         Supplier<Pose2d> poseSupplier = () -> getFinalAlignPose(1, reefSideSupplier.get(), LocalReefSide.Middle);
-        // TODO: Tune distances
         Command driveTo = Commands.race(
                 // Drive to position
                 drive.moveTo(poseSupplier),
@@ -640,7 +639,10 @@ public class Superstructure extends SubsystemBaseExt {
                         drive.runRobotRelative(
                                 () -> new ChassisSpeeds(-0.4, 0, 0)
                         ),
-                        endEffector.waitUntilDescoreAmperageTriggered()
+                        Commands.sequence(
+                                Commands.waitSeconds(0.5),
+                                endEffector.waitUntilDescoreAmperageTriggered()
+                        )
                 ),
                 setGoal(Goal.AUTO_DESCORE_ALGAE_WAIT_AMPERAGE)
         );

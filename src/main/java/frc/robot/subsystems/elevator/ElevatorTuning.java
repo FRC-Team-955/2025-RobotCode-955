@@ -18,9 +18,9 @@ public class ElevatorTuning {
     public static final LoggedTunableNumber scoreL1GoalSetpoint =
             new LoggedTunableNumber("Elevator/Goal/ScoreL1", 0.23);
     public static final LoggedTunableNumber scoreL2GoalSetpoint =
-            new LoggedTunableNumber("Elevator/Goal/ScoreL2", 0.695);
+            new LoggedTunableNumber("Elevator/Goal/ScoreL2", 0.71);
     public static final LoggedTunableNumber scoreL3GoalSetpoint =
-            new LoggedTunableNumber("Elevator/Goal/ScoreL3", 1.125);
+            new LoggedTunableNumber("Elevator/Goal/ScoreL3", 1.17);
     public static final LoggedTunableNumber scoreL4GoalSetpoint =
             new LoggedTunableNumber("Elevator/Goal/ScoreL4", maxHeightMeters);
     public static final LoggedTunableNumber descoreL2GoalSetpoint =

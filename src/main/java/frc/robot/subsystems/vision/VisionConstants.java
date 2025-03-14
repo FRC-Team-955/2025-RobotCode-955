@@ -72,7 +72,7 @@ public class VisionConstants {
                 },
                 // Trust more at close distance, less at long distance
                 2.5,
-                0.75
+                0.5
         ),
         ;
 
@@ -92,17 +92,17 @@ public class VisionConstants {
 
     @RequiredArgsConstructor
     public enum GamepieceCamera {
-        Limelight(
-                // 2 inches back, 2 inches right, 37 inches up, 40 degrees down from horizontal
-                new Transform3d(Units.inchesToMeters(-2), Units.inchesToMeters(-2), Units.inchesToMeters(37),
-                        new Rotation3d(0, Units.degreesToRadians(40), 0)
-                ),
-                (cam) -> switch (Constants.identity) {
-                    case COMPBOT -> new GamepieceIO();
-                    case ALPHABOT -> new GamepieceIOLimelight("limelight", cam.robotToCamera);
-                    case SIMBOT -> new GamepieceIOSim();
-                }
-        ),
+//        Limelight(
+//                // 2 inches back, 2 inches right, 37 inches up, 40 degrees down from horizontal
+//                new Transform3d(Units.inchesToMeters(-2), Units.inchesToMeters(-2), Units.inchesToMeters(37),
+//                        new Rotation3d(0, Units.degreesToRadians(40), 0)
+//                ),
+//                (cam) -> switch (Constants.identity) {
+//                    case COMPBOT -> new GamepieceIO();
+//                    case ALPHABOT -> new GamepieceIOLimelight("limelight", cam.robotToCamera);
+//                    case SIMBOT -> new GamepieceIOSim();
+//                }
+//        ),
         ;
 
         public final Transform3d robotToCamera;
