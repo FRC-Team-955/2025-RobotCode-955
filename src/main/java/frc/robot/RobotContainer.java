@@ -23,6 +23,7 @@ import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.leds.LEDs;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
+import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
@@ -156,6 +157,9 @@ public class RobotContainer extends VirtualSubsystem {
 
         driverController.rightTrigger().whileTrue(superstructure.funnelIntake(false));
 
+        var ref = new Object() {
+            boolean shouldDescoreAlgae = false;
+        };
         driverController.leftTrigger().onTrue(Commands.either(
                 superstructure.scoreCoralManual(
                         false,
@@ -163,33 +167,52 @@ public class RobotContainer extends VirtualSubsystem {
                         driverController.leftBumper(),
                         operatorDashboard::getCoralScoringElevatorGoal
                 ).asProxy(),
-                superstructure.autoAlignScoreAndDescore(
-                        false,
-                        operatorDashboard::getSelectedReefZoneSide,
-                        operatorDashboard::getSelectedLocalReefSide,
-                        operatorDashboard::getCoralScoringElevatorGoal,
-                        driverController.leftTrigger(),
-                        driverController.leftBumper(),
-                        driverController.rightBumper(),
-                        operatorDashboard::getAlgaeDescoringElevatorGoal,
-                        driverController.rightBumper(),
-                        driverController.leftBumper()
-                ).asProxy(),
+                superstructure.autoAlignAndScore(
+                                false,
+                                operatorDashboard::getSelectedReefZoneSide,
+                                operatorDashboard::getSelectedLocalReefSide,
+                                operatorDashboard::getCoralScoringElevatorGoal,
+                                driverController.leftTrigger(),
+                                driverController.leftBumper(),
+                                CommandsExt.onlyIf(
+                                        () -> ref.shouldDescoreAlgae,
+                                        superstructure.autoAlignDescoreAlgae(
+                                                operatorDashboard::getSelectedReefZoneSide,
+                                                operatorDashboard::getAlgaeDescoringElevatorGoal,
+                                                driverController.rightBumper(),
+                                                driverController.leftBumper()
+                                        )
+                                )
+                        )
+                        .deadlineFor(
+                                Commands.startRun(
+                                        () -> ref.shouldDescoreAlgae = false,
+                                        () -> {
+                                            if (driverController.rightBumper().getAsBoolean()) {
+                                                ref.shouldDescoreAlgae = true;
+                                            }
+                                        }
+                                ).until(() -> ref.shouldDescoreAlgae)
+                        )
+                        .asProxy(),
                 // Use manual scoring if override enabled or when scoring L1
                 () -> operatorDashboard.manualScoring.get()
                         || operatorDashboard.getSelectedCoralScoringLevel() == OperatorDashboard.CoralScoringLevel.L1
         ));
 
 //        driverController.rightBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
-        driverController.rightBumper().onTrue(Commands.either(
-                superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal).asProxy(),
-                superstructure.autoAlignDescoreAlgae(
-                        operatorDashboard::getSelectedReefZoneSide,
-                        operatorDashboard::getAlgaeDescoringElevatorGoal,
-                        driverController.rightBumper(),
-                        driverController.leftBumper()
-                ).asProxy(),
-                operatorDashboard.manualScoring::get
+        driverController.rightBumper().onTrue(CommandsExt.onlyIf(
+                () -> superstructure.getGoal() == Superstructure.Goal.IDLE,
+                Commands.either(
+                        superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal).asProxy(),
+                        superstructure.autoAlignDescoreAlgae(
+                                operatorDashboard::getSelectedReefZoneSide,
+                                operatorDashboard::getAlgaeDescoringElevatorGoal,
+                                driverController.rightBumper(),
+                                driverController.leftBumper()
+                        ).asProxy(),
+                        operatorDashboard.manualScoring::get
+                )
         ));
 
         if (mode == Constants.Mode.SIM) {

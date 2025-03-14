@@ -449,6 +449,18 @@ public class Superstructure extends SubsystemBaseExt {
             BooleanSupplier forceCondition,
             BooleanSupplier cancelCondition
     ) {
+        return autoAlignAndScore(duringAuto, reefSideSupplier, sideSupplier, elevatorGoalSupplier, forceCondition, cancelCondition, null);
+    }
+
+    public Command autoAlignAndScore(
+            boolean duringAuto,
+            Supplier<ReefZoneSide> reefSideSupplier,
+            Supplier<LocalReefSide> sideSupplier,
+            Supplier<Elevator.Goal> elevatorGoalSupplier,
+            BooleanSupplier forceCondition,
+            BooleanSupplier cancelCondition,
+            Command afterDone
+    ) {
         Supplier<Pose2d> initialPoseSupplier = () -> getInitialAlignPose(robotState.getPose(), reefSideSupplier.get(), sideSupplier.get());
         Command initial = Commands.race(
                 // Drive to initial position
@@ -551,7 +563,7 @@ public class Superstructure extends SubsystemBaseExt {
             return CommandsExt.onlyIf(
                     // Only run if you have coral and are in front of your reef side
                     () -> (endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
-                            && alignable(reefSideSupplier.get(), RobotState.get().getPose()),
+                            && alignable(reefSideSupplier.get(), robotState.getPose()),
                     CommandsExt.cancelOnTrigger(
                             cancelCondition,
                             Commands.sequence(
@@ -562,10 +574,18 @@ public class Superstructure extends SubsystemBaseExt {
                                             waitForForce
                                     ),
                                     // don't allow cancelling
-                                    CommandsExt.schedule(Commands.race(
-                                            drive.moveTo(finalPoseSupplier),
-                                            score.andThen(finalize)
-                                    ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming))
+                                    CommandsExt.schedule(
+                                            Commands.race(
+                                                            drive.moveTo(finalPoseSupplier),
+                                                            score.andThen(finalize)
+                                                    )
+                                                    .finallyDo(() -> {
+                                                        if (afterDone != null) {
+                                                            afterDone.schedule();
+                                                        }
+                                                    })
+                                                    .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                                    )
                             )
                     )
             );
@@ -617,7 +637,7 @@ public class Superstructure extends SubsystemBaseExt {
                         drive.runRobotRelative(
                                 () -> new ChassisSpeeds(-0.4, 0, 0)
                         ),
-                        endEffector.waitUntilAmperageTriggered()
+                        endEffector.waitUntilDescoreAmperageTriggered()
                 ),
                 setGoal(Goal.AUTO_DESCORE_ALGAE_WAIT_AMPERAGE)
         );
@@ -642,7 +662,7 @@ public class Superstructure extends SubsystemBaseExt {
 
         return CommandsExt.onlyIf(
                 () -> (!endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
-                        && alignable(reefSideSupplier.get(), RobotState.get().getPose()),
+                        && alignable(reefSideSupplier.get(), robotState.getPose()),
                 CommandsExt.cancelOnTrigger(
                         cancelCondition,
                         Commands.sequence(
@@ -657,32 +677,5 @@ public class Superstructure extends SubsystemBaseExt {
                         )
                 )
         );
-    }
-
-    public Command autoAlignScoreAndDescore(
-            boolean duringAuto,
-            Supplier<ReefZoneSide> reefSideSupplier,
-            Supplier<LocalReefSide> sideSupplier,
-            Supplier<Elevator.Goal> elevatorGoalSupplier,
-            BooleanSupplier forceCondition,
-            BooleanSupplier cancelCondition,
-            BooleanSupplier descoreCondition,
-            Supplier<Elevator.Goal> elevatorDescoreGoalSupplier,
-            BooleanSupplier descoreForceCondition,
-            BooleanSupplier descoreCancelCondition
-    ) {
-        return autoAlignAndScore(
-                duringAuto,
-                reefSideSupplier,
-                sideSupplier,
-                elevatorGoalSupplier,
-                forceCondition,
-                cancelCondition
-        ).andThen(CommandsExt.onlyIf(descoreCondition, autoAlignDescoreAlgae(
-                reefSideSupplier,
-                elevatorDescoreGoalSupplier,
-                descoreForceCondition,
-                descoreCancelCondition
-        )).asProxy());
     }
 }

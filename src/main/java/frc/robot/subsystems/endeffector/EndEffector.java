@@ -117,13 +117,13 @@ public class EndEffector extends SubsystemBaseExt {
         }
     }
 
-    @AutoLogOutput(key = "EndEffector/AmperageTriggered")
-    public boolean amperageTriggered() {
-        return amperageDebouncer.calculate(rollersInputs.currentAmps > currentTriggerAmps);
+    @AutoLogOutput(key = "EndEffector/DescoreAmperageTriggered")
+    public boolean descoreAmperageTriggered() {
+        return amperageDebouncer.calculate(Math.abs(rollersInputs.currentAmps) > descoreTriggerAmps);
     }
 
-    public Command waitUntilAmperageTriggered() {
-        return Commands.waitUntil(this::amperageTriggered);
+    public Command waitUntilDescoreAmperageTriggered() {
+        return Commands.waitUntil(this::descoreAmperageTriggered);
     }
 
     public Command setGoal(RollersGoal rollersGoal) {
