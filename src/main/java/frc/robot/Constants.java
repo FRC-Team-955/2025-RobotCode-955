@@ -56,7 +56,7 @@ public final class Constants {
          * Set this to a RobotIdentity to replay using a log from that robot.
          * If replayIdentity is null, log replay will not run and simulation will run like normal.
          */
-        public static final RobotIdentity replayIdentity = RobotIdentity.COMPBOT;
+        public static final RobotIdentity replayIdentity = null;
         @SuppressWarnings("ConstantValue")
         public static final boolean shouldReplay = RobotBase.isSimulation() && replayIdentity != null; // Don't modify please!
 
