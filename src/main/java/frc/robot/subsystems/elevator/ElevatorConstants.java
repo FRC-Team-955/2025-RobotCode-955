@@ -73,7 +73,7 @@ public class ElevatorConstants {
             return new ElevatorIO();
         }
         return switch (Constants.identity) {
-            case COMPBOT -> new ElevatorIOSparkMax(5, 6, 9, true);
+            case COMPBOT -> new ElevatorIOSparkMax(6, 5, 9, true);
             case SIMBOT -> new ElevatorIOSim();
             case ALPHABOT -> new ElevatorIO();
         };
