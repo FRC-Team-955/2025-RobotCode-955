@@ -305,8 +305,8 @@
    {"name":"score", "from":{"target":2, "targetTimestamp":0.93364, "offset":{"exp":"scoreOffset", "val":-0.6}}, "event":{"type":"named", "data":{"name":"score"}}},
    {"name":"score", "from":{"target":6, "targetTimestamp":3.59603, "offset":{"exp":"scoreOffset", "val":-0.6}}, "event":{"type":"named", "data":{"name":"score"}}},
    {"name":"score", "from":{"target":8, "targetTimestamp":5.99621, "offset":{"exp":"scoreOffset", "val":-0.6}}, "event":{"type":"named", "data":{"name":"score"}}},
-   {"name":"intake", "from":{"target":5, "targetTimestamp":2.38395, "offset":{"exp":"intakeOffset", "val":-0.7}}, "event":{"type":"named", "data":{"name":"intake"}}},
-   {"name":"intake", "from":{"target":7, "targetTimestamp":4.8081, "offset":{"exp":"intakeOffset", "val":-0.7}}, "event":{"type":"named", "data":{"name":"intake"}}},
-   {"name":"intake", "from":{"target":9, "targetTimestamp":7.18432, "offset":{"exp":"intakeOffset", "val":-0.7}}, "event":{"type":"named", "data":{"name":"intake"}}},
+   {"name":"intake", "from":{"target":5, "targetTimestamp":2.38395, "offset":{"exp":"intakeOffset", "val":-0.5}}, "event":{"type":"named", "data":{"name":"intake"}}},
+   {"name":"intake", "from":{"target":7, "targetTimestamp":4.8081, "offset":{"exp":"intakeOffset", "val":-0.5}}, "event":{"type":"named", "data":{"name":"intake"}}},
+   {"name":"intake", "from":{"target":9, "targetTimestamp":7.18432, "offset":{"exp":"intakeOffset", "val":-0.5}}, "event":{"type":"named", "data":{"name":"intake"}}},
    {"name":"score", "from":{"target":11, "targetTimestamp":8.49959, "offset":{"exp":"scoreOffset", "val":-0.6}}, "event":{"type":"named", "data":{"name":"score"}}}]
 }

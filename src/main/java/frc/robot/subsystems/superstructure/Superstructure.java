@@ -419,10 +419,8 @@ public class Superstructure extends SubsystemBaseExt {
         }
     }
 
-    private boolean isAtPoseWithTolerance(Pose2d desiredPose, double linearToleranceMeters, double angularToleranceRad) {
-        Pose2d currentPose = robotState.getPose();
-        return desiredPose.getTranslation().getDistance(currentPose.getTranslation()) < linearToleranceMeters
-                && Math.abs(desiredPose.getRotation().minus(currentPose.getRotation()).getRadians()) < angularToleranceRad;
+    private boolean isAtPoseWithTolerance(Pose2d desiredPose, double toleranceXYMeters, double angularToleranceRad) {
+        return isAtPoseWithTolerance(desiredPose, toleranceXYMeters, toleranceXYMeters, angularToleranceRad);
     }
 
     private boolean isAtPoseWithTolerance(Pose2d desiredPose, double toleranceXMeters, double toleranceYMeters, double angularToleranceRad) {
@@ -476,7 +474,7 @@ public class Superstructure extends SubsystemBaseExt {
                         Commands.waitUntil(() ->
                                 isAtPoseWithTolerance(
                                         finalPoseSupplier.get(),
-                                        finalAlignToleranceMeters,
+                                        finalAlignToleranceXYMeters,
                                         finalAlignToleranceRad
                                 )
                                         && Math.abs(drive.getMeasuredChassisLinearVelocityMetersPerSec()) < finalAlignToleranceMetersPerSecond
@@ -599,7 +597,7 @@ public class Superstructure extends SubsystemBaseExt {
                                 Commands.waitUntil(() ->
                                         isAtPoseWithTolerance(
                                                 poseSupplier.get(),
-                                                finalAlignToleranceMeters,
+                                                finalAlignToleranceXYMeters,
                                                 finalAlignToleranceRad
                                         )
                                 )

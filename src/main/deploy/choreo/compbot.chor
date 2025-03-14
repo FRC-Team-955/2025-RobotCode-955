@@ -7,8 +7,8 @@
    "intakeOffset":{
     "dimension":"Time",
     "var":{
-     "exp":"-0.7 s",
-     "val":-0.7
+     "exp":"-0.5 s",
+     "val":-0.5
     }
    },
    "scoreOffset":{

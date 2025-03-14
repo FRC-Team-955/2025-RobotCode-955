@@ -562,6 +562,8 @@ public class Drive extends SubsystemBaseExt {
                         },
                         () -> {
                             Pose2d currentPose = robotState.getPose();
+                            ChassisSpeeds currentVelocities = getMeasuredChassisSpeedsFieldRelative();
+
                             Pose2d goalPose = poseSupplier.get();
                             Logger.recordOutput("Drive/MoveTo/Goal", goalPose);
 
@@ -569,16 +571,22 @@ public class Drive extends SubsystemBaseExt {
                                     currentPose.getX(),
                                     goalPose.getX()
                             ) + moveToLinearX.getSetpoint().velocity;
+                            Logger.recordOutput("Drive/MoveTo/LinearXMeasurement", currentVelocities.vxMetersPerSecond);
+                            Logger.recordOutput("Drive/MoveTo/LinearXSetpoint", moveToLinearX.getSetpoint().velocity);
 
                             double linearYVelocityMetersPerSec = moveToLinearY.calculate(
                                     currentPose.getY(),
                                     goalPose.getY()
                             ) + moveToLinearY.getSetpoint().velocity;
+                            Logger.recordOutput("Drive/MoveTo/LinearYMeasurement", currentVelocities.vyMetersPerSecond);
+                            Logger.recordOutput("Drive/MoveTo/LinearYSetpoint", moveToLinearY.getSetpoint().velocity);
 
                             double angularVelocityRadPerSec = moveToAngular.calculate(
                                     currentPose.getRotation().getRadians(),
                                     goalPose.getRotation().getRadians()
                             ) + moveToAngular.getSetpoint().velocity;
+                            Logger.recordOutput("Drive/MoveTo/AngularMeasurement", currentVelocities.omegaRadiansPerSecond);
+                            Logger.recordOutput("Drive/MoveTo/AngularSetpoint", moveToAngular.getSetpoint().velocity);
 
                             Logger.recordOutput("Drive/MoveTo/Setpoint", new Pose2d(
                                     moveToLinearX.getSetpoint().position,

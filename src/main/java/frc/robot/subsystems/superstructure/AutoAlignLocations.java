@@ -44,10 +44,10 @@ public class AutoAlignLocations {
     public static final double initialAlignToleranceXMeters = 0.5;
     public static final double initialAlignToleranceYMeters = 0.2;
     public static final double initialAlignToleranceRad = Units.degreesToRadians(20);
-    public static final double initialAlignToleranceRadPerSecond = Units.degreesToRadians(20);
+    public static final double initialAlignToleranceRadPerSecond = Units.degreesToRadians(40);
 
     // very little tolerance
-    public static final double finalAlignToleranceMeters = 0.04;
+    public static final double finalAlignToleranceXYMeters = 0.04;
     public static final double finalAlignToleranceRad = Units.degreesToRadians(4);
     public static final double finalAlignToleranceMetersPerSecond = 0.10;
     public static final double finalAlignToleranceRadPerSecond = Units.degreesToRadians(8);
