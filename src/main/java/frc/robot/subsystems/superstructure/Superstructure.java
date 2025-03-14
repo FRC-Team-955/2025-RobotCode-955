@@ -665,10 +665,8 @@ public class Superstructure extends SubsystemBaseExt {
                         cancelCondition,
                         Commands.sequence(
                                 Commands.race(
-                                        Commands.sequence(
-                                                driveTo,
-                                                waitAlgae
-                                        ),
+                                        driveTo,
+                                        waitAlgae,
                                         waitForForce
                                 ),
                                 driveBack

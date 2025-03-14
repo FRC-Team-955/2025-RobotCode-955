@@ -52,7 +52,7 @@ public class EndEffector extends SubsystemBaseExt {
     private Double rollersPositionSetpointRad = null;
 
     // TODO: Tune time
-    private final Debouncer amperageDebouncer = new Debouncer(0.25);
+    private final Debouncer descoreAmperageDebouncer = new Debouncer(0.25);
 
     private final Alert rollersDisconnectedAlert = new Alert("End effector rollers motor is disconnected.", Alert.AlertType.kError);
 
@@ -119,7 +119,7 @@ public class EndEffector extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "EndEffector/DescoreAmperageTriggered")
     public boolean descoreAmperageTriggered() {
-        return amperageDebouncer.calculate(Math.abs(rollersInputs.currentAmps) > descoreTriggerAmps);
+        return descoreAmperageDebouncer.calculate(Math.abs(rollersInputs.currentAmps) > descoreTriggerAmps);
     }
 
     public Command waitUntilDescoreAmperageTriggered() {
