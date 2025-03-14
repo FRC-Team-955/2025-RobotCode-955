@@ -214,7 +214,7 @@ public class Elevator extends SubsystemBaseExt {
                     // If we are below the hardstop slowdown zone
                     && positionMeters < hardstopSlowdownMeters;
             // Only actually use the gentle profile if we are close enough to the max velocity to avoid jumping directly to max velocity
-            boolean usingGentleProfile = usingGentleVelocity && Math.abs(velocityMetersPerSec) < gentleMaxVelocityMetersPerSecond + 0.2;
+            boolean usingGentleProfile = usingGentleVelocity && Math.abs(velocityMetersPerSec) < gentleMaxVelocityMetersPerSecond + 0.4;
             var profile = usingGentleProfile
                     ? profileGentleVelocity
                     : profileFullVelocity;
