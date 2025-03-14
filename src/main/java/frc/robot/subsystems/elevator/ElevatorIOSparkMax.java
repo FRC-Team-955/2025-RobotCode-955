@@ -190,7 +190,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         if (!emergencyStopped) {
             var ffVolts = ff.calculateWithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
             lastVelocitySetpointRadPerSec = velocityRadPerSec;
-            leadMotor.setVoltage(ffVolts + pid.calculate(followEncoder.getPosition(), positionRad));
+            leadMotor.setVoltage(ffVolts);
 //            controller.setReference(
 //                    positionRad,
 //                    SparkBase.ControlType.kPosition,
