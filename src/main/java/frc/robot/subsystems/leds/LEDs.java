@@ -89,12 +89,10 @@ public class LEDs extends SubsystemBaseExt {
             LEDPattern.solid(Color.kGreen).blink(Seconds.of(1)).applyTo(leftLowerView);
             LEDPattern.solid(Color.kYellow).blink(Seconds.of(1)).applyTo(rightUpperView);
             LEDPattern.solid(Color.kBlue).blink(Seconds.of(1)).applyTo(rightLowerView);
+        } else if (!autonomousRunning && DriverStation.isAutonomousEnabled()) {
+            set(autoFinished);
         } else if (useSpecialAutoPatterns && DriverStation.isAutonomousEnabled()) {
-            if (autonomousRunning) {
-                set(patternForAlliance(autoRed, autoBlue, autoUnknown));
-            } else {
-                set(autoFinished);
-            }
+            set(patternForAlliance(autoRed, autoBlue, autoUnknown));
         } else if (DriverStation.isEnabled()) {
             LEDPattern pattern = switch (superstructure.getGoal()) {
                 case AUTO_SCORE_CORAL_WAIT_INITIAL, AUTO_SCORE_CORAL_SCORING,
