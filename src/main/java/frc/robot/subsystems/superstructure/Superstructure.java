@@ -658,4 +658,31 @@ public class Superstructure extends SubsystemBaseExt {
                 )
         );
     }
+
+    public Command autoAlignScoreAndDescore(
+            boolean duringAuto,
+            Supplier<ReefZoneSide> reefSideSupplier,
+            Supplier<LocalReefSide> sideSupplier,
+            Supplier<Elevator.Goal> elevatorGoalSupplier,
+            BooleanSupplier forceCondition,
+            BooleanSupplier cancelCondition,
+            BooleanSupplier descoreCondition,
+            Supplier<Elevator.Goal> elevatorDescoreGoalSupplier,
+            BooleanSupplier descoreForceCondition,
+            BooleanSupplier descoreCancelCondition
+    ) {
+        return autoAlignAndScore(
+                duringAuto,
+                reefSideSupplier,
+                sideSupplier,
+                elevatorGoalSupplier,
+                forceCondition,
+                cancelCondition
+        ).andThen(CommandsExt.onlyIf(descoreCondition, autoAlignDescoreAlgae(
+                reefSideSupplier,
+                elevatorDescoreGoalSupplier,
+                descoreForceCondition,
+                descoreCancelCondition
+        )).asProxy());
+    }
 }
