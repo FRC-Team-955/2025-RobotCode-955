@@ -77,6 +77,8 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
     private final Debouncer driveConnectedDebounce = new Debouncer(0.5);
     private final Debouncer turnConnectedDebounce = new Debouncer(0.5);
     private final Debouncer turnEncoderConnectedDebounce = new Debouncer(0.5);
+    private double driveReference = 0.0;
+    private double turnReference = 0.0;
 
     private SimpleMotorFeedforward driveFF = moduleConfig.driveGains().toSimpleFF();
 
@@ -196,6 +198,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
         );
         SparkUtil.ifOk(driveSpark, driveSpark::getOutputCurrent, (value) -> inputs.driveCurrentAmps = value);
         SparkUtil.ifOk(driveSpark, driveSpark::getMotorTemperature, (value) -> inputs.driveTemperatureCelsius = value);
+        SparkUtil.checkAmpsVsVolts(driveReference, inputs.driveAppliedVolts, inputs.driveCurrentAmps);
         inputs.driveConnected = driveConnectedDebounce.calculate(!SparkUtil.sparkStickyFault);
 
         // Update turn inputs
@@ -213,6 +216,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
         );
         SparkUtil.ifOk(turnSpark, turnSpark::getOutputCurrent, (value) -> inputs.turnCurrentAmps = value);
         SparkUtil.ifOk(turnSpark, turnSpark::getMotorTemperature, (value) -> inputs.turnTemperatureCelsius = value);
+        SparkUtil.checkAmpsVsVolts(turnReference, inputs.turnAppliedVolts, inputs.turnCurrentAmps);
         inputs.turnConnected = turnConnectedDebounce.calculate(!SparkUtil.sparkStickyFault);
 
         // Turn cancoder
@@ -277,16 +281,19 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
 
     @Override
     public void setDriveOpenLoop(double output) {
+        driveReference = output;
         driveSpark.setVoltage(output);
     }
 
     @Override
     public void setTurnOpenLoop(double output) {
+        turnReference = output;
         turnSpark.setVoltage(output);
     }
 
     @Override
     public void setDriveVelocity(double velocityRadPerSec) {
+        driveReference = velocityRadPerSec;
         var ffVolts = driveFF.calculate(velocityRadPerSec);
         driveController.setReference(
                 velocityRadPerSec,
@@ -299,6 +306,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
 
     @Override
     public void setTurnPosition(double positionRad) {
+        turnReference = 0; // position references don't really work
         double setpoint = MathUtil.inputModulus(positionRad, 0.0, 2 * Math.PI);
         turnController.setReference(setpoint, ControlType.kPosition);
     }

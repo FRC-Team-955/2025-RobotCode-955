@@ -78,4 +78,11 @@ public class SparkUtil {
     public static void tryUntilOkAsync(int maxAttempts, Supplier<REVLibError> command) {
         asyncExecutor.execute(() -> tryUntilOk(maxAttempts, command));
     }
+
+    public static void checkAmpsVsVolts(double reference, double appliedVolts, double currentAmps) {
+        // If we are applying voltage and nothing is happening, something is wrong
+        if ((reference != 0 || appliedVolts != 0) && currentAmps == 0) {
+            sparkStickyFault = true;
+        }
+    }
 }
