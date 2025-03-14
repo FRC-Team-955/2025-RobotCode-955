@@ -4,7 +4,7 @@ import frc.robot.Constants;
 
 public class SuperstructureConstants {
     public static final double scoreCoralSettleSeconds = 0.25;
-    public static final double scoreCoralL1SettleSeconds = 1;
+    public static final double scoreCoralL1SettleSeconds = 1.5;
     public static final double waitUntilIdleTeleopTimeoutSeconds = 3;
 
     protected static SuperstructureIO createIO() {
