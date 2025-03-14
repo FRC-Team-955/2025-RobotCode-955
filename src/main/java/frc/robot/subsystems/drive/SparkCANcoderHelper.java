@@ -29,8 +29,8 @@ public class SparkCANcoderHelper {
         } catch (InterruptedException ignored) {
         }
         var successful = false;
-        // 15 attempts because this is really important
-        for (int i = 0; i < 15; i++) {
+        // 30 attempts because this is really important
+        for (int i = 0; i < 30; i++) {
             var turnEncoderStatus = BaseStatusSignal.refreshAll(turnAbsolutePosition);
             var turnEncoderConnected = turnEncoderStatus.isOK();
             if (turnEncoderConnected) {
@@ -46,6 +46,10 @@ public class SparkCANcoderHelper {
                 }
             }
             System.out.printf("Drive module with cancoder ID %d FAILED on attempt %d to set initial position of turn relative encoder (connected: %s, sparkStickyFault: %s)%n", cancoderCanID, i + 1, turnEncoderConnected, SparkUtil.sparkStickyFault);
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException ignored) {
+            }
         }
         if (!successful) {
             System.out.printf("Drive module with cancoder ID %d GAVE UP setting initial position of turn relative encoder%n", cancoderCanID);
