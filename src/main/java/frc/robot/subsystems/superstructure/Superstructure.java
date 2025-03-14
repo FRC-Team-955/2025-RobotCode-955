@@ -304,17 +304,16 @@ public class Superstructure extends SubsystemBaseExt {
         if (duringAuto) {
             return Commands.sequence(raiseElevator, waitConfirm, score, finalize);
         } else {
-            Command cmd = Commands.sequence(
-                    raiseElevator,
-                    waitConfirm,
-                    // Don't allow canceling
-                    CommandsExt.schedule(score.andThen(finalize).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming))
-            );
             return CommandsExt.onlyIf(
                     () -> endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                     CommandsExt.cancelOnTrigger(
                             cancelCondition,
-                            cmd
+                            Commands.sequence(
+                                    raiseElevator,
+                                    waitConfirm,
+                                    // Don't allow canceling
+                                    CommandsExt.schedule(score.andThen(finalize).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming))
+                            ).finallyDo(() -> elevator.zero().schedule())
                     )
             );
         }
@@ -340,7 +339,7 @@ public class Superstructure extends SubsystemBaseExt {
                                         elevator.setGoal(elevatorGoalSupplier),
                                         Commands.idle()
                                 )
-                        )
+                        ).finallyDo(() -> elevator.zero().schedule())
                 )
         );
     }
@@ -589,7 +588,7 @@ public class Superstructure extends SubsystemBaseExt {
                                                     })
                                                     .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
                                     )
-                            )
+                            ).finallyDo(() -> elevator.zero().schedule())
                     )
             );
         }
@@ -679,7 +678,7 @@ public class Superstructure extends SubsystemBaseExt {
                                         waitForForce
                                 ),
                                 driveBack
-                        )
+                        ).finallyDo(() -> elevator.zero().schedule())
                 )
         );
     }

@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
@@ -36,6 +37,7 @@ public class Elevator extends SubsystemBaseExt {
     @RequiredArgsConstructor
     public enum Goal {
         CHARACTERIZATION(null),
+        ZERO(null),
         STOW(stowGoalSetpoint::get), // Setpoint for when coral stuck in robot mode is activated is in periodicAfterCommands
         SCORE_L1(scoreL1GoalSetpoint::get),
         SCORE_L2(scoreL2GoalSetpoint::get),
@@ -322,5 +324,14 @@ public class Elevator extends SubsystemBaseExt {
                         1,
                         this
                 ));
+    }
+
+    public Command zero() {
+        return Commands.sequence(
+                setGoal(() -> Goal.ZERO),
+                runOnce(() -> io.setOpenLoop(-1)).until(() -> Math.abs(getVelocityMetersPerSec()) < 0.2),
+                waitUntil(() -> Math.abs(getVelocityMetersPerSec()) < 0.01),
+                runOnce(() -> io.setEncoder(0.0))
+        );
     }
 }
