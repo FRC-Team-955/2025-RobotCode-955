@@ -1,15 +1,11 @@
 package frc.robot.subsystems.elevator;
 
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkBase;
-import com.revrobotics.spark.SparkLowLevel;
-import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.*;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.util.PIDF;
@@ -32,8 +28,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     private final DigitalInput limitSwitch;
 
     // Closed loop controllers
-    //private final SparkClosedLoopController controller;
-    private final PIDController pid = gains.toPID();
+    private final SparkClosedLoopController controller;
     private ElevatorFeedforward ff = gains.toElevatorFF();
 
     // Connection debouncers
@@ -55,7 +50,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         followMotor = new SparkMax(followCanID, SparkLowLevel.MotorType.kBrushless);
         leadEncoder = leadMotor.getEncoder();
         followEncoder = followMotor.getEncoder();
-        //controller = leadMotor.getClosedLoopController();
+        controller = leadMotor.getClosedLoopController();
 
         limitSwitch = new DigitalInput(limitSwitchID);
 
@@ -190,14 +185,13 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         if (!emergencyStopped) {
             var ffVolts = ff.calculateWithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
             lastVelocitySetpointRadPerSec = velocityRadPerSec;
-            leadMotor.setVoltage(ffVolts);
-//            controller.setReference(
-//                    positionRad,
-//                    SparkBase.ControlType.kPosition,
-//                    ClosedLoopSlot.kSlot0,
-//                    ffVolts,
-//                    SparkClosedLoopController.ArbFFUnits.kVoltage
-//            );
+            controller.setReference(
+                    positionRad,
+                    SparkBase.ControlType.kPosition,
+                    ClosedLoopSlot.kSlot0,
+                    ffVolts,
+                    SparkClosedLoopController.ArbFFUnits.kVoltage
+            );
         }
     }
 
