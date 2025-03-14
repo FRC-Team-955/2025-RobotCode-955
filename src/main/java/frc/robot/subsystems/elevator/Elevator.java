@@ -210,10 +210,10 @@ public class Elevator extends SubsystemBaseExt {
                 setpointMeters = 1.1;
             }
 
-            boolean usingGentleVelocity = inputs.leaderVelocityRadPerSec < 0.1 // If we are going down
+            boolean usingGentleVelocity = setpointMeters < positionMeters // If we are going down
                     // If we are below the hardstop slowdown zone
                     && positionMeters < hardstopSlowdownMeters;
-            // Only actually use the gentle profile if we are close enough to the max velocity xto avoid jumping directly to max velocity
+            // Only actually use the gentle profile if we are close enough to the max velocity to avoid jumping directly to max velocity
             boolean usingGentleProfile = usingGentleVelocity && Math.abs(velocityMetersPerSec) < gentleMaxVelocityMetersPerSecond + 0.2;
             var profile = usingGentleProfile
                     ? profileGentleVelocity

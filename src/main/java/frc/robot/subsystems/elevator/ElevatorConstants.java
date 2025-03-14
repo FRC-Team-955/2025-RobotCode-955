@@ -36,7 +36,7 @@ public class ElevatorConstants {
 
     public static double calculateHardstopSlowdownMeters(double currentVelocityMetersPerSec) {
         // In reality, max acceleration is a lot higher, especially with an aggressive kG
-        double assumedMaxAccelerationMetersPerSecondSquared = maxAccelerationMetersPerSecondSquared * 1.25;
+        double assumedMaxAccelerationMetersPerSecondSquared = maxAccelerationMetersPerSecondSquared * 0.9;
 
         // If we are going down at v:
         //     x = -v * t
