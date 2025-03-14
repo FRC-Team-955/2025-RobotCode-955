@@ -313,7 +313,7 @@ public class Superstructure extends SubsystemBaseExt {
                                     waitConfirm,
                                     // Don't allow canceling
                                     CommandsExt.schedule(score.andThen(finalize).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming))
-                            ).finallyDo(() -> elevator.zero().schedule())
+                            )//.finallyDo(() -> elevator.zero().schedule())
                     )
             );
         }
@@ -339,7 +339,7 @@ public class Superstructure extends SubsystemBaseExt {
                                         elevator.setGoal(elevatorGoalSupplier),
                                         Commands.idle()
                                 )
-                        ).finallyDo(() -> elevator.zero().schedule())
+                        )//.finallyDo(() -> elevator.zero().schedule())
                 )
         );
     }
@@ -588,7 +588,7 @@ public class Superstructure extends SubsystemBaseExt {
                                                     })
                                                     .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
                                     )
-                            ).finallyDo(() -> elevator.zero().schedule())
+                            )//.finallyDo(() -> elevator.zero().schedule())
                     )
             );
         }
@@ -678,7 +678,7 @@ public class Superstructure extends SubsystemBaseExt {
                                         waitForForce
                                 ),
                                 driveBack
-                        ).finallyDo(() -> elevator.zero().schedule())
+                        )//.finallyDo(() -> elevator.zero().schedule())
                 )
         );
     }
