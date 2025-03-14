@@ -293,9 +293,7 @@ public class Superstructure extends SubsystemBaseExt {
                         () -> elevatorGoalSupplier.get() == Elevator.Goal.SCORE_L1
                 ),
                 elevator.setGoal(elevatorGoalSupplier),
-                duringAuto
-                        ? Commands.none()
-                        : waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
+                waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
         );
         // Wait for coral to settle
         Command finalize = Commands.either(
