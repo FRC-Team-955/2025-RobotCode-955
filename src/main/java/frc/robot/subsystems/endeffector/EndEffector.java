@@ -119,7 +119,8 @@ public class EndEffector extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "EndEffector/DescoreAmperageTriggered")
     public boolean descoreAmperageTriggered() {
-        return descoreAmperageDebouncer.calculate(Math.abs(rollersInputs.currentAmps) > descoreTriggerAmps);
+        //return descoreAmperageDebouncer.calculate(Math.abs(rollersInputs.currentAmps) > descoreTriggerAmps);
+        return Math.abs(rollersInputs.currentAmps) > descoreTriggerAmps;
     }
 
     public Command waitUntilDescoreAmperageTriggered() {
