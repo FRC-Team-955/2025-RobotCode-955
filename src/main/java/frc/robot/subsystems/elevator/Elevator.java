@@ -330,6 +330,7 @@ public class Elevator extends SubsystemBaseExt {
         return Commands.sequence(
                 setGoal(() -> Goal.ZERO),
                 runOnce(() -> io.setOpenLoop(-1)).until(() -> Math.abs(getVelocityMetersPerSec()) < 0.2),
+                Commands.waitSeconds(0.5),
                 waitUntil(() -> Math.abs(getVelocityMetersPerSec()) < 0.01),
                 runOnce(() -> io.setEncoder(0.0))
         );
