@@ -204,7 +204,10 @@ public class RobotContainer extends VirtualSubsystem {
         driverController.rightBumper().onTrue(CommandsExt.onlyIf(
                 () -> superstructure.getGoal() == Superstructure.Goal.IDLE,
                 Commands.either(
-                        superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal).asProxy(),
+                        superstructure.descoreAlgaeManual(
+                                operatorDashboard::getAlgaeDescoringElevatorGoal,
+                                driverController.leftBumper()
+                        ).asProxy(),
                         superstructure.autoAlignDescoreAlgae(
                                 operatorDashboard::getSelectedReefZoneSide,
                                 operatorDashboard::getAlgaeDescoringElevatorGoal,

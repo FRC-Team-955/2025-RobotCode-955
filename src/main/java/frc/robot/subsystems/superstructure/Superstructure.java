@@ -320,23 +320,28 @@ public class Superstructure extends SubsystemBaseExt {
         }
     }
 
-    public Command descoreAlgaeManual(Supplier<Elevator.Goal> elevatorGoalSupplier) {
-        Command cmd = Commands.sequence(
-                Commands.parallel(
-                        setGoal(Goal.DESCORE_ALGAE_WAIT_ELEVATOR),
-                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                        elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
-                ),
-                Commands.parallel(
-                        setGoal(Goal.DESCORE_ALGAE_DESCORING),
-                        endEffector.setGoal(EndEffector.RollersGoal.DESCORE_ALGAE),
-                        elevator.setGoal(elevatorGoalSupplier),
-                        Commands.idle()
-                )
-        );
+    public Command descoreAlgaeManual(
+            Supplier<Elevator.Goal> elevatorGoalSupplier,
+            BooleanSupplier cancelCondition
+    ) {
         return CommandsExt.onlyIf(
                 () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                cmd
+                CommandsExt.cancelOnTrigger(
+                        cancelCondition,
+                        Commands.sequence(
+                                Commands.parallel(
+                                        setGoal(Goal.DESCORE_ALGAE_WAIT_ELEVATOR),
+                                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                        elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
+                                ),
+                                Commands.parallel(
+                                        setGoal(Goal.DESCORE_ALGAE_DESCORING),
+                                        endEffector.setGoal(EndEffector.RollersGoal.DESCORE_ALGAE),
+                                        elevator.setGoal(elevatorGoalSupplier),
+                                        Commands.idle()
+                                )
+                        )
+                )
         );
     }
 
