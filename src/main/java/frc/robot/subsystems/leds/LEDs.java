@@ -100,7 +100,7 @@ public class LEDs extends SubsystemBaseExt {
                      AUTO_DESCORE_ALGAE_WAIT_INITIAL, AUTO_DESCORE_ALGAE_MOVE_BACK -> autoScoring;
 
                 case AUTO_SCORE_CORAL_WAIT_FINAL, AUTO_SCORE_CORAL_WAIT_ELEVATOR,
-                     AUTO_DESCORE_ALGAE_WAIT_FINAL ->
+                     AUTO_DESCORE_ALGAE_WAIT_FINAL, AUTO_DESCORE_ALGAE_WAIT_AMPERAGE ->
                         superstructure.isAutoScoreForceable() ? driverConfirm : autoScoring;
 
                 case DESCORE_ALGAE_WAIT_ELEVATOR, MANUAL_SCORE_CORAL_WAIT_ELEVATOR -> waitElevator;

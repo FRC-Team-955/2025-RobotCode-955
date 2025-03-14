@@ -65,6 +65,7 @@ public class Superstructure extends SubsystemBaseExt {
 
         AUTO_DESCORE_ALGAE_WAIT_INITIAL(true),
         AUTO_DESCORE_ALGAE_WAIT_FINAL(true),
+        AUTO_DESCORE_ALGAE_WAIT_AMPERAGE(true),
         AUTO_DESCORE_ALGAE_MOVE_BACK(true),
 
         HANDOFF(false),
@@ -610,6 +611,17 @@ public class Superstructure extends SubsystemBaseExt {
                         )
                 )
         );
+
+        Command waitAlgae = Commands.parallel(
+                Commands.race(
+                        drive.runRobotRelative(
+                                () -> new ChassisSpeeds(-0.4, 0, 0)
+                        ),
+                        endEffector.waitUntilAmperageTriggered()
+                ),
+                setGoal(Goal.AUTO_DESCORE_ALGAE_WAIT_AMPERAGE)
+        );
+
         Command driveBack = Commands.parallel(
                 drive.runRobotRelative(
                         () -> new ChassisSpeeds(0.7, 0, 0)
@@ -637,7 +649,7 @@ public class Superstructure extends SubsystemBaseExt {
                                 Commands.race(
                                         Commands.sequence(
                                                 driveTo,
-                                                Commands.waitSeconds(0)
+                                                waitAlgae
                                         ),
                                         waitForForce
                                 ),

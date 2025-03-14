@@ -1,10 +1,12 @@
 package frc.robot.subsystems.endeffector;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
 import frc.robot.subsystems.elevator.Elevator;
@@ -14,6 +16,7 @@ import frc.robot.util.characterization.FeedforwardCharacterization;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
@@ -47,6 +50,9 @@ public class EndEffector extends SubsystemBaseExt {
     @Getter
     private RollersGoal rollersGoal = RollersGoal.IDLE;
     private Double rollersPositionSetpointRad = null;
+
+    // TODO: Tune time
+    private final Debouncer amperageDebouncer = new Debouncer(0.25);
 
     private final Alert rollersDisconnectedAlert = new Alert("End effector rollers motor is disconnected.", Alert.AlertType.kError);
 
@@ -109,6 +115,15 @@ public class EndEffector extends SubsystemBaseExt {
             Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", false);
             Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", false);
         }
+    }
+
+    @AutoLogOutput(key = "EndEffector/AmperageTriggered")
+    public boolean amperageTriggered() {
+        return amperageDebouncer.calculate(rollersInputs.currentAmps > currentTriggerAmps);
+    }
+
+    public Command waitUntilAmperageTriggered() {
+        return Commands.waitUntil(this::amperageTriggered);
     }
 
     public Command setGoal(RollersGoal rollersGoal) {
