@@ -79,13 +79,6 @@ public class SparkUtil {
         asyncExecutor.execute(() -> tryUntilOk(maxAttempts, command));
     }
 
-    public static void checkAmpsVsVolts(double arbitraryNonPositionReference, double appliedVolts, double currentAmps) {
-        // If we are applying voltage and nothing is happening, something is wrong
-        if ((arbitraryNonPositionReference != 0 || appliedVolts != 0) && currentAmps == 0) {
-            sparkStickyFault = true;
-        }
-    }
-
     // Keeping this as a utility function in case we need to ignore a certain fault or something
     public static boolean hasFault(SparkBase spark) {
         return spark.hasActiveFault();

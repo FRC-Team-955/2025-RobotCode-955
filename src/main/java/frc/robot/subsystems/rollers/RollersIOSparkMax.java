@@ -24,7 +24,6 @@ public class RollersIOSparkMax extends RollersIO {
 
     // Connection debouncers
     private final Debouncer connectedDebounce = new Debouncer(0.5);
-    private double arbitraryNonPositionReference = 0.0;
 
     private SimpleMotorFeedforward velocityFeedforward;
 
@@ -84,7 +83,6 @@ public class RollersIOSparkMax extends RollersIO {
         );
         ifOk(spark, spark::getOutputCurrent, (value) -> inputs.currentAmps = value);
         ifOk(spark, spark::getMotorTemperature, (value) -> inputs.temperatureCelsius = value);
-        checkAmpsVsVolts(arbitraryNonPositionReference, inputs.appliedVolts, inputs.currentAmps);
         inputs.connected = connectedDebounce.calculate(!sparkStickyFault);
     }
 
@@ -125,13 +123,11 @@ public class RollersIOSparkMax extends RollersIO {
 
     @Override
     public void setOpenLoop(double output) {
-        arbitraryNonPositionReference = output;
         spark.setVoltage(output);
     }
 
     @Override
     public void setVelocity(double velocityRadPerSec) {
-        arbitraryNonPositionReference = velocityRadPerSec;
         var ffVolts = velocityFeedforward.calculate(velocityRadPerSec);
         controller.setReference(
                 velocityRadPerSec,
@@ -144,7 +140,6 @@ public class RollersIOSparkMax extends RollersIO {
 
     @Override
     public void setPosition(double positionRad) {
-        arbitraryNonPositionReference = 0; // position references don't really work
         controller.setReference(
                 positionRad,
                 SparkBase.ControlType.kPosition,
