@@ -151,11 +151,13 @@ public class Vision extends SubsystemBaseExt {
                 angularStdDev *= metadata.stddevMultiplier;
 
                 // Send vision observation
-                RobotState.get().addVisionMeasurement(
-                        observation.pose().toPose2d(),
-                        observation.timestamp(),
-                        VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev)
-                );
+                if (metadata != AprilTagCamera.StationCam) {
+                    RobotState.get().addVisionMeasurement(
+                            observation.pose().toPose2d(),
+                            observation.timestamp(),
+                            VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev)
+                    );
+                }
             }
 
             // Log camera data
