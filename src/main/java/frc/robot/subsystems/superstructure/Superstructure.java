@@ -254,6 +254,7 @@ public class Superstructure extends SubsystemBaseExt {
     private void endFunnelIntakeAlternate() {
         funnelIntakeTimer.stop();
     }
+
     private void funnelSetGoalIntakeAlternate() {
         if (!funnelIntakeTimer.isRunning()) {
             funnelIntakeTimer.restart();
@@ -389,7 +390,7 @@ public class Superstructure extends SubsystemBaseExt {
                 waitUntilFunnelTriggered()
         ).deadlineFor(
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                funnel.run(this::funnelSetGoalIntakeAlternate).finallyDo(this::endFunnelIntakeAlternate)
+                funnel.run(this::funnelSetGoalIntakeAlternate).finallyDo(this::endFunnelIntakeAlternate),
                 Commands.sequence(
                         Commands.parallel(
                                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_ALIGN),
