@@ -317,8 +317,16 @@ public class Superstructure extends SubsystemBaseExt {
                                     raiseElevator,
                                     waitConfirm,
                                     // Don't allow canceling
-                                    CommandsExt.schedule(score.andThen(finalize).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming))
-                            )//.finallyDo(() -> elevator.zero().schedule())
+                                    CommandsExt.schedule(
+                                            CommandsExt.cancelOnTrigger(
+                                                    cancelCondition,
+                                                    Commands.sequence(
+                                                            score,
+                                                            finalize
+                                                    )
+                                            ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                                    )
+                            )
                     )
             );
         }
@@ -576,16 +584,18 @@ public class Superstructure extends SubsystemBaseExt {
                                     ),
                                     // don't allow cancelling
                                     CommandsExt.schedule(
-                                            Commands.race(
-                                                            drive.moveTo(finalPoseSupplier),
-                                                            score.andThen(finalize)
-                                                    )
-                                                    .finallyDo(() -> {
-                                                        if (afterDone != null) {
-                                                            afterDone.schedule();
-                                                        }
-                                                    })
-                                                    .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                                            CommandsExt.cancelOnTrigger(
+                                                    cancelCondition,
+                                                    Commands.race(
+                                                                    drive.moveTo(finalPoseSupplier),
+                                                                    score.andThen(finalize)
+                                                            )
+                                                            .finallyDo(() -> {
+                                                                if (afterDone != null) {
+                                                                    afterDone.schedule();
+                                                                }
+                                                            })
+                                            ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
                                     )
                             )//.finallyDo(() -> elevator.zero().schedule())
                     )
