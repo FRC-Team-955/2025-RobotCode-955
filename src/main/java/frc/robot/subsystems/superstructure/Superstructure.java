@@ -251,7 +251,7 @@ public class Superstructure extends SubsystemBaseExt {
     private final Timer funnelIntakeTimer = new Timer();
 
     private void funnelSetGoalIntakeAlternate() {
-        if (funnel.getGoal() != Funnel.Goal.INTAKE_FORWARDS && funnel.getGoal() != Funnel.Goal.INTAKE_BACKWARDS) {
+        if (funnelIntakeTimer.hasElapsed(5)) {
             funnelIntakeTimer.restart();
         }
 
@@ -356,7 +356,7 @@ public class Superstructure extends SubsystemBaseExt {
                 setGoal(Goal.FUNNEL_INTAKE_WAITING),
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
                 Commands.sequence(
-                        funnel.setGoal(Funnel.Goal.INTAKE_FORWARDS).withTimeout(2),
+                        funnel.setGoal(Funnel.Goal.INTAKE_FORWARDS).withTimeout(1),
                         funnel.run(this::funnelSetGoalIntakeAlternate)
                 )
         );
@@ -389,7 +389,7 @@ public class Superstructure extends SubsystemBaseExt {
         ).deadlineFor(
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
                 Commands.sequence(
-                        funnel.setGoal(Funnel.Goal.INTAKE_FORWARDS).withTimeout(2),
+                        funnel.setGoal(Funnel.Goal.INTAKE_FORWARDS).withTimeout(1),
                         funnel.run(this::funnelSetGoalIntakeAlternate)
                 ),
                 Commands.sequence(
