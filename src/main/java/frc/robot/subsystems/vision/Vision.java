@@ -152,7 +152,7 @@ public class Vision extends SubsystemBaseExt {
 
                 // Send vision observation
                 if (metadata != AprilTagCamera.StationCam) {
-                    RobotState.get().addVisionMeasurement(
+                    robotState.addVisionMeasurement(
                             observation.pose().toPose2d(),
                             observation.timestamp(),
                             VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev)
