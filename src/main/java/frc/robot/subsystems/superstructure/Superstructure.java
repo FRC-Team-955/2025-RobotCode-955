@@ -143,6 +143,7 @@ public class Superstructure extends SubsystemBaseExt {
             funnelSetGoalIntakeAlternate();
             if (endEffectorTriggeredShort() || operatorDashboard.ignoreEndEffectorBeamBreak.get()) {
                 goal = Goal.HOME;
+                endFunnelIntakeAlternate();
             }
         }
 
@@ -250,8 +251,11 @@ public class Superstructure extends SubsystemBaseExt {
 
     private final Timer funnelIntakeTimer = new Timer();
 
+    private void endFunnelIntakeAlternate() {
+        funnelIntakeTimer.stop();
+    }
     private void funnelSetGoalIntakeAlternate() {
-        if (funnelIntakeTimer.hasElapsed(5) || !funnelIntakeTimer.isRunning()) {
+        if (!funnelIntakeTimer.isRunning()) {
             funnelIntakeTimer.restart();
         }
 
@@ -355,10 +359,7 @@ public class Superstructure extends SubsystemBaseExt {
         ).deadlineFor(
                 setGoal(Goal.FUNNEL_INTAKE_WAITING),
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                Commands.sequence(
-                        funnel.setGoal(Funnel.Goal.INTAKE_FORWARDS).withTimeout(1),
-                        funnel.run(this::funnelSetGoalIntakeAlternate)
-                )
+                funnel.run(this::funnelSetGoalIntakeAlternate).finallyDo(this::endFunnelIntakeAlternate)
         );
         if (duringAuto) {
             return CommandsExt.onlyIf(
@@ -388,10 +389,7 @@ public class Superstructure extends SubsystemBaseExt {
                 waitUntilFunnelTriggered()
         ).deadlineFor(
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                Commands.sequence(
-                        funnel.setGoal(Funnel.Goal.INTAKE_FORWARDS).withTimeout(1),
-                        funnel.run(this::funnelSetGoalIntakeAlternate)
-                ),
+                funnel.run(this::funnelSetGoalIntakeAlternate).finallyDo(this::endFunnelIntakeAlternate)
                 Commands.sequence(
                         Commands.parallel(
                                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_ALIGN),
