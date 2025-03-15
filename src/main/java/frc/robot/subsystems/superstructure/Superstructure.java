@@ -251,7 +251,7 @@ public class Superstructure extends SubsystemBaseExt {
     private final Timer funnelIntakeTimer = new Timer();
 
     private void funnelSetGoalIntakeAlternate() {
-        if (funnelIntakeTimer.hasElapsed(5)) {
+        if (funnelIntakeTimer.hasElapsed(5) || !funnelIntakeTimer.isRunning()) {
             funnelIntakeTimer.restart();
         }
 
