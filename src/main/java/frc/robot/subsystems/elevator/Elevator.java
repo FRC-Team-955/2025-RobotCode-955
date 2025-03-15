@@ -77,7 +77,7 @@ public class Elevator extends SubsystemBaseExt {
     public final SysIdRoutine sysId;
 
     private final Alert emergencyStoppedAlert = new Alert("Elevator is emergency stopped.", Alert.AlertType.kError);
-    private final Alert notZeroedAlert = new Alert("Elevator is not zeroed. Please zero.", Alert.AlertType.kError);
+    private final Alert notZeroedAlert = new Alert("Elevator is not zeroed! Please zero.", Alert.AlertType.kError);
     private final Alert leaderDisconnectedAlert = new Alert("Elevator leader motor is disconnected.", Alert.AlertType.kError);
     private final Alert followerDisconnectedAlert = new Alert("Elevator follower motor is disconnected.", Alert.AlertType.kError);
     private final Alert offsetSetAlert = new Alert("Elevator offset is not zero, bad things may happen.", Alert.AlertType.kWarning);
