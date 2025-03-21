@@ -21,6 +21,10 @@ import java.util.function.Consumer;
 public class Util {
     private static final double epsilon = 1E-6;
 
+    public static double positiveModulus(double input, double modulus) {
+        return ((input % modulus) + modulus) % modulus;
+    }
+
     public static boolean shouldFlip() {
         return DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
     }

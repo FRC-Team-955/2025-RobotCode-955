@@ -380,6 +380,10 @@ public class Drive extends SubsystemBaseExt {
         return robotState.getKinematics().toChassisSpeeds(getMeasuredModuleStates());
     }
 
+    public ChassisSpeeds getMeasuredChassisSpeedsFieldRelative() {
+        return ChassisSpeeds.fromRobotRelativeSpeeds(getMeasuredChassisSpeeds(), robotState.getRotation());
+    }
+
     /**
      * Returns the module states (turn angles and drive velocities) for all of the modules.
      */

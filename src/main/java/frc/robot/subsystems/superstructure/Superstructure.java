@@ -143,6 +143,10 @@ public class Superstructure extends SubsystemBaseExt {
     @Override
     public void periodicAfterCommands() {
         Logger.recordOutput("Superstructure/Goal", goal);
+
+        Logger.recordOutput("Superstructure/switchSide", AutoAlignLocations.switchSide(robotState.getPose(), drive.getMeasuredChassisSpeeds()));
+        Logger.recordOutput("Superstructure/closestSide", AutoAlignLocations.closestSide(robotState.getPose()));
+        Logger.recordOutput("Superstructure/adjustedSide", AutoAlignLocations.closestSideAdjusted(robotState.getPose(), drive.getMeasuredChassisSpeeds()));
     }
 
 //    private boolean intakeRangeTriggered() {

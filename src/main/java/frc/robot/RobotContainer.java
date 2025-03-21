@@ -19,6 +19,7 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.leds.LEDs;
+import frc.robot.subsystems.superstructure.AutoAlignLocations;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.subsystem.VirtualSubsystem;
@@ -168,7 +169,8 @@ public class RobotContainer extends VirtualSubsystem {
                 ).asProxy(),
                 superstructure.autoAlignAndScore(
                         false,
-                        operatorDashboard::getSelectedReefZoneSide,
+                        //operatorDashboard::getSelectedReefZoneSide,
+                        () -> AutoAlignLocations.closestSideAdjusted(robotState.getPose(), drive.getMeasuredChassisSpeeds()),
                         operatorDashboard::getSelectedLocalReefSide,
                         operatorDashboard::getCoralScoringElevatorGoal,
                         driverController.leftTrigger(),

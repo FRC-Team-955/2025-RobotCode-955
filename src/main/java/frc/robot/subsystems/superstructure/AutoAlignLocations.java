@@ -5,13 +5,16 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import frc.robot.OperatorDashboard.LocalReefSide;
 import frc.robot.OperatorDashboard.ReefZoneSide;
 import frc.robot.Util;
 import lombok.RequiredArgsConstructor;
+import org.littletonrobotics.junction.Logger;
 
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static frc.robot.Util.shouldFlip;
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
@@ -43,6 +46,45 @@ public class AutoAlignLocations {
     public static final double finalAlignToleranceRad = Units.degreesToRadians(2);
     public static final double finalAlignToleranceMetersPerSecond = 0.05;
     public static final double finalAlignToleranceRadPerSecond = Units.degreesToRadians(2);
+
+    public static final double interpolateSeconds = 0.4;
+
+    /**
+     * Returns the closest reef side
+     * TODO: Make this less weird
+     */
+    public static ReefZoneSide closestSide(Pose2d currentPose) {
+        Stream<ReefZoneSide> stream = Stream.of(ReefZoneSide.values());
+        Pose2d nearestPose = currentPose.nearest(stream.map(AutoAlignLocations::getAprilTagPoseAdjusted).toList());
+        stream = Stream.of(ReefZoneSide.values());
+        return stream.filter((value) -> (getAprilTagPoseAdjusted(value).equals(nearestPose))).findFirst().orElse(ReefZoneSide.LeftFront);
+    }
+
+    public static boolean switchSide(Pose2d currentPose, ChassisSpeeds robotRelativeSpeeds) {
+        ReefZoneSide closestSide = closestSide(currentPose);
+        Pose2d leftTagPose = getAprilTagPoseAdjusted(ReefZoneSide.getSideFromID(closestSide.aprilTagOffset - 1));
+        Pose2d rightTagPose = getAprilTagPoseAdjusted(ReefZoneSide.getSideFromID(closestSide.aprilTagOffset + 1));
+        Rotation2d angleToLeftTag = leftTagPose.relativeTo(currentPose).getTranslation().getAngle()
+                .minus(
+                        rightTagPose.relativeTo(currentPose).getTranslation().getAngle()
+                );
+        Logger.recordOutput("Superstructure/angleToRightTag", Util.positiveModulus(angleToLeftTag.getDegrees(), 360));
+        Rotation2d angleToAdjustedPosition = new Rotation2d(robotRelativeSpeeds.vxMetersPerSecond, robotRelativeSpeeds.vyMetersPerSecond)
+                .minus(
+                        rightTagPose.relativeTo(currentPose).getTranslation().getAngle()
+                );
+        Logger.recordOutput("Superstructure/angleToAdjustedPosition", Util.positiveModulus(angleToAdjustedPosition.getDegrees(), 360));
+        return Util.positiveModulus(angleToAdjustedPosition.getRadians(), 2 * Math.PI) > Util.positiveModulus(angleToLeftTag.getRadians(), 2 * Math.PI);
+    }
+
+    public static ReefZoneSide closestSideAdjusted(Pose2d currentPose, ChassisSpeeds robotRelativeSpeeds) {
+        Logger.recordOutput("Superstructure/interpolatedPosition", currentPose.exp(robotRelativeSpeeds.toTwist2d(interpolateSeconds)));
+        if (switchSide(currentPose, robotRelativeSpeeds)) {
+            return closestSide(currentPose.exp(robotRelativeSpeeds.toTwist2d(interpolateSeconds)));
+        } else {
+            return closestSide(currentPose);
+        }
+    }
 
     /**
      * Checks whether moving to the side will intersect with the reef, and refuses to do so if it does.

@@ -123,6 +123,23 @@ public class OperatorDashboard extends VirtualSubsystem {
         LeftBack(5);
 
         public final int aprilTagOffset;
+
+        public static ReefZoneSide getSideFromID(int id) {
+            // wrap id from 0 to 6, ensure it is positive - shouldn't be different unless we are doing some weird stuff
+            int idAdjusted = (((id % 6) + 6) % 6);
+            return switch (idAdjusted) {
+                case 0 -> LeftFront;
+                case 1 -> MiddleFront;
+                case 2 -> RightFront;
+                case 3 -> RightBack;
+                case 4 -> MiddleBack;
+                case 5 -> LeftBack;
+                default -> {
+                    System.out.println("Trying to choose invalid ID (This shouldn't ever happen unless the code is broken)");
+                    yield LeftFront;
+                }
+            };
+        }
     }
 
     @RequiredArgsConstructor
