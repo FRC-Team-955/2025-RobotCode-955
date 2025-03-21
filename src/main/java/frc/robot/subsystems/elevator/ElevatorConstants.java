@@ -7,7 +7,7 @@ import frc.robot.util.PIDF;
 public class ElevatorConstants {
     /** Gains in radians */
     public static final PIDF gains = switch (Constants.identity) {
-        case COMPBOT -> PIDF.ofPDSVAG(0.05, 0, 0.1, 0.1, 0.005, 0.8);
+        case COMPBOT -> PIDF.ofPDSVAG(0.05, 0, 0.1, 0.1, 0.005, 0.83);
         case SIMBOT -> PIDF.ofPDVAG(0, 0, 0.102, 0.005, 1.5015);
         case ALPHABOT -> PIDF.ofP(0);
     };
@@ -22,7 +22,7 @@ public class ElevatorConstants {
     public static final double setpointPositionToleranceMeters = Units.inchesToMeters(2);
     public static final double setpointVelocityToleranceMetersPerSec = Units.inchesToMeters(0.02);
 
-    public static final double maxHeightMeters = Units.inchesToMeters(67.5);
+    public static final double maxHeightMeters = 1.72;
     public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 3);
     public static final ElevatorLimit lowerLimit = new ElevatorLimit(0.25, -1.75);
 
@@ -36,7 +36,7 @@ public class ElevatorConstants {
 
     public static double calculateHardstopSlowdownMeters(double currentVelocityMetersPerSec) {
         // In reality, max acceleration is a lot higher, especially with an aggressive kG
-        double assumedMaxAccelerationMetersPerSecondSquared = maxAccelerationMetersPerSecondSquared * 1.25;
+        double assumedMaxAccelerationMetersPerSecondSquared = maxAccelerationMetersPerSecondSquared * 0.9;
 
         // If we are going down at v:
         //     x = -v * t

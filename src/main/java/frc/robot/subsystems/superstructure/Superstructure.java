@@ -65,6 +65,7 @@ public class Superstructure extends SubsystemBaseExt {
 
         AUTO_DESCORE_ALGAE_WAIT_INITIAL(true),
         AUTO_DESCORE_ALGAE_WAIT_FINAL(true),
+        AUTO_DESCORE_ALGAE_WAIT_AMPERAGE(true),
         AUTO_DESCORE_ALGAE_MOVE_BACK(true),
 
         HANDOFF(false),
@@ -142,6 +143,7 @@ public class Superstructure extends SubsystemBaseExt {
             funnelSetGoalIntakeAlternate();
             if (endEffectorTriggeredShort() || operatorDashboard.ignoreEndEffectorBeamBreak.get()) {
                 goal = Goal.HOME;
+                endFunnelIntakeAlternate();
             }
         }
 
@@ -249,8 +251,12 @@ public class Superstructure extends SubsystemBaseExt {
 
     private final Timer funnelIntakeTimer = new Timer();
 
+    private void endFunnelIntakeAlternate() {
+        funnelIntakeTimer.stop();
+    }
+
     private void funnelSetGoalIntakeAlternate() {
-        if (funnel.getGoal() != Funnel.Goal.INTAKE_FORWARDS && funnel.getGoal() != Funnel.Goal.INTAKE_BACKWARDS) {
+        if (!funnelIntakeTimer.isRunning()) {
             funnelIntakeTimer.restart();
         }
 
@@ -292,9 +298,7 @@ public class Superstructure extends SubsystemBaseExt {
                         () -> elevatorGoalSupplier.get() == Elevator.Goal.SCORE_L1
                 ),
                 elevator.setGoal(elevatorGoalSupplier),
-                duringAuto
-                        ? Commands.none()
-                        : waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
+                waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
         );
         // Wait for coral to settle
         Command finalize = Commands.either(
@@ -305,39 +309,51 @@ public class Superstructure extends SubsystemBaseExt {
         if (duringAuto) {
             return Commands.sequence(raiseElevator, waitConfirm, score, finalize);
         } else {
-            Command cmd = Commands.sequence(
-                    raiseElevator,
-                    waitConfirm,
-                    // Don't allow canceling
-                    CommandsExt.schedule(score.andThen(finalize).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming))
-            );
             return CommandsExt.onlyIf(
                     () -> endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                     CommandsExt.cancelOnTrigger(
                             cancelCondition,
-                            cmd
+                            Commands.sequence(
+                                    raiseElevator,
+                                    waitConfirm,
+                                    // Don't allow canceling
+                                    CommandsExt.schedule(
+                                            CommandsExt.cancelOnTrigger(
+                                                    cancelCondition,
+                                                    Commands.sequence(
+                                                            score,
+                                                            finalize
+                                                    )
+                                            ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                                    )
+                            )
                     )
             );
         }
     }
 
-    public Command descoreAlgaeManual(Supplier<Elevator.Goal> elevatorGoalSupplier) {
-        Command cmd = Commands.sequence(
-                Commands.parallel(
-                        setGoal(Goal.DESCORE_ALGAE_WAIT_ELEVATOR),
-                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                        elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
-                ),
-                Commands.parallel(
-                        setGoal(Goal.DESCORE_ALGAE_DESCORING),
-                        endEffector.setGoal(EndEffector.RollersGoal.DESCORE_ALGAE),
-                        elevator.setGoal(elevatorGoalSupplier),
-                        Commands.idle()
-                )
-        );
+    public Command descoreAlgaeManual(
+            Supplier<Elevator.Goal> elevatorGoalSupplier,
+            BooleanSupplier cancelCondition
+    ) {
         return CommandsExt.onlyIf(
                 () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                cmd
+                CommandsExt.cancelOnTrigger(
+                        cancelCondition,
+                        Commands.sequence(
+                                Commands.parallel(
+                                        setGoal(Goal.DESCORE_ALGAE_WAIT_ELEVATOR),
+                                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                        elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
+                                ),
+                                Commands.parallel(
+                                        setGoal(Goal.DESCORE_ALGAE_DESCORING),
+                                        endEffector.setGoal(EndEffector.RollersGoal.DESCORE_ALGAE),
+                                        elevator.setGoal(elevatorGoalSupplier),
+                                        Commands.idle()
+                                )
+                        )//.finallyDo(() -> elevator.zero().schedule())
+                )
         );
     }
 
@@ -352,10 +368,7 @@ public class Superstructure extends SubsystemBaseExt {
         ).deadlineFor(
                 setGoal(Goal.FUNNEL_INTAKE_WAITING),
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                Commands.sequence(
-                        funnel.setGoal(Funnel.Goal.INTAKE_FORWARDS).withTimeout(2),
-                        funnel.run(this::funnelSetGoalIntakeAlternate)
-                )
+                funnel.run(this::funnelSetGoalIntakeAlternate).finallyDo(this::endFunnelIntakeAlternate)
         );
         if (duringAuto) {
             return CommandsExt.onlyIf(
@@ -385,10 +398,7 @@ public class Superstructure extends SubsystemBaseExt {
                 waitUntilFunnelTriggered()
         ).deadlineFor(
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                Commands.sequence(
-                        funnel.setGoal(Funnel.Goal.INTAKE_FORWARDS).withTimeout(2),
-                        funnel.run(this::funnelSetGoalIntakeAlternate)
-                ),
+                funnel.run(this::funnelSetGoalIntakeAlternate).finallyDo(this::endFunnelIntakeAlternate),
                 Commands.sequence(
                         Commands.parallel(
                                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_ALIGN),
@@ -448,6 +458,18 @@ public class Superstructure extends SubsystemBaseExt {
             BooleanSupplier forceCondition,
             BooleanSupplier cancelCondition
     ) {
+        return autoAlignAndScore(duringAuto, reefSideSupplier, sideSupplier, elevatorGoalSupplier, forceCondition, cancelCondition, null);
+    }
+
+    public Command autoAlignAndScore(
+            boolean duringAuto,
+            Supplier<ReefZoneSide> reefSideSupplier,
+            Supplier<LocalReefSide> sideSupplier,
+            Supplier<Elevator.Goal> elevatorGoalSupplier,
+            BooleanSupplier forceCondition,
+            BooleanSupplier cancelCondition,
+            Command afterDone
+    ) {
         Supplier<Pose2d> initialPoseSupplier = () -> getInitialAlignPose(robotState.getPose(), reefSideSupplier.get(), sideSupplier.get());
         Command initial = Commands.race(
                 // Drive to initial position
@@ -491,7 +513,7 @@ public class Superstructure extends SubsystemBaseExt {
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_ELEVATOR),
                         elevator.waitUntilAtGoal()
                 ),
-                Commands.waitSeconds(0.1)
+                Commands.waitSeconds(0.3)
         );
         // Don't allow forcing for a bit, then check if force is true
         Command waitForForce = Commands.sequence(
@@ -550,7 +572,7 @@ public class Superstructure extends SubsystemBaseExt {
             return CommandsExt.onlyIf(
                     // Only run if you have coral and are in front of your reef side
                     () -> (endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
-                            && alignable(reefSideSupplier.get(), RobotState.get().getPose()),
+                            && alignable(reefSideSupplier.get(), robotState.getPose()),
                     CommandsExt.cancelOnTrigger(
                             cancelCondition,
                             Commands.sequence(
@@ -561,11 +583,21 @@ public class Superstructure extends SubsystemBaseExt {
                                             waitForForce
                                     ),
                                     // don't allow cancelling
-                                    CommandsExt.schedule(Commands.race(
-                                            drive.moveTo(finalPoseSupplier),
-                                            score.andThen(finalize)
-                                    ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming))
-                            )
+                                    CommandsExt.schedule(
+                                            CommandsExt.cancelOnTrigger(
+                                                    cancelCondition,
+                                                    Commands.race(
+                                                                    drive.moveTo(finalPoseSupplier),
+                                                                    score.andThen(finalize)
+                                                            )
+                                                            .finallyDo(() -> {
+                                                                if (afterDone != null) {
+                                                                    afterDone.schedule();
+                                                                }
+                                                            })
+                                            ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+                                    )
+                            )//.finallyDo(() -> elevator.zero().schedule())
                     )
             );
         }
@@ -578,7 +610,6 @@ public class Superstructure extends SubsystemBaseExt {
             BooleanSupplier cancelCondition
     ) {
         Supplier<Pose2d> poseSupplier = () -> getFinalAlignPose(1, reefSideSupplier.get(), LocalReefSide.Middle);
-        // TODO: Tune distances
         Command driveTo = Commands.race(
                 // Drive to position
                 drive.moveTo(poseSupplier),
@@ -610,6 +641,20 @@ public class Superstructure extends SubsystemBaseExt {
                         )
                 )
         );
+
+        Command waitAlgae = Commands.parallel(
+                Commands.race(
+                        drive.runRobotRelative(
+                                () -> new ChassisSpeeds(-0.4, 0, 0)
+                        ),
+                        Commands.sequence(
+                                Commands.waitSeconds(0.5),
+                                endEffector.waitUntilDescoreAmperageTriggered()
+                        )
+                ),
+                setGoal(Goal.AUTO_DESCORE_ALGAE_WAIT_AMPERAGE)
+        );
+
         Command driveBack = Commands.parallel(
                 drive.runRobotRelative(
                         () -> new ChassisSpeeds(0.7, 0, 0)
@@ -630,19 +675,19 @@ public class Superstructure extends SubsystemBaseExt {
 
         return CommandsExt.onlyIf(
                 () -> (!endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
-                        && alignable(reefSideSupplier.get(), RobotState.get().getPose()),
+                        && alignable(reefSideSupplier.get(), robotState.getPose()),
                 CommandsExt.cancelOnTrigger(
                         cancelCondition,
                         Commands.sequence(
                                 Commands.race(
                                         Commands.sequence(
                                                 driveTo,
-                                                Commands.waitSeconds(0)
+                                                waitAlgae
                                         ),
                                         waitForForce
                                 ),
                                 driveBack
-                        )
+                        )//.finallyDo(() -> elevator.zero().schedule())
                 )
         );
     }

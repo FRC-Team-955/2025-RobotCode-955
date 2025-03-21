@@ -124,7 +124,9 @@ public class Vision extends SubsystemBaseExt {
                                 || observation.pose().getX() < 0.0
                                 || observation.pose().getX() > aprilTagLayout.getFieldLength()
                                 || observation.pose().getY() < 0.0
-                                || observation.pose().getY() > aprilTagLayout.getFieldWidth();
+                                || observation.pose().getY() > aprilTagLayout.getFieldWidth()
+                                // Reject if station cam and reef cam connected
+                                || (metadata == AprilTagCamera.StationCam && aprilTagCameras.get(AprilTagCamera.ReefCam).inputs.connected);
 
                 // Add pose to log
                 robotPoses.add(observation.pose());
@@ -151,7 +153,7 @@ public class Vision extends SubsystemBaseExt {
                 angularStdDev *= metadata.stddevMultiplier;
 
                 // Send vision observation
-                RobotState.get().addVisionMeasurement(
+                robotState.addVisionMeasurement(
                         observation.pose().toPose2d(),
                         observation.timestamp(),
                         VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev)

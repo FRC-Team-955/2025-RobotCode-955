@@ -183,8 +183,8 @@ public class Drive extends SubsystemBaseExt {
             // All timestamps will be synced by HighFrequencySamplingThread
             double[] sampleTimestamps = modules[0].getOdometryTimestamps();
             for (int sample = 0; sample < sampleTimestamps.length; sample++) {
+                boolean discardSample = false;
                 double sampleTimestamp = sampleTimestamps[sample];
-                // Find the closest turn sample
 
                 // Read wheel positions and deltas from each module
                 SwerveModulePosition[] modulePositions = new SwerveModulePosition[modules.length];
@@ -199,12 +199,19 @@ public class Drive extends SubsystemBaseExt {
                             modulePosition.distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
                             modulePosition.angle
                     );
+
+//                    if (moduleDeltas[moduleIndex].distanceMeters > odometryPositionDeltaDiscardMeters) {
+//                        discardSample = true;
+//                        modules[moduleIndex].setDrivePosition(lastModulePositions[moduleIndex].distanceMeters / driveConfig.wheelRadiusMeters());
+//                        modules[moduleIndex].setTurnPosition(lastModulePositions[moduleIndex].angle.getRadians());
+//                    } else {
                     lastModulePositions[moduleIndex] = modulePosition;
+//                    }
                 }
 
                 // Update gyro angle
                 // Sanity check in case gyro is connected but not giving timestamps
-                if (gyroInputs.connected && gyroInputs.odometryYawTimestamps.length > sample) {
+                if (gyroInputs.connected && !disableGyro && gyroInputs.odometryYawTimestamps.length > sample) {
                     // Use the real gyro angle
                     rawGyroRotation = new Rotation2d(gyroInputs.odometryYawPositionsRad[sample]);
                 } else {
@@ -214,9 +221,13 @@ public class Drive extends SubsystemBaseExt {
                 }
 
                 // Apply update
-                robotState.applyOdometryUpdate(sampleTimestamp, rawGyroRotation, modulePositions);
+                if (!discardSample) {
+                    robotState.applyOdometryUpdate(sampleTimestamp, rawGyroRotation, modulePositions);
+                }
             }
         } else {
+            boolean discardSample = false;
+
             // Read wheel positions and deltas from each module
             SwerveModulePosition[] modulePositions = new SwerveModulePosition[modules.length];
             SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[modules.length];
@@ -231,6 +242,14 @@ public class Drive extends SubsystemBaseExt {
                         modulePosition.angle
                 );
                 lastModulePositions[moduleIndex] = modulePosition;
+
+//                if (moduleDeltas[moduleIndex].distanceMeters > odometryPositionDeltaDiscardMeters) {
+//                    discardSample = true;
+//                    modules[moduleIndex].setDrivePosition(lastModulePositions[moduleIndex].distanceMeters / driveConfig.wheelRadiusMeters());
+//                    modules[moduleIndex].setTurnPosition(lastModulePositions[moduleIndex].angle.getRadians());
+//                } else {
+                lastModulePositions[moduleIndex] = modulePosition;
+//                }
             }
 
             // Update gyro angle
@@ -244,7 +263,9 @@ public class Drive extends SubsystemBaseExt {
             }
 
             // Apply update
-            robotState.applyOdometryUpdate(Timer.getTimestamp(), rawGyroRotation, modulePositions);
+            if (!discardSample) {
+                robotState.applyOdometryUpdate(Timer.getTimestamp(), rawGyroRotation, modulePositions);
+            }
         }
     }
 

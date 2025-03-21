@@ -13,6 +13,8 @@ public class EndEffectorConstants {
     public static final double rollersPositionToleranceRad = Units.degreesToRadians(30);
     public static final double rollersRadiusMeters = Units.inchesToMeters(2.25 / 2.0);
 
+    public static final double descoreTriggerAmps = 27;
+
     public static double rollersRadiansForMeters(double meters) {
         return meters / rollersRadiusMeters;
     }

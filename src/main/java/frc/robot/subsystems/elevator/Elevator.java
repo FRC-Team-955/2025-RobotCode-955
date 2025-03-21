@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
@@ -36,6 +37,7 @@ public class Elevator extends SubsystemBaseExt {
     @RequiredArgsConstructor
     public enum Goal {
         CHARACTERIZATION(null),
+        ZERO(null),
         STOW(stowGoalSetpoint::get), // Setpoint for when coral stuck in robot mode is activated is in periodicAfterCommands
         SCORE_L1(scoreL1GoalSetpoint::get),
         SCORE_L2(scoreL2GoalSetpoint::get),
@@ -75,11 +77,13 @@ public class Elevator extends SubsystemBaseExt {
     public final SysIdRoutine sysId;
 
     private final Alert emergencyStoppedAlert = new Alert("Elevator is emergency stopped.", Alert.AlertType.kError);
-    private final Alert notZeroedAlert = new Alert("Elevator is not zeroed.", Alert.AlertType.kWarning);
+    private final Alert notZeroedAlert = new Alert("Elevator is not zeroed! Please zero.", Alert.AlertType.kError);
     private final Alert leaderDisconnectedAlert = new Alert("Elevator leader motor is disconnected.", Alert.AlertType.kError);
     private final Alert followerDisconnectedAlert = new Alert("Elevator follower motor is disconnected.", Alert.AlertType.kError);
     private final Alert offsetSetAlert = new Alert("Elevator offset is not zero, bad things may happen.", Alert.AlertType.kWarning);
     private final Alert temperatureAlert = new Alert("Elevator motor temperature is high.", Alert.AlertType.kWarning);
+    private final Alert trustingLeaderAlert = new Alert("Currently trusting elevator leader motor.", Alert.AlertType.kInfo);
+    private final Alert trustingFollowerAlert = new Alert("Currently trusting elevator follower motor.", Alert.AlertType.kInfo);
 
     private static Elevator instance;
 
@@ -113,6 +117,9 @@ public class Elevator extends SubsystemBaseExt {
         followerDisconnectedAlert.set(!inputs.followerConnected);
 
         temperatureAlert.set(Math.max(inputs.leaderTemperatureCelsius, inputs.followerTemperatureCelsius) > 60);
+
+        trustingLeaderAlert.set(!trustFollowerMotor());
+        trustingFollowerAlert.set(trustFollowerMotor());
 
         // Check emergency stop and limits for auto stop
         var positionMeters = getPositionMeters();
@@ -205,11 +212,11 @@ public class Elevator extends SubsystemBaseExt {
                 setpointMeters = 1.1;
             }
 
-            boolean usingGentleVelocity = inputs.leaderVelocityRadPerSec < 0.1 // If we are going down
+            boolean usingGentleVelocity = setpointMeters < positionMeters // If we are going down
                     // If we are below the hardstop slowdown zone
                     && positionMeters < hardstopSlowdownMeters;
-            // Only actually use the gentle profile if we are close enough to the max velocity xto avoid jumping directly to max velocity
-            boolean usingGentleProfile = usingGentleVelocity && Math.abs(velocityMetersPerSec) < gentleMaxVelocityMetersPerSecond + 0.2;
+            // Only actually use the gentle profile if we are close enough to the max velocity to avoid jumping directly to max velocity
+            boolean usingGentleProfile = usingGentleVelocity && Math.abs(velocityMetersPerSec) < gentleMaxVelocityMetersPerSecond + 0.4;
             var profile = usingGentleProfile
                     ? profileGentleVelocity
                     : profileFullVelocity;
@@ -282,16 +289,29 @@ public class Elevator extends SubsystemBaseExt {
         return runOnceAndWaitUntil(() -> this.goal = goal.get(), this::atGoal);
     }
 
+    @AutoLogOutput(key = "Elevator/TrustFollowerMotor")
+    private boolean trustFollowerMotor() {
+        return inputs.followerConnected && (operatorDashboard.trustElevatorFollower.get() || !inputs.leaderConnected);
+    }
+
     @AutoLogOutput(key = "Elevator/Measurement/PositionMeters")
     public double getPositionMeters() {
-        return radToMeters(inputs.leaderPositionRad);
+        return radToMeters(
+                trustFollowerMotor()
+                        ? inputs.followerPositionRad
+                        : inputs.leaderPositionRad
+        );
 //        var avgPositionRad = (inputs.leaderPositionRad + inputs.followerPositionRad) / 2.0;
 //        return radToMeters(avgPositionRad);
     }
 
     @AutoLogOutput(key = "Elevator/Measurement/VelocityMetersPerSec")
     public double getVelocityMetersPerSec() {
-        return radToMeters(inputs.leaderVelocityRadPerSec);
+        return radToMeters(
+                trustFollowerMotor()
+                        ? inputs.followerVelocityRadPerSec
+                        : inputs.leaderVelocityRadPerSec
+        );
 //        var avgVelocityRadPerSec = (inputs.leaderVelocityRadPerSec + inputs.followerVelocityRadPerSec) / 2.0;
 //        return radToMeters(avgVelocityRadPerSec);
     }
@@ -304,5 +324,18 @@ public class Elevator extends SubsystemBaseExt {
                         1,
                         this
                 ));
+    }
+
+    public Command zero() {
+        return Commands.sequence(
+                setGoal(() -> Goal.ZERO),
+                startEnd(
+                        () -> io.setOpenLoop(-1.5),
+                        () -> io.setOpenLoop(0)
+                ).until(() -> Math.abs(getVelocityMetersPerSec()) < 0.1),
+                Commands.waitSeconds(0.5),
+                waitUntil(() -> Math.abs(getVelocityMetersPerSec()) < 0.01),
+                runOnce(() -> io.setEncoder(0.0))
+        );
     }
 }

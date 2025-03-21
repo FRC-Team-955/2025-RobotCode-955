@@ -73,12 +73,12 @@ public class Module {
         if (disableDriving) {
             io.setDriveOpenLoop(0.0);
         } else {
-            io.setDriveVelocity(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
+            io.setDriveClosedLoop(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
         }
         if (Math.abs(state.speedMetersPerSecond) < 1e-4 && Math.abs(currentAngle.minus(state.angle).getRadians()) < 0.1) {
             io.setTurnOpenLoop(0.0);
         } else {
-            io.setTurnPosition(state.angle.getRadians());
+            io.setTurnClosedLoop(state.angle.getRadians());
         }
     }
 
@@ -87,7 +87,7 @@ public class Module {
      */
     public void runCharacterization(double output) {
         io.setDriveOpenLoop(output);
-        io.setTurnPosition(0.0);
+        io.setTurnClosedLoop(0.0);
     }
 
     /**
@@ -109,6 +109,14 @@ public class Module {
     public void setBrakeMode(boolean enable) {
         io.setDriveBrakeMode(enable);
         io.setTurnBrakeMode(enable);
+    }
+
+    public void setDrivePosition(double positionRad) {
+        io.setDrivePosition(positionRad);
+    }
+
+    public void setTurnPosition(double positionRad) {
+        io.setTurnPosition(positionRad);
     }
 
     /**

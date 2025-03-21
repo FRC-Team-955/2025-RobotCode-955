@@ -44,7 +44,7 @@ public class VisionConstants {
     public enum AprilTagCamera {
         StationCam(
                 new Transform3d(
-                        Units.inchesToMeters(-5.126), Units.inchesToMeters(-9.289), Units.inchesToMeters(26.413),
+                        Units.inchesToMeters(-6.5), Units.inchesToMeters(-8.375), Units.inchesToMeters(27.5),
                         // Rotation order matters
                         new Rotation3d(0.0, Units.degreesToRadians(-15), 0.0)
                                 .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-30)))
@@ -60,7 +60,7 @@ public class VisionConstants {
         ),
         ReefCam(
                 new Transform3d(
-                        Units.inchesToMeters(-8.5), Units.inchesToMeters(8.8), Units.inchesToMeters(25.5),
+                        Units.inchesToMeters(-8), Units.inchesToMeters(8.75), Units.inchesToMeters(25.75),
                         // Rotation order matters
                         new Rotation3d(0.0, Units.degreesToRadians(35), 0.0)
                                 .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-170)))
@@ -72,7 +72,7 @@ public class VisionConstants {
                 },
                 // Trust more at close distance, less at long distance
                 2.5,
-                0.75
+                0.5
         ),
         ;
 
@@ -92,17 +92,17 @@ public class VisionConstants {
 
     @RequiredArgsConstructor
     public enum GamepieceCamera {
-        Limelight(
-                // 2 inches back, 2 inches right, 37 inches up, 40 degrees down from horizontal
-                new Transform3d(Units.inchesToMeters(-2), Units.inchesToMeters(-2), Units.inchesToMeters(37),
-                        new Rotation3d(0, Units.degreesToRadians(40), 0)
-                ),
-                (cam) -> switch (Constants.identity) {
-                    case COMPBOT -> new GamepieceIO();
-                    case ALPHABOT -> new GamepieceIOLimelight("limelight", cam.robotToCamera);
-                    case SIMBOT -> new GamepieceIOSim();
-                }
-        ),
+//        Limelight(
+//                // 2 inches back, 2 inches right, 37 inches up, 40 degrees down from horizontal
+//                new Transform3d(Units.inchesToMeters(-2), Units.inchesToMeters(-2), Units.inchesToMeters(37),
+//                        new Rotation3d(0, Units.degreesToRadians(40), 0)
+//                ),
+//                (cam) -> switch (Constants.identity) {
+//                    case COMPBOT -> new GamepieceIO();
+//                    case ALPHABOT -> new GamepieceIOLimelight("limelight", cam.robotToCamera);
+//                    case SIMBOT -> new GamepieceIOSim();
+//                }
+//        ),
         ;
 
         public final Transform3d robotToCamera;
