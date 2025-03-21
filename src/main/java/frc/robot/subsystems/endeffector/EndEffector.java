@@ -36,6 +36,7 @@ public class EndEffector extends SubsystemBaseExt {
         HANDOFF(() -> 0),
         FUNNEL_INTAKE(funnelIntakeGoalSetpoint::get),
         SCORE_CORAL(scoreCoralGoalSetpoint::get),
+        SCORE_CORAL_L1(scoreCoralL1GoalSetpoint::get),
         DESCORE_ALGAE(descoreAlgaeGoalSetpoint::get),
         EJECT(ejectGoalSetpoint::get),
         GO_TO_POSITION(null); // Handled specially in periodic and with rollersPositionSetpointRad
@@ -114,23 +115,18 @@ public class EndEffector extends SubsystemBaseExt {
         return runOnce(() -> this.rollersGoal = rollersGoal);
     }
 
+    public void setGoalInstantaneous(RollersGoal rollersGoal) {
+        this.rollersGoal = rollersGoal;
+    }
+
     public boolean atPositionSetpoint() {
         return Math.abs(rollersInputs.positionRad - rollersPositionSetpointRad) <= rollersPositionToleranceRad;
     }
 
     /** Goes positionDeltaMeters forward (or backwards) from current position */
-    public Command moveByAndWaitUntilDone(DoubleSupplier positionDeltaMeters) {
-        return startEndWaitUntil(
-                () -> {
-                    this.rollersGoal = RollersGoal.GO_TO_POSITION;
-                    rollersPositionSetpointRad = rollersInputs.positionRad + rollersRadiansForMeters(positionDeltaMeters.getAsDouble());
-                },
-                () -> {
-                    this.rollersGoal = RollersGoal.IDLE;
-                    rollersPositionSetpointRad = null;
-                },
-                this::atPositionSetpoint
-        );
+    public void moveByInstantaneous(double positionDeltaMeters) {
+        this.rollersGoal = RollersGoal.GO_TO_POSITION;
+        rollersPositionSetpointRad = rollersInputs.positionRad + rollersRadiansForMeters(positionDeltaMeters);
     }
 
     public double getAngleDegrees() {

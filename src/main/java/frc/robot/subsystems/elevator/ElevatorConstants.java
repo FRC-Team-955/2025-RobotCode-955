@@ -7,12 +7,13 @@ import frc.robot.util.PIDF;
 public class ElevatorConstants {
     /** Gains in radians */
     public static final PIDF gains = switch (Constants.identity) {
-        case COMPBOT -> PIDF.ofPDSVAG(0.06, 0.03, 0, 0.172, 0.0105, 1.5);
-        case SIMBOT, ALPHABOT -> PIDF.ofPDVAG(0, 0, 0.1, 0.008, 1.5015);
+        case COMPBOT -> PIDF.ofPDSVAG(0.05, 0, 0.1, 0.1, 0.005, 0.8);
+        case SIMBOT -> PIDF.ofPDVAG(0, 0, 0.102, 0.005, 1.5015);
+        case ALPHABOT -> PIDF.ofP(0);
     };
 
-    public static final double maxVelocityMetersPerSecond = 2;
-    public static final double maxAccelerationMetersPerSecondSquared = 3;
+    public static final double maxVelocityMetersPerSecond = 3;
+    public static final double maxAccelerationMetersPerSecondSquared = 12;
 
     public static final double gearRatio = 5;
     protected static final double sprocketRadiusMeters = Units.inchesToMeters((1.0 + (9.0 / 32.0)) / 2);
@@ -22,11 +23,11 @@ public class ElevatorConstants {
     public static final double setpointVelocityToleranceMetersPerSec = Units.inchesToMeters(0.02);
 
     public static final double maxHeightMeters = Units.inchesToMeters(67.5);
-    public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 2.5);
+    public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 3);
     public static final ElevatorLimit lowerLimit = new ElevatorLimit(0.25, -1.75);
 
     public static final double hardstopMeters = Units.inchesToMeters(20);
-    public static final double gentleMaxVelocityMetersPerSecond = 0.75;
+    public static final double gentleMaxVelocityMetersPerSecond = 0.4;
     /**
      * While we could calculate this based on the current velocity, it caused the gentle profile to be used
      * for only half of the loop cycles. This could probably be solved but I don't think it's worth the effort
@@ -73,7 +74,8 @@ public class ElevatorConstants {
         }
         return switch (Constants.identity) {
             case COMPBOT -> new ElevatorIOSparkMax(5, 6, 9, true);
-            case SIMBOT, ALPHABOT -> new ElevatorIOSim();
+            case SIMBOT -> new ElevatorIOSim();
+            case ALPHABOT -> new ElevatorIO();
         };
     }
 

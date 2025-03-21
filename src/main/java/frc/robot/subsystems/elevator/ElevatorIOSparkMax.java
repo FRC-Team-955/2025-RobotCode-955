@@ -34,6 +34,8 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     // Connection debouncers
     private final Debouncer leadConnectedDebounce = new Debouncer(0.5);
     private final Debouncer followConnectedDebounce = new Debouncer(0.5);
+    private double arbitraryNonPositionReference = 0.0;
+
 
     private boolean emergencyStopped = false;
 
@@ -102,7 +104,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     @Override
     public void updateInputs(ElevatorIOInputs inputs) {
         // Update lead inputs
-        sparkStickyFault = false;
+        sparkStickyFault = hasFault(leadMotor);
         ifOk(leadMotor, leadEncoder::getPosition, (value) -> inputs.leaderPositionRad = value);
         ifOk(leadMotor, leadEncoder::getVelocity, (value) -> inputs.leaderVelocityRadPerSec = value);
         ifOk(
@@ -112,10 +114,11 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         );
         ifOk(leadMotor, leadMotor::getOutputCurrent, (value) -> inputs.leaderCurrentAmps = value);
         ifOk(leadMotor, leadMotor::getMotorTemperature, (value) -> inputs.leaderTemperatureCelsius = value);
+        checkAmpsVsVolts(arbitraryNonPositionReference, inputs.leaderAppliedVolts, inputs.leaderCurrentAmps);
         inputs.leaderConnected = leadConnectedDebounce.calculate(!sparkStickyFault);
 
         // Update follow inputs
-        sparkStickyFault = false;
+        sparkStickyFault = hasFault(followMotor);
         ifOk(followMotor, followEncoder::getPosition, (value) -> inputs.followerPositionRad = value);
         ifOk(followMotor, followEncoder::getVelocity, (value) -> inputs.followerVelocityRadPerSec = value);
         ifOk(
@@ -125,6 +128,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         );
         ifOk(followMotor, followMotor::getOutputCurrent, (value) -> inputs.followerCurrentAmps = value);
         ifOk(followMotor, followMotor::getMotorTemperature, (value) -> inputs.followerTemperatureCelsius = value);
+        checkAmpsVsVolts(arbitraryNonPositionReference, inputs.followerAppliedVolts, inputs.followerCurrentAmps);
         inputs.followerConnected = followConnectedDebounce.calculate(!sparkStickyFault);
 
         inputs.limitSwitchTriggered = !limitSwitch.get();
@@ -167,6 +171,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     public void setEmergencyStopped(boolean emergencyStopped) {
         this.emergencyStopped = emergencyStopped;
         if (emergencyStopped) {
+            arbitraryNonPositionReference = 0;
             lastVelocitySetpointRadPerSec = 0;
             leadMotor.setVoltage(0);
         }
@@ -175,6 +180,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     @Override
     public void setOpenLoop(double output) {
         if (!emergencyStopped) {
+            arbitraryNonPositionReference = output;
             lastVelocitySetpointRadPerSec = 0;
             leadMotor.setVoltage(output);
         }
@@ -183,6 +189,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     @Override
     public void setClosedLoop(double positionRad, double velocityRadPerSec) {
         if (!emergencyStopped) {
+            arbitraryNonPositionReference = velocityRadPerSec;
             var ffVolts = ff.calculateWithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
             lastVelocitySetpointRadPerSec = velocityRadPerSec;
             controller.setReference(

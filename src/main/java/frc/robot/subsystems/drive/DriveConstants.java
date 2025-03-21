@@ -1,6 +1,7 @@
 package frc.robot.subsystems.drive;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.Util;
@@ -10,12 +11,14 @@ public class DriveConstants {
     public static final double assistDirectionToleranceRad = Units.degreesToRadians(50);
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
-    // Ranges: -1 to 1, where 1 is the maximum speed
-    public static final PIDF moveToXY = PIDF.ofPD(0.6, 0);
-    public static final PIDF moveToOmega = PIDF.ofPD(0.4, 0);
+    public static final PIDF moveToLinear = PIDF.ofPD(2.5, 0);
+    public static final TrapezoidProfile.Constraints moveToLinearConstraintsMeters = new TrapezoidProfile.Constraints(3, 4);
+    public static final PIDF moveToAngular = PIDF.ofPD(1.5, 0);
+    public static final TrapezoidProfile.Constraints moveToAngularConstraintsRad = new TrapezoidProfile.Constraints(5, 6);
 
     public static final boolean useSetpointGenerator = true;
     public static final boolean disableDriving = false;
+    public static final boolean disableGyro = false;
     public static final boolean useHighFrequencyOdometry = true;
 
     // Slow to 30% speed when elevator is at max height
@@ -28,8 +31,8 @@ public class DriveConstants {
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(35),
                 Units.inchesToMeters(35),
-                PIDF.ofPD(1.5, 0),
-                PIDF.ofPD(1.5, 0),
+                PIDF.ofPD(3.5, 0),
+                PIDF.ofPD(3, 0),
                 4.58,
                 20,
                 20
@@ -68,11 +71,22 @@ public class DriveConstants {
 
     public static final ModuleConfig moduleConfig = switch (Constants.identity) {
         case COMPBOT -> new ModuleConfig(
-                PIDF.ofPDSV(
+                PIDF.ofPDSVA(
                         0.0, 0.0,
-                        0.183, 0.1205
+                        0.183, 0.1205, 0.005
                 ),
                 PIDF.ofPD(5, 0.04),
+                Mk4iGearRatios.L2,
+                Mk4iGearRatios.TURN,
+                true,
+                false,
+                false,
+                120,
+                60
+        );
+        case SIMBOT -> new ModuleConfig(
+                PIDF.ofPDSV(0.05, 0.0, 0.02522, 0.14115),
+                PIDF.ofPD(5.0, 0.07),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
@@ -96,17 +110,6 @@ public class DriveConstants {
                 false,
                 false,
                 60,
-                60
-        );
-        case SIMBOT -> new ModuleConfig(
-                PIDF.ofPDSV(0.05, 0.0, 0.02522, 0.14115),
-                PIDF.ofPD(3.0, 0.07),
-                Mk4iGearRatios.L2,
-                Mk4iGearRatios.TURN,
-                true,
-                false,
-                false,
-                120,
                 60
         );
     };

@@ -3,12 +3,27 @@
  "version":1,
  "type":"Swerve",
  "variables":{
-  "expressions":{},
+  "expressions":{
+   "intakeOffset":{
+    "dimension":"Time",
+    "var":{
+     "exp":"-0.5 s",
+     "val":-0.5
+    }
+   },
+   "scoreOffset":{
+    "dimension":"Time",
+    "var":{
+     "exp":"-0.6 s",
+     "val":-0.6
+    }
+   }
+  },
   "poses":{
    "bargeSource":{
     "x":{
-     "exp":"1.53 m",
-     "val":1.53
+     "exp":"1.6 m",
+     "val":1.6
     },
     "y":{
      "exp":"7.35 m",
@@ -21,8 +36,8 @@
    },
    "processorSource":{
     "x":{
-     "exp":"1.5291827917099 m",
-     "val":1.5291827917099
+     "exp":"1.6 m",
+     "val":1.6
     },
     "y":{
      "exp":"0.7047982215881348 m",
@@ -30,6 +45,20 @@
     },
     "heading":{
      "exp":"-2.2011978563888506 rad",
+     "val":-2.2011978563888506
+    }
+   },
+   "processorSourceFriendly":{
+    "x":{
+     "exp":"processorSource.x - 0.95 m",
+     "val":0.6500000000000001
+    },
+    "y":{
+     "exp":"processorSource.y + 0.65 m",
+     "val":1.354798221588135
+    },
+    "heading":{
+     "exp":"processorSource.heading",
      "val":-2.2011978563888506
     }
    }
@@ -73,12 +102,12 @@
    "val":0.04917309497131504
   },
   "vmax":{
-   "exp":"4800 RPM",
-   "val":502.6548245743669
+   "exp":"5000 RPM",
+   "val":523.5987755982989
   },
   "tmax":{
-   "exp":"0.9064 N * m",
-   "val":0.9064
+   "exp":"1.1 N * m",
+   "val":1.1
   },
   "cof":{
    "exp":"1.4",

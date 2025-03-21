@@ -12,12 +12,14 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.factories.auto.BargeSideAuto;
-import frc.robot.factories.auto.ProcessorSideAuto;
-import frc.robot.subsystems.climber.Climber;
+import frc.robot.autos.BargeSideAuto;
+import frc.robot.autos.CenterAuto;
+import frc.robot.autos.ProcessorSideAuto;
+import frc.robot.autos.ProcessorSideFriendlyAuto;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
+import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.leds.LEDs;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
@@ -44,25 +46,21 @@ public class RobotContainer extends VirtualSubsystem {
     private final Alert driverControllerDisconnectedAlert = new Alert("Driver controller is not connected!", Alert.AlertType.kError);
 
     // Dashboard inputs
-    /** THERE SHOULD NOT BE A DEFAULT OPTION OR THE ALERT WILL BREAK!! */
     private final LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Choices");
     private final LoggedDashboardChooser<Command> characterizationChooser = new LoggedDashboardChooser<>("Characterization Choices");
-    private final Alert autoNotChosenAlert = new Alert("Auto is not chosen!", Alert.AlertType.kError);
 
-    private final RobotState robotState = RobotState.get();
-    private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
+    public final RobotState robotState = RobotState.get();
+    public final OperatorDashboard operatorDashboard = OperatorDashboard.get();
 
     /* Subsystems */
     // Note: order does matter
-    private final Elevator elevator = Elevator.get();
-    //    private final CoralIntake coralIntake = CoralIntake.get();
-//    private final Indexer indexer = Indexer.get();
-    private final EndEffector endEffector = EndEffector.get();
-    private final Vision vision = Vision.get();
-    private final Drive drive = Drive.get();
-    private final Superstructure superstructure = Superstructure.get();
-    private final LEDs leds = LEDs.get();
-    private final Climber climber = Climber.get();
+    public final Elevator elevator = Elevator.get();
+    public final EndEffector endEffector = EndEffector.get();
+    public final Funnel funnel = Funnel.get();
+    public final Vision vision = Vision.get();
+    public final Drive drive = Drive.get();
+    public final Superstructure superstructure = Superstructure.get();
+    public final LEDs leds = LEDs.get();
 
     public RobotContainer() {
         addAutos();
@@ -74,12 +72,13 @@ public class RobotContainer extends VirtualSubsystem {
     private void addAutos() {
         final var factory = drive.createAutoFactory();
 
-        // THERE SHOULD NOT BE A DEFAULT OPTION OR THE ALERT WILL BREAK!!
-
         autoChooser.addOption("None", Commands.none());
+        autoChooser.addOption("Leave", drive.runRobotRelative(() -> new ChassisSpeeds(-0.5, 0, 0)).withTimeout(5));
+
         autoChooser.addOption("Barge Side", BargeSideAuto.get(factory.newRoutine("Barge Side")));
         autoChooser.addOption("Processor Side", ProcessorSideAuto.get(factory.newRoutine("Processor Side")));
-        autoChooser.addOption("Leave", drive.runRobotRelative(() -> new ChassisSpeeds(-0.5, 0, 0)).withTimeout(5));
+        autoChooser.addOption("Processor Side Friendly", ProcessorSideFriendlyAuto.get(factory.newRoutine("Processor Side Friendly")));
+        autoChooser.addOption("Center", CenterAuto.get(factory.newRoutine("Center")));
 
         autoChooser.addOption("Characterization", Commands.deferredProxy(characterizationChooser::get));
     }
@@ -106,9 +105,25 @@ public class RobotContainer extends VirtualSubsystem {
         ////////////////////// END EFFECTOR //////////////////////
 
         characterizationChooser.addOption("End Effector Rollers Feedforward Characterization", endEffector.rollersFeedforwardCharacterization());
+
+        ////////////////////// FUNNEL //////////////////////
+
+        characterizationChooser.addOption("Funnel Belt Feedforward Characterization", funnel.beltFeedforwardCharacterization());
     }
 
     private void setDefaultCommands() {
+        //                            var gamepiece = vision.getClosestGamepiece();
+        //                            return gamepiece.map(gamepieceTranslation -> {
+        //                                var relativeToRobot = gamepieceTranslation.minus(robotState.getTranslation());
+        //                                if (relativeToRobot.getNorm() < Units.feetToMeters(1)) {
+        //                                    // Don't try to face towards it if we are too close
+        //                                    return new Pose2d(gamepieceTranslation, robotState.getRotation());
+        //                                } else {
+        //                                    // Try to face towards the game piece
+        //                                    var toGamepiece = new Rotation2d(relativeToRobot.getX(), relativeToRobot.getY());
+        //                                    return new Pose2d(gamepieceTranslation, toGamepiece);
+        //                                }
+        //                            });
         drive.setDefaultCommand(
                 drive.driveJoystick(
                         // https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
@@ -118,31 +133,14 @@ public class RobotContainer extends VirtualSubsystem {
                         () -> -driverController.getLeftX(),
                         // right on joystick is positive x - we want negative x for right (CCW is positive)
                         () -> -driverController.getRightX(),
-                        () -> {
-//                            if (coralIntake.getRollersGoal() != CoralIntake.RollersGoal.INTAKE)
-                            return Optional.empty();
-//                            var gamepiece = vision.getClosestGamepiece();
-//                            return gamepiece.map(gamepieceTranslation -> {
-//                                var relativeToRobot = gamepieceTranslation.minus(robotState.getTranslation());
-//                                if (relativeToRobot.getNorm() < Units.feetToMeters(1)) {
-//                                    // Don't try to face towards it if we are too close
-//                                    return new Pose2d(gamepieceTranslation, robotState.getRotation());
-//                                } else {
-//                                    // Try to face towards the game piece
-//                                    var toGamepiece = new Rotation2d(relativeToRobot.getX(), relativeToRobot.getY());
-//                                    return new Pose2d(gamepieceTranslation, toGamepiece);
-//                                }
-//                            });
-                        }
+                        Optional::empty
                 )
         );
 
         superstructure.setDefaultCommand(superstructure.idle().ignoringDisable(true));
-//        coralIntake.setDefaultCommand(superstructure.coralIntakeIdle().ignoringDisable(true));
-//        indexer.setDefaultCommand(superstructure.indexerIdle().ignoringDisable(true));
         elevator.setDefaultCommand(superstructure.elevatorIdle().ignoringDisable(true));
         endEffector.setDefaultCommand(superstructure.endEffectorIdle().ignoringDisable(true));
-        climber.setDefaultCommand(climber.idle());
+        funnel.setDefaultCommand(superstructure.funnelIdle().ignoringDisable(true));
     }
 
     /**
@@ -157,7 +155,6 @@ public class RobotContainer extends VirtualSubsystem {
         driverController.x().whileTrue(superstructure.eject());
 
         driverController.rightTrigger().whileTrue(superstructure.funnelIntake(false));
-//        driverController.rightTrigger().whileTrue(superstructure.intakeCoral());
 
         driverController.leftTrigger().onTrue(Commands.either(
                 superstructure.scoreCoralManual(
@@ -178,10 +175,18 @@ public class RobotContainer extends VirtualSubsystem {
                 () -> operatorDashboard.manualScoring.get()
                         || operatorDashboard.getSelectedCoralScoringLevel() == OperatorDashboard.CoralScoringLevel.L1
         ));
-        driverController.rightBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
 
-        driverController.povDown().whileTrue(climber.towardsRobot());
-        driverController.povUp().whileTrue(climber.awayFromRobot());
+        driverController.rightBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
+//        driverController.rightBumper().onTrue(CommandsExt.eitherProxied(
+//                superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal),
+//                superstructure.autoAlignDescoreAlgae(
+//                        operatorDashboard::getSelectedReefZoneSide,
+//                        operatorDashboard::getAlgaeDescoringElevatorGoal,
+//                        driverController.rightBumper(),
+//                        driverController.leftBumper()
+//                ),
+//                operatorDashboard.manualScoring::get
+//        ));
 
         if (mode == Constants.Mode.SIM) {
             driverController.x().onTrue(Commands.runOnce(() ->
@@ -222,7 +227,5 @@ public class RobotContainer extends VirtualSubsystem {
     @Override
     public void periodicBeforeCommands() {
         driverControllerDisconnectedAlert.set(!driverController.isConnected());
-
-        autoNotChosenAlert.set(autoChooser.get() == null);
     }
 }

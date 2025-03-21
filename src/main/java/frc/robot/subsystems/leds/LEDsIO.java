@@ -1,12 +1,8 @@
 package frc.robot.subsystems.leds;
 
-import org.littletonrobotics.junction.AutoLog;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 
 public class LEDsIO {
-    @AutoLog
-    public static class LEDsIOInputs {
-    }
-
-    public void updateInputs(LEDsIOInputs inputs) {
+    public void setData(AddressableLEDBuffer buffer) {
     }
 }

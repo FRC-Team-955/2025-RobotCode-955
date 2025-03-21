@@ -3,6 +3,7 @@ package frc.robot;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import frc.robot.subsystems.drive.DriveConstants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
@@ -30,13 +31,80 @@ public class RobotMechanism {
     public static final double middleOfRobot = 0.75;
 
     @AutoLogOutput(key = "RobotState/Mechanism")
-    private final LoggedMechanism2d mechanism = new LoggedMechanism2d(1.5, 2.1, new Color8Bit(Color.kBlack));
+    public final LoggedMechanism2d mechanism = new LoggedMechanism2d(1.5, 2.1, new Color8Bit(Color.kBlack));
 
+    private final Bumpers bumpers = new Bumpers();
     public final Elevator elevator = new Elevator();
     public final EndEffector endEffector = new EndEffector();
-    public final Climber climber = new Climber();
-//    public final Indexer indexer = new Indexer();
-//    public final CoralIntake coralIntake = new CoralIntake();
+    public final Funnel funnel = new Funnel();
+
+    public class Bumpers {
+        private Bumpers() {
+            double bumperThickness = Units.inchesToMeters(3.375);
+
+            LoggedMechanismRoot2d frontBumperRoot = mechanism.getRoot("bumpers_front", middleOfRobot + (DriveConstants.driveConfig.bumperLengthMeters() / 2) - bumperThickness, -0.25);
+            frontBumperRoot.append(new LoggedMechanismLigament2d(
+                    "bumpers_front",
+                    bumperThickness - 0.0025,
+                    0,
+                    90,
+                    new Color8Bit(Color.kBlue)
+            ));
+
+            LoggedMechanismRoot2d backBumperRoot = mechanism.getRoot("bumpers_back", middleOfRobot - (DriveConstants.driveConfig.bumperLengthMeters() / 2), -0.25);
+            backBumperRoot.append(new LoggedMechanismLigament2d(
+                    "bumpers_back",
+                    bumperThickness,
+                    0,
+                    90,
+                    new Color8Bit(Color.kBlue)
+            ));
+        }
+    }
+
+    public class Funnel {
+        private static final double x = middleOfRobot + Units.inchesToMeters(12.2);
+        private static final double y = Units.inchesToMeters(6);
+        private static final double angle = 90;
+
+        public final LoggedMechanismRoot2d root = mechanism.getRoot("funnel", x, y + 0.065);
+
+        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot(
+                "funnel_beamBreak",
+                x - Units.inchesToMeters(9.5),
+                y + Units.inchesToMeters(5)
+        );
+        public final LoggedMechanismLigament2d beamBreakLigament = beamBreakRoot.append(new LoggedMechanismLigament2d(
+                "funnel_beamBreak",
+                Units.inchesToMeters(1),
+                angle,
+                11,
+                new Color8Bit(Color.kRed)
+        ));
+
+        public final LoggedMechanismRoot2d beltRoot = mechanism.getRoot(
+                "funnel_belt",
+                x - Units.inchesToMeters(5),
+                y + Units.inchesToMeters(7)
+        );
+        public final LoggedMechanismLigament2d beltLigament = beltRoot.append(new LoggedMechanismLigament2d(
+                "funnel_belt",
+                Units.inchesToMeters(1),
+                0,
+                12,
+                new Color8Bit(Color.kOrange)
+        ));
+
+        private Funnel() {
+            root.append(new LoggedMechanismLigament2d(
+                    "ligament",
+                    Units.inchesToMeters(14.75),
+                    angle,
+                    10,
+                    new Color8Bit(Color.kBlue)
+            ));
+        }
+    }
 
     public class Elevator {
         public final LoggedMechanismRoot2d stage1Root = mechanism.getRoot("elevator_stage1", 0, 0);
@@ -155,103 +223,4 @@ public class RobotMechanism {
         private EndEffector() {
         }
     }
-
-    public class Climber {
-        public final LoggedMechanismRoot2d root = mechanism.getRoot("climber", middleOfRobot, 0.5);
-        public final LoggedMechanismLigament2d ligament = root.append(new LoggedMechanismLigament2d(
-                "ligament",
-                Units.inchesToMeters(15),
-                0,
-                5,
-                new Color8Bit(Color.kCyan)
-        ));
-
-        private Climber() {
-
-        }
-    }
-
-//    public class Indexer {
-//        private static final double x = middleOfRobot + Units.inchesToMeters(12.2);
-//        private static final double y = Units.inchesToMeters(6);
-//        private static final double angle = 180 - 13.815;
-//
-//        public final LoggedMechanismRoot2d root = mechanism.getRoot("indexer", x, y + 0.065);
-//
-//        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot(
-//                "indexer_beamBreak",
-//                x - Units.inchesToMeters(9.5),
-//                y + Units.inchesToMeters(5)
-//        );
-//        public final LoggedMechanismLigament2d beamBreakLigament = beamBreakRoot.append(new LoggedMechanismLigament2d(
-//                "indexer_beamBreak",
-//                Units.inchesToMeters(1),
-//                angle,
-//                11,
-//                new Color8Bit(Color.kRed)
-//        ));
-//
-//        public final LoggedMechanismRoot2d rollersRoot = mechanism.getRoot(
-//                "indexer_rollers",
-//                x - Units.inchesToMeters(5),
-//                y + Units.inchesToMeters(7)
-//        );
-//        public final LoggedMechanismLigament2d rollersLigament = rollersRoot.append(new LoggedMechanismLigament2d(
-//                "indexer_rollers",
-//                Units.inchesToMeters(1),
-//                0,
-//                12,
-//                new Color8Bit(Color.kOrange)
-//        ));
-//
-//        private Indexer() {
-//            root.append(new LoggedMechanismLigament2d(
-//                    "ligament",
-//                    Units.inchesToMeters(14.75),
-//                    angle,
-//                    10,
-//                    new Color8Bit(Color.kBlue)
-//            ));
-//        }
-//    }
-//
-//    public class CoralIntake {
-//        public final LoggedMechanismRoot2d root = mechanism.getRoot("coralIntake", 0, 0);
-//        public final LoggedMechanismLigament2d ligament = root.append(new LoggedMechanismLigament2d(
-//                "ligament",
-//                Units.inchesToMeters(1), // width, x
-//                0,
-//                35, // height, y
-//                new Color8Bit(Color.kGreen)
-//        ));
-//
-//        public final LoggedMechanismRoot2d rangeRoot = mechanism.getRoot(
-//                "coralIntake_range",
-//                middleOfRobot + Units.inchesToMeters(18),
-//                Units.inchesToMeters(7)
-//        );
-//        public final LoggedMechanismLigament2d rangeLigament = rangeRoot.append(new LoggedMechanismLigament2d(
-//                "coralIntake_range",
-//                Units.inchesToMeters(1),
-//                135,
-//                11,
-//                new Color8Bit(Color.kRed)
-//        ));
-//
-//        public final LoggedMechanismRoot2d topRollersRoot = mechanism.getRoot(
-//                "coralIntake_topRollers",
-//                middleOfRobot + Units.inchesToMeters(23),
-//                Units.inchesToMeters(7)
-//        );
-//        public final LoggedMechanismLigament2d topRollersLigament = topRollersRoot.append(new LoggedMechanismLigament2d(
-//                "coralIntake_topRollers",
-//                Units.inchesToMeters(1),
-//                0,
-//                12,
-//                new Color8Bit(Color.kOrange)
-//        ));
-//
-//        private CoralIntake() {
-//        }
-//    }
 }

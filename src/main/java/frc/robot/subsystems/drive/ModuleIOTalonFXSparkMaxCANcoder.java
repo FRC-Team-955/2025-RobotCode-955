@@ -100,6 +100,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
     private final Debouncer driveConnectedDebounce = new Debouncer(0.5);
     private final Debouncer turnConnectedDebounce = new Debouncer(0.5);
     private final Debouncer turnEncoderConnectedDebounce = new Debouncer(0.5);
+    private double turnArbitraryNonPositionReference = 0.0;
 
     public ModuleIOTalonFXSparkMaxCANcoder(
             int driveCanID,
@@ -214,7 +215,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
         inputs.driveTemperatureCelsius = driveTemperatureCelsius.getValueAsDouble();
 
         // Update turn inputs
-        SparkUtil.sparkStickyFault = false;
+        SparkUtil.sparkStickyFault = SparkUtil.hasFault(turnSpark);
         SparkUtil.ifOk(
                 turnSpark,
                 turnEncoder::getPosition,
@@ -228,6 +229,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
         );
         SparkUtil.ifOk(turnSpark, turnSpark::getOutputCurrent, (value) -> inputs.turnCurrentAmps = value);
         SparkUtil.ifOk(turnSpark, turnSpark::getMotorTemperature, (value) -> inputs.turnTemperatureCelsius = value);
+        SparkUtil.checkAmpsVsVolts(turnArbitraryNonPositionReference, inputs.turnAppliedVolts, inputs.turnCurrentAmps);
         inputs.turnConnected = turnConnectedDebounce.calculate(!SparkUtil.sparkStickyFault);
 
         // Update absolute encoder
@@ -294,6 +296,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
 
     @Override
     public void setTurnOpenLoop(double output) {
+        turnArbitraryNonPositionReference = output;
         turnSpark.setVoltage(output);
     }
 
@@ -308,6 +311,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
 
     @Override
     public void setTurnPosition(double positionRad) {
+        turnArbitraryNonPositionReference = 0; // position references don't really work
         double setpoint = MathUtil.inputModulus(positionRad, 0.0, 2 * Math.PI);
         turnController.setReference(setpoint, SparkBase.ControlType.kPosition);
     }
