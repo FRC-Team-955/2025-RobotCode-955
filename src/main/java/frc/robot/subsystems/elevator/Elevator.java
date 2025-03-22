@@ -207,16 +207,18 @@ public class Elevator extends SubsystemBaseExt {
                 offsetSetAlert.set(false);
             }
 
-            if (goal == Goal.STOW && operatorDashboard.coralStuckInRobotMode.get()) {
-                // Override stow setpoint if coral is stuck in the robot
-                setpointMeters = 1.1;
-            }
-
             boolean usingGentleVelocity = setpointMeters < positionMeters // If we are going down
                     // If we are below the hardstop slowdown zone
                     && positionMeters < hardstopSlowdownMeters;
             // Only actually use the gentle profile if we are close enough to the max velocity to avoid jumping directly to max velocity
             boolean usingGentleProfile = usingGentleVelocity && Math.abs(velocityMetersPerSec) < gentleMaxVelocityMetersPerSecond + 0.4;
+
+            if (goal == Goal.STOW && operatorDashboard.coralStuckInRobotMode.get()) {
+                // Override stow setpoint if coral is stuck in the robot
+                setpointMeters = 1.1;
+                usingGentleProfile = true;
+            }
+
             var profile = usingGentleProfile
                     ? profileGentleVelocity
                     : profileFullVelocity;
