@@ -25,41 +25,51 @@ public class RobotMechanism {
     }
 
     private RobotMechanism() {
+        addBumpers();
     }
 
     /** Middle of the robot in the mechanism */
     public static final double middleOfRobot = 0.75;
 
     @AutoLogOutput(key = "RobotState/Mechanism")
-    public final LoggedMechanism2d mechanism = new LoggedMechanism2d(1.5, 2.1, new Color8Bit(Color.kBlack));
+    public final LoggedMechanism2d mechanism = new LoggedMechanism2d(middleOfRobot * 2, 2.1, new Color8Bit(Color.kBlack));
 
-    private final Bumpers bumpers = new Bumpers();
+    public final Superstructure superstructure = new Superstructure();
     public final Elevator elevator = new Elevator();
     public final EndEffector endEffector = new EndEffector();
     public final Funnel funnel = new Funnel();
 
-    public class Bumpers {
-        private Bumpers() {
-            double bumperThickness = Units.inchesToMeters(3.375);
+    private void addBumpers() {
+        double bumperThickness = Units.inchesToMeters(3.375);
 
-            LoggedMechanismRoot2d frontBumperRoot = mechanism.getRoot("bumpers_front", middleOfRobot + (DriveConstants.driveConfig.bumperLengthMeters() / 2) - bumperThickness, -0.25);
-            frontBumperRoot.append(new LoggedMechanismLigament2d(
-                    "bumpers_front",
-                    bumperThickness - 0.0025,
-                    0,
-                    90,
-                    new Color8Bit(Color.kBlue)
-            ));
+        LoggedMechanismRoot2d frontBumperRoot = mechanism.getRoot("bumpers_front", middleOfRobot + (DriveConstants.driveConfig.bumperLengthMeters() / 2) - bumperThickness, -0.25);
+        frontBumperRoot.append(new LoggedMechanismLigament2d(
+                "bumpers_front",
+                bumperThickness - 0.0025,
+                0,
+                90,
+                new Color8Bit(Color.kBlue)
+        ));
 
-            LoggedMechanismRoot2d backBumperRoot = mechanism.getRoot("bumpers_back", middleOfRobot - (DriveConstants.driveConfig.bumperLengthMeters() / 2), -0.25);
-            backBumperRoot.append(new LoggedMechanismLigament2d(
-                    "bumpers_back",
-                    bumperThickness,
-                    0,
-                    90,
-                    new Color8Bit(Color.kBlue)
-            ));
-        }
+        LoggedMechanismRoot2d backBumperRoot = mechanism.getRoot("bumpers_back", middleOfRobot - (DriveConstants.driveConfig.bumperLengthMeters() / 2), -0.25);
+        backBumperRoot.append(new LoggedMechanismLigament2d(
+                "bumpers_back",
+                bumperThickness,
+                0,
+                90,
+                new Color8Bit(Color.kBlue)
+        ));
+    }
+
+    public class Superstructure {
+        public final LoggedMechanismLigament2d color = mechanism.getRoot("superstructure_color", middleOfRobot, 1)
+                .append(new LoggedMechanismLigament2d(
+                        "superstructure_color",
+                        Units.inchesToMeters(10),
+                        90,
+                        11,
+                        new Color8Bit(Color.kBlack)
+                ));
     }
 
     public class Funnel {

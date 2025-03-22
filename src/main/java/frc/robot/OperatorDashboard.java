@@ -2,6 +2,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.GenericHID;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.util.network.LoggedNetworkBooleanExt;
 import frc.robot.util.network.LoggedNetworkNumberExt;
@@ -46,6 +47,8 @@ public class OperatorDashboard extends VirtualSubsystem {
     private final Alert manualScoringAlert = new Alert("Manual scoring is enabled.", Alert.AlertType.kWarning);
     private final Alert ignoreEndEffectorBeamBreakAlert = new Alert("Ignore end effector beam break is enabled.", Alert.AlertType.kWarning);
     private final Alert autoNotChosenAlert = new Alert("Auto is not chosen!", Alert.AlertType.kError);
+    @SuppressWarnings("FieldCanBeLocal")
+    private final Alert constantSetAlert = new Alert("Constants are set.", Alert.AlertType.kInfo);
 
     private final OperatorKeypad operatorKeypad = new OperatorKeypad();
     private final Alert operatorKeypadDisconnectedAlert = new Alert("Operator keypad is not connected!", Alert.AlertType.kError);
@@ -62,6 +65,9 @@ public class OperatorDashboard extends VirtualSubsystem {
     }
 
     private OperatorDashboard() {
+        if (Constants.tuningMode || DriveConstants.disableDriving || DriveConstants.disableGyro) {
+            constantSetAlert.set(true);
+        }
     }
 
     @Override
@@ -95,7 +101,6 @@ public class OperatorDashboard extends VirtualSubsystem {
             handleEnumToggles(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);
             handleEnumToggles(coralScoringLevels, selectedCoralScoringLevel, selectNew -> selectedCoralScoringLevel = selectNew);
         }
-
     }
 
     public Elevator.Goal getCoralScoringElevatorGoal() {

@@ -4,13 +4,11 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.autos.BargeSideAuto;
 import frc.robot.autos.CenterAuto;
@@ -20,7 +18,6 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
-import frc.robot.subsystems.leds.LEDs;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.commands.CommandsExt;
@@ -61,13 +58,18 @@ public class RobotContainer extends VirtualSubsystem {
     public final Vision vision = Vision.get();
     public final Drive drive = Drive.get();
     public final Superstructure superstructure = Superstructure.get();
-    public final LEDs leds = LEDs.get();
 
     public RobotContainer() {
         addAutos();
         addCharacterizations();
         setDefaultCommands();
         configureButtonBindings();
+
+        new Trigger(() -> DriverStation.isTeleopEnabled() && DriverStation.getMatchTime() > 0 && DriverStation.getMatchTime() < 30)
+                .onTrue(Commands.startEnd(
+                        () -> driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0.5),
+                        () -> driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0)
+                ).withTimeout(3.0));
     }
 
     private void addAutos() {

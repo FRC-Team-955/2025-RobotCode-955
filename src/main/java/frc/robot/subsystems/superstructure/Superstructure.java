@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
@@ -160,6 +161,33 @@ public class Superstructure extends SubsystemBaseExt {
     @Override
     public void periodicAfterCommands() {
         Logger.recordOutput("Superstructure/Goal", goal);
+
+        Color color = DriverStation.isDisabled()
+                ? DashboardColors.disabled.get()
+                : switch (goal) {
+            case AUTO_SCORE_CORAL_WAIT_INITIAL, AUTO_SCORE_CORAL_SCORING,
+                 AUTO_FUNNEL_INTAKE_WAITING_ALIGN, AUTO_FUNNEL_INTAKE_WAITING_SHAKE,
+                 AUTO_DESCORE_ALGAE_WAIT_INITIAL, AUTO_DESCORE_ALGAE_MOVE_BACK -> DashboardColors.autoScoring.get();
+
+            case AUTO_SCORE_CORAL_WAIT_FINAL, AUTO_SCORE_CORAL_WAIT_ELEVATOR,
+                 AUTO_DESCORE_ALGAE_WAIT_FINAL, AUTO_DESCORE_ALGAE_WAIT_AMPERAGE ->
+                    autoScoreForceable ? DashboardColors.driverConfirm.get() : DashboardColors.autoScoring.get();
+
+            case DESCORE_ALGAE_WAIT_ELEVATOR, MANUAL_SCORE_CORAL_WAIT_ELEVATOR -> DashboardColors.waitElevator.get();
+
+            case FUNNEL_INTAKE_WAITING -> DashboardColors.funnelIntaking.get();
+
+            case MANUAL_SCORE_CORAL_WAIT_CONFIRM -> DashboardColors.driverConfirm.get();
+
+            case HOME, HANDOFF,
+                 MANUAL_SCORE_CORAL_SCORING, DESCORE_ALGAE_DESCORING -> DashboardColors.finalizing.get();
+
+            case EJECT -> DashboardColors.eject.get();
+
+            case IDLE -> Color.kBlack;
+        };
+        Logger.recordOutput("Superstructure/Color", color.toHexString());
+        robotMechanism.superstructure.color.setColor(new Color8Bit(color));
     }
 
     /** Reacts quickly to change so better for waiting for the beam break */
