@@ -116,4 +116,9 @@ public class Util {
     public static boolean greaterThanEpsilon(double a) {
         return a > epsilon;
     }
+
+    /** Modulus but output is positive */
+    public static double positiveModulus(double input, double modulus) {
+        return ((input % modulus) + modulus) % modulus;
+    }
 }

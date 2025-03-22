@@ -2,8 +2,10 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.GenericHID;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.superstructure.AutoAlignLocations;
 import frc.robot.util.network.LoggedNetworkBooleanExt;
 import frc.robot.util.network.LoggedNetworkNumberExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
@@ -24,6 +26,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     public final LoggedNetworkBooleanExt ignoreEndEffectorBeamBreak = new LoggedNetworkBooleanExt(prefix + "IgnoreEndEffectorBeamBreak", false);
     public final LoggedNetworkBooleanExt disableInterpolateAutoAlign = new LoggedNetworkBooleanExt(prefix + "DisableInterpolateAutoAlign", false);
     public final LoggedNetworkBooleanExt autoChosen = new LoggedNetworkBooleanExt(prefix + "AutoChosen", false);
+    public final LoggedNetworkBooleanExt manualReefSide = new LoggedNetworkBooleanExt(prefix + "ManualReefSide", false);
 
     public final LoggedNetworkBooleanExt elevatorEStop = new LoggedNetworkBooleanExt(prefix + "ElevatorEStop", false);
     public final LoggedNetworkBooleanExt useRealElevatorState = new LoggedNetworkBooleanExt(prefix + "UseRealElevatorState", false);
@@ -49,6 +52,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     private final Alert autoNotChosenAlert = new Alert("Auto is not chosen!", Alert.AlertType.kError);
     @SuppressWarnings("FieldCanBeLocal")
     private final Alert constantSetAlert = new Alert("Constants are set.", Alert.AlertType.kInfo);
+    private final Alert manualReefSideAlert = new Alert("Manual reef side choosing is enabled.", Alert.AlertType.kWarning);
 
     private final OperatorKeypad operatorKeypad = new OperatorKeypad();
     private final Alert operatorKeypadDisconnectedAlert = new Alert("Operator keypad is not connected!", Alert.AlertType.kError);
@@ -83,8 +87,14 @@ public class OperatorDashboard extends VirtualSubsystem {
         if (operatorKeypad.isConnected()) {
             operatorKeypadDisconnectedAlert.set(false);
 
-            ReefZoneSide newReefZoneSide = operatorKeypad.getReefZoneSide();
-            if (newReefZoneSide != null) selectedReefZoneSide = newReefZoneSide;
+            if (operatorKeypad.getManualReefSide()) {
+                manualReefSide.set(true);
+                ReefZoneSide newReefZoneSide = operatorKeypad.getReefZoneSide();
+                if (newReefZoneSide != null) selectedReefZoneSide = newReefZoneSide;
+            } else {
+                manualReefSide.set(false);
+                selectedReefZoneSide = AutoAlignLocations.closestSideAdjusted(RobotState.get().getPose(), Drive.get().getMeasuredChassisSpeeds());
+            }
             updateToggles(reefZoneSides, selectedReefZoneSide);
 
             CoralScoringLevel newCoralScoringLevel = operatorKeypad.getCoralScoringLevel();
@@ -97,10 +107,17 @@ public class OperatorDashboard extends VirtualSubsystem {
         } else {
             operatorKeypadDisconnectedAlert.set(true);
 
-            handleEnumToggles(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
+            if (manualReefSide.get()) {
+                handleEnumToggles(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
+            } else {
+                selectedReefZoneSide = AutoAlignLocations.closestSideAdjusted(RobotState.get().getPose(), Drive.get().getMeasuredChassisSpeeds());
+                updateToggles(reefZoneSides, selectedReefZoneSide);
+            }
             handleEnumToggles(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);
             handleEnumToggles(coralScoringLevels, selectedCoralScoringLevel, selectNew -> selectedCoralScoringLevel = selectNew);
         }
+
+        manualReefSideAlert.set(manualReefSide.get());
     }
 
     public Elevator.Goal getCoralScoringElevatorGoal() {
@@ -129,6 +146,23 @@ public class OperatorDashboard extends VirtualSubsystem {
         LeftBack(5);
 
         public final int aprilTagOffset;
+
+        public static ReefZoneSide getSideFromID(int id) {
+            // wrap id from 0 to 6, ensure it is positive - shouldn't be different unless we are doing some weird stuff
+            int idAdjusted = (((id % 6) + 6) % 6);
+            return switch (idAdjusted) {
+                case 0 -> LeftFront;
+                case 1 -> MiddleFront;
+                case 2 -> RightFront;
+                case 3 -> RightBack;
+                case 4 -> MiddleBack;
+                case 5 -> LeftBack;
+                default -> {
+                    Util.error("Trying to choose invalid ID (This shouldn't ever happen unless the code is broken)");
+                    yield LeftFront;
+                }
+            };
+        }
     }
 
     @RequiredArgsConstructor
@@ -233,6 +267,12 @@ public class OperatorDashboard extends VirtualSubsystem {
             if (hid.getRawButton(11)) return LocalReefSide.Left;
             if (hid.getRawButton(12)) return LocalReefSide.Right;
             return null;
+        }
+
+        public boolean getManualReefSide() {
+            if (hid.getRawButton(13)) return true;
+            if (hid.getRawButton(14)) return false;
+            return true;
         }
     }
 }
