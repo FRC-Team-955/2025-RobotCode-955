@@ -215,6 +215,7 @@ public class Elevator extends SubsystemBaseExt {
             if (goal == Goal.STOW && operatorDashboard.coralStuckInRobotMode.get()) {
                 // Override stow setpoint if coral is stuck in the robot
                 setpointMeters = 1.1;
+                // Use gentle so we don't slam coral into one of the crossbars
                 usingGentleProfile = true;
             }
 
