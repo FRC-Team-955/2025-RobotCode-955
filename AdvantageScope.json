@@ -2,14 +2,13 @@
   "hubs": [
     {
       "x": 0,
-      "y": 37,
-      "width": 1470,
-      "height": 919,
+      "y": 25,
+      "width": 1920,
+      "height": 1055,
       "state": {
         "sidebar": {
           "width": 399,
           "expanded": [
-            "/RealOutputs/Vision/Summary",
             "/RealOutputs/Vision/Camera1",
             "/RealOutputs/Vision/Camera0",
             "/RealOutputs/RobotState/Pose",
@@ -171,7 +170,16 @@
             "/Inputs/Vision/AprilTag/StationCam/TagIds",
             "/RealOutputs/Drive",
             "/RealOutputs/Drive/MoveTo/Setpoint/rotation",
-            "/Inputs/Elevator"
+            "/Inputs/Elevator",
+            "/RealOutputs/Vision/AprilTag",
+            "/RealOutputs/Vision/AprilTag/StationCam",
+            "/RealOutputs/Vision/AprilTag/StationCam/RobotPoses",
+            "/ReplayOutputs/Vision",
+            "/ReplayOutputs/Vision/Summary",
+            "/ReplayOutputs/Vision/Summary/RobotPosesAccepted",
+            "/ReplayOutputs/Vision/Summary/RobotPosesRejected",
+            "/RealOutputs/Superstructure/CoralInFunnel",
+            "/RealOutputs/Superstructure/CoralInEndEffector"
           ]
         },
         "tabs": {
@@ -1042,15 +1050,6 @@
                     }
                   },
                   {
-                    "type": "gamePiece",
-                    "logKey": "/RealOutputs/FieldSimulation/CoralInRobot",
-                    "logType": "Pose3d[]",
-                    "visible": true,
-                    "options": {
-                      "variant": "Coral"
-                    }
-                  },
-                  {
                     "type": "trajectory",
                     "logKey": "/RealOutputs/Drive/Trajectory",
                     "logType": "Pose2d[]",
@@ -1084,7 +1083,7 @@
                     "type": "ghost",
                     "logKey": "/RealOutputs/Vision/Summary/RobotPosesRejected",
                     "logType": "Pose3d[]",
-                    "visible": false,
+                    "visible": true,
                     "options": {
                       "model": "KitBot",
                       "color": "#ff0000"
@@ -1117,7 +1116,7 @@
                     "visible": true,
                     "options": {
                       "model": "KitBot",
-                      "color": "#ff0000"
+                      "color": "#ff00ff"
                     }
                   },
                   {
@@ -1133,6 +1132,24 @@
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {}
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "/RealOutputs/Superstructure/CoralInFunnel",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "/RealOutputs/Superstructure/CoralInEndEffector",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
+                    }
                   }
                 ],
                 "game": "2025 Field (Welded)",
@@ -1143,17 +1160,17 @@
                 "cameraIndex": -1,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  5.705597908704105,
-                  6.249002493834918,
-                  7.018976511499419
+                  12.132349078974698,
+                  7.552333905950927,
+                  -0.6119047446898379
                 ],
                 "cameraTarget": [
-                  5.292545974703325,
-                  -0.2211379523888862,
-                  1.3467846894378626
+                  6.137914388974043,
+                  1.873544064734598,
+                  0.2153236845296531
                 ]
               },
-              "controlsHeight": 225
+              "controlsHeight": 267
             },
             {
               "type": 2,
