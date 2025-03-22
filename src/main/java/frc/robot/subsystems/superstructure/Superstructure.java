@@ -1,8 +1,7 @@
 package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -124,17 +123,6 @@ public class Superstructure extends SubsystemBaseExt {
     public void periodicBeforeCommands() {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Superstructure", inputs);
-
-        robotMechanism.funnel.beamBreakLigament.setColor(
-                inputs.funnelBeamBreakTriggered
-                        ? new Color8Bit(Color.kGreen)
-                        : new Color8Bit(Color.kRed)
-        );
-        robotMechanism.endEffector.beamBreakLigament.setColor(
-                inputs.endEffectorBeamBreakTriggered
-                        ? new Color8Bit(Color.kGreen)
-                        : new Color8Bit(Color.kRed)
-        );
     }
 
 
@@ -188,6 +176,33 @@ public class Superstructure extends SubsystemBaseExt {
         };
         Logger.recordOutput("Superstructure/Color", color.toHexString());
         robotMechanism.superstructure.color.setColor(new Color8Bit(color));
+
+        Pose3d robotPose = new Pose3d(robotState.getPose());
+
+        if (inputs.funnelBeamBreakTriggered) {
+            Pose3d coralInFunnel = robotPose.transformBy(new Transform3d(
+                    Units.inchesToMeters(-4),
+                    0,
+                    Units.inchesToMeters(12),
+                    new Rotation3d(0, Units.degreesToRadians(7), 0)
+            ));
+            Logger.recordOutput("Superstructure/CoralInFunnel", new Pose3d[]{coralInFunnel});
+        } else {
+            Logger.recordOutput("Superstructure/CoralInFunnel", new Pose3d[]{});
+        }
+
+        if (inputs.endEffectorBeamBreakTriggered) {
+            double angle = Units.degreesToRadians(-endEffector.getAngleDegrees() - 90);
+            Pose3d coralInEndEffector = robotPose.transformBy(new Transform3d(
+                    Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angle),
+                    0,
+                    Units.inchesToMeters(13.5) + elevator.getPositionMeters() + Units.inchesToMeters(4) * Math.tan(angle),
+                    new Rotation3d(0, angle, 0)
+            ));
+            Logger.recordOutput("Superstructure/CoralInEndEffector", new Pose3d[]{coralInEndEffector});
+        } else {
+            Logger.recordOutput("Superstructure/CoralInEndEffector", new Pose3d[]{});
+        }
     }
 
     /** Reacts quickly to change so better for waiting for the beam break */

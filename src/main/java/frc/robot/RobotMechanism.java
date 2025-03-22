@@ -79,19 +79,6 @@ public class RobotMechanism {
 
         public final LoggedMechanismRoot2d root = mechanism.getRoot("funnel", x, y + 0.065);
 
-        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot(
-                "funnel_beamBreak",
-                x - Units.inchesToMeters(9.5),
-                y + Units.inchesToMeters(5)
-        );
-        public final LoggedMechanismLigament2d beamBreakLigament = beamBreakRoot.append(new LoggedMechanismLigament2d(
-                "funnel_beamBreak",
-                Units.inchesToMeters(1),
-                angle,
-                11,
-                new Color8Bit(Color.kRed)
-        ));
-
         public final LoggedMechanismRoot2d beltRoot = mechanism.getRoot(
                 "funnel_belt",
                 x - Units.inchesToMeters(5),
@@ -210,15 +197,6 @@ public class RobotMechanism {
                 90,
                 10,
                 new Color8Bit(Color.kPurple)
-        ));
-
-        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot("endEffector_beamBreak", 0, 0);
-        public final LoggedMechanismLigament2d beamBreakLigament = beamBreakRoot.append(new LoggedMechanismLigament2d(
-                "beamBreak",
-                Units.inchesToMeters(1),
-                0,
-                11,
-                new Color8Bit(Color.kRed)
         ));
 
         public final LoggedMechanismRoot2d topRollersRoot = mechanism.getRoot("endEffector_topRollers", 0, 0);

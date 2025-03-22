@@ -161,7 +161,6 @@ public class Elevator extends SubsystemBaseExt {
         var endEffectorX = middleOfRobot - Units.inchesToMeters(10);
         var endEffectorY = Units.inchesToMeters(4.85) + getPositionMeters();
         robotMechanism.endEffector.root.setPosition(endEffectorX, endEffectorY);
-        robotMechanism.endEffector.beamBreakRoot.setPosition(endEffectorX - Units.inchesToMeters(1), endEffectorY + Units.inchesToMeters(5.25));
         robotMechanism.endEffector.topRollersRoot.setPosition(endEffectorX - Units.inchesToMeters(3), endEffectorY + Units.inchesToMeters(10));
     }
 
