@@ -61,6 +61,9 @@ public class AutoAlignLocations {
     }
 
     public static boolean switchSide(Pose2d currentPose, ChassisSpeeds robotRelativeSpeeds) {
+        if (robotRelativeSpeeds.vxMetersPerSecond == 0 && robotRelativeSpeeds.vyMetersPerSecond == 0) {
+            return false;
+        }
         ReefZoneSide closestSide = closestSide(currentPose);
         Pose2d leftTagPose = getAprilTagPoseAdjusted(ReefZoneSide.getSideFromID(closestSide.aprilTagOffset - 1));
         Pose2d rightTagPose = getAprilTagPoseAdjusted(ReefZoneSide.getSideFromID(closestSide.aprilTagOffset + 1));

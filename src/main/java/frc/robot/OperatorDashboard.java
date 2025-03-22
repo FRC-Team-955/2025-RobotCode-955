@@ -2,7 +2,9 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.GenericHID;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.superstructure.AutoAlignLocations;
 import frc.robot.util.network.LoggedNetworkBooleanExt;
 import frc.robot.util.network.LoggedNetworkNumberExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
@@ -15,6 +17,8 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 public class OperatorDashboard extends VirtualSubsystem {
+    private final RobotState robotState = RobotState.get();
+
     private static final String prefix = "/OperatorDashboard/";
 
     public final LoggedNetworkBooleanExt coastOverride = new LoggedNetworkBooleanExt(prefix + "CoastOverride", false);
@@ -46,6 +50,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     private final Alert coralStuckInRobotModeAlert = new Alert("Coral stuck in robot mode is enabled.", Alert.AlertType.kWarning);
     private final Alert manualScoringAlert = new Alert("Manual scoring is enabled.", Alert.AlertType.kWarning);
     private final Alert ignoreEndEffectorBeamBreakAlert = new Alert("Ignore end effector beam break is enabled.", Alert.AlertType.kWarning);
+    private final Alert manualReefSideAlert = new Alert("Manual reef side choosing is enabled.", Alert.AlertType.kWarning);
 
     private final OperatorKeypad operatorKeypad = new OperatorKeypad();
     private final Alert operatorKeypadDisconnectedAlert = new Alert("Operator keypad is not connected!", Alert.AlertType.kWarning);
@@ -72,12 +77,17 @@ public class OperatorDashboard extends VirtualSubsystem {
         coralStuckInRobotModeAlert.set(coralStuckInRobotMode.get());
         manualScoringAlert.set(manualScoring.get());
         ignoreEndEffectorBeamBreakAlert.set(ignoreEndEffectorBeamBreak.get());
+        manualReefSideAlert.set(operatorKeypad.getManualReefSide());
 
         if (operatorKeypad.isConnected()) {
             operatorKeypadDisconnectedAlert.set(false);
 
-            ReefZoneSide newReefZoneSide = operatorKeypad.getReefZoneSide();
-            if (newReefZoneSide != null) selectedReefZoneSide = newReefZoneSide;
+            if (operatorKeypad.getManualReefSide()) {
+                ReefZoneSide newReefZoneSide = operatorKeypad.getReefZoneSide();
+                if (newReefZoneSide != null) selectedReefZoneSide = newReefZoneSide;
+            } else {
+                selectedReefZoneSide = AutoAlignLocations.closestSideAdjusted(robotState.getPose(), Drive.get().getMeasuredChassisSpeeds());
+            }
             updateToggles(reefZoneSides, selectedReefZoneSide);
 
             CoralScoringLevel newCoralScoringLevel = operatorKeypad.getCoralScoringLevel();
@@ -243,6 +253,12 @@ public class OperatorDashboard extends VirtualSubsystem {
             if (hid.getRawButton(11)) return LocalReefSide.Left;
             if (hid.getRawButton(12)) return LocalReefSide.Right;
             return null;
+        }
+
+        public boolean getManualReefSide() {
+            if (hid.getRawButton(13)) return true;
+            if (hid.getRawButton(14)) return false;
+            return true;
         }
     }
 }
