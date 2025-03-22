@@ -11,7 +11,6 @@ import frc.robot.OperatorDashboard.ReefZoneSide;
 import frc.robot.Util;
 import frc.robot.subsystems.vision.VisionConstants;
 import lombok.RequiredArgsConstructor;
-import org.littletonrobotics.junction.Logger;
 
 import java.util.Arrays;
 
@@ -148,13 +147,11 @@ public class AutoAlignLocations {
                 .minus(
                         rightTagPose.relativeTo(currentPose).getTranslation().getAngle()
                 );
-        Logger.recordOutput("Superstructure/angleToAdjustedPosition", Util.positiveModulus(angleToAdjustedPosition.getDegrees(), 360));
         return Util.positiveModulus(angleToAdjustedPosition.getRadians(), 2 * Math.PI)
                 > Util.positiveModulus(robotToLeftTag.getRadians(), 2 * Math.PI);
     }
 
     public static ReefZoneSide closestSideAdjusted(Pose2d currentPose, ChassisSpeeds robotRelativeSpeeds) {
-        Logger.recordOutput("Superstructure/interpolatedPosition", currentPose.exp(robotRelativeSpeeds.toTwist2d(velocityLookaheadSeconds)));
         if (switchSide(currentPose, robotRelativeSpeeds)) {
             return closestSide(currentPose.exp(robotRelativeSpeeds.toTwist2d(velocityLookaheadSeconds)));
         } else {

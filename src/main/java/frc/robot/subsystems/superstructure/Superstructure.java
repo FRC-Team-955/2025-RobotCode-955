@@ -203,6 +203,8 @@ public class Superstructure extends SubsystemBaseExt {
         } else {
             Logger.recordOutput("Superstructure/CoralInEndEffector", new Pose3d[]{});
         }
+
+        Logger.recordOutput("Superstructure/TeleopAutoScoreGoal", getFinalAlignPose(1, operatorDashboard.getSelectedReefZoneSide(), operatorDashboard.getSelectedLocalReefSide()));
     }
 
     /** Reacts quickly to change so better for waiting for the beam break */
