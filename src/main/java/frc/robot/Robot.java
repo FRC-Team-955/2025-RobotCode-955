@@ -179,6 +179,12 @@ public class Robot extends LoggedRobot {
         // Switch thread to high priority to improve loop timing
         Threads.setCurrentThreadPriority(true, 99);
 
+        robotContainer.periodicBeforeAll();
+
+        for (var subsystem : extendedSubsystems) {
+            subsystem.periodicBeforeCommands();
+        }
+
         for (var subsystem : virtualSubsystems) {
             subsystem.periodicBeforeCommands();
         }
@@ -200,11 +206,11 @@ public class Robot extends LoggedRobot {
 
         robotContainer.superstructure.periodicAfterCommandsBeforeSubsystems();
 
-        for (var subsystem : virtualSubsystems) {
+        for (var subsystem : extendedSubsystems) {
             subsystem.periodicAfterCommands();
         }
 
-        for (var subsystem : extendedSubsystems) {
+        for (var subsystem : virtualSubsystems) {
             subsystem.periodicAfterCommands();
         }
 

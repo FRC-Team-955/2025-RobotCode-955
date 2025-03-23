@@ -16,6 +16,6 @@ public abstract class SubsystemBaseExt extends SubsystemBase implements Subsyste
     @Override
     // did you know you can have final methods in java? neither did I
     public final void periodic() {
-        this.periodicBeforeCommands();
+        // periodicBeforeCommands is run by Robot
     }
 }

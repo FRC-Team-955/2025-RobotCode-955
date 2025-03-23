@@ -2,8 +2,8 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.GenericHID;
-import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.drive.JoystickDrive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.superstructure.AutoAlignLocations;
 import frc.robot.util.network.LoggedNetworkBooleanExt;
@@ -18,6 +18,9 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
 public class OperatorDashboard extends VirtualSubsystem {
+    private final RobotState robotState = RobotState.get();
+    private final JoystickDrive joystickDrive = JoystickDrive.get();
+
     private static final String prefix = "/OperatorDashboard/";
 
     public final LoggedNetworkBooleanExt coastOverride = new LoggedNetworkBooleanExt(prefix + "CoastOverride", false);
@@ -93,7 +96,7 @@ public class OperatorDashboard extends VirtualSubsystem {
                 if (newReefZoneSide != null) selectedReefZoneSide = newReefZoneSide;
             } else {
                 manualReefSide.set(false);
-                selectedReefZoneSide = AutoAlignLocations.closestSideAdjusted(RobotState.get().getPose(), Drive.get().getMeasuredChassisSpeeds());
+                selectedReefZoneSide = AutoAlignLocations.closestSideAdjusted(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
             }
             updateToggles(reefZoneSides, selectedReefZoneSide);
 
@@ -110,7 +113,7 @@ public class OperatorDashboard extends VirtualSubsystem {
             if (manualReefSide.get()) {
                 handleEnumToggles(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
             } else {
-                selectedReefZoneSide = AutoAlignLocations.closestSideAdjusted(RobotState.get().getPose(), Drive.get().getMeasuredChassisSpeeds());
+                selectedReefZoneSide = AutoAlignLocations.closestSideAdjusted(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
                 updateToggles(reefZoneSides, selectedReefZoneSide);
             }
             handleEnumToggles(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);
@@ -147,21 +150,17 @@ public class OperatorDashboard extends VirtualSubsystem {
 
         public final int aprilTagOffset;
 
-        public static ReefZoneSide getSideFromID(int id) {
-            // wrap id from 0 to 6, ensure it is positive - shouldn't be different unless we are doing some weird stuff
-            int idAdjusted = (((id % 6) + 6) % 6);
-            return switch (idAdjusted) {
-                case 0 -> LeftFront;
-                case 1 -> MiddleFront;
-                case 2 -> RightFront;
-                case 3 -> RightBack;
-                case 4 -> MiddleBack;
-                case 5 -> LeftBack;
-                default -> {
-                    Util.error("Trying to choose invalid ID (This shouldn't ever happen unless the code is broken)");
-                    yield LeftFront;
+        public static ReefZoneSide fromAprilTagOffset(int aprilTagOffset) {
+            // wrap april tag offset from 0 to 6, ensure it is positive - shouldn't be different unless we are doing some weird stuff
+            aprilTagOffset = Util.positiveModulus(aprilTagOffset, 6);
+            // We could do this with a switch statement for -0.001ms performance gain but who cares
+            for (ReefZoneSide side : values()) {
+                if (side.aprilTagOffset == aprilTagOffset) {
+                    return side;
                 }
-            };
+            }
+            Util.error("Trying to choose invalid ID (This shouldn't ever happen unless the code is broken)");
+            return LeftFront;
         }
     }
 

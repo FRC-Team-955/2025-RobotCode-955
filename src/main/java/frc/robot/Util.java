@@ -117,8 +117,17 @@ public class Util {
         return a > epsilon;
     }
 
-    /** Modulus but output is positive */
-    public static double positiveModulus(double input, double modulus) {
+    public static int positiveModulus(int input, int modulus) {
+        // Ensures returned value is positive
         return ((input % modulus) + modulus) % modulus;
+    }
+
+    public static double positiveModulus(double input, double modulus) {
+        // Ensures returned value is positive
+        return ((input % modulus) + modulus) % modulus;
+    }
+
+    public static double positiveAngleModulus(double angleRad) {
+        return positiveModulus(angleRad, 2 * Math.PI);
     }
 }

@@ -1,6 +1,7 @@
 package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -8,11 +9,11 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import frc.robot.OperatorDashboard.LocalReefSide;
 import frc.robot.OperatorDashboard.ReefZoneSide;
-import frc.robot.Util;
 import frc.robot.subsystems.vision.VisionConstants;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
+import java.util.Comparator;
 
 import static frc.robot.Util.shouldFlip;
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
@@ -116,46 +117,55 @@ public class AutoAlignLocations {
         }
     }
 
-    public static final double velocityLookaheadSeconds = 0.4;
+    private static final double velocityLookaheadSeconds = 0.4;
+    private static final Transform2d reefSideAngleOffset = new Transform2d(0.25, 0, new Rotation2d());
 
-    /**
-     * Returns the closest reef side
-     * TODO: Make this less weird
-     */
-    public static ReefZoneSide closestSide(Pose2d currentPose) {
-        Pose2d nearestPose = currentPose.nearest(
-                Arrays.stream(ReefZoneSide.values())
-                        .map(AutoAlignLocations::getReefAprilTagPoseAdjusted).toList()
-        );
+    private static ReefZoneSide closestSideToPose(Pose2d currentPose) {
         return Arrays.stream(ReefZoneSide.values())
-                .filter((value) -> (getReefAprilTagPoseAdjusted(value).equals(nearestPose)))
-                .findFirst().orElse(ReefZoneSide.LeftFront);
+                .map(side -> new Pair<>(side, getReefAprilTagPoseAdjusted(side)))
+                .min(Comparator.comparing(
+                        pair -> currentPose.getTranslation().getDistance(pair.getSecond().getTranslation())
+                ))
+                .map(Pair::getFirst)
+                .orElse(ReefZoneSide.LeftFront);
     }
 
-    public static boolean switchSide(Pose2d currentPose, ChassisSpeeds robotRelativeSpeeds) {
-        if (robotRelativeSpeeds.vxMetersPerSecond == 0 && robotRelativeSpeeds.vyMetersPerSecond == 0) {
-            return false;
+    public static ReefZoneSide closestSideAdjusted(Pose2d currentPose, ChassisSpeeds joystickSetpointFieldRelative) {
+        ReefZoneSide closestSide = closestSideToPose(currentPose);
+        boolean lookahead = false;
+
+        // Get poses of sides left and right of closest, with an offset
+        Pose2d leftTagPose = getReefAprilTagPoseAdjusted(ReefZoneSide.fromAprilTagOffset(closestSide.aprilTagOffset - 1))
+                .plus(reefSideAngleOffset);
+//        Logger.recordOutput("Superstructure/ClosestSide/LeftTagPose", leftTagPose);
+        Pose2d rightTagPose = getReefAprilTagPoseAdjusted(ReefZoneSide.fromAprilTagOffset(closestSide.aprilTagOffset + 1))
+                .plus(reefSideAngleOffset);
+//        Logger.recordOutput("Superstructure/ClosestSide/RightTagPose", rightTagPose);
+
+        if (joystickSetpointFieldRelative.vxMetersPerSecond != 0 || joystickSetpointFieldRelative.vyMetersPerSecond != 0) {
+            // Get angles to left and right
+            Rotation2d robotToLeft = leftTagPose.relativeTo(currentPose).getTranslation().getAngle();
+//            Logger.recordOutput("Superstructure/ClosestSide/RobotToLeft", robotToLeft);
+            Rotation2d robotToRight = rightTagPose.relativeTo(currentPose).getTranslation().getAngle();
+//            Logger.recordOutput("Superstructure/ClosestSide/RobotToRight", robotToRight);
+
+            // Get the joystick angle relative to the closest tag
+            Rotation2d joystickAngle = new Rotation2d(joystickSetpointFieldRelative.vxMetersPerSecond, joystickSetpointFieldRelative.vyMetersPerSecond);
+//            Logger.recordOutput("Superstructure/ClosestSide/JoystickAngle", joystickAngle);
+
+            // Lookahead if the angle of the joystick setpoint angle is more CCW (positive) than the left pose or more CW (negative) than the right pose
+            // We have to make all rotations relative to the center tag so that CCW and CW are actually positive and negative and the inequalities work out
+            Pose2d centerTagPose = getReefAprilTagPoseAdjusted(closestSide);
+            Rotation2d relativeToCenterTag = centerTagPose.getRotation().unaryMinus().plus(Rotation2d.k180deg);
+            lookahead = joystickAngle.rotateBy(relativeToCenterTag).getRadians() > robotToLeft.rotateBy(relativeToCenterTag).getRadians() ||
+                    joystickAngle.rotateBy(relativeToCenterTag).getRadians() < robotToRight.rotateBy(relativeToCenterTag).getRadians();
         }
-        ReefZoneSide closestSide = closestSide(currentPose);
-        Pose2d leftTagPose = getReefAprilTagPoseAdjusted(ReefZoneSide.getSideFromID(closestSide.aprilTagOffset - 1));
-        Pose2d rightTagPose = getReefAprilTagPoseAdjusted(ReefZoneSide.getSideFromID(closestSide.aprilTagOffset + 1));
-        Rotation2d robotToLeftTag = leftTagPose.relativeTo(currentPose).getTranslation().getAngle()
-                .minus(
-                        rightTagPose.relativeTo(currentPose).getTranslation().getAngle()
-                );
-        Rotation2d angleToAdjustedPosition = new Rotation2d(robotRelativeSpeeds.vxMetersPerSecond, robotRelativeSpeeds.vyMetersPerSecond)
-                .minus(
-                        rightTagPose.relativeTo(currentPose).getTranslation().getAngle()
-                );
-        return Util.positiveModulus(angleToAdjustedPosition.getRadians(), 2 * Math.PI)
-                > Util.positiveModulus(robotToLeftTag.getRadians(), 2 * Math.PI);
-    }
-
-    public static ReefZoneSide closestSideAdjusted(Pose2d currentPose, ChassisSpeeds robotRelativeSpeeds) {
-        if (switchSide(currentPose, robotRelativeSpeeds)) {
-            return closestSide(currentPose.exp(robotRelativeSpeeds.toTwist2d(velocityLookaheadSeconds)));
+        Pose2d currentPoseWithLookahead = currentPose.exp(ChassisSpeeds.fromFieldRelativeSpeeds(joystickSetpointFieldRelative, currentPose.getRotation()).toTwist2d(velocityLookaheadSeconds));
+//        Logger.recordOutput("Superstructure/ClosestSide/Lookahead", currentPoseWithLookahead);
+        if (lookahead) {
+            return closestSideToPose(currentPoseWithLookahead);
         } else {
-            return closestSide(currentPose);
+            return closestSide;
         }
     }
 

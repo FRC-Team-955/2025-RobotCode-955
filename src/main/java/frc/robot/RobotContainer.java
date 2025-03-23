@@ -15,13 +15,13 @@ import frc.robot.autos.CenterAuto;
 import frc.robot.autos.ProcessorSideAuto;
 import frc.robot.autos.ProcessorSideFriendlyAuto;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.JoystickDrive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.commands.CommandsExt;
-import frc.robot.util.subsystem.VirtualSubsystem;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -36,7 +36,7 @@ import static frc.robot.Constants.mode;
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
-public class RobotContainer extends VirtualSubsystem {
+public class RobotContainer {
     // Controller
     private final CommandXboxController driverController = RobotBase.isSimulation()
             ? Constants.Simulation.simController.apply(0)
@@ -49,6 +49,7 @@ public class RobotContainer extends VirtualSubsystem {
 
     public final RobotState robotState = RobotState.get();
     public final OperatorDashboard operatorDashboard = OperatorDashboard.get();
+    public final JoystickDrive joystickDrive = JoystickDrive.get();
 
     /* Subsystems */
     // Note: order does matter
@@ -127,18 +128,7 @@ public class RobotContainer extends VirtualSubsystem {
         //                                    return new Pose2d(gamepieceTranslation, toGamepiece);
         //                                }
         //                            });
-        drive.setDefaultCommand(
-                drive.driveJoystick(
-                        // https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
-                        // forward on joystick is negative y - we want positive x for forward
-                        () -> -driverController.getLeftY(),
-                        // right on joystick is positive x - we want negative y for right
-                        () -> -driverController.getLeftX(),
-                        // right on joystick is positive x - we want negative x for right (CCW is positive)
-                        () -> -driverController.getRightX(),
-                        Optional::empty
-                )
-        );
+        drive.setDefaultCommand(drive.driveJoystick(Optional::empty));
 
         superstructure.setDefaultCommand(superstructure.idle().ignoringDisable(true));
         elevator.setDefaultCommand(superstructure.elevatorIdle().ignoringDisable(true));
@@ -256,8 +246,17 @@ public class RobotContainer extends VirtualSubsystem {
         return autoChooser.get();
     }
 
-    @Override
-    public void periodicBeforeCommands() {
+    public void periodicBeforeAll() {
         driverControllerDisconnectedAlert.set(!driverController.isConnected());
+
+        joystickDrive.update(
+                // https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
+                // forward on joystick is negative y - we want positive x for forward
+                -driverController.getLeftY(),
+                // right on joystick is positive x - we want negative y for right
+                -driverController.getLeftX(),
+                // right on joystick is positive x - we want negative x for right (CCW is positive)
+                -driverController.getRightX()
+        );
     }
 }
