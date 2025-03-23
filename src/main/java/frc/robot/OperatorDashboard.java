@@ -13,9 +13,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
-import java.util.Map;
+import java.util.EnumMap;
 import java.util.function.Consumer;
-import java.util.function.IntFunction;
 
 public class OperatorDashboard extends VirtualSubsystem {
     private final RobotState robotState = RobotState.get();
@@ -37,9 +36,9 @@ public class OperatorDashboard extends VirtualSubsystem {
     public final LoggedNetworkNumberExt elevatorOffsetMeters = new LoggedNetworkNumberExt(prefix + "ElevatorOffsetMeters", 0);
     public final LoggedNetworkBooleanExt trustElevatorFollower = new LoggedNetworkBooleanExt(prefix + "TrustElevatorFollower", false);
 
-    private final Map<ReefZoneSide, LoggedNetworkBooleanExt> reefZoneSides = generateTogglesForEnum("ReefZoneSides", ReefZoneSide.values());
-    private final Map<LocalReefSide, LoggedNetworkBooleanExt> localReefSides = generateTogglesForEnum("LocalReefSides", Arrays.stream(LocalReefSide.values()).filter(side -> side != LocalReefSide.Middle).toArray(LocalReefSide[]::new));
-    private final Map<CoralScoringLevel, LoggedNetworkBooleanExt> coralScoringLevels = generateTogglesForEnum("CoralScoringLevels", CoralScoringLevel.values());
+    private final EnumMap<ReefZoneSide, LoggedNetworkBooleanExt> reefZoneSides = generateTogglesForEnum("ReefZoneSides", ReefZoneSide.values(), ReefZoneSide.class);
+    private final EnumMap<LocalReefSide, LoggedNetworkBooleanExt> localReefSides = generateTogglesForEnum("LocalReefSides", Arrays.stream(LocalReefSide.values()).filter(side -> side != LocalReefSide.Middle).toArray(LocalReefSide[]::new), LocalReefSide.class);
+    private final EnumMap<CoralScoringLevel, LoggedNetworkBooleanExt> coralScoringLevels = generateTogglesForEnum("CoralScoringLevels", CoralScoringLevel.values(), CoralScoringLevel.class);
 
     @Getter
     private ReefZoneSide selectedReefZoneSide = ReefZoneSide.LeftFront;
@@ -179,7 +178,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     }
 
     private static <E extends Enum<E>> void updateToggles(
-            Map<E, LoggedNetworkBooleanExt> map,
+            EnumMap<E, LoggedNetworkBooleanExt> map,
             E currentlySelected
     ) {
         LoggedNetworkBooleanExt toggle = map.get(currentlySelected);
@@ -194,7 +193,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     }
 
     private static <E extends Enum<E>> void handleEnumToggles(
-            Map<E, LoggedNetworkBooleanExt> map,
+            EnumMap<E, LoggedNetworkBooleanExt> map,
             E currentlySelected,
             Consumer<E> select
     ) {
@@ -226,15 +225,8 @@ public class OperatorDashboard extends VirtualSubsystem {
         }
     }
 
-    private static <E extends Enum<E>> Map<E, LoggedNetworkBooleanExt> generateTogglesForEnum(String name, E[] values) {
-        return Map.ofEntries(
-                Arrays.stream(values)
-                        .map(side -> Map.entry(
-                                side,
-                                new LoggedNetworkBooleanExt(prefix + name + "/" + side.name(), false)
-                        ))
-                        .toArray((IntFunction<Map.Entry<E, LoggedNetworkBooleanExt>[]>) Map.Entry[]::new)
-        );
+    private static <E extends Enum<E>> EnumMap<E, LoggedNetworkBooleanExt> generateTogglesForEnum(String name, E[] enumValues, Class<E> enumClass) {
+        return Util.createEnumMap(enumClass, enumValues, (side) -> new LoggedNetworkBooleanExt(prefix + name + "/" + side.name(), false));
     }
 
     private static class OperatorKeypad {

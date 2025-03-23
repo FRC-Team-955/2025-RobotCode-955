@@ -20,37 +20,30 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.RobotState;
+import frc.robot.Util;
 import frc.robot.subsystems.vision.AprilTagIO.PoseObservationType;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.*;
-import java.util.function.IntFunction;
+import java.util.stream.Stream;
 
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 public class Vision extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
 
-    private final Map<AprilTagCamera, AprilTagCameraData> aprilTagCameras = Map.ofEntries(
-            Arrays.stream(AprilTagCamera.values())
-                    .map(cam -> Map.entry(cam, new AprilTagCameraData(
-                            new AprilTagIOInputsAutoLogged(),
-                            cam.createIO(),
-                            new Alert("AprilTag camera " + cam.name() + " is disconnected.", AlertType.kError)
-                    )))
-                    .toArray((IntFunction<Map.Entry<AprilTagCamera, AprilTagCameraData>[]>) Map.Entry[]::new)
-    );
-    private final Map<GamepieceCamera, GamepieceCameraData> gamepieceCameras = Map.ofEntries(
-            Arrays.stream(GamepieceCamera.values())
-                    .map(cam -> Map.entry(cam, new GamepieceCameraData(
-                            new GamepieceIOInputsAutoLogged(),
-                            cam.createIO(),
-                            new Alert("Gamepiece camera " + cam.name() + " is disconnected.", AlertType.kError)
-                    )))
-                    .toArray((IntFunction<Map.Entry<GamepieceCamera, GamepieceCameraData>[]>) Map.Entry[]::new)
-    );
+    private final EnumMap<AprilTagCamera, AprilTagCameraData> aprilTagCameras = Util.createEnumMap(AprilTagCamera.class, AprilTagCamera.values(), (cam) -> new AprilTagCameraData(
+            new AprilTagIOInputsAutoLogged(),
+            cam.createIO(),
+            new Alert("AprilTag camera " + cam.name() + " is disconnected.", AlertType.kError)
+    ));
+    private final EnumMap<GamepieceCamera, GamepieceCameraData> gamepieceCameras = Util.createEnumMap(GamepieceCamera.class, GamepieceCamera.values(), (cam) -> new GamepieceCameraData(
+            new GamepieceIOInputsAutoLogged(),
+            cam.createIO(),
+            new Alert("Gamepiece camera " + cam.name() + " is disconnected.", AlertType.kError)
+    ));
 
     @Getter
     private Optional<Translation2d> closestGamepiece = Optional.empty();
@@ -162,10 +155,10 @@ public class Vision extends SubsystemBaseExt {
 
             // Log camera data
             String prefix = "Vision/AprilTag/" + metadata.name();
-            Logger.recordOutput(prefix + "/TagPoses", tagPoses.toArray(new Pose3d[tagPoses.size()]));
-            Logger.recordOutput(prefix + "/RobotPoses", robotPoses.toArray(new Pose3d[robotPoses.size()]));
-            Logger.recordOutput(prefix + "/RobotPosesAccepted", robotPosesAccepted.toArray(new Pose3d[robotPosesAccepted.size()]));
-            Logger.recordOutput(prefix + "/RobotPosesRejected", robotPosesRejected.toArray(new Pose3d[robotPosesRejected.size()]));
+            Logger.recordOutput(prefix + "/TagPoses", tagPoses.toArray(Pose3d[]::new));
+            Logger.recordOutput(prefix + "/RobotPoses", robotPoses.toArray(Pose3d[]::new));
+            Logger.recordOutput(prefix + "/RobotPosesAccepted", robotPosesAccepted.toArray(Pose3d[]::new));
+            Logger.recordOutput(prefix + "/RobotPosesRejected", robotPosesRejected.toArray(Pose3d[]::new));
             allTagPoses.addAll(tagPoses);
             allRobotPoses.addAll(robotPoses);
             allRobotPosesAccepted.addAll(robotPosesAccepted);
@@ -173,10 +166,10 @@ public class Vision extends SubsystemBaseExt {
         }
 
         // Log summary data
-        Logger.recordOutput("Vision/Summary/TagPoses", allTagPoses.toArray(new Pose3d[allTagPoses.size()]));
-        Logger.recordOutput("Vision/Summary/RobotPoses", allRobotPoses.toArray(new Pose3d[allRobotPoses.size()]));
-        Logger.recordOutput("Vision/Summary/RobotPosesAccepted", allRobotPosesAccepted.toArray(new Pose3d[allRobotPosesAccepted.size()]));
-        Logger.recordOutput("Vision/Summary/RobotPosesRejected", allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
+        Logger.recordOutput("Vision/Summary/TagPoses", allTagPoses.toArray(Pose3d[]::new));
+        Logger.recordOutput("Vision/Summary/RobotPoses", allRobotPoses.toArray(Pose3d[]::new));
+        Logger.recordOutput("Vision/Summary/RobotPosesAccepted", allRobotPosesAccepted.toArray(Pose3d[]::new));
+        Logger.recordOutput("Vision/Summary/RobotPosesRejected", allRobotPosesRejected.toArray(Pose3d[]::new));
 
         // Gamepiece vision
         var robotTranslation = robotState.getTranslation();
@@ -220,16 +213,13 @@ public class Vision extends SubsystemBaseExt {
         // Log camera poses for debugging
         var robotPose = new Pose3d(robotState.getPose());
         Logger.recordOutput(
-                "Vision/AprilTagCameraPoses",
-                aprilTagCameras.keySet().stream()
-                        .map(cam -> robotPose.transformBy(cam.robotToCamera))
-                        .toArray(Pose3d[]::new)
-        );
-        Logger.recordOutput(
-                "Vision/GamepieceCameraPoses",
-                gamepieceCameras.keySet().stream()
-                        .map(cam -> robotPose.transformBy(cam.robotToCamera))
-                        .toArray(Pose3d[]::new)
+                "Vision/CameraPoses",
+                Stream.concat(
+                        Arrays.stream(AprilTagCamera.values())
+                                .map(cam -> robotPose.transformBy(cam.robotToCamera)),
+                        Arrays.stream(GamepieceCamera.values())
+                                .map(cam -> robotPose.transformBy(cam.robotToCamera))
+                ).toArray(Pose3d[]::new)
         );
     }
 

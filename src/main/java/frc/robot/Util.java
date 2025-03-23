@@ -16,7 +16,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class Util {
     private static final double epsilon = 1E-6;
@@ -129,5 +131,13 @@ public class Util {
 
     public static double positiveAngleModulus(double angleRad) {
         return positiveModulus(angleRad, 2 * Math.PI);
+    }
+
+    public static <E extends Enum<E>, V> EnumMap<E, V> createEnumMap(Class<E> clazz, E[] values, Function<E, V> valueSupplier) {
+        EnumMap<E, V> map = new EnumMap<>(clazz);
+        for (E key : values) {
+            map.put(key, valueSupplier.apply(key));
+        }
+        return map;
     }
 }
