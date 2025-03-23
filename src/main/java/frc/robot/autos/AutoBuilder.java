@@ -30,11 +30,9 @@ public class AutoBuilder {
 
         IntakeScorePair first = trajectories.get(0);
 
-        routine.active().onTrue(
-                Commands.sequence(
-                        first.scoreTraj.resetOdometry(),
-                        first.scoreTraj.cmd()
-                )
+        Command startCmd = CommandsExt.eagerSequence(
+                first.scoreTraj.resetOdometry(),
+                first.scoreTraj.cmd()
         );
 
         IntakeScorePair last = first;
@@ -44,26 +42,38 @@ public class AutoBuilder {
                 // Skip first trajectory
                 if (next == first || next.station == null || next.stationTraj == null) continue;
 
-                last.scoreTraj.atTime("score").onTrue(Commands.sequence(
+                last.scoreTraj.atTime("score").onTrue(CommandsExt.eagerSequence(
                         last.scoreCommand(superstructure),
-                        CommandsExt.schedule(next.stationTraj.cmd()) // schedule so subsystems run their default commands and so the command doesn't cancel itself
+                        // scheduling the trajectory wastes a cycle; instead, reset the superstructure and run the trajectory at the same time
+                        Commands.parallel(
+                                superstructure.ensureNotBusyAndResetGoals(),
+                                next.stationTraj.cmd()
+                        )
                 ));
 
-                next.stationTraj.atTime("intake").onTrue(Commands.sequence(
+                next.stationTraj.atTime("intake").onTrue(CommandsExt.eagerSequence(
                         superstructure.autoFunnelIntake(true, next.station),
-                        next.scoreTraj.cmd()
+                        // scheduling the trajectory wastes a cycle; instead, reset the superstructure and run the trajectory at the same time
+                        Commands.parallel(
+                                superstructure.ensureNotBusyAndResetGoals(),
+                                next.scoreTraj.cmd()
+                        )
                 ));
 
                 last = next;
             }
         }
 
-        last.scoreTraj.atTime("score").onTrue(Commands.sequence(
+        last.scoreTraj.atTime("score").onTrue(CommandsExt.eagerSequence(
                 last.scoreCommand(superstructure),
                 Commands.runOnce(() -> ref.isFinished = true)
         ));
 
-        return new WrapperCommand(routine.cmd(() -> ref.isFinished)) {
+        return new WrapperCommand(
+                routine.cmd(() -> ref.isFinished)
+                        // routine.active() wastes a cycle. We can just start it now as a parallel command
+                        .alongWith(startCmd.asProxy())
+        ) {
             @Override
             public void initialize() {
                 ref.isFinished = false;

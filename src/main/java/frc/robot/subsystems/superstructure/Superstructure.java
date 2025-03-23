@@ -231,18 +231,22 @@ public class Superstructure extends SubsystemBaseExt {
     }
 
     public Command ensureNotBusyAndResetGoals() {
-        return Commands.sequence(
+        return CommandsExt.eagerSequence(
                 backgroundCommandScheduler.waitUntilFinish(),
                 cancel()
         );
     }
 
     private Command wrapExposedCommand(Command command) {
-        // Note: if you are modifying this, there are some commands
-        // that integrate ensureNotBusyAndResetGoals directly, instead
-        // of using wrapExposedCommand. Make sure those are included in the changes too.
-        return Commands.sequence(
+        return CommandsExt.eagerSequence(
                 ensureNotBusyAndResetGoals(),
+                command
+        );
+    }
+
+    private Command wrapExposedCommand(Command whileWaiting, Command command) {
+        return CommandsExt.eagerSequence(
+                ensureNotBusyAndResetGoals().deadlineFor(whileWaiting),
                 command
         );
     }
@@ -264,7 +268,7 @@ public class Superstructure extends SubsystemBaseExt {
     }
 
     private Command handoffAndHome() {
-        return Commands.sequence(
+        return CommandsExt.eagerSequence(
                 waitUntilEndEffectorTriggered(Commands.none())
                         .deadlineFor(Commands.parallel(
                                 setGoal(Goal.HANDOFF),
@@ -339,20 +343,19 @@ public class Superstructure extends SubsystemBaseExt {
         );
 
         if (duringAuto) {
-            return Commands.sequence(
-                    ensureNotBusyAndResetGoals(),
+            return wrapExposedCommand(CommandsExt.eagerSequence(
                     raiseElevator,
                     waitConfirm,
                     score,
                     finalize
-            );
+            ));
         } else {
             return wrapExposedCommand(CommandsExt.onlyIf(
                     () -> endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                    Commands.sequence(
+                    CommandsExt.eagerSequence(
                             raiseElevator,
                             waitConfirm,
-                            backgroundCommandScheduler.scheduleInBackground(Commands.sequence(
+                            backgroundCommandScheduler.scheduleInBackground(CommandsExt.eagerSequence(
                                     score,
                                     finalize
                             ))
@@ -364,7 +367,7 @@ public class Superstructure extends SubsystemBaseExt {
     public Command descoreAlgaeManual(Supplier<Elevator.Goal> elevatorGoalSupplier) {
         return wrapExposedCommand(CommandsExt.onlyIf(
                 () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                Commands.sequence(
+                CommandsExt.eagerSequence(
                         Commands.parallel(
                                 setGoal(Goal.DESCORE_ALGAE_WAIT_ELEVATOR),
                                 endEffector.setGoal(EndEffector.RollersGoal.IDLE),
@@ -392,7 +395,7 @@ public class Superstructure extends SubsystemBaseExt {
         if (duringAuto) {
             return wrapExposedCommand(CommandsExt.onlyIf(
                     () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                    Commands.sequence(
+                    CommandsExt.eagerSequence(
                             intake,
                             backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
                     )
@@ -400,7 +403,7 @@ public class Superstructure extends SubsystemBaseExt {
         } else {
             return wrapExposedCommand(CommandsExt.onlyIf(
                     () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                    Commands.sequence(
+                    CommandsExt.eagerSequence(
                             intake,
                             backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
                     )
@@ -416,7 +419,7 @@ public class Superstructure extends SubsystemBaseExt {
         ).deadlineFor(
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
                 funnelSetGoalIntakeAlternate(),
-                Commands.sequence(
+                CommandsExt.eagerSequence(
                         Commands.parallel(
                                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_ALIGN),
                                 drive.moveTo(alignPoseSupplier).until(() -> isAtPoseWithTolerance(
@@ -434,7 +437,7 @@ public class Superstructure extends SubsystemBaseExt {
         if (duringAuto) {
             return wrapExposedCommand(CommandsExt.onlyIf(
                     () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                    Commands.sequence(
+                    CommandsExt.eagerSequence(
                             intake,
                             backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
                     )
@@ -442,7 +445,7 @@ public class Superstructure extends SubsystemBaseExt {
         } else {
             return wrapExposedCommand(CommandsExt.onlyIf(
                     () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                    Commands.sequence(
+                    CommandsExt.eagerSequence(
                             intake,
                             backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
                     )
@@ -496,7 +499,7 @@ public class Superstructure extends SubsystemBaseExt {
                 ? 1
                 : elevator.getPositionMeters() / elevatorGoalSupplier.get().setpointMeters.getAsDouble();
         Supplier<Pose2d> finalPoseSupplier = () -> getFinalAlignPose(elevatorPercentageSupplier.getAsDouble(), reefSideSupplier.get(), sideSupplier.get());
-        Command waitFinalAndElevator = Commands.sequence(
+        Command waitFinalAndElevator = CommandsExt.eagerSequence(
                 Commands.parallel(
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_FINAL),
                         endEffector.setGoal(EndEffector.RollersGoal.IDLE),
@@ -518,7 +521,7 @@ public class Superstructure extends SubsystemBaseExt {
                 Commands.waitSeconds(0.3)
         );
         // Don't allow forcing for a bit, then check if force is true
-        Command waitForForce = Commands.sequence(
+        Command waitForForce = CommandsExt.eagerSequence(
                 Commands.parallel(
                         Commands.waitSeconds(2),
                         Commands.runOnce(() -> autoScoreForceable = false)
@@ -548,26 +551,27 @@ public class Superstructure extends SubsystemBaseExt {
                 )
         );
         if (duringAuto) {
-            return Commands.sequence(
-                    ensureNotBusyAndResetGoals() // MUST BE CALLED AT THE START OF EVERY EXPOSED COMMAND
-                            .raceWith(Commands.sequence(
-                                    drive.moveTo(initialPoseSupplier)
-                                            // We don't really care about position tolerances right now,
-                                            // checking velocity is a good way to approximate "we're at the position we want"
-                                            .until(() -> Math.abs(drive.getMeasuredChassisLinearVelocityMetersPerSec()) < finalAlignToleranceMetersPerSecond
-                                                    && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < finalAlignToleranceRadPerSecond),
-                                    shake()
-                            )),
-                    initial,
-                    Commands.race(
-                            drive.moveTo(finalPoseSupplier),
-                            Commands.sequence(
-                                    Commands.race(
-                                            waitFinalAndElevator,
-                                            waitForForce
-                                    ),
-                                    score,
-                                    finalize
+            return wrapExposedCommand(
+                    CommandsExt.eagerSequence(
+                            drive.moveTo(initialPoseSupplier)
+                                    // We don't really care about position tolerances right now,
+                                    // checking velocity is a good way to approximate "we're at the position we want"
+                                    .until(() -> Math.abs(drive.getMeasuredChassisLinearVelocityMetersPerSec()) < finalAlignToleranceMetersPerSecond
+                                            && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < finalAlignToleranceRadPerSecond),
+                            shake()
+                    ),
+                    CommandsExt.eagerSequence(
+                            initial,
+                            Commands.race(
+                                    drive.moveTo(finalPoseSupplier),
+                                    CommandsExt.eagerSequence(
+                                            Commands.race(
+                                                    waitFinalAndElevator,
+                                                    waitForForce
+                                            ),
+                                            score,
+                                            finalize
+                                    )
                             )
                     )
             );
@@ -576,7 +580,7 @@ public class Superstructure extends SubsystemBaseExt {
                     // Only run if you have coral and are in front of your reef side
                     () -> (endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
                             && alignable(reefSideSupplier.get(), robotState.getPose()),
-                    Commands.sequence(
+                    CommandsExt.eagerSequence(
                             initial,
                             Commands.race(
                                     drive.moveTo(finalPoseSupplier),
@@ -601,7 +605,7 @@ public class Superstructure extends SubsystemBaseExt {
         Command driveTo = Commands.race(
                 // Drive to position
                 drive.moveTo(poseSupplier),
-                Commands.sequence(
+                CommandsExt.eagerSequence(
                         Commands.parallel(
                                 setGoal(Goal.AUTO_DESCORE_ALGAE_WAIT_INITIAL),
                                 endEffector.setGoal(EndEffector.RollersGoal.IDLE),
@@ -635,7 +639,7 @@ public class Superstructure extends SubsystemBaseExt {
                         drive.runRobotRelative(
                                 () -> new ChassisSpeeds(-0.4, 0, 0)
                         ),
-                        Commands.sequence(
+                        CommandsExt.eagerSequence(
                                 Commands.waitSeconds(0.5),
                                 endEffector.waitUntilDescoreAmperageTriggered()
                         )
@@ -650,7 +654,7 @@ public class Superstructure extends SubsystemBaseExt {
                 setGoal(Goal.AUTO_DESCORE_ALGAE_MOVE_BACK)
         );
 
-        Command waitForForce = Commands.sequence(
+        Command waitForForce = CommandsExt.eagerSequence(
                 Commands.parallel(
                         Commands.waitSeconds(2),
                         Commands.runOnce(() -> autoScoreForceable = false)
@@ -664,9 +668,9 @@ public class Superstructure extends SubsystemBaseExt {
         return wrapExposedCommand(CommandsExt.onlyIf(
                 () -> (!endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
                         && alignable(reefSideSupplier.get(), robotState.getPose()),
-                Commands.sequence(
+                CommandsExt.eagerSequence(
                         Commands.race(
-                                Commands.sequence(
+                                CommandsExt.eagerSequence(
                                         driveTo,
                                         waitAlgae
                                 ),

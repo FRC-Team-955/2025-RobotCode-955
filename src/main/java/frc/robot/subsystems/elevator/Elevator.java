@@ -7,7 +7,6 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
@@ -326,18 +325,5 @@ public class Elevator extends SubsystemBaseExt {
                         1,
                         this
                 ));
-    }
-
-    public Command zero() {
-        return Commands.sequence(
-                setGoal(() -> Goal.ZERO),
-                startEnd(
-                        () -> io.setOpenLoop(-1.5),
-                        () -> io.setOpenLoop(0)
-                ).until(() -> Math.abs(getVelocityMetersPerSec()) < 0.1),
-                Commands.waitSeconds(0.5),
-                waitUntil(() -> Math.abs(getVelocityMetersPerSec()) < 0.01),
-                runOnce(() -> io.setEncoder(0.0))
-        );
     }
 }

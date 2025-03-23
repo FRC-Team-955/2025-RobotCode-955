@@ -21,7 +21,6 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.OperatorDashboard;
@@ -30,6 +29,7 @@ import frc.robot.Util;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.util.characterization.FeedforwardCharacterization;
+import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import frc.robot.util.swerve.ModuleLimits;
 import frc.robot.util.swerve.SwerveSetpoint;
@@ -108,8 +108,6 @@ public class Drive extends SubsystemBaseExt {
     };
     @Getter
     private Rotation2d rawGyroRotation = new Rotation2d();
-
-    private Rotation2d lastJoystickDriveLinearDirection = new Rotation2d();
 
     private final SwerveSetpointGenerator setpointGenerator = new SwerveSetpointGenerator(robotState.getKinematics());
     /** If null, it will be set to the measured ChassisSpeeds and module states when the setpoint generator starts to be used */
@@ -658,7 +656,7 @@ public class Drive extends SubsystemBaseExt {
     }
 
     public Command fullSpeedCharacterization() {
-        return withGoal(Goal.CHARACTERIZATION, Commands.sequence(
+        return withGoal(Goal.CHARACTERIZATION, CommandsExt.eagerSequence(
                 startIdle(
                         () -> {
                             for (var module : modules) {
