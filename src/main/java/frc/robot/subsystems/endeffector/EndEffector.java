@@ -135,14 +135,19 @@ public class EndEffector extends SubsystemBaseExt {
         this.rollersGoal = rollersGoal;
     }
 
-    public boolean atPositionSetpoint() {
-        return Math.abs(rollersInputs.positionRad - rollersPositionSetpointRad) <= rollersPositionToleranceRad;
-    }
-
     /** Goes positionDeltaMeters forward (or backwards) from current position */
-    public void moveByInstantaneous(double positionDeltaMeters) {
-        this.rollersGoal = RollersGoal.GO_TO_POSITION;
-        rollersPositionSetpointRad = rollersInputs.positionRad + rollersRadiansForMeters(positionDeltaMeters);
+    public Command moveByAndWaitUntilDone(DoubleSupplier positionDeltaMeters) {
+        return startEndWaitUntil(
+                () -> {
+                    this.rollersGoal = RollersGoal.GO_TO_POSITION;
+                    rollersPositionSetpointRad = rollersInputs.positionRad + rollersRadiansForMeters(positionDeltaMeters.getAsDouble());
+                },
+                () -> {
+                    this.rollersGoal = RollersGoal.IDLE;
+                    rollersPositionSetpointRad = null;
+                },
+                () -> Math.abs(rollersInputs.positionRad - rollersPositionSetpointRad) <= rollersPositionToleranceRad
+        );
     }
 
     public double getAngleDegrees() {

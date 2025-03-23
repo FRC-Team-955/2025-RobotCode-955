@@ -1,6 +1,5 @@
 package frc.robot.subsystems.superstructure;
 
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
@@ -51,7 +50,6 @@ public class SuperstructureIOSim extends SuperstructureIO {
     @Override
     public void updateInputs(SuperstructureIOInputs inputs) {
         var pose = robotState.getPose();
-        Transform3d coralRobotRelative = null;
         switch (coralState) {
             case NO_CORAL -> {
                 var current = robotState.getPose().getTranslation();

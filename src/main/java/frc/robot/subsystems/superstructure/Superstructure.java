@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import frc.robot.OperatorDashboard;
 import frc.robot.OperatorDashboard.LocalReefSide;
 import frc.robot.OperatorDashboard.ReefZoneSide;
@@ -20,6 +19,7 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
+import frc.robot.util.BackgroundCommandScheduler;
 import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
@@ -49,61 +49,50 @@ public class Superstructure extends SubsystemBaseExt {
 
     @RequiredArgsConstructor
     public enum Goal {
-        IDLE(true),
+        IDLE,
 
-        MANUAL_SCORE_CORAL_WAIT_ELEVATOR(true),
-        MANUAL_SCORE_CORAL_WAIT_CONFIRM(true),
-        MANUAL_SCORE_CORAL_SCORING(true),
+        MANUAL_SCORE_CORAL_WAIT_ELEVATOR,
+        MANUAL_SCORE_CORAL_WAIT_CONFIRM,
+        MANUAL_SCORE_CORAL_SCORING,
 
-        AUTO_SCORE_CORAL_WAIT_INITIAL(true),
-        AUTO_SCORE_CORAL_WAIT_FINAL(true),
-        AUTO_SCORE_CORAL_WAIT_ELEVATOR(true),
-        AUTO_SCORE_CORAL_SCORING(true),
+        AUTO_SCORE_CORAL_WAIT_INITIAL,
+        AUTO_SCORE_CORAL_WAIT_FINAL,
+        AUTO_SCORE_CORAL_WAIT_ELEVATOR,
+        AUTO_SCORE_CORAL_SCORING,
 
-        DESCORE_ALGAE_WAIT_ELEVATOR(true),
-        DESCORE_ALGAE_DESCORING(true),
+        DESCORE_ALGAE_WAIT_ELEVATOR,
+        DESCORE_ALGAE_DESCORING,
 
-        AUTO_DESCORE_ALGAE_WAIT_INITIAL(true),
-        AUTO_DESCORE_ALGAE_WAIT_FINAL(true),
-        AUTO_DESCORE_ALGAE_WAIT_AMPERAGE(true),
-        AUTO_DESCORE_ALGAE_MOVE_BACK(true),
+        AUTO_DESCORE_ALGAE_WAIT_INITIAL,
+        AUTO_DESCORE_ALGAE_WAIT_FINAL,
+        AUTO_DESCORE_ALGAE_WAIT_AMPERAGE,
+        AUTO_DESCORE_ALGAE_MOVE_BACK,
 
-        HANDOFF(false),
-        HOME(false),
+        HANDOFF,
+        HOME,
 
-        FUNNEL_INTAKE_WAITING(true),
+        FUNNEL_INTAKE_WAITING,
 
-        AUTO_FUNNEL_INTAKE_WAITING_ALIGN(true),
-        AUTO_FUNNEL_INTAKE_WAITING_SHAKE(true),
+        AUTO_FUNNEL_INTAKE_WAITING_ALIGN,
+        AUTO_FUNNEL_INTAKE_WAITING_SHAKE,
 
-        EJECT(true),
-        ;
-
-        private final boolean cancellable;
+        EJECT,
     }
 
     @Getter
     private Goal goal = Goal.IDLE;
+
+    private Command setGoal(Goal goal) {
+        return runOnce(() -> this.goal = goal);
+    }
+
+    private final BackgroundCommandScheduler backgroundCommandScheduler = new BackgroundCommandScheduler();
 
     private final Debouncer endEffectorBeamBreakDebouncerShort = new Debouncer(3 * 0.02);
     private final Debouncer endEffectorBeamBreakDebouncerLong = new Debouncer(0.25);
 
     private final Debouncer funnelBeamBreakDebouncerShort = new Debouncer(3 * 0.02);
     private final Debouncer funnelBeamBreakDebouncerLong = new Debouncer(0.25);
-
-    private Command withGoal(Goal goal, Command command) {
-        return new WrapperCommand(command) {
-            @Override
-            public void initialize() {
-                Superstructure.this.goal = goal;
-                super.initialize();
-            }
-        };
-    }
-
-    private Command setGoal(Goal goal) {
-        return runOnce(() -> this.goal = goal);
-    }
 
     private static Superstructure instance;
 
@@ -125,26 +114,6 @@ public class Superstructure extends SubsystemBaseExt {
         Logger.processInputs("Inputs/Superstructure", inputs);
     }
 
-
-    public void periodicAfterCommandsBeforeSubsystems() {
-        if (goal == Goal.HANDOFF) {
-            endEffector.setGoalInstantaneous(EndEffector.RollersGoal.FUNNEL_INTAKE);
-            funnelSetGoalIntakeAlternate();
-            if (endEffectorTriggeredShort() || operatorDashboard.ignoreEndEffectorBeamBreak.get()) {
-                goal = Goal.HOME;
-                endFunnelIntakeAlternate();
-            }
-        }
-
-        if (goal == Goal.HOME) {
-            funnel.setGoalInstantaneous(Funnel.Goal.IDLE);
-            if (endEffector.getRollersGoal() != EndEffector.RollersGoal.GO_TO_POSITION) {
-                endEffector.moveByInstantaneous(Units.inchesToMeters(funnelIntakeFinalizeInches.get()));
-            } else if (endEffector.atPositionSetpoint()) {
-                goal = Goal.IDLE;
-            }
-        }
-    }
 
     @Override
     public void periodicAfterCommands() {
@@ -204,34 +173,34 @@ public class Superstructure extends SubsystemBaseExt {
             Logger.recordOutput("Superstructure/CoralInEndEffector", new Pose3d[]{});
         }
 
-        Logger.recordOutput("Superstructure/TeleopAutoScoreGoal", getFinalAlignPose(1, operatorDashboard.getSelectedReefZoneSide(), operatorDashboard.getSelectedLocalReefSide()));
+        Logger.recordOutput("Superstructure/AutoScoreCoralFinalAlign", getFinalAlignPose(1, operatorDashboard.getSelectedReefZoneSide(), operatorDashboard.getSelectedLocalReefSide()));
     }
 
     /** Reacts quickly to change so better for waiting for the beam break */
     @AutoLogOutput(key = "Superstructure/EndEffectorTriggeredShort")
-    public boolean endEffectorTriggeredShort() {
+    private boolean endEffectorTriggeredShort() {
         return endEffectorBeamBreakDebouncerShort.calculate(inputs.endEffectorBeamBreakTriggered);
     }
 
     /** Reacts slowly to change so better for gating commands */
     @AutoLogOutput(key = "Superstructure/EndEffectorTriggeredLong")
-    public boolean endEffectorTriggeredLong() {
+    private boolean endEffectorTriggeredLong() {
         return endEffectorBeamBreakDebouncerLong.calculate(inputs.endEffectorBeamBreakTriggered);
     }
 
     /** Reacts quickly to change so better for waiting for the beam break */
     @AutoLogOutput(key = "Superstructure/FunnelTriggeredShort")
-    public boolean funnelTriggeredShort() {
+    private boolean funnelTriggeredShort() {
         return funnelBeamBreakDebouncerShort.calculate(inputs.funnelBeamBreakTriggered);
     }
 
     /** Reacts slowly to change so better for gating commands */
     @AutoLogOutput(key = "Superstructure/FunnelTriggeredLong")
-    public boolean funnelTriggeredLong() {
+    private boolean funnelTriggeredLong() {
         return funnelBeamBreakDebouncerLong.calculate(inputs.funnelBeamBreakTriggered);
     }
 
-    public Command waitUntilEndEffectorTriggered(Command ifIgnored) {
+    private Command waitUntilEndEffectorTriggered(Command ifIgnored) {
         return Commands.either(
                 ifIgnored,
                 Commands.waitUntil(this::endEffectorTriggeredShort),
@@ -239,11 +208,11 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
-    public Command waitUntilFunnelTriggered() {
+    private Command waitUntilFunnelTriggered() {
         return Commands.waitUntil(this::funnelTriggeredShort);
     }
 
-    public Command waitUntilEndEffectorNotTriggered(Command ifIngored) {
+    private Command waitUntilEndEffectorNotTriggered(Command ifIngored) {
         return Commands.either(
                 ifIngored,
                 Commands.waitUntil(() -> !endEffectorTriggeredShort()),
@@ -251,67 +220,63 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
-    public Command idle() {
-        return run(() -> {
-            if (goal.cancellable) {
-                goal = Goal.IDLE;
-            }
-        });
-    }
-
-    public Command elevatorIdle() {
-        return elevator.setGoal(() -> Elevator.Goal.STOW).andThen(Commands.idle());
-    }
-
-    public Command endEffectorIdle() {
-        return endEffector.run(() -> {
-            if (goal != Goal.HANDOFF && goal != Goal.HOME) {
-                endEffector.setGoalInstantaneous(EndEffector.RollersGoal.IDLE);
-            }
-        });
-    }
-
-    public Command funnelIdle() {
-        return funnel.run(() -> {
-            if (goal != Goal.HANDOFF) {
-                funnel.setGoalInstantaneous(Funnel.Goal.IDLE);
-            }
-        });
-    }
-
-    public Command eject() {
+    public Command cancel() {
         return Commands.parallel(
-                setGoal(Goal.EJECT),
-                endEffector.setGoal(EndEffector.RollersGoal.EJECT),
-                funnel.run(() -> {
-                    boolean forwards = Timer.getTimestamp() % 1.0 < 0.86;
-                    if (forwards) {
-                        funnel.setGoalInstantaneous(Funnel.Goal.EJECT_FORWARDS);
-                    } else {
-                        funnel.setGoalInstantaneous(Funnel.Goal.EJECT_BACKWARDS);
-                    }
-                })
+                backgroundCommandScheduler.cancelIfRunning(),
+                setGoal(Goal.IDLE),
+                elevator.setGoal(() -> Elevator.Goal.STOW),
+                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                funnel.setGoal(Funnel.Goal.IDLE)
         );
     }
 
-    private final Timer funnelIntakeTimer = new Timer();
-
-    private void endFunnelIntakeAlternate() {
-        funnelIntakeTimer.stop();
+    public Command ensureNotBusyAndResetGoals() {
+        return Commands.sequence(
+                backgroundCommandScheduler.waitUntilFinish(),
+                cancel()
+        );
     }
 
-    private void funnelSetGoalIntakeAlternate() {
-        if (!funnelIntakeTimer.isRunning()) {
-            funnelIntakeTimer.restart();
-        }
+    private Command wrapExposedCommand(Command command) {
+        // Note: if you are modifying this, there are some commands
+        // that integrate ensureNotBusyAndResetGoals directly, instead
+        // of using wrapExposedCommand. Make sure those are included in the changes too.
+        return Commands.sequence(
+                ensureNotBusyAndResetGoals(),
+                command
+        );
+    }
 
-        boolean backwards = funnelIntakeTimer.hasElapsed(0.92);
-        if (backwards) {
-            funnel.setGoalInstantaneous(Funnel.Goal.INTAKE_BACKWARDS);
-            funnelIntakeTimer.advanceIfElapsed(1.0);
-        } else {
-            funnel.setGoalInstantaneous(Funnel.Goal.INTAKE_FORWARDS);
-        }
+    private Command funnelSetGoalIntakeAlternate() {
+        Timer funnelTimer = new Timer();
+        return funnel.startRun(
+                funnelTimer::restart,
+                () -> {
+                    boolean backwards = funnelTimer.hasElapsed(0.92);
+                    if (backwards) {
+                        funnel.setGoalInstantaneous(Funnel.Goal.INTAKE_BACKWARDS);
+                        funnelTimer.advanceIfElapsed(1.0);
+                    } else {
+                        funnel.setGoalInstantaneous(Funnel.Goal.INTAKE_FORWARDS);
+                    }
+                }
+        );
+    }
+
+    private Command handoffAndHome() {
+        return Commands.sequence(
+                waitUntilEndEffectorTriggered(Commands.none())
+                        .deadlineFor(Commands.parallel(
+                                setGoal(Goal.HANDOFF),
+                                endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
+                                funnelSetGoalIntakeAlternate()
+                        )),
+                Commands.parallel(
+                        setGoal(Goal.HOME),
+                        endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeFinalizeInches.get())),
+                        funnel.setGoal(Funnel.Goal.IDLE)
+                )
+        );
     }
 
     private Command shake() {
@@ -320,10 +285,28 @@ public class Superstructure extends SubsystemBaseExt {
                 : new ChassisSpeeds(0.05, 0.05, 0.3));
     }
 
+    public Command eject() {
+        Timer funnelTimer = new Timer();
+        return wrapExposedCommand(Commands.parallel(
+                setGoal(Goal.EJECT),
+                endEffector.setGoal(EndEffector.RollersGoal.EJECT), funnel.startRun(
+                        funnelTimer::restart,
+                        () -> {
+                            boolean backwards = funnelTimer.hasElapsed(0.86);
+                            if (backwards) {
+                                funnel.setGoalInstantaneous(Funnel.Goal.EJECT_BACKWARDS);
+                                funnelTimer.advanceIfElapsed(1.0);
+                            } else {
+                                funnel.setGoalInstantaneous(Funnel.Goal.EJECT_FORWARDS);
+                            }
+                        }
+                )
+        ));
+    }
+
     public Command scoreCoralManual(
             boolean duringAuto,
             BooleanSupplier forwardCondition,
-            BooleanSupplier cancelCondition,
             Supplier<Elevator.Goal> elevatorGoalSupplier
     ) {
         Command raiseElevator = Commands.parallel(
@@ -331,10 +314,12 @@ public class Superstructure extends SubsystemBaseExt {
                 endEffector.setGoal(EndEffector.RollersGoal.IDLE),
                 elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
         );
+
         Command waitConfirm = Commands.parallel(
                 setGoal(Goal.MANUAL_SCORE_CORAL_WAIT_CONFIRM),
                 Commands.waitUntil(forwardCondition)
         );
+
         Command score = Commands.parallel(
                 setGoal(Goal.MANUAL_SCORE_CORAL_SCORING),
                 Commands.either(
@@ -345,65 +330,54 @@ public class Superstructure extends SubsystemBaseExt {
                 elevator.setGoal(elevatorGoalSupplier),
                 waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
         );
+
         // Wait for coral to settle
         Command finalize = Commands.either(
                 Commands.waitSeconds(scoreCoralL1SettleSeconds),
                 Commands.waitSeconds(scoreCoralSettleSeconds),
                 () -> elevatorGoalSupplier.get() == Elevator.Goal.SCORE_L1
         );
+
         if (duringAuto) {
-            return Commands.sequence(raiseElevator, waitConfirm, score, finalize);
-        } else {
-            return CommandsExt.onlyIf(
-                    () -> endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                    CommandsExt.cancelOnTrigger(
-                            cancelCondition,
-                            Commands.sequence(
-                                    raiseElevator,
-                                    waitConfirm,
-                                    // Don't allow canceling
-                                    CommandsExt.schedule(
-                                            CommandsExt.cancelOnTrigger(
-                                                    cancelCondition,
-                                                    Commands.sequence(
-                                                            score,
-                                                            finalize
-                                                    )
-                                            ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
-                                    )
-                            )
-                    )
+            return Commands.sequence(
+                    ensureNotBusyAndResetGoals(),
+                    raiseElevator,
+                    waitConfirm,
+                    score,
+                    finalize
             );
+        } else {
+            return wrapExposedCommand(CommandsExt.onlyIf(
+                    () -> endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
+                    Commands.sequence(
+                            raiseElevator,
+                            waitConfirm,
+                            backgroundCommandScheduler.scheduleInBackground(Commands.sequence(
+                                    score,
+                                    finalize
+                            ))
+                    )
+            ));
         }
     }
 
-    public Command descoreAlgaeManual(
-            Supplier<Elevator.Goal> elevatorGoalSupplier,
-            BooleanSupplier cancelCondition
-    ) {
-        return CommandsExt.onlyIf(
+    public Command descoreAlgaeManual(Supplier<Elevator.Goal> elevatorGoalSupplier) {
+        return wrapExposedCommand(CommandsExt.onlyIf(
                 () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                CommandsExt.cancelOnTrigger(
-                        cancelCondition,
-                        Commands.sequence(
-                                Commands.parallel(
-                                        setGoal(Goal.DESCORE_ALGAE_WAIT_ELEVATOR),
-                                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
-                                        elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
-                                ),
-                                Commands.parallel(
-                                        setGoal(Goal.DESCORE_ALGAE_DESCORING),
-                                        endEffector.setGoal(EndEffector.RollersGoal.DESCORE_ALGAE),
-                                        elevator.setGoal(elevatorGoalSupplier),
-                                        Commands.idle()
-                                )
-                        )//.finallyDo(() -> elevator.zero().schedule())
+                Commands.sequence(
+                        Commands.parallel(
+                                setGoal(Goal.DESCORE_ALGAE_WAIT_ELEVATOR),
+                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                elevator.setGoalAndWaitUntilAtGoal(elevatorGoalSupplier)
+                        ),
+                        Commands.parallel(
+                                setGoal(Goal.DESCORE_ALGAE_DESCORING),
+                                endEffector.setGoal(EndEffector.RollersGoal.DESCORE_ALGAE),
+                                elevator.setGoal(elevatorGoalSupplier),
+                                Commands.idle()
+                        )
                 )
-        );
-    }
-
-    private Command waitUntilIdle() {
-        return Commands.waitUntil(() -> goal == Goal.IDLE);
+        ));
     }
 
     public Command funnelIntake(boolean duringAuto) {
@@ -413,37 +387,35 @@ public class Superstructure extends SubsystemBaseExt {
         ).deadlineFor(
                 setGoal(Goal.FUNNEL_INTAKE_WAITING),
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                funnel.run(this::funnelSetGoalIntakeAlternate).finallyDo(this::endFunnelIntakeAlternate)
+                funnelSetGoalIntakeAlternate()
         );
         if (duringAuto) {
-            return CommandsExt.onlyIf(
-                    () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                    Commands.sequence(intake, setGoal(Goal.HANDOFF))
-            );
-        } else {
-            return CommandsExt.onlyIf(
+            return wrapExposedCommand(CommandsExt.onlyIf(
                     () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                     Commands.sequence(
                             intake,
-                            // Don't allow canceling
-                            CommandsExt.schedule(Commands.parallel(
-                                    setGoal(Goal.HANDOFF),
-                                    waitUntilIdle().withTimeout(waitUntilIdleTeleopTimeoutSeconds)
-                                            .finallyDo(i -> goal = Goal.IDLE)
-                            ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming))
+                            backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
                     )
-            );
+            ));
+        } else {
+            return wrapExposedCommand(CommandsExt.onlyIf(
+                    () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
+                    Commands.sequence(
+                            intake,
+                            backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
+                    )
+            ));
         }
     }
 
-    public Command funnelIntakeWithAutoAlign(boolean duringAuto, Station station) {
+    public Command autoFunnelIntake(boolean duringAuto, Station station) {
         Supplier<Pose2d> alignPoseSupplier = () -> getStationAlignPose(station);
         Command intake = Commands.race(
                 waitUntilEndEffectorTriggered(Commands.idle()),
                 waitUntilFunnelTriggered()
         ).deadlineFor(
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                funnel.run(this::funnelSetGoalIntakeAlternate).finallyDo(this::endFunnelIntakeAlternate),
+                funnelSetGoalIntakeAlternate(),
                 Commands.sequence(
                         Commands.parallel(
                                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_ALIGN),
@@ -460,23 +432,21 @@ public class Superstructure extends SubsystemBaseExt {
                 )
         );
         if (duringAuto) {
-            return CommandsExt.onlyIf(
-                    () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                    Commands.sequence(intake, setGoal(Goal.HANDOFF))
-            );
-        } else {
-            return CommandsExt.onlyIf(
+            return wrapExposedCommand(CommandsExt.onlyIf(
                     () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                     Commands.sequence(
                             intake,
-                            // Don't allow canceling
-                            CommandsExt.schedule(Commands.parallel(
-                                    setGoal(Goal.HANDOFF),
-                                    waitUntilIdle().withTimeout(waitUntilIdleTeleopTimeoutSeconds)
-                                            .finallyDo(i -> goal = Goal.IDLE)
-                            ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming))
+                            backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
                     )
-            );
+            ));
+        } else {
+            return wrapExposedCommand(CommandsExt.onlyIf(
+                    () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
+                    Commands.sequence(
+                            intake,
+                            backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
+                    )
+            ));
         }
     }
 
@@ -495,25 +465,12 @@ public class Superstructure extends SubsystemBaseExt {
     @Getter
     private boolean autoScoreForceable = false;
 
-    public Command autoAlignAndScore(
+    public Command autoScoreCoral(
             boolean duringAuto,
             Supplier<ReefZoneSide> reefSideSupplier,
             Supplier<LocalReefSide> sideSupplier,
             Supplier<Elevator.Goal> elevatorGoalSupplier,
-            BooleanSupplier forceCondition,
-            BooleanSupplier cancelCondition
-    ) {
-        return autoAlignAndScore(duringAuto, reefSideSupplier, sideSupplier, elevatorGoalSupplier, forceCondition, cancelCondition, null);
-    }
-
-    public Command autoAlignAndScore(
-            boolean duringAuto,
-            Supplier<ReefZoneSide> reefSideSupplier,
-            Supplier<LocalReefSide> sideSupplier,
-            Supplier<Elevator.Goal> elevatorGoalSupplier,
-            BooleanSupplier forceCondition,
-            BooleanSupplier cancelCondition,
-            Command afterDone
+            BooleanSupplier forceCondition
     ) {
         Supplier<Pose2d> initialPoseSupplier = () -> getInitialAlignPose(robotState.getPose(), reefSideSupplier.get(), sideSupplier.get());
         Command initial = Commands.race(
@@ -592,14 +549,15 @@ public class Superstructure extends SubsystemBaseExt {
         );
         if (duringAuto) {
             return Commands.sequence(
-                    waitUntilIdle().raceWith(Commands.sequence(
-                            drive.moveTo(initialPoseSupplier)
-                                    // We don't really care about position tolerances right now,
-                                    // checking velocity is a good way to approximate "we're at the position we want"
-                                    .until(() -> Math.abs(drive.getMeasuredChassisLinearVelocityMetersPerSec()) < finalAlignToleranceMetersPerSecond
-                                            && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < finalAlignToleranceRadPerSecond),
-                            shake()
-                    )),
+                    ensureNotBusyAndResetGoals() // MUST BE CALLED AT THE START OF EVERY EXPOSED COMMAND
+                            .raceWith(Commands.sequence(
+                                    drive.moveTo(initialPoseSupplier)
+                                            // We don't really care about position tolerances right now,
+                                            // checking velocity is a good way to approximate "we're at the position we want"
+                                            .until(() -> Math.abs(drive.getMeasuredChassisLinearVelocityMetersPerSec()) < finalAlignToleranceMetersPerSecond
+                                                    && Math.abs(drive.getMeasuredChassisAngularVelocityRadPerSec()) < finalAlignToleranceRadPerSecond),
+                                    shake()
+                            )),
                     initial,
                     Commands.race(
                             drive.moveTo(finalPoseSupplier),
@@ -613,48 +571,33 @@ public class Superstructure extends SubsystemBaseExt {
                             )
                     )
             );
-        } else {
-            return CommandsExt.onlyIf(
+        } else
+            return wrapExposedCommand(CommandsExt.onlyIf(
                     // Only run if you have coral and are in front of your reef side
                     () -> (endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
                             && alignable(reefSideSupplier.get(), robotState.getPose()),
-                    CommandsExt.cancelOnTrigger(
-                            cancelCondition,
-                            Commands.sequence(
-                                    initial,
-                                    Commands.race(
-                                            drive.moveTo(finalPoseSupplier),
-                                            waitFinalAndElevator,
-                                            waitForForce
-                                    ),
-                                    // don't allow cancelling
-                                    CommandsExt.schedule(
-                                            CommandsExt.cancelOnTrigger(
-                                                    cancelCondition,
-                                                    Commands.race(
-                                                                    drive.moveTo(finalPoseSupplier),
-                                                                    score.andThen(finalize)
-                                                            )
-                                                            .finallyDo(() -> {
-                                                                if (afterDone != null) {
-                                                                    afterDone.schedule();
-                                                                }
-                                                            })
-                                            ).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
-                                    )
-                            )//.finallyDo(() -> elevator.zero().schedule())
+                    Commands.sequence(
+                            initial,
+                            Commands.race(
+                                    drive.moveTo(finalPoseSupplier),
+                                    waitFinalAndElevator,
+                                    waitForForce
+                            ),
+                            backgroundCommandScheduler.scheduleInBackground(Commands.race(
+                                    drive.moveTo(finalPoseSupplier),
+                                    score.andThen(finalize)
+                            ))
                     )
-            );
-        }
+            ));
     }
 
-    public Command autoAlignDescoreAlgae(
+    public Command autoDescoreAlgae(
             Supplier<ReefZoneSide> reefSideSupplier,
             Supplier<Elevator.Goal> elevatorGoalSupplier,
-            BooleanSupplier forceCondition,
-            BooleanSupplier cancelCondition
+            BooleanSupplier forceCondition
     ) {
         Supplier<Pose2d> poseSupplier = () -> getFinalAlignPose(1, reefSideSupplier.get(), LocalReefSide.Middle);
+
         Command driveTo = Commands.race(
                 // Drive to position
                 drive.moveTo(poseSupplier),
@@ -718,22 +661,19 @@ public class Superstructure extends SubsystemBaseExt {
                 )
         );
 
-        return CommandsExt.onlyIf(
+        return wrapExposedCommand(CommandsExt.onlyIf(
                 () -> (!endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
                         && alignable(reefSideSupplier.get(), robotState.getPose()),
-                CommandsExt.cancelOnTrigger(
-                        cancelCondition,
-                        Commands.sequence(
-                                Commands.race(
-                                        Commands.sequence(
-                                                driveTo,
-                                                waitAlgae
-                                        ),
-                                        waitForForce
+                Commands.sequence(
+                        Commands.race(
+                                Commands.sequence(
+                                        driveTo,
+                                        waitAlgae
                                 ),
-                                driveBack
-                        )//.finallyDo(() -> elevator.zero().schedule())
+                                waitForForce
+                        ),
+                        driveBack
                 )
-        );
+        ));
     }
 }

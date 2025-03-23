@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.subsystems.drive.ModuleIOSim;
+import frc.robot.util.BackgroundCommandScheduler;
 import frc.robot.util.CANLogger;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
@@ -34,6 +35,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 import static frc.robot.Constants.mode;
@@ -51,6 +53,7 @@ public class Robot extends LoggedRobot {
 
     private static final HashSet<SubsystemBaseExt> extendedSubsystems = new HashSet<>();
     private static final HashSet<VirtualSubsystem> virtualSubsystems = new HashSet<>();
+    private static final ArrayList<BackgroundCommandScheduler> backgroundCommandSchedulers = new ArrayList<>();
 
     public static void registerExtendedSubsystem(SubsystemBaseExt subsystem) {
         if (!extendedSubsystems.add(subsystem)) {
@@ -58,10 +61,14 @@ public class Robot extends LoggedRobot {
         }
     }
 
-    public static void registerVirtualSubsystem(VirtualSubsystem subsystem) {
-        if (!virtualSubsystems.add(subsystem)) {
-            Util.error("A virtual subsystem has been registered more than once: " + subsystem.getClass().getName());
+    public static void registerVirtualSubsystem(VirtualSubsystem virtualSubsystem) {
+        if (!virtualSubsystems.add(virtualSubsystem)) {
+            Util.error("A virtual subsystem has been registered more than once: " + virtualSubsystem.getClass().getName());
         }
+    }
+
+    public static void registerBackgroundCommandScheduler(BackgroundCommandScheduler backgroundCommandScheduler) {
+        backgroundCommandSchedulers.add(backgroundCommandScheduler);
     }
 
 //    private static void onCommandEnd(Command command) {
@@ -185,13 +192,16 @@ public class Robot extends LoggedRobot {
             subsystem.periodicBeforeCommands();
         }
 
-        for (var subsystem : virtualSubsystems) {
-            subsystem.periodicBeforeCommands();
+        for (var virtualSubsystem : virtualSubsystems) {
+            virtualSubsystem.periodicBeforeCommands();
+        }
+
+        for (var backgroundCommandScheduler : backgroundCommandSchedulers) {
+            backgroundCommandScheduler.periodicBeforeCommands();
         }
 
         // Run the command scheduler.
-        // This first runs all subsystem periodic() (AKA periodicBeforeCommands())
-        // and then runs all of the commands.
+        // Extended subsystems periodic have already been run.
         CommandScheduler.getInstance().run();
 
         if (DriverStation.isAutonomousEnabled()) {
@@ -204,14 +214,16 @@ public class Robot extends LoggedRobot {
             }
         }
 
-        robotContainer.superstructure.periodicAfterCommandsBeforeSubsystems();
+        for (var backgroundCommandScheduler : backgroundCommandSchedulers) {
+            backgroundCommandScheduler.periodicAfterCommands();
+        }
 
         for (var subsystem : extendedSubsystems) {
             subsystem.periodicAfterCommands();
         }
 
-        for (var subsystem : virtualSubsystems) {
-            subsystem.periodicAfterCommands();
+        for (var virtualSubsystem : virtualSubsystems) {
+            virtualSubsystem.periodicAfterCommands();
         }
 
         // Return to normal thread priority

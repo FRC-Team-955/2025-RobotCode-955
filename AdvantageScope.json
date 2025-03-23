@@ -2,9 +2,9 @@
   "hubs": [
     {
       "x": 0,
-      "y": 25,
-      "width": 1920,
-      "height": 1055,
+      "y": 33,
+      "width": 1280,
+      "height": 799,
       "state": {
         "sidebar": {
           "width": 399,
@@ -128,21 +128,17 @@
             "/RealOutputs/RobotState/Mechanism/LED10/LED10",
             "/RealOutputs/RobotState/Mechanism/LED12",
             "/RealOutputs/RobotState/Mechanism/LED12/LED12",
-            "/RealOutputs/Funnel",
             "/RealOutputs/Superstructure",
             "/RealOutputs/Superstructrue",
             "/RealOutputs/Superstructrue/align",
             "/RealOutputs/Superstructrue/align/translation",
-            "/RealOutputs/LoggedRobot",
             "/RealOutputs/RobotState/Pose/rotation",
             "/RealOutputs/Drive/MoveTo/Setpoint",
             "/RealOutputs/Drive/MoveTo/Setpoint/translation",
             "/RealOutputs/Drive/MoveTo/Goal",
             "/RealOutputs/Drive/MoveTo/Goal/translation",
             "/RealOutputs/RobotState/Pose/translation",
-            "/Inputs",
             "/Inputs/Superstructure",
-            "/RealOutputs/RobotState",
             "/Inputs/Funnel",
             "/Inputs/Funnel/Belt",
             "/RealOutputs/Funnel/Belt",
@@ -168,7 +164,6 @@
             "/Inputs/Vision/AprilTag/StationCam/LatestAprilTagTargetObservation",
             "/Inputs/Vision/AprilTag/StationCam/LatestAprilTagTargetObservation/tx",
             "/Inputs/Vision/AprilTag/StationCam/TagIds",
-            "/RealOutputs/Drive",
             "/RealOutputs/Drive/MoveTo/Setpoint/rotation",
             "/Inputs/Elevator",
             "/RealOutputs/Vision/AprilTag",
@@ -179,7 +174,14 @@
             "/ReplayOutputs/Vision/Summary/RobotPosesAccepted",
             "/ReplayOutputs/Vision/Summary/RobotPosesRejected",
             "/RealOutputs/Superstructure/CoralInFunnel",
-            "/RealOutputs/Superstructure/CoralInEndEffector"
+            "/RealOutputs/Superstructure/CoralInEndEffector",
+            "/RealOutputs/JoystickDrive/Suppliers",
+            "/RealOutputs/Superstructure/ClosestSide",
+            "/RealOutputs/Superstructure/ClosestSide/RobotSpeedsToRight",
+            "/RealOutputs/Superstructure/ClosestSide/RightToCurrent",
+            "/RealOutputs/Superstructure/ClosestSide/RobotToRight",
+            "/RealOutputs/Superstructure/ClosestSide/RobotToLeft",
+            "/RealOutputs/Superstructure/ClosestSide/JoystickAngle"
           ]
         },
         "tabs": {
@@ -1150,6 +1152,16 @@
                     "options": {
                       "variant": "Coral"
                     }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "/RealOutputs/Superstructure/AutoScoreCoralFinalAlign",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#ffff00"
+                    }
                   }
                 ],
                 "game": "2025 Field (Welded)",
@@ -1160,14 +1172,14 @@
                 "cameraIndex": -1,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  12.132349078974698,
-                  7.552333905950927,
-                  -0.6119047446898379
+                  10.9336452901303,
+                  5.153488127916834,
+                  -0.19487018143394905
                 ],
                 "cameraTarget": [
-                  6.137914388974043,
-                  1.873544064734598,
-                  0.2153236845296531
+                  6.2996577159689675,
+                  1.8568713497282496,
+                  -0.14668883656928727
                 ]
               },
               "controlsHeight": 267

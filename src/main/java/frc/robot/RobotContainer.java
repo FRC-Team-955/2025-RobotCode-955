@@ -1,9 +1,6 @@
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -22,13 +19,9 @@ import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.commands.CommandsExt;
-import org.ironmaple.simulation.SimulatedArena;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import java.util.Optional;
-
-import static frc.robot.Constants.mode;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -130,10 +123,7 @@ public class RobotContainer {
         //                            });
         drive.setDefaultCommand(drive.driveJoystick(Optional::empty));
 
-        superstructure.setDefaultCommand(superstructure.idle().ignoringDisable(true));
-        elevator.setDefaultCommand(superstructure.elevatorIdle().ignoringDisable(true));
-        endEffector.setDefaultCommand(superstructure.endEffectorIdle().ignoringDisable(true));
-        funnel.setDefaultCommand(superstructure.funnelIdle().ignoringDisable(true));
+        superstructure.setDefaultCommand(superstructure.ensureNotBusyAndResetGoals().andThen(Commands.idle()).ignoringDisable(true));
     }
 
     /**
@@ -144,6 +134,8 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
         driverController.y().onTrue(robotState.resetRotation());
+
+        driverController.leftBumper().onTrue(superstructure.cancel());
 
         driverController.x().whileTrue(superstructure.eject());
 
@@ -156,25 +148,14 @@ public class RobotContainer {
                 superstructure.scoreCoralManual(
                         false,
                         driverController.leftTrigger(),
-                        driverController.leftBumper(),
                         operatorDashboard::getCoralScoringElevatorGoal
                 ).asProxy(),
-                superstructure.autoAlignAndScore(
+                superstructure.autoScoreCoral(
                                 false,
                                 operatorDashboard::getSelectedReefZoneSide,
                                 operatorDashboard::getSelectedLocalReefSide,
                                 operatorDashboard::getCoralScoringElevatorGoal,
-                                driverController.leftTrigger(),
-                                driverController.leftBumper(),
-                                CommandsExt.onlyIf(
-                                        () -> ref.shouldDescoreAlgae,
-                                        superstructure.autoAlignDescoreAlgae(
-                                                operatorDashboard::getSelectedReefZoneSide,
-                                                operatorDashboard::getAlgaeDescoringElevatorGoal,
-                                                driverController.rightBumper(),
-                                                driverController.leftBumper()
-                                        )
-                                )
+                                driverController.leftTrigger()
                         )
                         .deadlineFor(
                                 Commands.startRun(
@@ -186,55 +167,34 @@ public class RobotContainer {
                                         }
                                 ).until(() -> ref.shouldDescoreAlgae)
                         )
+                        .andThen(CommandsExt.onlyIf(
+                                () -> ref.shouldDescoreAlgae,
+                                superstructure.autoDescoreAlgae(
+                                        operatorDashboard::getSelectedReefZoneSide,
+                                        operatorDashboard::getAlgaeDescoringElevatorGoal,
+                                        driverController.rightBumper()
+                                )
+                        ))
                         .asProxy(),
                 // Use manual scoring if override enabled or when scoring L1
                 () -> operatorDashboard.manualScoring.get()
                         || operatorDashboard.getSelectedCoralScoringLevel() == OperatorDashboard.CoralScoringLevel.L1
         ));
 
-//        driverController.rightBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
         driverController.rightBumper().onTrue(CommandsExt.onlyIf(
                 () -> superstructure.getGoal() == Superstructure.Goal.IDLE,
                 Commands.either(
                         superstructure.descoreAlgaeManual(
-                                operatorDashboard::getAlgaeDescoringElevatorGoal,
-                                driverController.leftBumper()
+                                operatorDashboard::getAlgaeDescoringElevatorGoal
                         ).asProxy(),
-                        superstructure.autoAlignDescoreAlgae(
+                        superstructure.autoDescoreAlgae(
                                 operatorDashboard::getSelectedReefZoneSide,
                                 operatorDashboard::getAlgaeDescoringElevatorGoal,
-                                driverController.rightBumper(),
-                                driverController.leftBumper()
+                                driverController.rightBumper()
                         ).asProxy(),
                         operatorDashboard.manualScoring::get
                 )
         ));
-
-        if (mode == Constants.Mode.SIM) {
-            driverController.x().onTrue(Commands.runOnce(() ->
-                    SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(
-                            new Pose2d(Units.inchesToMeters(650), Units.inchesToMeters(30), new Rotation2d(Math.random() * 2 * Math.PI))
-                    ))
-            ));
-            driverController.a().onTrue(Commands.runOnce(() ->
-                    SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(
-                            new Pose2d(Units.inchesToMeters(650), Units.inchesToMeters(285), new Rotation2d(Math.random() * 2 * Math.PI))
-                    ))
-            ));
-        }
-
-//        // Lock to 0° when A button is held
-//        controller
-//                .a()
-//                .whileTrue(
-//                        DriveCommands.joystickDriveAtAngle(
-//                                drive,
-//                                () -> -controller.getLeftY(),
-//                                () -> -controller.getLeftX(),
-//                                () -> new Rotation2d()));
-
-        // Switch to X pattern when X button is pressed
-//        controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     }
 
     /**

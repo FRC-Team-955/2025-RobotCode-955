@@ -50,7 +50,7 @@ public class AutoBuilder {
                 ));
 
                 next.stationTraj.atTime("intake").onTrue(Commands.sequence(
-                        superstructure.funnelIntakeWithAutoAlign(true, next.station),
+                        superstructure.autoFunnelIntake(true, next.station),
                         next.scoreTraj.cmd()
                 ));
 
@@ -81,13 +81,12 @@ public class AutoBuilder {
             Elevator.Goal elevatorGoal
     ) {
         private Command scoreCommand(Superstructure superstructure) {
-            return superstructure.autoAlignAndScore(
+            return superstructure.autoScoreCoral(
                     true,
                     () -> reefZoneSide,
                     () -> localReefSide,
                     () -> elevatorGoal,
-                    () -> true,
-                    () -> false
+                    () -> true
             );
         }
     }
