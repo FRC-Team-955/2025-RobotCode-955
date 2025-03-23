@@ -36,7 +36,9 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static frc.robot.Constants.mode;
 
@@ -51,20 +53,22 @@ public class Robot extends LoggedRobot {
     private Command autonomousCommand;
     private double autonomousStart;
 
-    private static final HashSet<SubsystemBaseExt> extendedSubsystems = new HashSet<>();
-    private static final HashSet<VirtualSubsystem> virtualSubsystems = new HashSet<>();
-    private static final ArrayList<BackgroundCommandScheduler> backgroundCommandSchedulers = new ArrayList<>();
+    private static List<SubsystemBaseExt> extendedSubsystems = new ArrayList<>();
+    private static final List<VirtualSubsystem> virtualSubsystems = new ArrayList<>();
+    private static final List<BackgroundCommandScheduler> backgroundCommandSchedulers = new ArrayList<>();
 
     public static void registerExtendedSubsystem(SubsystemBaseExt subsystem) {
-        if (!extendedSubsystems.add(subsystem)) {
+        if (extendedSubsystems.contains(subsystem)) {
             Util.error("An extended subsystem has been registered more than once: " + subsystem.getName());
         }
+        extendedSubsystems.add(subsystem);
     }
 
     public static void registerVirtualSubsystem(VirtualSubsystem virtualSubsystem) {
-        if (!virtualSubsystems.add(virtualSubsystem)) {
+        if (virtualSubsystems.contains(virtualSubsystem)) {
             Util.error("A virtual subsystem has been registered more than once: " + virtualSubsystem.getClass().getName());
         }
+        virtualSubsystems.add(virtualSubsystem);
     }
 
     public static void registerBackgroundCommandScheduler(BackgroundCommandScheduler backgroundCommandScheduler) {
@@ -151,6 +155,19 @@ public class Robot extends LoggedRobot {
         System.out.println("********** Initializing RobotContainer **********");
         robotContainer = new RobotContainer();
 
+        extendedSubsystems = extendedSubsystems.stream().sorted(Comparator.comparingInt(o -> o.periodicPriority)).toList();
+        System.out.println("Extended subsystems: " +
+                extendedSubsystems.stream()
+                        .map(s -> s.getName() + " (" + s.periodicPriority + ")")
+                        .collect(Collectors.joining(", "))
+        );
+
+        System.out.println("Virtual subsystems: " +
+                virtualSubsystems.stream()
+                        .map(s -> s.getClass().getSimpleName())
+                        .collect(Collectors.joining(", "))
+        );
+
 //        CommandScheduler.getInstance().onCommandFinish(Robot::onCommandEnd);
 //        CommandScheduler.getInstance().onCommandInterrupt(Robot::onCommandEnd);
     }
@@ -188,11 +205,13 @@ public class Robot extends LoggedRobot {
 
         robotContainer.periodicBeforeAll();
 
-        for (var subsystem : extendedSubsystems) {
-            subsystem.periodicBeforeCommands();
+        for (var extendedSubsystem : extendedSubsystems) {
+//            System.out.println("Extended subsystem periodicBeforeCommands: " + extendedSubsystem.getName());
+            extendedSubsystem.periodicBeforeCommands();
         }
 
         for (var virtualSubsystem : virtualSubsystems) {
+//            System.out.println("Virtual subsystem periodicBeforeCommands: " + virtualSubsystem.getClass().getSimpleName());
             virtualSubsystem.periodicBeforeCommands();
         }
 
@@ -218,11 +237,13 @@ public class Robot extends LoggedRobot {
             backgroundCommandScheduler.periodicAfterCommands();
         }
 
-        for (var subsystem : extendedSubsystems) {
-            subsystem.periodicAfterCommands();
+        for (var extendedSubsystem : extendedSubsystems) {
+//            System.out.println("Extended subsystem periodicAfterCommands: " + extendedSubsystem.getName());
+            extendedSubsystem.periodicAfterCommands();
         }
 
         for (var virtualSubsystem : virtualSubsystems) {
+//            System.out.println("Virtual subsystem periodicAfterCommands: " + virtualSubsystem.getClass().getSimpleName());
             virtualSubsystem.periodicAfterCommands();
         }
 

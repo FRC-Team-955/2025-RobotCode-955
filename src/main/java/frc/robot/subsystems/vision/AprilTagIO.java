@@ -13,42 +13,46 @@
 
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import org.littletonrobotics.junction.AutoLog;
 
 public class AprilTagIO {
     @AutoLog
     public static class AprilTagIOInputs {
         public boolean connected = false;
-        public AprilTagTargetObservation latestAprilTagTargetObservation = new AprilTagTargetObservation(new Rotation2d(), new Rotation2d());
-        public PoseObservation[] poseObservations = new PoseObservation[0];
-        public int[] tagIds = new int[0];
+        public AprilTagTargetObservation[] aprilTagObservations = new AprilTagTargetObservation[0];
+        public BestTargetObservation[] bestTargetObservations = new BestTargetObservation[0];
+        public MultiTagObservation[] multiTagObservations = new MultiTagObservation[0];
     }
 
     /**
      * Represents the angle to a simple target, not used for pose estimation.
      */
-    public record AprilTagTargetObservation(Rotation2d tx, Rotation2d ty) {
+    public record AprilTagTargetObservation(
+            double timestamp,
+            int id,
+            Rotation2d tx,
+            Rotation2d ty
+    ) {
     }
 
-    /**
-     * Represents a robot pose sample used for pose estimation.
-     */
-    public record PoseObservation(
+    public record BestTargetObservation(
             double timestamp,
-            Pose3d pose,
+            double ambiguity,
+            int tagID,
+            Transform3d cameraToTarget,
+            double pitch,
+            double yaw
+    ) {}
+
+    public record MultiTagObservation(
+            double timestamp,
             double ambiguity,
             int tagCount,
             double averageTagDistance,
-            PoseObservationType type) {
-    }
-
-    public enum PoseObservationType {
-        MEGATAG_1,
-        MEGATAG_2,
-        PHOTONVISION
-    }
+            Transform3d fieldToCamera
+    ) {}
 
     public void updateInputs(AprilTagIOInputs inputs) {
     }

@@ -49,8 +49,8 @@ public class RobotContainer {
     public final Elevator elevator = Elevator.get();
     public final EndEffector endEffector = EndEffector.get();
     public final Funnel funnel = Funnel.get();
-    public final Vision vision = Vision.get();
     public final Drive drive = Drive.get();
+    public final Vision vision = Vision.get();
     public final Superstructure superstructure = Superstructure.get();
 
     public RobotContainer() {

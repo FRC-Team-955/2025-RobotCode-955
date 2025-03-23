@@ -34,13 +34,8 @@ public class AprilTagIOPhotonVisionSim extends AprilTagIOPhotonVision {
     private static final Supplier<Pose2d> poseSupplier = ModuleIOSim.driveSimulation::getSimulatedDriveTrainPose;
     private final PhotonCameraSim cameraSim;
 
-    /**
-     * Creates a new VisionIOPhotonVisionSim.
-     *
-     * @param name The name of the camera.
-     */
     public AprilTagIOPhotonVisionSim(String name, Transform3d robotToCamera) {
-        super(name, robotToCamera);
+        super(name);
 
         // Initialize vision sim
         if (visionSim == null) {

@@ -15,6 +15,7 @@ import frc.robot.subsystems.drive.DriveConstants;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public class RobotState {
@@ -59,6 +60,10 @@ public class RobotState {
             Matrix<N3, N1> visionMeasurementStdDevs
     ) {
         poseEstimator.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+    }
+
+    public Optional<Pose2d> getPoseAtTimestamp(double timestampSeconds) {
+        return poseEstimator.sampleAt(timestampSeconds);
     }
 
     @AutoLogOutput(key = "RobotState/Pose")

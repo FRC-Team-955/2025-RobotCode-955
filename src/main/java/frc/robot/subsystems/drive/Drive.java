@@ -137,6 +137,8 @@ public class Drive extends SubsystemBaseExt {
     }
 
     private Drive() {
+        super(0);
+
         var moduleIO = createModuleIO();
         // Array is currently four nulls, so length works just fine
         for (int i = 0; i < modules.length; i++) {

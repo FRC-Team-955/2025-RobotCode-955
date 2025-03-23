@@ -25,20 +25,21 @@ import java.util.function.Function;
 
 public class VisionConstants {
     // AprilTag layout
-    public static AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+    public static final AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
     // Basic filtering thresholds
-    public static double maxAmbiguity = 0.3;
-    public static double maxZError = 0.25;
+    public static final double maxAmbiguity = 0.3;
+    public static final double maxZError = 0.2;
 
     // Standard deviation baselines, for 1 meter distance and 1 tag
     // (Adjusted automatically based on distance and # of tags)
-    public static double linearStdDevBaseline = 0.15; // Meters
-    public static double angularStdDevBaseline = Units.degreesToRadians(15); // Radians
+    public static final double linearStdDevBaselineTrigMeters = 0.1;
+    public static final double angularStdDevBaselineTrigRad = Units.degreesToRadians(30);
+    public static final double linearStdDevBaseline3dSolveMeters = 0.3;
+    public static final double angularStdDevBaseline3dSolveRad = Units.degreesToRadians(15);
 
-    // Multipliers to apply for MegaTag 2 observations
-    public static double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
-    public static double angularStdDevMegatag2Factor = Double.POSITIVE_INFINITY; // No rotation data available
+    // Distance from a tag for trig estimation to be used
+    public static final double distanceFromTagForTrigMeters = 1;
 
     @RequiredArgsConstructor
     public enum AprilTagCamera {
@@ -50,7 +51,7 @@ public class VisionConstants {
                                 .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-30)))
                 ),
                 (cam) -> switch (Constants.identity) {
-                    case COMPBOT -> new AprilTagIOPhotonVision("StationCam", cam.robotToCamera);
+                    case COMPBOT -> new AprilTagIOPhotonVision("StationCam");
                     case SIMBOT -> new AprilTagIOPhotonVisionSim("StationCam", cam.robotToCamera);
                     case ALPHABOT -> new AprilTagIO();
                 },
@@ -66,7 +67,7 @@ public class VisionConstants {
                                 .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-170)))
                 ),
                 (cam) -> switch (Constants.identity) {
-                    case COMPBOT -> new AprilTagIOPhotonVision("ReefCam", cam.robotToCamera);
+                    case COMPBOT -> new AprilTagIOPhotonVision("ReefCam");
                     case SIMBOT -> new AprilTagIOPhotonVisionSim("ReefCam", cam.robotToCamera);
                     case ALPHABOT -> new AprilTagIO();
                 },

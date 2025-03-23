@@ -55,6 +55,7 @@ public class Funnel extends SubsystemBaseExt {
     }
 
     private Funnel() {
+        super(10);
     }
 
     @Override

@@ -68,6 +68,7 @@ public class EndEffector extends SubsystemBaseExt {
     }
 
     private EndEffector() {
+        super(10);
     }
 
     @Override

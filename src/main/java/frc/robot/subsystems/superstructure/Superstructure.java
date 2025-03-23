@@ -106,6 +106,7 @@ public class Superstructure extends SubsystemBaseExt {
     }
 
     private Superstructure() {
+        super(5);
     }
 
     @Override

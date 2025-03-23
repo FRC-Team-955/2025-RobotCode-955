@@ -96,6 +96,8 @@ public class Elevator extends SubsystemBaseExt {
     }
 
     private Elevator() {
+        super(10);
+
         sysId = Util.sysIdRoutine(
                 "Elevator",
                 (voltage) -> io.setOpenLoop(voltage.in(Volts)),
