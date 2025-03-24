@@ -11,7 +11,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.vision;
+package frc.robot.subsystems.apriltagvision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.function.Function;
 
-public class VisionConstants {
+public class AprilTagVisionConstants {
     // AprilTag layout
     public static final AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
@@ -42,7 +42,7 @@ public class VisionConstants {
     public static final double distanceFromTagForTrigMeters = 1;
 
     @RequiredArgsConstructor
-    public enum AprilTagCamera {
+    public enum Camera {
         StationCam(
                 new Transform3d(
                         Units.inchesToMeters(-6.5), Units.inchesToMeters(-8.375), Units.inchesToMeters(27.5),
@@ -51,9 +51,9 @@ public class VisionConstants {
                                 .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-30)))
                 ),
                 (cam) -> switch (Constants.identity) {
-                    case COMPBOT -> new AprilTagIOPhotonVision("StationCam");
-                    case SIMBOT -> new AprilTagIOPhotonVisionSim("StationCam", cam.robotToCamera);
-                    case ALPHABOT -> new AprilTagIO();
+                    case COMPBOT -> new AprilTagVisionIOPhotonVision("StationCam");
+                    case SIMBOT -> new AprilTagVisionIOPhotonVisionSim("StationCam", cam.robotToCamera);
+                    case ALPHABOT -> new AprilTagVisionIO();
                 },
                 // Relatively stable, even at long distance
                 2.0,
@@ -67,9 +67,9 @@ public class VisionConstants {
                                 .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-170)))
                 ),
                 (cam) -> switch (Constants.identity) {
-                    case COMPBOT -> new AprilTagIOPhotonVision("ReefCam");
-                    case SIMBOT -> new AprilTagIOPhotonVisionSim("ReefCam", cam.robotToCamera);
-                    case ALPHABOT -> new AprilTagIO();
+                    case COMPBOT -> new AprilTagVisionIOPhotonVision("ReefCam");
+                    case SIMBOT -> new AprilTagVisionIOPhotonVisionSim("ReefCam", cam.robotToCamera);
+                    case ALPHABOT -> new AprilTagVisionIO();
                 },
                 // Trust more at close distance, less at long distance
                 2.5,
@@ -78,40 +78,13 @@ public class VisionConstants {
         ;
 
         public final Transform3d robotToCamera;
-        private final Function<AprilTagCamera, AprilTagIO> createIO;
+        private final Function<Camera, AprilTagVisionIO> createIO;
         public final double distancePower;
         public final double stddevMultiplier;
 
-        public AprilTagIO createIO() {
+        public AprilTagVisionIO createIO() {
             if (Constants.isReplay) {
-                return new AprilTagIO();
-            }
-
-            return createIO.apply(this);
-        }
-    }
-
-    @RequiredArgsConstructor
-    public enum GamepieceCamera {
-//        Limelight(
-//                // 2 inches back, 2 inches right, 37 inches up, 40 degrees down from horizontal
-//                new Transform3d(Units.inchesToMeters(-2), Units.inchesToMeters(-2), Units.inchesToMeters(37),
-//                        new Rotation3d(0, Units.degreesToRadians(40), 0)
-//                ),
-//                (cam) -> switch (Constants.identity) {
-//                    case COMPBOT -> new GamepieceIO();
-//                    case ALPHABOT -> new GamepieceIOLimelight("limelight", cam.robotToCamera);
-//                    case SIMBOT -> new GamepieceIOSim();
-//                }
-//        ),
-        ;
-
-        public final Transform3d robotToCamera;
-        private final Function<GamepieceCamera, GamepieceIO> createIO;
-
-        public GamepieceIO createIO() {
-            if (Constants.isReplay) {
-                return new GamepieceIO();
+                return new AprilTagVisionIO();
             }
 
             return createIO.apply(this);

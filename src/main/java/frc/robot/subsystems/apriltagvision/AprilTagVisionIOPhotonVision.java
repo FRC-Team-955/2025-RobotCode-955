@@ -11,7 +11,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.vision;
+package frc.robot.subsystems.apriltagvision;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import org.photonvision.PhotonCamera;
@@ -22,15 +22,15 @@ import java.util.List;
 /**
  * IO implementation for real PhotonVision hardware.
  */
-public class AprilTagIOPhotonVision extends AprilTagIO {
+public class AprilTagVisionIOPhotonVision extends AprilTagVisionIO {
     protected final PhotonCamera camera;
 
-    public AprilTagIOPhotonVision(String name) {
+    public AprilTagVisionIOPhotonVision(String name) {
         camera = new PhotonCamera(name);
     }
 
     @Override
-    public void updateInputs(AprilTagIOInputs inputs) {
+    public void updateInputs(AprilTagVisionIOInputs inputs) {
         inputs.connected = camera.isConnected();
 
         List<AprilTagTargetObservation> aprilTagTargetObservations = new LinkedList<>();

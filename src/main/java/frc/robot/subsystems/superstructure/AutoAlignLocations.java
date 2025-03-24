@@ -9,7 +9,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import frc.robot.OperatorDashboard.LocalReefSide;
 import frc.robot.OperatorDashboard.ReefZoneSide;
-import frc.robot.subsystems.vision.VisionConstants;
+import frc.robot.subsystems.apriltagvision.AprilTagVisionConstants;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
@@ -30,7 +30,7 @@ public class AutoAlignLocations {
 
     @SuppressWarnings("OptionalGetWithoutIsPresent") // better for our code to crash than to fail silently
     private static Pose2d getAprilTagPose(int id) {
-        return VisionConstants.aprilTagLayout.getTagPose(id).get().toPose2d();
+        return AprilTagVisionConstants.aprilTagLayout.getTagPose(id).get().toPose2d();
     }
 
     private static final Transform2d bumperOffset = new Transform2d(driveConfig.bumperLengthMeters() / 2.0, 0, new Rotation2d());

@@ -11,13 +11,14 @@ import frc.robot.autos.BargeSideAuto;
 import frc.robot.autos.CenterAuto;
 import frc.robot.autos.ProcessorSideAuto;
 import frc.robot.autos.ProcessorSideFriendlyAuto;
+import frc.robot.subsystems.apriltagvision.AprilTagVision;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.JoystickDrive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
+import frc.robot.subsystems.gamepiecevision.GamePieceVision;
 import frc.robot.subsystems.superstructure.Superstructure;
-import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.commands.CommandsExt;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -50,7 +51,8 @@ public class RobotContainer {
     public final EndEffector endEffector = EndEffector.get();
     public final Funnel funnel = Funnel.get();
     public final Drive drive = Drive.get();
-    public final Vision vision = Vision.get();
+    public final AprilTagVision aprilTagVision = AprilTagVision.get();
+    public final GamePieceVision gamePieceVision = GamePieceVision.get();
     public final Superstructure superstructure = Superstructure.get();
 
     public RobotContainer() {
@@ -109,18 +111,6 @@ public class RobotContainer {
     }
 
     private void setDefaultCommands() {
-        //                            var gamepiece = vision.getClosestGamepiece();
-        //                            return gamepiece.map(gamepieceTranslation -> {
-        //                                var relativeToRobot = gamepieceTranslation.minus(robotState.getTranslation());
-        //                                if (relativeToRobot.getNorm() < Units.feetToMeters(1)) {
-        //                                    // Don't try to face towards it if we are too close
-        //                                    return new Pose2d(gamepieceTranslation, robotState.getRotation());
-        //                                } else {
-        //                                    // Try to face towards the game piece
-        //                                    var toGamepiece = new Rotation2d(relativeToRobot.getX(), relativeToRobot.getY());
-        //                                    return new Pose2d(gamepieceTranslation, toGamepiece);
-        //                                }
-        //                            });
         drive.setDefaultCommand(drive.driveJoystick(Optional::empty));
 
         superstructure.setDefaultCommand(superstructure.ensureNotBusyAndResetGoals().andThen(Commands.idle()).ignoringDisable(true));

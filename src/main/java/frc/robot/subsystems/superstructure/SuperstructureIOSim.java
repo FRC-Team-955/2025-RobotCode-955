@@ -31,10 +31,15 @@ public class SuperstructureIOSim extends SuperstructureIO {
     private final Elevator elevator = Elevator.get();
     private final Funnel funnel = Funnel.get();
 
+    public static boolean gamePieceVisible = false;
+
+    private final Timer sinceAtStation = new Timer();
+    private static final double stationGamePieceVisibleTime = 0.25;
+    private static final double stationIntakeTime = 1;
+
     private final Timer sinceCoralIntaked = new Timer();
     private static final double indexTime = 1;
-    private final Timer sinceAtStation = new Timer();
-    private static final double stationIntakeTime = 1;
+
     private CoralState coralState = CoralState.IN_END_EFFECTOR; // preload
 
     private enum CoralState {
@@ -53,8 +58,15 @@ public class SuperstructureIOSim extends SuperstructureIO {
         switch (coralState) {
             case NO_CORAL -> {
                 var current = robotState.getPose().getTranslation();
-                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 1.5) && (funnel.getGoal() == Funnel.Goal.INTAKE_FORWARDS || funnel.getGoal() == Funnel.Goal.INTAKE_BACKWARDS) && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
+
+                if (
+                        Arrays.stream(stationLocations)
+                                .anyMatch(t -> t.getDistance(current) < 1.5)
+                                && (funnel.getGoal() == Funnel.Goal.INTAKE_FORWARDS || funnel.getGoal() == Funnel.Goal.INTAKE_BACKWARDS)
+                                && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE
+                ) {
                     if (!sinceAtStation.isRunning()) sinceAtStation.restart();
+
                     if (sinceAtStation.hasElapsed(stationIntakeTime)) {
                         coralState = CoralState.INTAKING;
                         sinceCoralIntaked.restart();
@@ -63,9 +75,14 @@ public class SuperstructureIOSim extends SuperstructureIO {
                     sinceAtStation.stop();
                     sinceAtStation.reset();
                 }
+
+                gamePieceVisible = sinceAtStation.hasElapsed(stationGamePieceVisibleTime);
             }
             case INTAKING -> {
-                if ((funnel.getGoal() == Funnel.Goal.INTAKE_FORWARDS || funnel.getGoal() == Funnel.Goal.INTAKE_BACKWARDS) && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
+                if (
+                        (funnel.getGoal() == Funnel.Goal.INTAKE_FORWARDS || funnel.getGoal() == Funnel.Goal.INTAKE_BACKWARDS)
+                                && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE
+                ) {
                     if (!sinceCoralIntaked.isRunning()) sinceCoralIntaked.restart();
                     if (sinceCoralIntaked.hasElapsed(indexTime)) {
                         coralState = CoralState.IN_END_EFFECTOR;
@@ -74,13 +91,19 @@ public class SuperstructureIOSim extends SuperstructureIO {
                     sinceCoralIntaked.stop();
                     sinceCoralIntaked.reset();
                 }
+
+                gamePieceVisible = !sinceCoralIntaked.hasElapsed(0.25);
             }
             case IN_END_EFFECTOR -> {
-                var angle = Units.degreesToRadians(-endEffector.getAngleDegrees() - 90);
-                var coralOffsetX = Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angle);
-                var coralOffsetZ = Units.inchesToMeters(13.5) + elevator.getPositionMeters() + Units.inchesToMeters(4) * Math.tan(angle);
-                if (endEffector.getRollersGoal() == EndEffector.RollersGoal.SCORE_CORAL || endEffector.getRollersGoal() == EndEffector.RollersGoal.EJECT) {
+                gamePieceVisible = false;
+
+                if (endEffector.getRollersGoal() == EndEffector.RollersGoal.SCORE_CORAL
+                        || endEffector.getRollersGoal() == EndEffector.RollersGoal.EJECT) {
                     coralState = CoralState.NO_CORAL;
+
+                    var angle = Units.degreesToRadians(-endEffector.getAngleDegrees() - 90);
+                    var coralOffsetX = Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angle);
+                    var coralOffsetZ = Units.inchesToMeters(13.5) + elevator.getPositionMeters() + Units.inchesToMeters(4) * Math.tan(angle);
                     SimulatedArena.getInstance()
                             .addGamePieceProjectile(new ReefscapeCoralOnFly(
                                     pose.getTranslation(),

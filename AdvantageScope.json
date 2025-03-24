@@ -194,7 +194,19 @@
             "/Inputs/Vision/AprilTag/ReefCam/PoseObservations/0/fieldToCamera",
             "/Inputs/Vision/AprilTag/ReefCam/PoseObservations/0/bestTarget",
             "/Inputs/Vision/AprilTag/ReefCam/PoseObservations/0",
-            "/Inputs/Vision/AprilTag/ReefCam/PoseObservations/0/bestTarget/cameraToTarget"
+            "/Inputs/Vision/AprilTag/ReefCam/PoseObservations/0/bestTarget/cameraToTarget",
+            "/RealOutputs/Vision/AprilTag/StationCam/GenericPoseObservations",
+            "/RealOutputs/Vision/AprilTag/StationCam/GenericPoseObservations/0",
+            "/RealOutputs/Vision/AprilTag/ReefCam",
+            "/RealOutputs/Vision/AprilTag/StationCam/GenericPoseObservations/0/poseEstimate/translation",
+            "/Inputs/Vision/AprilTag/ReefCam/MultiTagObservations",
+            "/Inputs/Vision/AprilTag/ReefCam/BestTargetObservations",
+            "/RealOutputs/Vision/AprilTag/ReefCam/GenericPoseObservations",
+            "/RealOutputs/Vision/AprilTag/ReefCam/GenericPoseObservations/0",
+            "/RealOutputs/Vision/AprilTag/ReefCam/GenericPoseObservations/1",
+            "/RealOutputs/Vision/AprilTag/ReefCam/GenericPoseObservations/0/poseEstimate",
+            "/RealOutputs/AprilTagVision",
+            "/RealOutputs/AprilTagVision/Summary"
           ]
         },
         "tabs": {
@@ -987,18 +999,8 @@
                     "type": "mechanism",
                     "logKey": "/RealOutputs/RobotState/Mechanism",
                     "logType": "Mechanism2d",
-                    "visible": true,
+                    "visible": false,
                     "options": {}
-                  },
-                  {
-                    "type": "vision",
-                    "logKey": "/RealOutputs/Vision/Summary/TagPoses",
-                    "logType": "Pose3d[]",
-                    "visible": true,
-                    "options": {
-                      "color": "#00ff00",
-                      "size": "normal"
-                    }
                   },
                   {
                     "type": "swerveStates",
@@ -1011,6 +1013,16 @@
                     }
                   },
                   {
+                    "type": "vision",
+                    "logKey": "/RealOutputs/AprilTagVision/Summary/TagPoses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "size": "normal"
+                    }
+                  },
+                  {
                     "type": "ghost",
                     "logKey": "/RealOutputs/Drive/Assist/Pose",
                     "logType": "Pose2d",
@@ -1018,15 +1030,6 @@
                     "options": {
                       "model": "Crab Bot",
                       "color": "#00ff00"
-                    }
-                  },
-                  {
-                    "type": "gamePiece",
-                    "logKey": "/RealOutputs/Vision/Summary/ClosestGamepiece/Pose",
-                    "logType": "Pose3d",
-                    "visible": false,
-                    "options": {
-                      "variant": "Coral"
                     }
                   },
                   {
@@ -1052,7 +1055,7 @@
                     "type": "mechanism",
                     "logKey": "/RealOutputs/RobotState/Mechanism",
                     "logType": "Mechanism2d",
-                    "visible": true,
+                    "visible": false,
                     "options": {}
                   },
                   {
@@ -1086,29 +1089,9 @@
                   },
                   {
                     "type": "ghost",
-                    "logKey": "/RealOutputs/Vision/Summary/RobotPosesAccepted",
-                    "logType": "Pose3d[]",
-                    "visible": true,
-                    "options": {
-                      "model": "KitBot",
-                      "color": "#00ff00"
-                    }
-                  },
-                  {
-                    "type": "ghost",
-                    "logKey": "/RealOutputs/Vision/Summary/RobotPosesRejected",
-                    "logType": "Pose3d[]",
-                    "visible": true,
-                    "options": {
-                      "model": "KitBot",
-                      "color": "#ff0000"
-                    }
-                  },
-                  {
-                    "type": "ghost",
                     "logKey": "/RealOutputs/Drive/MoveTo/Goal",
                     "logType": "Pose2d",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "model": "KitBot",
                       "color": "#0000ff"
@@ -1118,7 +1101,7 @@
                     "type": "ghost",
                     "logKey": "/RealOutputs/Drive/MoveTo/Setpoint",
                     "logType": "Pose2d",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "model": "KitBot",
                       "color": "#00ffff"
@@ -1146,7 +1129,7 @@
                     "type": "ghost",
                     "logKey": "/RealOutputs/Superstructure/AutoScoreCoralFinalAlign",
                     "logType": "Pose2d",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "model": "KitBot",
                       "color": "#ffff00"
@@ -1154,10 +1137,30 @@
                   },
                   {
                     "type": "axes",
-                    "logKey": "/RealOutputs/Vision/CameraPoses",
+                    "logKey": "/RealOutputs/AprilTagVision/CameraPoses",
                     "logType": "Pose3d[]",
                     "visible": true,
                     "options": {}
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "/RealOutputs/AprilTagVision/Summary/RobotPosesAccepted",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "/RealOutputs/AprilTagVision/Summary/RobotPosesRejected",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "model": "KitBot",
+                      "color": "#ff0000"
+                    }
                   }
                 ],
                 "game": "2025 Field (Welded)",
@@ -1168,14 +1171,14 @@
                 "cameraIndex": -1,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  4.173205430453483,
-                  4.703759405788166,
-                  0.4458812775407739
+                  8.236020082597427,
+                  6.560118495510449,
+                  2.4329426115386643
                 ],
                 "cameraTarget": [
-                  4.1698012674569425,
-                  1.1006267286473508,
-                  -1.4538572577251998
+                  5.380175993638884,
+                  -0.640614656551369,
+                  -1.2350755558169175
                 ]
               },
               "controlsHeight": 267
@@ -1334,5 +1337,5 @@
     }
   ],
   "satellites": [],
-  "version": "4.1.4"
+  "version": "4.1.5"
 }

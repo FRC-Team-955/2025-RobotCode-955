@@ -1,7 +1,9 @@
 package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -19,6 +21,7 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
+import frc.robot.subsystems.gamepiecevision.GamePieceVision;
 import frc.robot.util.BackgroundCommandScheduler;
 import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
@@ -39,10 +42,12 @@ public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
     private final RobotMechanism robotMechanism = RobotMechanism.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
+
     private final Drive drive = Drive.get();
     private final Elevator elevator = Elevator.get();
     private final EndEffector endEffector = EndEffector.get();
     private final Funnel funnel = Funnel.get();
+    private final GamePieceVision gamePieceVision = GamePieceVision.get();
 
     private final SuperstructureIO io = createIO();
     private final SuperstructureIOInputsAutoLogged inputs = new SuperstructureIOInputsAutoLogged();
@@ -149,27 +154,24 @@ public class Superstructure extends SubsystemBaseExt {
 
         Pose3d robotPose = new Pose3d(robotState.getPose());
 
+        if (gamePieceVision.visibleDebounced()) {
+            Pose3d coral = robotPose.transformBy(coralAboveFunnel);
+            Logger.recordOutput("Superstructure/CoralAboveFunnel", new Pose3d[]{coral});
+        } else {
+            Logger.recordOutput("Superstructure/CoralAboveFunnel", new Pose3d[]{});
+        }
+
         if (inputs.funnelBeamBreakTriggered) {
-            Pose3d coralInFunnel = robotPose.transformBy(new Transform3d(
-                    Units.inchesToMeters(-4),
-                    0,
-                    Units.inchesToMeters(12),
-                    new Rotation3d(0, Units.degreesToRadians(7), 0)
-            ));
-            Logger.recordOutput("Superstructure/CoralInFunnel", new Pose3d[]{coralInFunnel});
+            Pose3d coral = robotPose.transformBy(coralInFunnel);
+            Logger.recordOutput("Superstructure/CoralInFunnel", new Pose3d[]{coral});
         } else {
             Logger.recordOutput("Superstructure/CoralInFunnel", new Pose3d[]{});
         }
 
         if (inputs.endEffectorBeamBreakTriggered) {
-            double angle = Units.degreesToRadians(-endEffector.getAngleDegrees() - 90);
-            Pose3d coralInEndEffector = robotPose.transformBy(new Transform3d(
-                    Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angle),
-                    0,
-                    Units.inchesToMeters(13.5) + elevator.getPositionMeters() + Units.inchesToMeters(4) * Math.tan(angle),
-                    new Rotation3d(0, angle, 0)
-            ));
-            Logger.recordOutput("Superstructure/CoralInEndEffector", new Pose3d[]{coralInEndEffector});
+            double angleRad = Units.degreesToRadians(-endEffector.getAngleDegrees() - 90);
+            Pose3d coral = robotPose.transformBy(coralInEndEffector(elevator.getPositionMeters(), angleRad));
+            Logger.recordOutput("Superstructure/CoralInEndEffector", new Pose3d[]{coral});
         } else {
             Logger.recordOutput("Superstructure/CoralInEndEffector", new Pose3d[]{});
         }
@@ -416,7 +418,8 @@ public class Superstructure extends SubsystemBaseExt {
         Supplier<Pose2d> alignPoseSupplier = () -> getStationAlignPose(station);
         Command intake = Commands.race(
                 waitUntilEndEffectorTriggered(Commands.idle()),
-                waitUntilFunnelTriggered()
+                waitUntilFunnelTriggered(),
+                gamePieceVision.waitForGamePiece()
         ).deadlineFor(
                 endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
                 funnelSetGoalIntakeAlternate(),
