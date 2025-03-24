@@ -298,7 +298,8 @@ public class Superstructure extends SubsystemBaseExt {
         Timer funnelTimer = new Timer();
         return wrapExposedCommand(Commands.parallel(
                 setGoal(Goal.EJECT),
-                endEffector.setGoal(EndEffector.RollersGoal.EJECT), funnel.startRun(
+                endEffector.setGoal(EndEffector.RollersGoal.EJECT),
+                funnel.startRun(
                         funnelTimer::restart,
                         () -> {
                             boolean backwards = funnelTimer.hasElapsed(0.86);
