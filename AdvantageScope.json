@@ -206,7 +206,9 @@
             "/RealOutputs/Vision/AprilTag/ReefCam/GenericPoseObservations/1",
             "/RealOutputs/Vision/AprilTag/ReefCam/GenericPoseObservations/0/poseEstimate",
             "/RealOutputs/AprilTagVision",
-            "/RealOutputs/AprilTagVision/Summary"
+            "/RealOutputs/AprilTagVision/Summary",
+            "/Inputs/GamePieceVision",
+            "/RealOutputs/GamePieceVision"
           ]
         },
         "tabs": {
@@ -1160,6 +1162,15 @@
                     "options": {
                       "model": "KitBot",
                       "color": "#ff0000"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "/RealOutputs/Superstructure/CoralAboveFunnel",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Coral"
                     }
                   }
                 ],
