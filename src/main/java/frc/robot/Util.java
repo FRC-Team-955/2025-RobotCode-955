@@ -1,8 +1,10 @@
 package frc.robot;
 
 import choreo.util.ChoreoAllianceFlipUtil;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Time;
@@ -139,5 +141,16 @@ public class Util {
             map.put(key, valueSupplier.apply(key));
         }
         return map;
+    }
+
+    public static boolean isAtPoseWithTolerance(Pose2d currentPose, Pose2d desiredPose, double linearToleranceMeters, double angularToleranceRad) {
+        Transform2d relative = new Transform2d(desiredPose, currentPose);
+        return Math.abs(relative.getTranslation().getNorm()) < linearToleranceMeters
+                && Math.abs(MathUtil.angleModulus(relative.getRotation().getRadians())) < angularToleranceRad;
+    }
+
+    public static boolean isWithinVelocityTolerance(ChassisSpeeds measuredChassisSpeeds, double linearToleranceMetersPerSec, double angularToleranceRadPerSec) {
+        return Math.hypot(measuredChassisSpeeds.vxMetersPerSecond, measuredChassisSpeeds.vyMetersPerSecond) < linearToleranceMetersPerSec
+                && Math.abs(measuredChassisSpeeds.omegaRadiansPerSecond) < angularToleranceRadPerSec;
     }
 }

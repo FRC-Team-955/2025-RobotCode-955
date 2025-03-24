@@ -41,6 +41,10 @@ public class GamePieceVision extends SubsystemBaseExt {
         disconnectedAlert.set(!inputs.connected);
     }
 
+    public boolean visibleNotDebounced() {
+        return inputs.visible;
+    }
+
     @AutoLogOutput(key = "GamePieceVision/VisibleDebounced")
     public boolean visibleDebounced() {
         return visibleDebouncer.calculate(inputs.visible);

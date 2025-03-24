@@ -434,19 +434,6 @@ public class Drive extends SubsystemBaseExt {
         return states;
     }
 
-    @AutoLogOutput(key = "Drive/ChassisSpeeds/MeasuredLinearVelocity")
-    public double getMeasuredChassisLinearVelocityMetersPerSec() {
-        ChassisSpeeds measuredChassisSpeeds = getMeasuredChassisSpeeds();
-        return Math.sqrt(
-                measuredChassisSpeeds.vxMetersPerSecond * measuredChassisSpeeds.vxMetersPerSecond +
-                        measuredChassisSpeeds.vyMetersPerSecond * measuredChassisSpeeds.vyMetersPerSecond
-        );
-    }
-
-    public double getMeasuredChassisAngularVelocityRadPerSec() {
-        return getMeasuredChassisSpeeds().omegaRadiansPerSecond;
-    }
-
     @AutoLogOutput(key = "Drive/ModuleLimits")
     public ModuleLimits getModuleLimits() {
         if (operatorDashboard.coralStuckInRobotMode.get()) {

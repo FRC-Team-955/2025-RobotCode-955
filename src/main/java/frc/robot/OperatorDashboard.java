@@ -95,7 +95,7 @@ public class OperatorDashboard extends VirtualSubsystem {
                 if (newReefZoneSide != null) selectedReefZoneSide = newReefZoneSide;
             } else {
                 manualReefSide.set(false);
-                selectedReefZoneSide = AutoAlignLocations.closestSideAdjusted(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
+                selectedReefZoneSide = AutoAlignLocations.ReefAlign.determineClosestReefSide(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
             }
             updateToggles(reefZoneSides, selectedReefZoneSide);
 
@@ -112,7 +112,7 @@ public class OperatorDashboard extends VirtualSubsystem {
             if (manualReefSide.get()) {
                 handleEnumToggles(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
             } else {
-                selectedReefZoneSide = AutoAlignLocations.closestSideAdjusted(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
+                selectedReefZoneSide = AutoAlignLocations.ReefAlign.determineClosestReefSide(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
                 updateToggles(reefZoneSides, selectedReefZoneSide);
             }
             handleEnumToggles(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);

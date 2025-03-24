@@ -84,7 +84,7 @@ public class AutoBuilder {
 
     public record IntakeScorePair(
             AutoTrajectory stationTraj,
-            AutoAlignLocations.Station station,
+            AutoAlignLocations.StationAlign.Station station,
             AutoTrajectory scoreTraj,
             OperatorDashboard.ReefZoneSide reefZoneSide,
             OperatorDashboard.LocalReefSide localReefSide,

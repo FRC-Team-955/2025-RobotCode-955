@@ -6,7 +6,7 @@ import frc.robot.OperatorDashboard.LocalReefSide;
 import frc.robot.OperatorDashboard.ReefZoneSide;
 import frc.robot.autos.AutoBuilder.IntakeScorePair;
 import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.superstructure.AutoAlignLocations.Station;
+import frc.robot.subsystems.superstructure.AutoAlignLocations.StationAlign.Station;
 
 import java.util.List;
 

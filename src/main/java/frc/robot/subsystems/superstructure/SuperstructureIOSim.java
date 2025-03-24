@@ -101,9 +101,9 @@ public class SuperstructureIOSim extends SuperstructureIO {
                         || endEffector.getRollersGoal() == EndEffector.RollersGoal.EJECT) {
                     coralState = CoralState.NO_CORAL;
 
-                    var angle = Units.degreesToRadians(-endEffector.getAngleDegrees() - 90);
-                    var coralOffsetX = Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angle);
-                    var coralOffsetZ = Units.inchesToMeters(13.5) + elevator.getPositionMeters() + Units.inchesToMeters(4) * Math.tan(angle);
+                    var angleRad = Units.degreesToRadians(-endEffector.getAngleDegrees() - 90);
+                    var coralOffsetX = Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angleRad);
+                    var coralOffsetZ = Units.inchesToMeters(13.5) + elevator.getPositionMeters() + Units.inchesToMeters(4) * Math.tan(angleRad);
                     SimulatedArena.getInstance()
                             .addGamePieceProjectile(new ReefscapeCoralOnFly(
                                     pose.getTranslation(),
@@ -116,7 +116,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
                                     MetersPerSecond.of(-1),
                                     elevator.getGoal() == Elevator.Goal.SCORE_L4
                                             ? Degrees.of(65)
-                                            : Degrees.of(45)
+                                            : Degrees.of(40)
                             ));
                 }
             }
