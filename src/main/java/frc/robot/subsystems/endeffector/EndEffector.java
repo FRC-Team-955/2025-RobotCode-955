@@ -1,7 +1,6 @@
 package frc.robot.subsystems.endeffector;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -50,8 +49,6 @@ public class EndEffector extends SubsystemBaseExt {
     @Getter
     private RollersGoal rollersGoal = RollersGoal.IDLE;
     private Double rollersPositionSetpointRad = null;
-
-    private final Debouncer descoreAmperageDebouncer = new Debouncer(0.25);
 
     private final Alert rollersDisconnectedAlert = new Alert("End effector rollers motor is disconnected.", Alert.AlertType.kError);
 
@@ -118,7 +115,6 @@ public class EndEffector extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "EndEffector/DescoreAmperageTriggered")
     public boolean descoreAmperageTriggered() {
-        //return descoreAmperageDebouncer.calculate(Math.abs(rollersInputs.currentAmps) > descoreTriggerAmps);
         return Math.abs(rollersInputs.currentAmps) > descoreTriggerAmps;
     }
 

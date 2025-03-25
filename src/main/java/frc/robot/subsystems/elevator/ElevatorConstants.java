@@ -2,6 +2,7 @@ package frc.robot.subsystems.elevator;
 
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
+import frc.robot.subsystems.endeffector.EndEffectorConstants;
 import frc.robot.util.PIDF;
 
 public class ElevatorConstants {
@@ -25,6 +26,8 @@ public class ElevatorConstants {
     public static final double maxHeightMeters = 1.72;
     public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 3);
     public static final ElevatorLimit lowerLimit = new ElevatorLimit(0.25, -1.75);
+
+    public static final double positionOffsetPerMeterOfDistance = Math.tan(EndEffectorConstants.angleWhenExtendedRad);
 
     public static final double hardstopMeters = Units.inchesToMeters(20);
     public static final double gentleMaxVelocityMetersPerSecond = 0.4;

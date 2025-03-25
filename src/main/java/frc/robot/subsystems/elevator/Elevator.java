@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
@@ -35,18 +36,19 @@ public class Elevator extends SubsystemBaseExt {
 
     @RequiredArgsConstructor
     public enum Goal {
-        CHARACTERIZATION(null),
-        ZERO(null),
-        STOW(stowGoalSetpoint::get), // Setpoint for when coral stuck in robot mode is activated is in periodicAfterCommands
-        SCORE_L1(scoreL1GoalSetpoint::get),
-        SCORE_L2(scoreL2GoalSetpoint::get),
-        SCORE_L3(scoreL3GoalSetpoint::get),
-        SCORE_L4(scoreL4GoalSetpoint::get),
-        DESCORE_L2(descoreL2GoalSetpoint::get),
-        DESCORE_L3(descoreL3GoalSetpoint::get);
+        CHARACTERIZATION(null, false),
+        ZERO(null, false),
+        STOW(stowGoalSetpoint::get, false), // Setpoint for when coral stuck in robot mode is activated is in periodicAfterCommands
+        SCORE_L1(scoreL1GoalSetpoint::get, false),
+        SCORE_L2(scoreL2GoalSetpoint::get, true),
+        SCORE_L3(scoreL3GoalSetpoint::get, true),
+        SCORE_L4(scoreL4GoalSetpoint::get, true),
+        DESCORE_L2(descoreL2GoalSetpoint::get, false),
+        DESCORE_L3(descoreL3GoalSetpoint::get, false);
 
         /** Should be constant for every loop cycle */
         public final DoubleSupplier setpointMeters;
+        private final boolean adjustForScoring;
     }
 
     @Getter
@@ -72,6 +74,9 @@ public class Elevator extends SubsystemBaseExt {
             )
     );
     private TrapezoidProfile.State previousStateMeters = null;
+
+    @AutoLogOutput(key = "Elevator/DistanceFromScoringPositionMeters")
+    private double distanceFromScoringPositionMeters = 0.0;
 
     public final SysIdRoutine sysId;
 
@@ -197,7 +202,12 @@ public class Elevator extends SubsystemBaseExt {
         } else if (goal.setpointMeters != null) {
             double positionMeters = getPositionMeters();
             double velocityMetersPerSec = getVelocityMetersPerSec();
-            double setpointMeters = MathUtil.clamp(goal.setpointMeters.getAsDouble(), 0, maxHeightMeters);
+
+            double setpointMeters = goal.setpointMeters.getAsDouble();
+            if (goal.adjustForScoring) {
+                setpointMeters += calculatePositionOffsetForScoring();
+            }
+            setpointMeters = MathUtil.clamp(setpointMeters, 0, maxHeightMeters);
 
             double offsetMeters = operatorDashboard.elevatorOffsetMeters.get();
             if (offsetMeters != 0.0) {
@@ -317,6 +327,18 @@ public class Elevator extends SubsystemBaseExt {
         );
 //        var avgVelocityRadPerSec = (inputs.leaderVelocityRadPerSec + inputs.followerVelocityRadPerSec) / 2.0;
 //        return radToMeters(avgVelocityRadPerSec);
+    }
+
+    public Command setDistanceFromScoringPositionContinuous(DoubleSupplier distanceFromScoringPositionMeters) {
+        // Don't require subsystem
+        return Commands.runEnd(
+                () -> this.distanceFromScoringPositionMeters = distanceFromScoringPositionMeters.getAsDouble(),
+                () -> this.distanceFromScoringPositionMeters = 0.0
+        );
+    }
+
+    private double calculatePositionOffsetForScoring() {
+        return MathUtil.clamp(distanceFromScoringPositionMeters, 0, 0.5) * positionOffsetPerMeterOfDistance;
     }
 
     public Command feedforwardCharacterization() {
