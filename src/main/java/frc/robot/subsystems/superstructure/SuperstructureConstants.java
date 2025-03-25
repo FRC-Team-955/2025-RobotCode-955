@@ -22,12 +22,14 @@ public class SuperstructureConstants {
             new Rotation3d()
     );
 
-    public static Transform3d coralInEndEffector(double elevatorPositionMeters, double angleRad) {
+    public static Transform3d coralInEndEffector(double elevatorPositionMeters, double endEffectorAngleRad) {
+        endEffectorAngleRad += Math.PI / 2.0;
+        double tan = Math.tan(endEffectorAngleRad);
         return new Transform3d(
-                Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angleRad),
+                Units.inchesToMeters(-10) + Units.inchesToMeters(3) * tan,
                 0,
-                Units.inchesToMeters(13.5) + elevatorPositionMeters + Units.inchesToMeters(4) * Math.tan(angleRad),
-                new Rotation3d(0, angleRad, 0)
+                Units.inchesToMeters(13.5) + elevatorPositionMeters + Units.inchesToMeters(1) * tan,
+                new Rotation3d(0, endEffectorAngleRad, 0)
         );
     }
 

@@ -51,7 +51,6 @@ public class EndEffector extends SubsystemBaseExt {
     private RollersGoal rollersGoal = RollersGoal.IDLE;
     private Double rollersPositionSetpointRad = null;
 
-    // TODO: Tune time
     private final Debouncer descoreAmperageDebouncer = new Debouncer(0.25);
 
     private final Alert rollersDisconnectedAlert = new Alert("End effector rollers motor is disconnected.", Alert.AlertType.kError);
@@ -78,8 +77,7 @@ public class EndEffector extends SubsystemBaseExt {
 
         rollersDisconnectedAlert.set(!rollersInputs.connected);
 
-        robotMechanism.endEffector.ligament.setAngle(getAngleDegrees());
-        robotMechanism.endEffector.ligament.setAngle(getAngleDegrees());
+        robotMechanism.endEffector.ligament.setAngle(180 - Units.radiansToDegrees(getAngleRad()));
         // top rollers are reversed relative to motor
         robotMechanism.endEffector.topRollersLigament.setAngle(Units.radiansToDegrees(-rollersInputs.positionRad));
     }
@@ -132,10 +130,6 @@ public class EndEffector extends SubsystemBaseExt {
         return runOnce(() -> this.rollersGoal = rollersGoal);
     }
 
-    public void setGoalInstantaneous(RollersGoal rollersGoal) {
-        this.rollersGoal = rollersGoal;
-    }
-
     /** Goes positionDeltaMeters forward (or backwards) from current position */
     public Command moveByAndWaitUntilDone(DoubleSupplier positionDeltaMeters) {
         return startEndWaitUntil(
@@ -151,11 +145,12 @@ public class EndEffector extends SubsystemBaseExt {
         );
     }
 
-    public double getAngleDegrees() {
-        return MathUtil.clamp(
-                // After 5 inches, interpolate to 40 degrees finishing at 7.25 inches
-                90 + (40 / Units.inchesToMeters(2.25) * (elevator.getPositionMeters() - Units.inchesToMeters(5))),
-                90, 130
+    @AutoLogOutput(key = "EndEffector/AngleRad")
+    public double getAngleRad() {
+        return MathUtil.interpolate(
+                angleWhenRetractedRad,
+                angleWhenExtendedRad,
+                (elevator.getPositionMeters() - extendStartMeters) / extendDistanceMeters
         );
     }
 

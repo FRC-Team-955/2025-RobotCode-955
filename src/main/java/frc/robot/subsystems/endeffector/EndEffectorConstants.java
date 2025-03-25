@@ -15,6 +15,11 @@ public class EndEffectorConstants {
 
     public static final double descoreTriggerAmps = 27;
 
+    public static final double extendStartMeters = Units.inchesToMeters(5);
+    public static final double extendDistanceMeters = Units.inchesToMeters(2.25);
+    public static final double angleWhenExtendedRad = Units.degreesToRadians(40);
+    public static final double angleWhenRetractedRad = Units.degreesToRadians(90);
+
     public static double rollersRadiansForMeters(double meters) {
         return meters / rollersRadiusMeters;
     }

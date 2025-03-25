@@ -171,8 +171,7 @@ public class Superstructure extends SubsystemBaseExt {
         }
 
         if (inputs.endEffectorBeamBreakTriggered) {
-            double angleRad = Units.degreesToRadians(-endEffector.getAngleDegrees() - 90);
-            Pose3d coral = robotPose.transformBy(coralInEndEffector(elevator.getPositionMeters(), angleRad));
+            Pose3d coral = robotPose.transformBy(coralInEndEffector(elevator.getPositionMeters(), endEffector.getAngleRad()));
             Logger.recordOutput("Superstructure/CoralInEndEffector", new Pose3d[]{coral});
         } else {
             Logger.recordOutput("Superstructure/CoralInEndEffector", new Pose3d[]{});

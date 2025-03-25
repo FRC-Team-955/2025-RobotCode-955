@@ -9,7 +9,8 @@ import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 
-import static frc.robot.subsystems.elevator.ElevatorConstants.*;
+import static frc.robot.subsystems.elevator.ElevatorConstants.hardstopMeters;
+import static frc.robot.subsystems.elevator.ElevatorConstants.hardstopSlowdownMeters;
 
 /** Holds the Mechanism2d and all roots and ligaments that visualizes the robot state */
 public class RobotMechanism {
@@ -167,24 +168,6 @@ public class RobotMechanism {
                     90,
                     11,
                     new Color8Bit(Color.kYellow)
-            ));
-
-            var autoStopUpperRoot = mechanism.getRoot("elevator_autoStopUpper", middleOfRobot - Units.inchesToMeters(15), Units.inchesToMeters(2.85) + upperLimit.positionMeters());
-            autoStopUpperRoot.append(new LoggedMechanismLigament2d(
-                    "autoStopUpper",
-                    Units.inchesToMeters(1),
-                    90,
-                    11,
-                    new Color8Bit(Color.kRed)
-            ));
-
-            var autoStopLowerRoot = mechanism.getRoot("elevator_autoStopLower", middleOfRobot - Units.inchesToMeters(15), Units.inchesToMeters(2.85) + lowerLimit.positionMeters());
-            autoStopLowerRoot.append(new LoggedMechanismLigament2d(
-                    "autoStopLower",
-                    Units.inchesToMeters(1),
-                    90,
-                    11,
-                    new Color8Bit(Color.kRed)
             ));
         }
     }

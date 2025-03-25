@@ -101,22 +101,21 @@ public class SuperstructureIOSim extends SuperstructureIO {
                         || endEffector.getRollersGoal() == EndEffector.RollersGoal.EJECT) {
                     coralState = CoralState.NO_CORAL;
 
-                    var angleRad = Units.degreesToRadians(-endEffector.getAngleDegrees() - 90);
-                    var coralOffsetX = Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angleRad);
-                    var coralOffsetZ = Units.inchesToMeters(13.5) + elevator.getPositionMeters() + Units.inchesToMeters(4) * Math.tan(angleRad);
+                    var endEffectorAngleRad = endEffector.getAngleRad();
+                    var coralInEndEffector = SuperstructureConstants.coralInEndEffector(elevator.getPositionMeters(), endEffectorAngleRad);
                     SimulatedArena.getInstance()
                             .addGamePieceProjectile(new ReefscapeCoralOnFly(
                                     pose.getTranslation(),
-                                    new Translation2d(coralOffsetX - Units.inchesToMeters(2), 0),
+                                    new Translation2d(coralInEndEffector.getX() - Units.inchesToMeters(2), 0),
                                     ModuleIOSim.driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
                                     pose.getRotation(),
                                     // The height at which the coral is ejected
-                                    Meters.of(coralOffsetZ + Units.inchesToMeters(2)),
+                                    Meters.of(coralInEndEffector.getZ()),
                                     // The initial speed of the coral
-                                    MetersPerSecond.of(-1),
+                                    MetersPerSecond.of(-1.5),
                                     elevator.getGoal() == Elevator.Goal.SCORE_L4
                                             ? Degrees.of(65)
-                                            : Degrees.of(40)
+                                            : Radians.of(endEffectorAngleRad)
                             ));
                 }
             }
