@@ -98,7 +98,6 @@ public class AutoAlignLocations {
             Pose2d base = getReefAprilTagPoseAdjusted(reefZoneSide);
             Pose2d finalAlign = getFinalAlignPose(reefZoneSide, localReefSide);
 
-            if (elevatorPercentage >= 0.9) elevatorPercentage = 1.0;
 
             // If elevator isn't close enough, start by calculating the initial align
             Pose2d initialBase = base.plus(initialLocalReefSideAdjustment(localReefSide));
@@ -113,12 +112,21 @@ public class AutoAlignLocations {
 
             // Now interpolate from initial to final end based on elevator percentage
             // Fully at final when 100% raised, fully at initial when 0% raised
+            if (elevatorPercentage >= 0.9) {
+                elevatorPercentage = 1.0;
+            } else {
+                elevatorPercentage = MathUtil.clamp(elevatorPercentage, 0.0, 1.0);
+            }
+
             // Also consider rotational difference when aligning - we don't want to fully align if we aren't pointing in the right direction
             double finalAngularDiff = Math.abs(MathUtil.angleModulus(new Transform2d(finalAlign, currentPose).getRotation().getRadians()));
-            if (finalAngularDiff < alignAngularToleranceRad) finalAngularDiff = 0.0;
+            if (finalAngularDiff < alignAngularToleranceRad / 2.0) {
+                finalAngularDiff = 0.0;
+            }
             // Clamp needed since we're multiplying
             double angularDiffInterp = MathUtil.clamp(1.0 - (finalAngularDiff / finalAlignAngularDiffForInitialRad), 0.0, 1.0);
-            return initial.interpolate(finalAlign, MathUtil.clamp(elevatorPercentage, 0.0, 1.0) * angularDiffInterp);
+
+            return initial.interpolate(finalAlign, elevatorPercentage * angularDiffInterp);
         }
 
         private static final Transform2d adjustmentLeft = new Transform2d(0, -distanceCenterOfReefToBranchMeters, new Rotation2d());
