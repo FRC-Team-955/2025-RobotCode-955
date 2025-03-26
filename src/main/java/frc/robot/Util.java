@@ -19,11 +19,15 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class Util {
     private static final double epsilon = 1E-6;
+
+    public static final Executor asyncExecutor = Executors.newFixedThreadPool(4);
 
     public static boolean shouldFlip() {
         return DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;

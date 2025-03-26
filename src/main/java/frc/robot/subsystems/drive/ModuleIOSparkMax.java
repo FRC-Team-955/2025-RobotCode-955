@@ -275,7 +275,7 @@ public class ModuleIOSparkMax extends ModuleIO {
 
     @Override
     public void setDrivePosition(double positionRad) {
-        driveEncoder.setPosition(positionRad);
+        tryUntilOkAsync(5, () -> driveEncoder.setPosition(positionRad));
     }
 
     @Override

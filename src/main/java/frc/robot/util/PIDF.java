@@ -127,6 +127,14 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
                 .withKA(converted.kA);
     }
 
+    public SlotConfigs toPhoenixWithoutFeedforward() {
+        var converted = toPhoenixUnits();
+        return new SlotConfigs()
+                .withKP(converted.kP)
+                .withKI(converted.kI)
+                .withKD(converted.kD);
+    }
+
     public SlotConfigs toPhoenix(StaticFeedforwardSignValue staticFeedforwardSign) {
         var converted = toPhoenixUnits();
         return new SlotConfigs()

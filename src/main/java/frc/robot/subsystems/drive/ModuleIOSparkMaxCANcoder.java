@@ -47,6 +47,7 @@ import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
 import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
+import static frc.robot.util.SparkUtil.tryUntilOkAsync;
 
 /**
  * Module IO implementation for Spark Max drive motor controller, Spark Max turn motor controller,
@@ -305,11 +306,11 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
 
     @Override
     public void setDrivePosition(double positionRad) {
-        driveEncoder.setPosition(positionRad);
+        tryUntilOkAsync(5, () -> driveEncoder.setPosition(positionRad));
     }
 
     @Override
     public void setTurnPosition(double positionRad) {
-        turnEncoder.setPosition(positionRad);
+        tryUntilOkAsync(5, () -> turnEncoder.setPosition(positionRad));
     }
 }
