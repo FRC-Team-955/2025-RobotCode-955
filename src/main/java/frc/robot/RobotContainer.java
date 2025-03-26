@@ -129,7 +129,7 @@ public class RobotContainer {
 
         driverController.x().whileTrue(superstructure.eject());
 
-        driverController.rightTrigger().whileTrue(superstructure.funnelIntake(false));
+        driverController.rightTrigger().whileTrue(superstructure.funnelIntake(false).repeatedly());
 
         var ref = new Object() {
             boolean shouldDescoreAlgae = false;
