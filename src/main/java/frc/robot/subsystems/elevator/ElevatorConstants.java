@@ -76,7 +76,7 @@ public class ElevatorConstants {
             return new ElevatorIO();
         }
         return switch (Constants.identity) {
-            case COMPBOT -> new ElevatorIOTalonFX(10, 11, 9, false, false);
+            case COMPBOT -> new ElevatorIOTalonFX(10, 11, false, false);
             case SIMBOT -> new ElevatorIOSim();
             case ALPHABOT -> new ElevatorIO();
         };

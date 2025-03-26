@@ -7,7 +7,6 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.util.PIDF;
 
 import java.util.function.DoubleSupplier;
@@ -25,8 +24,6 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     private final SparkMaxConfig leaderConfig;
     private final SparkMaxConfig followerConfig;
 
-    private final DigitalInput limitSwitch;
-
     // Closed loop controllers
     private final SparkClosedLoopController pid;
     private ElevatorFeedforward ff = gains.toElevatorFF();
@@ -43,7 +40,6 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     public ElevatorIOSparkMax(
             int leaderCanID,
             int followerCanID,
-            int limitSwitchID,
             boolean leaderInverted,
             boolean followerInvertedRelativeToLeader
     ) {
@@ -52,8 +48,6 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         leaderEncoder = leaderSpark.getEncoder();
         followerEncoder = followerSpark.getEncoder();
         pid = leaderSpark.getClosedLoopController();
-
-        limitSwitch = new DigitalInput(limitSwitchID);
 
         // Configure motors
         leaderConfig = new SparkMaxConfig();
@@ -127,8 +121,6 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         ifOk(followerSpark, followerSpark::getOutputCurrent, (value) -> inputs.followerCurrentAmps = value);
         ifOk(followerSpark, followerSpark::getMotorTemperature, (value) -> inputs.followerTemperatureCelsius = value);
         inputs.followerConnected = followerConnectedDebounce.calculate(!sparkStickyFault);
-
-        inputs.limitSwitchTriggered = !limitSwitch.get();
     }
 
     @Override

@@ -15,7 +15,6 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
-import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
 import frc.robot.util.PIDF;
 
@@ -30,8 +29,6 @@ public class ElevatorIOTalonFX extends ElevatorIO {
     private final TalonFX followerTalon;
     private final TalonFXConfiguration leaderConfig;
     private final TalonFXConfiguration followerConfig;
-
-    private final DigitalInput limitSwitch;
 
     // Control requests
     private final VoltageOut voltageRequest = new VoltageOut(0);
@@ -65,14 +62,11 @@ public class ElevatorIOTalonFX extends ElevatorIO {
     public ElevatorIOTalonFX(
             int leadCanID,
             int followCanID,
-            int limitSwitchID,
             boolean leaderInverted,
             boolean followerInvertedRelativeToLeader
     ) {
         leaderTalon = new TalonFX(leadCanID, Constants.CANivore.busName);
         followerTalon = new TalonFX(followCanID, Constants.CANivore.busName);
-
-        limitSwitch = new DigitalInput(limitSwitchID);
 
         // Configure leader motor
         leaderConfig = new TalonFXConfiguration();
@@ -153,8 +147,6 @@ public class ElevatorIOTalonFX extends ElevatorIO {
         inputs.followerAppliedVolts = followerAppliedVolts.getValueAsDouble();
         inputs.followerCurrentAmps = followerCurrentAmps.getValueAsDouble();
         inputs.followerTemperatureCelsius = followerTemperatureCelsius.getValueAsDouble();
-
-        inputs.limitSwitchTriggered = !limitSwitch.get();
     }
 
     @Override

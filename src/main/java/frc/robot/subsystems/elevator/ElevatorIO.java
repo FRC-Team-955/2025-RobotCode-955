@@ -19,8 +19,6 @@ public class ElevatorIO {
         public double followerAppliedVolts = 0.0;
         public double followerCurrentAmps = 0.0;
         public double followerTemperatureCelsius = 0.0;
-
-        public boolean limitSwitchTriggered = false;
     }
 
     public void updateInputs(ElevatorIOInputs inputs) {
