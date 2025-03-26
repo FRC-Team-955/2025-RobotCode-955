@@ -331,7 +331,7 @@ public class Elevator extends SubsystemBaseExt {
     }
 
     public Command setDistanceFromScoringPositionContinuous(DoubleSupplier distanceFromScoringPositionMeters) {
-        // Don't require subsystem
+        // Don't require subsystem - meant to run in background
         return Commands.runEnd(
                 () -> this.distanceFromScoringPositionMeters = distanceFromScoringPositionMeters.getAsDouble(),
                 () -> this.distanceFromScoringPositionMeters = 0.0
