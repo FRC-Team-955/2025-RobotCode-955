@@ -42,12 +42,12 @@ public class GamePieceVision extends SubsystemBaseExt {
     }
 
     public boolean visibleNotDebounced() {
-        return inputs.visible;
+        return inputs.connected && inputs.visible;
     }
 
     @AutoLogOutput(key = "GamePieceVision/VisibleDebounced")
     public boolean visibleDebounced() {
-        return visibleDebouncer.calculate(inputs.visible);
+        return inputs.connected && visibleDebouncer.calculate(inputs.visible);
     }
 
     public Command waitForGamePiece() {
