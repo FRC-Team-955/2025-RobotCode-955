@@ -111,7 +111,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
         driveConfig
                 .closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder);
-        moduleConfig.driveGains().applySparkPID(driveConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        moduleConfig.driveGains().applySparkWithoutFeedforward(driveConfig.closedLoop, ClosedLoopSlot.kSlot0);
         driveConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
@@ -146,7 +146,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .positionWrappingEnabled(true)
                 .positionWrappingInputRange(0.0, 2 * Math.PI);
-        moduleConfig.turnGains().applySparkPID(turnConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        moduleConfig.turnGains().applySparkWithoutFeedforward(turnConfig.closedLoop, ClosedLoopSlot.kSlot0);
         turnConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
@@ -236,7 +236,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
         System.out.println("Setting drive gains");
         driveFF = newGains.toSimpleFF();
         var newConfig = new SparkMaxConfig();
-        newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        newGains.applySparkWithoutFeedforward(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
         SparkUtil.tryUntilOkAsync(5, () -> driveSpark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
@@ -248,7 +248,7 @@ public class ModuleIOSparkMaxCANcoder extends ModuleIO {
     public void setTurnPIDF(PIDF newGains) {
         System.out.println("Setting turn gains");
         var newConfig = new SparkMaxConfig();
-        newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        newGains.applySparkWithoutFeedforward(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
         SparkUtil.tryUntilOkAsync(5, () -> turnSpark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,

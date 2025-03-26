@@ -53,8 +53,8 @@ public class RollersIOSparkMax extends RollersIO {
         config
                 .closedLoop
                 .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder);
-        rollersConfig.positionGains().applySparkPID(config.closedLoop, ClosedLoopSlot.kSlot0); // position = slot0
-        rollersConfig.velocityGains().applySparkPID(config.closedLoop, ClosedLoopSlot.kSlot1); // velocity = slot1
+        rollersConfig.positionGains().applySparkWithoutFeedforward(config.closedLoop, ClosedLoopSlot.kSlot0); // position = slot0
+        rollersConfig.velocityGains().applySparkWithoutFeedforward(config.closedLoop, ClosedLoopSlot.kSlot1); // velocity = slot1
         config
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
@@ -90,7 +90,7 @@ public class RollersIOSparkMax extends RollersIO {
     public void setPositionPIDF(PIDF newGains) {
         System.out.println("Setting roller position gains");
         var newConfig = new SparkMaxConfig();
-        newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        newGains.applySparkWithoutFeedforward(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
         tryUntilOkAsync(5, () -> spark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
@@ -103,7 +103,7 @@ public class RollersIOSparkMax extends RollersIO {
         System.out.println("Setting roller velocity gains");
         velocityFeedforward = newGains.toSimpleFF();
         var newConfig = new SparkMaxConfig();
-        newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        newGains.applySparkWithoutFeedforward(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
         tryUntilOkAsync(5, () -> spark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,

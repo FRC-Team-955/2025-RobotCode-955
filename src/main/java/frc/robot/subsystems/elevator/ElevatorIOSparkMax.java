@@ -67,7 +67,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         leaderConfig
                 .closedLoop
                 .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder);
-        gains.applySparkPID(leaderConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        gains.applySparkWithoutFeedforward(leaderConfig.closedLoop, ClosedLoopSlot.kSlot0);
         leaderConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
@@ -128,7 +128,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         System.out.println("Setting elevator gains");
         ff = newGains.toElevatorFF();
         var newConfig = new SparkMaxConfig();
-        newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        newGains.applySparkWithoutFeedforward(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
         tryUntilOkAsync(5, () -> leaderSpark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,

@@ -92,7 +92,7 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
         return new Tunable(name);
     }
 
-    public void applySparkPID(ClosedLoopConfig config, ClosedLoopSlot slot) {
+    public void applySparkWithoutFeedforward(ClosedLoopConfig config, ClosedLoopSlot slot) {
         // We do spark unit conversions on controller so no need for unit conversions
         config.pid(kP, kI, kD, slot);
     }
