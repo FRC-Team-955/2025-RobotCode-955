@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
 import frc.robot.Util;
+import frc.robot.subsystems.superstructure.AutoAlignLocations;
 import frc.robot.util.characterization.FeedforwardCharacterization;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
@@ -338,7 +339,12 @@ public class Elevator extends SubsystemBaseExt {
     }
 
     private double calculatePositionOffsetForScoring() {
-        return MathUtil.clamp(distanceFromScoringPositionMeters, 0, 0.5) * positionOffsetPerMeterOfDistance;
+        // Safeguard - this shouldn't happen due to when we set the distance but you never know
+        if (distanceFromScoringPositionMeters > AutoAlignLocations.ReefAlign.alignLinearToleranceMeters) {
+            return MathUtil.clamp(distanceFromScoringPositionMeters, 0, 0.5) * positionOffsetPerMeterOfDistance;
+        } else {
+            return 0.0;
+        }
     }
 
     public Command feedforwardCharacterization() {

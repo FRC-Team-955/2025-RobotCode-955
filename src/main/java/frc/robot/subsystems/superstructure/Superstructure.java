@@ -469,7 +469,6 @@ public class Superstructure extends SubsystemBaseExt {
                 ? 1
                 : elevator.getPositionMeters() / elevatorGoalSupplier.get().setpointMeters.getAsDouble();
         Supplier<Pose2d> alignPoseSupplier = () -> ReefAlign.getAlignPose(robotState.getPose(), elevatorPercentageSupplier.getAsDouble(), reefSideSupplier.get(), sideSupplier.get());
-        Command setElevatorDistanceFromScoringPosition = elevator.setDistanceFromScoringPositionContinuous(() -> robotState.getPose().getTranslation().getDistance(ReefAlign.getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get()).getTranslation()));
 
         Command initial = Commands.race(
                 // Drive to initial position
@@ -504,6 +503,12 @@ public class Superstructure extends SubsystemBaseExt {
                 Commands.parallel(
                         Commands.waitUntil(forceCondition),
                         Commands.runOnce(() -> autoForceable = true)
+                ).deadlineFor(
+                        // We only want to offset the elevator position if we aren't aligned and are taking a while to align
+                        elevator.setDistanceFromScoringPositionContinuous(
+                                () -> robotState.getPose().getTranslation()
+                                        .getDistance(ReefAlign.getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get()).getTranslation())
+                        )
                 )
         );
 
@@ -547,7 +552,7 @@ public class Superstructure extends SubsystemBaseExt {
                                             finalize
                                     )
                             )
-                    ).deadlineFor(setElevatorDistanceFromScoringPosition)
+                    )
             );
         } else
             return wrapExposedCommand(CommandsExt.onlyIf(
@@ -565,7 +570,7 @@ public class Superstructure extends SubsystemBaseExt {
                                     drive.moveTo(alignPoseSupplier),
                                     score.andThen(finalize)
                             ))
-                    ).deadlineFor(setElevatorDistanceFromScoringPosition)
+                    )
             ));
     }
 
