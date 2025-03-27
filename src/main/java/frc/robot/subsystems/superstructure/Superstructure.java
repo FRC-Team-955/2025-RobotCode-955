@@ -38,7 +38,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static frc.robot.subsystems.superstructure.SuperstructureConstants.*;
-import static frc.robot.subsystems.superstructure.SuperstructureTuning.funnelIntakeFinalizeInches;
+import static frc.robot.subsystems.superstructure.SuperstructureTuning.funnelIntakeHomeInches;
 
 public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
@@ -281,7 +281,12 @@ public class Superstructure extends SubsystemBaseExt {
                         )),
                 Commands.parallel(
                         setGoal(Goal.HOME),
-                        endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeFinalizeInches.get())),
+                        CommandsExt.eagerSequence(
+                                endEffector.setGoal(EndEffector.RollersGoal.ZERO_CORAL),
+                                Commands.waitSeconds(0.5),
+                                endEffector.waitUntilZeroCoralAmperageTriggered().withTimeout(1),
+                                endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeHomeInches.get()))
+                        ),
                         funnel.setGoal(Funnel.Goal.IDLE)
                 )
         );
@@ -605,7 +610,7 @@ public class Superstructure extends SubsystemBaseExt {
                         ),
                         CommandsExt.eagerSequence(
                                 Commands.waitSeconds(0.5),
-                                endEffector.waitUntilDescoreAmperageTriggered()
+                                endEffector.waitUntilDescoreAlgaeAmperageTriggered()
                         )
                 ),
                 setGoal(Goal.AUTO_DESCORE_ALGAE_WAIT_AMPERAGE)

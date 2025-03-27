@@ -41,6 +41,7 @@ public class EndEffector extends SubsystemBaseExt {
         SCORE_CORAL_L1(scoreCoralL1GoalSetpoint::get),
         DESCORE_ALGAE(descoreAlgaeGoalSetpoint::get),
         EJECT(ejectGoalSetpoint::get),
+        ZERO_CORAL(zeroCoralGoalSetpoint::get),
         GO_TO_POSITION(null); // Handled specially in periodic and with rollersPositionSetpointRad
 
         private final DoubleSupplier setpointRadPerSec;
@@ -113,13 +114,13 @@ public class EndEffector extends SubsystemBaseExt {
         }
     }
 
-    @AutoLogOutput(key = "EndEffector/DescoreAmperageTriggered")
-    public boolean descoreAmperageTriggered() {
-        return Math.abs(rollersInputs.currentAmps) > descoreTriggerAmps;
+    @AutoLogOutput(key = "EndEffector/DescoreAlgaeAmperageTriggered")
+    private boolean descoreAlgaeAmperageTriggered() {
+        return Math.abs(rollersInputs.currentAmps) > descoreAlgaeTriggerAmps;
     }
 
-    public Command waitUntilDescoreAmperageTriggered() {
-        return Commands.waitUntil(this::descoreAmperageTriggered);
+    public Command waitUntilDescoreAlgaeAmperageTriggered() {
+        return Commands.waitUntil(this::descoreAlgaeAmperageTriggered);
     }
 
     public Command setGoal(RollersGoal rollersGoal) {
@@ -139,6 +140,15 @@ public class EndEffector extends SubsystemBaseExt {
                 },
                 () -> Math.abs(rollersInputs.positionRad - rollersPositionSetpointRad) <= rollersPositionToleranceRad
         );
+    }
+
+    @AutoLogOutput(key = "EndEffector/ZeroCoralAmperageTriggered")
+    private boolean zeroCoralAmperageTriggered() {
+        return Math.abs(rollersInputs.currentAmps) > zeroCoralTriggerAmps;
+    }
+
+    public Command waitUntilZeroCoralAmperageTriggered() {
+        return Commands.waitUntil(this::zeroCoralAmperageTriggered);
     }
 
     @AutoLogOutput(key = "EndEffector/AngleRad")
