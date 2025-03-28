@@ -333,12 +333,17 @@ public class Superstructure extends SubsystemBaseExt {
                 Commands.waitUntil(forwardCondition)
         );
 
+        Command driveWhileScoringL1 = CommandsExt.onlyIf(
+                () -> coralScoringLevelSupplier.get() == CoralScoringLevel.L1,
+                drive.runRobotRelative(() -> new ChassisSpeeds(0, -1.0, 0)).asProxy()
+        );
+
         Command score = Commands.parallel(
                 setGoal(Goal.MANUAL_SCORE_CORAL_SCORING),
                 Commands.either(
                         endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL_L1),
                         endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
-                        () -> coralScoringLevelSupplier.get().coralScoringElevatorGoal == Elevator.Goal.SCORE_L1
+                        () -> coralScoringLevelSupplier.get() == CoralScoringLevel.L1
                 ),
                 elevator.setGoal(() -> coralScoringLevelSupplier.get().coralScoringElevatorGoal),
                 waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
@@ -348,15 +353,17 @@ public class Superstructure extends SubsystemBaseExt {
         Command finalize = Commands.either(
                 Commands.waitSeconds(scoreCoralL1SettleSeconds),
                 Commands.waitSeconds(scoreCoralSettleSeconds),
-                () -> coralScoringLevelSupplier.get().coralScoringElevatorGoal == Elevator.Goal.SCORE_L1
+                () -> coralScoringLevelSupplier.get() == CoralScoringLevel.L1
         );
 
         if (duringAuto) {
             return wrapExposedCommand(CommandsExt.eagerSequence(
                     raiseElevator,
                     waitConfirm,
-                    score,
-                    finalize
+                    CommandsExt.eagerSequence(
+                            score,
+                            finalize
+                    ).deadlineFor(driveWhileScoringL1)
             ));
         } else {
             return wrapExposedCommand(CommandsExt.onlyIf(
@@ -367,7 +374,7 @@ public class Superstructure extends SubsystemBaseExt {
                             backgroundCommandScheduler.scheduleInBackground(CommandsExt.eagerSequence(
                                     score,
                                     finalize
-                            ))
+                            ).deadlineFor(driveWhileScoringL1))
                     )
             ));
         }
@@ -521,7 +528,7 @@ public class Superstructure extends SubsystemBaseExt {
                 Commands.either(
                         endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL_L1),
                         endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
-                        () -> coralScoringLevelSupplier.get().coralScoringElevatorGoal == Elevator.Goal.SCORE_L1
+                        () -> coralScoringLevelSupplier.get() == CoralScoringLevel.L1
                 ),
                 waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
         );
@@ -531,7 +538,7 @@ public class Superstructure extends SubsystemBaseExt {
                 Commands.either(
                         Commands.waitSeconds(scoreCoralL1SettleSeconds),
                         Commands.waitSeconds(scoreCoralSettleSeconds),
-                        () -> coralScoringLevelSupplier.get().coralScoringElevatorGoal == Elevator.Goal.SCORE_L1
+                        () -> coralScoringLevelSupplier.get() == CoralScoringLevel.L1
                 )
         );
         if (duringAuto) {
