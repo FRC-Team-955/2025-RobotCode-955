@@ -12,6 +12,7 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
 import frc.robot.util.characterization.FeedforwardCharacterization;
+import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -152,12 +153,14 @@ public class EndEffector extends SubsystemBaseExt {
     }
 
     public Command rollersFeedforwardCharacterization() {
-        return setGoal(RollersGoal.CHARACTERIZATION)
-                .andThen(new FeedforwardCharacterization(
+        return CommandsExt.eagerSequence(
+                setGoal(RollersGoal.CHARACTERIZATION),
+                new FeedforwardCharacterization(
                         rollersIO::setOpenLoop,
                         () -> new double[]{rollersInputs.velocityRadPerSec},
                         1,
                         this
-                ));
+                )
+        );
     }
 }

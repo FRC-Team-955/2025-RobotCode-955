@@ -126,7 +126,7 @@ public class RobotContainer {
     private void setDefaultCommands() {
         drive.setDefaultCommand(drive.driveJoystick(Optional::empty));
 
-        superstructure.setDefaultCommand(superstructure.ensureNotBusyAndResetGoals().andThen(Commands.idle()).ignoringDisable(true));
+        superstructure.setDefaultCommand(CommandsExt.eagerSequence(superstructure.ensureNotBusyAndResetGoals(), Commands.idle()).ignoringDisable(true));
     }
 
     /**
@@ -156,14 +156,14 @@ public class RobotContainer {
                         driverController.leftTrigger(),
                         operatorDashboard::getSelectedCoralScoringLevel
                 ).asProxy(),
-                superstructure.autoScoreCoral(
+                CommandsExt.eagerSequence(
+                        superstructure.autoScoreCoral(
                                 false,
                                 operatorDashboard::getSelectedReefZoneSide,
                                 operatorDashboard::getSelectedLocalReefSide,
                                 operatorDashboard::getSelectedCoralScoringLevel,
                                 driverController.leftTrigger()
-                        )
-                        .deadlineFor(
+                        ).deadlineFor(
                                 Commands.startRun(
                                         () -> ref.shouldDescoreAlgae = false,
                                         () -> {
@@ -172,15 +172,15 @@ public class RobotContainer {
                                             }
                                         }
                                 ).until(() -> ref.shouldDescoreAlgae)
-                        )
-                        .andThen(CommandsExt.onlyIf(
+                        ),
+                        CommandsExt.onlyIf(
                                 () -> ref.shouldDescoreAlgae,
                                 superstructure.autoDescoreAlgae(
                                         operatorDashboard::getSelectedReefZoneSide,
                                         driverController.rightBumper()
                                 )
-                        ))
-                        .asProxy(),
+                        )
+                ).asProxy(),
                 // Use manual scoring if override enabled or when scoring L1
                 () -> operatorDashboard.manualScoring.get()
                         || operatorDashboard.getSelectedCoralScoringLevel() == OperatorDashboard.CoralScoringLevel.L1

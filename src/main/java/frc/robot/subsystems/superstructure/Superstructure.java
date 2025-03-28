@@ -588,7 +588,10 @@ public class Superstructure extends SubsystemBaseExt {
                                     ),
                                     backgroundCommandScheduler.scheduleInBackground(Commands.race(
                                             drive.moveTo(alignPoseSupplier),
-                                            score.andThen(finalize)
+                                            CommandsExt.eagerSequence(
+                                                    score,
+                                                    finalize
+                                            )
                                     ))
                             )
                     )

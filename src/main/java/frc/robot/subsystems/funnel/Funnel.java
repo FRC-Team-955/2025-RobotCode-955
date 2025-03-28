@@ -9,6 +9,7 @@ import frc.robot.RobotMechanism;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
 import frc.robot.util.characterization.FeedforwardCharacterization;
+import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -101,12 +102,14 @@ public class Funnel extends SubsystemBaseExt {
     }
 
     public Command beltFeedforwardCharacterization() {
-        return setGoal(Goal.CHARACTERIZATION)
-                .andThen(new FeedforwardCharacterization(
+        return CommandsExt.eagerSequence(
+                setGoal(Goal.CHARACTERIZATION),
+                new FeedforwardCharacterization(
                         beltIO::setOpenLoop,
                         () -> new double[]{beltInputs.velocityRadPerSec},
                         1,
                         this
-                ));
+                )
+        );
     }
 }
