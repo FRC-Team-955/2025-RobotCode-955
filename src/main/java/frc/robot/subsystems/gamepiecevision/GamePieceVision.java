@@ -3,6 +3,7 @@ package frc.robot.subsystems.gamepiecevision;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.OperatorDashboard;
 import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -11,6 +12,8 @@ import org.littletonrobotics.junction.Logger;
 import static frc.robot.subsystems.gamepiecevision.GamePieceVisionConstants.createIO;
 
 public class GamePieceVision extends SubsystemBaseExt {
+    private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
+
     private final GamePieceVisionIO io = createIO();
     private final GamePieceVisionIOInputsAutoLogged inputs = new GamePieceVisionIOInputsAutoLogged();
 
@@ -39,6 +42,10 @@ public class GamePieceVision extends SubsystemBaseExt {
         Logger.processInputs("Inputs/GamePieceVision", inputs);
         // Update disconnected alert
         disconnectedAlert.set(!inputs.connected);
+
+        if (operatorDashboard.forceGamePieceLEDs.hasChanged(hashCode())) {
+            io.setLEDs(operatorDashboard.forceGamePieceLEDs.get());
+        }
     }
 
     public boolean visibleNotDebounced() {
