@@ -11,11 +11,13 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -121,6 +123,7 @@ public class Drive extends SubsystemBaseExt {
     private final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackOmega = driveConfig.choreoFeedbackOmega().toPIDWrapRadians();
 
+    // Linear constraints will be updated when move to runs, we can just give the overall constraints for now
     private ProfiledPIDController moveToLinearX = DriveConstants.moveToLinear.toProfiledPID(moveToLinearConstraintsMeters);
     private ProfiledPIDController moveToLinearY = DriveConstants.moveToLinear.toProfiledPID(moveToLinearConstraintsMeters);
     private ProfiledPIDController moveToAngular = DriveConstants.moveToAngular.toProfiledPIDWrapRadians(moveToAngularConstraintsRad);
@@ -291,10 +294,14 @@ public class Drive extends SubsystemBaseExt {
         });
 
         moveToLinearTunable.ifChanged(gains -> {
+            // Constraints will be updated when move to runs, we can just give the overall constraints for now
             moveToLinearX = gains.toProfiledPID(moveToLinearConstraintsMeters);
             moveToLinearY = gains.toProfiledPID(moveToLinearConstraintsMeters);
         });
-        moveToAngularTunable.ifChanged(gains -> moveToAngular = gains.toProfiledPIDWrapRadians(moveToAngularConstraintsRad));
+        moveToAngularTunable.ifChanged(gains -> moveToAngular = gains.toProfiledPIDWrapRadians(new TrapezoidProfile.Constraints(
+                moveToAngularMaxVelocityTunable.get(),
+                moveToAngularMaxAccelerationTunable.get()
+        )));
 
         Logger.recordOutput("Drive/Goal", goal);
 
@@ -521,6 +528,27 @@ public class Drive extends SubsystemBaseExt {
 
                             Pose2d goalPose = poseSupplier.get();
                             Logger.recordOutput("Drive/MoveTo/Goal", goalPose);
+
+                            // Update profile constraints
+                            Translation2d currentToGoal = goalPose.getTranslation().minus(currentPose.getTranslation());
+                            double currentToGoalDistance = currentToGoal.getNorm();
+//                            Logger.recordOutput("Drive/MoveTo/CurrentToGoalDistance", currentToGoalDistance);
+                            // Direction of travel becomes unstable when we get onto the point
+                            if (currentToGoalDistance > 0.1) {
+                                Logger.recordOutput("Drive/MoveTo/CalculatingConstraints", true);
+                                Rotation2d directionOfTravel = currentToGoal.getAngle();
+//                                Logger.recordOutput("Drive/MoveTo/DirectionOfTravel", directionOfTravel);
+                                calculateMoveToLinearConstraints(directionOfTravel, (x, y) -> {
+//                                    Logger.recordOutput("Drive/MoveTo/Constraints/MaxVelocityX", x.maxVelocity);
+//                                    Logger.recordOutput("Drive/MoveTo/Constraints/MaxVelocityY", y.maxVelocity);
+//                                    Logger.recordOutput("Drive/MoveTo/Constraints/MaxAccelerationX", x.maxAcceleration);
+//                                    Logger.recordOutput("Drive/MoveTo/Constraints/MaxAccelerationY", y.maxAcceleration);
+                                    moveToLinearX.setConstraints(x);
+                                    moveToLinearY.setConstraints(y);
+                                });
+                            } else {
+                                Logger.recordOutput("Drive/MoveTo/CalculatingConstraints", false);
+                            }
 
                             double linearXVelocityMetersPerSec = moveToLinearX.calculate(
                                     currentPose.getX(),
