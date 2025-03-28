@@ -33,7 +33,7 @@ public class ReefAlign {
 
     public static final double alignLinearToleranceMeters = 0.04;
     public static final double alignAngularToleranceRad = Units.degreesToRadians(4);
-    public static final double alignLinearToleranceMetersPerSecond = 0.08;
+    public static final double alignLinearToleranceMetersPerSecond = 0.04;
     public static final double alignAngularToleranceRadPerSecond = Units.degreesToRadians(8);
 
     public static boolean canRaiseElevator(Pose2d currentPose, ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
@@ -98,7 +98,7 @@ public class ReefAlign {
 
         // Also consider rotational difference when aligning - we don't want to fully align if we aren't pointing in the right direction
         double finalAngularDiff = Math.abs(MathUtil.angleModulus(new Transform2d(finalAlign, currentPose).getRotation().getRadians()));
-        if (finalAngularDiff < alignAngularToleranceRad / 2.0) {
+        if (finalAngularDiff < alignAngularToleranceRad) {
             finalAngularDiff = 0.0;
         }
         // Clamp needed since we're multiplying

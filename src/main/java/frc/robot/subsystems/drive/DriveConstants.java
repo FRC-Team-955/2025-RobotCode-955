@@ -18,9 +18,9 @@ public class DriveConstants {
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
     public static final PIDF moveToLinear = PIDF.ofPD(2, 0);
-    public static final TrapezoidProfile.Constraints moveToLinearConstraintsMeters = new TrapezoidProfile.Constraints(4, 5);
-    public static final PIDF moveToAngular = PIDF.ofPD(1, 0);
-    public static final TrapezoidProfile.Constraints moveToAngularConstraintsRad = new TrapezoidProfile.Constraints(4, 8);
+    public static final TrapezoidProfile.Constraints moveToLinearConstraintsMeters = new TrapezoidProfile.Constraints(4, 4);
+    public static final PIDF moveToAngular = PIDF.ofPD(2, 0);
+    public static final TrapezoidProfile.Constraints moveToAngularConstraintsRad = new TrapezoidProfile.Constraints(3, 2);
 
     public static void calculateMoveToLinearConstraints(Rotation2d directionOfTravel, double scalar, BiConsumer<TrapezoidProfile.Constraints, TrapezoidProfile.Constraints> applyXYConstraints) {
         Translation2d maxVelocities = new Pose2d(new Translation2d(), directionOfTravel)
