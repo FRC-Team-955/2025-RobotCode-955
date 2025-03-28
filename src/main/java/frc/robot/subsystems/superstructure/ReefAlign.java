@@ -12,9 +12,8 @@ import frc.robot.util.AllianceBasedPose2d;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.Map;
 
 public class ReefAlign {
     private static final double distanceCenterOfReefToBranchMeters = Units.inchesToMeters(6.5);
@@ -121,15 +120,11 @@ public class ReefAlign {
     private static final double velocityLookaheadSeconds = 0.4;
     private static final Transform2d reefSideAngleOffset = new Transform2d(0.25, 0, new Rotation2d());
 
-    private static final EnumMap<ReefZoneSide, Pose2d> reefZoneSideToAdjustedPose = Util.createEnumMap(ReefZoneSide.class, ReefZoneSide.values(), ReefZoneSide::getAdjustedAprilTagPose);
-
     private static ReefZoneSide closestReefSideToPose(Pose2d currentPose) {
-        return reefZoneSideToAdjustedPose.entrySet()
-                .stream()
+        return Arrays.stream(ReefZoneSide.values())
                 .min(Comparator.comparing(
-                        entry -> currentPose.getTranslation().getDistance(entry.getValue().getTranslation())
+                        side -> currentPose.getTranslation().getDistance(side.getAdjustedAprilTagPose().getTranslation())
                 ))
-                .map(Map.Entry::getKey)
                 .orElse(ReefZoneSide.LeftFront);
     }
 
