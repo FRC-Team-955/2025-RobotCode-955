@@ -66,6 +66,12 @@ public class RobotContainer {
                         () -> driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0.5),
                         () -> driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0)
                 ).withTimeout(3.0));
+
+        new Trigger(superstructure::isAutoForceable)
+                .onTrue(Commands.startEnd(
+                        () -> driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0.5),
+                        () -> driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0)
+                ).withTimeout(1.0));
     }
 
     private void addAutos() {
