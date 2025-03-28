@@ -142,15 +142,6 @@ public class EndEffector extends SubsystemBaseExt {
         );
     }
 
-    @AutoLogOutput(key = "EndEffector/ZeroCoralAmperageTriggered")
-    private boolean zeroCoralAmperageTriggered() {
-        return Math.abs(rollersInputs.currentAmps) > zeroCoralTriggerAmps;
-    }
-
-    public Command waitUntilZeroCoralAmperageTriggered() {
-        return Commands.waitUntil(this::zeroCoralAmperageTriggered);
-    }
-
     @AutoLogOutput(key = "EndEffector/AngleRad")
     public double getAngleRad() {
         return MathUtil.interpolate(

@@ -22,5 +22,5 @@ public class EndEffectorTuning {
     public static final LoggedTunableNumber ejectGoalSetpoint =
             new LoggedTunableNumber("EndEffector/Goal/Eject", Units.rotationsPerMinuteToRadiansPerSecond(450));
     public static final LoggedTunableNumber zeroCoralGoalSetpoint =
-            new LoggedTunableNumber("EndEffector/Goal/ZeroCoral", Units.rotationsPerMinuteToRadiansPerSecond(-200));
+            new LoggedTunableNumber("EndEffector/Goal/ZeroCoral", Units.rotationsPerMinuteToRadiansPerSecond(-600));
 }

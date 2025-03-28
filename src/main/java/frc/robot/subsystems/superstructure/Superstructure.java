@@ -37,7 +37,8 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static frc.robot.subsystems.superstructure.SuperstructureConstants.*;
-import static frc.robot.subsystems.superstructure.SuperstructureTuning.funnelIntakeHomeInches;
+import static frc.robot.subsystems.superstructure.SuperstructureTuning.funnelIntakeHomeMeters;
+import static frc.robot.subsystems.superstructure.SuperstructureTuning.funnelIntakeInitialMeters;
 
 public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
@@ -281,11 +282,11 @@ public class Superstructure extends SubsystemBaseExt {
                 Commands.parallel(
                         setGoal(Goal.HOME),
                         CommandsExt.eagerSequence(
+                                endEffector.moveByAndWaitUntilDone(funnelIntakeInitialMeters::get),
                                 endEffector.setGoal(EndEffector.RollersGoal.ZERO_CORAL),
-                                Commands.waitSeconds(0.5),
-                                endEffector.waitUntilZeroCoralAmperageTriggered().withTimeout(1),
-                                endEffector.moveByAndWaitUntilDone(() -> Units.inchesToMeters(funnelIntakeHomeInches.get()))
-                        ),
+                                Commands.waitSeconds(0.1),
+                                endEffector.moveByAndWaitUntilDone(funnelIntakeHomeMeters::get)
+                        ).deadlineFor(elevator.zeroCoral()),
                         funnel.setGoal(Funnel.Goal.IDLE)
                 )
         );

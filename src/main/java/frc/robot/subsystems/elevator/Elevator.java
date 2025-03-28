@@ -15,6 +15,7 @@ import frc.robot.Util;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.superstructure.ReefAlign;
 import frc.robot.util.characterization.FeedforwardCharacterization;
+import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -39,14 +40,15 @@ public class Elevator extends SubsystemBaseExt {
     @RequiredArgsConstructor
     public enum Goal {
         CHARACTERIZATION(null, false),
-        ZERO(null, false),
         STOW(stowGoalSetpoint::get, false), // Setpoint for when coral stuck in robot mode is activated is in periodicAfterCommands
         SCORE_L1(scoreL1GoalSetpoint::get, false),
         SCORE_L2(scoreL2GoalSetpoint::get, true),
         SCORE_L3(scoreL3GoalSetpoint::get, true),
         SCORE_L4(scoreL4GoalSetpoint::get, true),
         DESCORE_L2(descoreL2GoalSetpoint::get, false),
-        DESCORE_L3(descoreL3GoalSetpoint::get, false);
+        DESCORE_L3(descoreL3GoalSetpoint::get, false),
+        ZERO_CORAL(null, false),
+        ;
 
         /** Should be constant for every loop cycle */
         public final DoubleSupplier setpointMeters;
@@ -363,5 +365,13 @@ public class Elevator extends SubsystemBaseExt {
                         1,
                         this
                 ));
+    public Command zeroCoral() {
+        return CommandsExt.eagerSequence(
+                setGoal(() -> Goal.ZERO_CORAL),
+                startEnd(
+                        () -> io.setOpenLoop(-1),
+                        () -> io.setOpenLoop(0)
+                )
+        );
     }
 }
