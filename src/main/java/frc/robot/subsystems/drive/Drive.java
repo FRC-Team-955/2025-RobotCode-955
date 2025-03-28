@@ -657,6 +657,10 @@ public class Drive extends SubsystemBaseExt {
         );
     }
 
+    public Command stop() {
+        return runOnce(() -> goal = Goal.IDLE);
+    }
+
     public Command feedforwardCharacterization() {
         return withGoal(Goal.CHARACTERIZATION, new FeedforwardCharacterization(
                 volts -> {

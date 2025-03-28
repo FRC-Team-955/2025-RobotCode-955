@@ -448,21 +448,27 @@ public class Superstructure extends SubsystemBaseExt {
                 )
         );
         if (duringAuto) {
-            return wrapExposedCommand(CommandsExt.onlyIf(
-                    () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                    CommandsExt.eagerSequence(
-                            intake,
-                            backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
+            return wrapExposedCommand(
+                    drive.stop(),
+                    CommandsExt.onlyIf(
+                            () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
+                            CommandsExt.eagerSequence(
+                                    intake,
+                                    backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
+                            )
                     )
-            ));
+            );
         } else {
-            return wrapExposedCommand(CommandsExt.onlyIf(
-                    () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                    CommandsExt.eagerSequence(
-                            intake,
-                            backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
+            return wrapExposedCommand(
+                    drive.stop(),
+                    CommandsExt.onlyIf(
+                            () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
+                            CommandsExt.eagerSequence(
+                                    intake,
+                                    backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
+                            )
                     )
-            ));
+            );
         }
     }
 
@@ -566,23 +572,26 @@ public class Superstructure extends SubsystemBaseExt {
                     )
             );
         } else
-            return wrapExposedCommand(CommandsExt.onlyIf(
-                    // Only run if you have coral and are in front of your reef side
-                    () -> (endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
-                            && ReefAlign.isAlignable(robotState.getPose(), reefSideSupplier.get()),
-                    CommandsExt.eagerSequence(
-                            initial,
-                            Commands.race(
-                                    drive.moveTo(alignPoseSupplier),
-                                    waitFinalAndElevator,
-                                    waitForForce
-                            ),
-                            backgroundCommandScheduler.scheduleInBackground(Commands.race(
-                                    drive.moveTo(alignPoseSupplier),
-                                    score.andThen(finalize)
-                            ))
+            return wrapExposedCommand(
+                    drive.stop(),
+                    CommandsExt.onlyIf(
+                            // Only run if you have coral and are in front of your reef side
+                            () -> (endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
+                                    && ReefAlign.isAlignable(robotState.getPose(), reefSideSupplier.get()),
+                            CommandsExt.eagerSequence(
+                                    initial,
+                                    Commands.race(
+                                            drive.moveTo(alignPoseSupplier),
+                                            waitFinalAndElevator,
+                                            waitForForce
+                                    ),
+                                    backgroundCommandScheduler.scheduleInBackground(Commands.race(
+                                            drive.moveTo(alignPoseSupplier),
+                                            score.andThen(finalize)
+                                    ))
+                            )
                     )
-            ));
+            );
     }
 
     public Command autoDescoreAlgae(
@@ -638,19 +647,22 @@ public class Superstructure extends SubsystemBaseExt {
                 )
         );
 
-        return wrapExposedCommand(CommandsExt.onlyIf(
-                () -> (!endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
-                        && ReefAlign.isAlignable(robotState.getPose(), reefSideSupplier.get()),
-                CommandsExt.eagerSequence(
-                        Commands.race(
-                                CommandsExt.eagerSequence(
-                                        driveTo,
-                                        waitAlgae
+        return wrapExposedCommand(
+                drive.stop(),
+                CommandsExt.onlyIf(
+                        () -> (!endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
+                                && ReefAlign.isAlignable(robotState.getPose(), reefSideSupplier.get()),
+                        CommandsExt.eagerSequence(
+                                Commands.race(
+                                        CommandsExt.eagerSequence(
+                                                driveTo,
+                                                waitAlgae
+                                        ),
+                                        waitForForce
                                 ),
-                                waitForForce
-                        ),
-                        driveBack
+                                driveBack
+                        )
                 )
-        ));
+        );
     }
 }
