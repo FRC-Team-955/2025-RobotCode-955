@@ -27,7 +27,7 @@ public class FunnelConstants {
             return new RollersIO();
         }
         return switch (Constants.identity) {
-            case COMPBOT -> new RollersIOSparkMax(8, beltConfig);
+            case COMPBOT -> new RollersIOSparkMax(5, beltConfig);
             case SIMBOT -> new RollersIOSim(
                     beltConfig,
                     0.01,

@@ -43,7 +43,7 @@ public class EndEffectorConstants {
             return new RollersIO();
         }
         return switch (Constants.identity) {
-            case COMPBOT -> new RollersIOSparkMax(7, rollersConfig);
+            case COMPBOT -> new RollersIOSparkMax(6, rollersConfig);
             case SIMBOT -> new RollersIOSim(
                     rollersConfig,
                     0.01,
