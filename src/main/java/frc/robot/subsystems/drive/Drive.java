@@ -29,7 +29,6 @@ import frc.robot.OperatorDashboard;
 import frc.robot.RobotState;
 import frc.robot.Util;
 import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.util.characterization.FeedforwardCharacterization;
 import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
@@ -367,7 +366,7 @@ public class Drive extends SubsystemBaseExt {
                 // Calculate module setpoints
                 ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(closedLoopSetpoint, 0.02);
                 SwerveModuleState[] setpointStates = robotState.getKinematics().toSwerveModuleStates(discreteSpeeds);
-                SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, driveConfig.maxDriveVelocityMetersPerSec());
+                SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, driveConfig.moduleLimits().maxDriveVelocityMetersPerSec());
 
                 Logger.recordOutput("Drive/ModuleStates/Setpoints", setpointStates);
 
@@ -441,30 +440,12 @@ public class Drive extends SubsystemBaseExt {
         return states;
     }
 
-    @AutoLogOutput(key = "Drive/ModuleLimits")
     public ModuleLimits getModuleLimits() {
         if (operatorDashboard.coralStuckInRobotMode.get()) {
-            return new ModuleLimits(
-                    driveConfig.maxDriveVelocityMetersPerSec(),
-                    driveConfig.maxDriveAccelMetersPerSecSquared(),
-                    driveConfig.maxTurnVelocityRadPerSec()
-            );
+            return driveConfig.moduleLimits();
         }
 
-        var elevatorSetpoint = elevator.getGoal().setpointMeters != null
-                ? elevator.getGoal().setpointMeters.getAsDouble()
-                : 0;
-        var elevatorPosition = Math.max(elevator.getPositionMeters(), elevatorSetpoint);
-        var scalar = MathUtil.clamp(
-                1 - elevatorSlowdownScalar * elevatorPosition / ElevatorConstants.maxHeightMeters,
-                1 - elevatorSlowdownScalar,
-                1
-        );
-        return new ModuleLimits(
-                driveConfig.maxDriveVelocityMetersPerSec() * scalar,
-                driveConfig.maxDriveAccelMetersPerSecSquared() * scalar,
-                driveConfig.maxTurnVelocityRadPerSec()
-        );
+        return driveConfig.moduleLimits().times(elevator.getDriveConstraintScalar());
     }
 
     public AutoFactory createAutoFactory() {
@@ -538,7 +519,7 @@ public class Drive extends SubsystemBaseExt {
                                 Logger.recordOutput("Drive/MoveTo/CalculatingConstraints", true);
                                 Rotation2d directionOfTravel = currentToGoal.getAngle();
 //                                Logger.recordOutput("Drive/MoveTo/DirectionOfTravel", directionOfTravel);
-                                calculateMoveToLinearConstraints(directionOfTravel, (x, y) -> {
+                                calculateMoveToLinearConstraints(directionOfTravel, elevator.getDriveConstraintScalar(), (x, y) -> {
 //                                    Logger.recordOutput("Drive/MoveTo/Constraints/MaxVelocityX", x.maxVelocity);
 //                                    Logger.recordOutput("Drive/MoveTo/Constraints/MaxVelocityY", y.maxVelocity);
 //                                    Logger.recordOutput("Drive/MoveTo/Constraints/MaxAccelerationX", x.maxAcceleration);

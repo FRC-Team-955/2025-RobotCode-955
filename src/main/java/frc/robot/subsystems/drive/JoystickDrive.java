@@ -72,8 +72,8 @@ public class JoystickDrive {
             linearVelocity = linearVelocity.rotateBy(Rotation2d.k180deg);
         }
         setpointFieldRelative = new ChassisSpeeds(
-                linearVelocity.getX() * driveConfig.maxDriveVelocityMetersPerSec(),
-                linearVelocity.getY() * driveConfig.maxDriveVelocityMetersPerSec(),
+                linearVelocity.getX() * driveConfig.moduleLimits().maxDriveVelocityMetersPerSec(),
+                linearVelocity.getY() * driveConfig.moduleLimits().maxDriveVelocityMetersPerSec(),
                 omegaMagnitude * joystickMaxAngularSpeedRadPerSec
         );
     }

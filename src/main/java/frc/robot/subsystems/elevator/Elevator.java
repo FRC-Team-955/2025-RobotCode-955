@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
 import frc.robot.Util;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.superstructure.ReefAlign;
 import frc.robot.util.characterization.FeedforwardCharacterization;
 import frc.robot.util.subsystem.SubsystemBaseExt;
@@ -343,6 +344,15 @@ public class Elevator extends SubsystemBaseExt {
         } else {
             return 0.0;
         }
+    }
+
+    @AutoLogOutput(key = "Elevator/DriveConstraintScalar")
+    public double getDriveConstraintScalar() {
+        double elevatorSetpoint = goal.setpointMeters != null
+                ? goal.setpointMeters.getAsDouble()
+                : 0;
+        double elevatorPosition = Math.max(getPositionMeters(), elevatorSetpoint);
+        return MathUtil.interpolate(1, DriveConstants.constraintScalarWhenElevatorAtMaxHeight, elevatorPosition / maxHeightMeters);
     }
 
     public Command feedforwardCharacterization() {

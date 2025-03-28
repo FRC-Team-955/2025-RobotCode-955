@@ -9,6 +9,7 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.Util;
 import frc.robot.util.PIDF;
+import frc.robot.util.swerve.ModuleLimits;
 
 import java.util.function.BiConsumer;
 
@@ -21,7 +22,7 @@ public class DriveConstants {
     public static final PIDF moveToAngular = PIDF.ofPD(1, 0);
     public static final TrapezoidProfile.Constraints moveToAngularConstraintsRad = new TrapezoidProfile.Constraints(4, 8);
 
-    public static void calculateMoveToLinearConstraints(Rotation2d directionOfTravel, BiConsumer<TrapezoidProfile.Constraints, TrapezoidProfile.Constraints> applyXYConstraints) {
+    public static void calculateMoveToLinearConstraints(Rotation2d directionOfTravel, double scalar, BiConsumer<TrapezoidProfile.Constraints, TrapezoidProfile.Constraints> applyXYConstraints) {
         Translation2d maxVelocities = new Pose2d(new Translation2d(), directionOfTravel)
                 .transformBy(new Transform2d(DriveTuning.moveToLinearMaxVelocityTunable.get(), 0, new Rotation2d()))
                 .getTranslation();
@@ -30,9 +31,9 @@ public class DriveConstants {
                 .getTranslation();
         applyXYConstraints.accept(
                 // X
-                new TrapezoidProfile.Constraints(Math.abs(maxVelocities.getX()), Math.abs(maxAccelerations.getX())),
+                new TrapezoidProfile.Constraints(Math.abs(maxVelocities.getX() * scalar), Math.abs(maxAccelerations.getX() * scalar)),
                 // Y
-                new TrapezoidProfile.Constraints(Math.abs(maxVelocities.getY()), Math.abs(maxAccelerations.getY()))
+                new TrapezoidProfile.Constraints(Math.abs(maxVelocities.getY() * scalar), Math.abs(maxAccelerations.getY() * scalar))
         );
     }
 
@@ -44,7 +45,7 @@ public class DriveConstants {
     public static final double odometryPositionDeltaDiscardMeters = 0.3;
 
     // Slow to 30% speed when elevator is at max height
-    public static final double elevatorSlowdownScalar = 0.7;
+    public static final double constraintScalarWhenElevatorAtMaxHeight = 0.3;
 
     public static final DriveConfig driveConfig = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> new DriveConfig(
@@ -55,9 +56,11 @@ public class DriveConstants {
                 Units.inchesToMeters(35),
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
-                4.58,
-                20,
-                20
+                new ModuleLimits(
+                        4.58,
+                        20,
+                        20
+                )
         );
         case ALPHABOT -> new DriveConfig(
                 Units.inchesToMeters(2),
@@ -67,9 +70,11 @@ public class DriveConstants {
                 Units.inchesToMeters(30),
                 PIDF.ofPD(1.5, 0),
                 PIDF.ofPD(1.5, 0),
-                4.637,
-                20,
-                Units.degreesToRadians(1080)
+                new ModuleLimits(
+                        4.637,
+                        20,
+                        20
+                )
         );
     };
 
@@ -86,7 +91,7 @@ public class DriveConstants {
     public static final double drivebaseRadiusMeters = Math.hypot(driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0);
 
     /** Maximum angular velocity of the whole drivetrain if all drive motors/wheels are going at full speed. */
-    public static final double maxAngularVelocityRadPerSec = driveConfig.maxDriveVelocityMetersPerSec() / drivebaseRadiusMeters;
+    public static final double maxAngularVelocityRadPerSec = driveConfig.moduleLimits().maxDriveVelocityMetersPerSec() / drivebaseRadiusMeters;
 
     public static final double joystickMaxAngularSpeedRadPerSec = Math.min(Units.degreesToRadians(315), maxAngularVelocityRadPerSec);
     public static final double joystickDriveDeadband = 0.1;
@@ -186,9 +191,7 @@ public class DriveConstants {
             double bumperLengthMeters,
             PIDF choreoFeedbackXY,
             PIDF choreoFeedbackOmega,
-            double maxDriveVelocityMetersPerSec, // Maximum velocity of the drive motor
-            double maxDriveAccelMetersPerSecSquared, // Maximum acceleration of the drive motor
-            double maxTurnVelocityRadPerSec // Maximum velocity of the turn motor
+            ModuleLimits moduleLimits // See ModuleLimits for docs on each value
     ) {
     }
 
