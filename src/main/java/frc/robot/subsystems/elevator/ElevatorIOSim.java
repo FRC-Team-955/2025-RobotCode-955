@@ -4,7 +4,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import frc.robot.util.PIDF;
 
@@ -65,8 +64,6 @@ public class ElevatorIOSim extends ElevatorIO {
         inputs.followerVelocityRadPerSec = inputs.leaderVelocityRadPerSec;
         inputs.followerAppliedVolts = inputs.leaderAppliedVolts;
         inputs.followerCurrentAmps = inputs.leaderCurrentAmps;
-
-        inputs.limitSwitchTriggered = sim.getPositionMeters() < Units.inchesToMeters(1);
     }
 
     @Override

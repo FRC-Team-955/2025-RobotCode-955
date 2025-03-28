@@ -272,13 +272,11 @@ public class Elevator extends SubsystemBaseExt {
 
         // Check limit switch and zero if needed
         var forceZero = operatorDashboard.forceZeroElevator.get();
-        if ((!hasZeroed && inputs.limitSwitchTriggered) || forceZero) {
+        if (forceZero) {
             io.setEncoder(0);
             hasZeroed = true;
-            if (forceZero) {
-                // Turn off the toggle instantly so it's like a button
-                operatorDashboard.forceZeroElevator.set(false);
-            }
+            // Turn off the toggle instantly so it's like a button
+            operatorDashboard.forceZeroElevator.set(false);
         }
         notZeroedAlert.set(!hasZeroed);
     }
