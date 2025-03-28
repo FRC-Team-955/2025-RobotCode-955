@@ -610,9 +610,7 @@ public class Superstructure extends SubsystemBaseExt {
 
         Command waitAlgae = Commands.parallel(
                 Commands.race(
-                        drive.runRobotRelative(
-                                () -> new ChassisSpeeds(-0.4, 0, 0)
-                        ),
+                        drive.runRobotRelative(() -> new ChassisSpeeds(-0.4, 0, 0)),
                         CommandsExt.eagerSequence(
                                 Commands.waitSeconds(0.5),
                                 endEffector.waitUntilDescoreAlgaeAmperageTriggered()
@@ -621,12 +619,13 @@ public class Superstructure extends SubsystemBaseExt {
                 setGoal(Goal.AUTO_DESCORE_ALGAE_WAIT_AMPERAGE)
         );
 
-        Command driveBack = Commands.parallel(
-                drive.runRobotRelative(
-                        () -> new ChassisSpeeds(0.7, 0, 0)
-                ).withTimeout(0.5),
-                setGoal(Goal.AUTO_DESCORE_ALGAE_MOVE_BACK)
-        );
+        Timer driveBackTimer = new Timer();
+        Command driveBack = drive.runRobotRelative(() -> new ChassisSpeeds(driveBackTimer.get() * 4.0, 0, 0))
+                .withTimeout(0.5)
+                .deadlineFor(
+                        Commands.runOnce(driveBackTimer::restart),
+                        setGoal(Goal.AUTO_DESCORE_ALGAE_MOVE_BACK)
+                );
 
         Command waitForForce = CommandsExt.eagerSequence(
                 Commands.parallel(
