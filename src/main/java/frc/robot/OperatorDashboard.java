@@ -6,6 +6,8 @@ import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.JoystickDrive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.superstructure.AutoAlignLocations;
+import frc.robot.subsystems.superstructure.AutoAlignLocations.ReefAlign.LocalReefSide;
+import frc.robot.subsystems.superstructure.AutoAlignLocations.ReefAlign.ReefZoneSide;
 import frc.robot.util.network.LoggedNetworkBooleanExt;
 import frc.robot.util.network.LoggedNetworkNumberExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
@@ -123,59 +125,15 @@ public class OperatorDashboard extends VirtualSubsystem {
         manualReefSideAlert.set(manualReefSide.get());
     }
 
-    public Elevator.Goal getCoralScoringElevatorGoal() {
-        return switch (selectedCoralScoringLevel) {
-            case L1 -> Elevator.Goal.SCORE_L1;
-            case L2 -> Elevator.Goal.SCORE_L2;
-            case L3 -> Elevator.Goal.SCORE_L3;
-            case L4 -> Elevator.Goal.SCORE_L4;
-        };
-    }
-
-    public Elevator.Goal getAlgaeDescoringElevatorGoal() {
-        return switch (selectedReefZoneSide) {
-            case LeftFront, RightFront, MiddleBack -> Elevator.Goal.DESCORE_L2;
-            case MiddleFront, RightBack, LeftBack -> Elevator.Goal.DESCORE_L3;
-        };
-    }
-
     @RequiredArgsConstructor
-    public enum ReefZoneSide {
-        LeftFront(0),
-        MiddleFront(1),
-        RightFront(2),
-        RightBack(3),
-        MiddleBack(4),
-        LeftBack(5);
-
-        public final int aprilTagOffset;
-
-        public static ReefZoneSide fromAprilTagOffset(int aprilTagOffset) {
-            // wrap april tag offset from 0 to 6, ensure it is positive - shouldn't be different unless we are doing some weird stuff
-            aprilTagOffset = Util.positiveModulus(aprilTagOffset, 6);
-            // We could do this with a switch statement for -0.001ms performance gain but who cares
-            for (ReefZoneSide side : values()) {
-                if (side.aprilTagOffset == aprilTagOffset) {
-                    return side;
-                }
-            }
-            Util.error("Trying to choose invalid ID (This shouldn't ever happen unless the code is broken)");
-            return LeftFront;
-        }
-    }
-
-    @RequiredArgsConstructor
-    public enum LocalReefSide {
-        Left,
-        Right,
-        Middle
-    }
-
     public enum CoralScoringLevel {
-        L1,
-        L2,
-        L3,
-        L4,
+        L1(Elevator.Goal.SCORE_L1),
+        L2(Elevator.Goal.SCORE_L2),
+        L3(Elevator.Goal.SCORE_L3),
+        L4(Elevator.Goal.SCORE_L4),
+        ;
+
+        public final Elevator.Goal coralScoringElevatorGoal;
     }
 
     private static <E extends Enum<E>> void updateToggles(

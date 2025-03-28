@@ -130,6 +130,9 @@ public class RobotContainer {
      * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
+        // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
+        // You must do this because if you don't, superstructure's default command will cancel your command
+
         driverController.y().onTrue(robotState.resetRotation());
 
         driverController.leftBumper().onTrue(superstructure.cancel());
@@ -145,13 +148,13 @@ public class RobotContainer {
                 superstructure.scoreCoralManual(
                         false,
                         driverController.leftTrigger(),
-                        operatorDashboard::getCoralScoringElevatorGoal
+                        operatorDashboard::getSelectedCoralScoringLevel
                 ).asProxy(),
                 superstructure.autoScoreCoral(
                                 false,
                                 operatorDashboard::getSelectedReefZoneSide,
                                 operatorDashboard::getSelectedLocalReefSide,
-                                operatorDashboard::getCoralScoringElevatorGoal,
+                                operatorDashboard::getSelectedCoralScoringLevel,
                                 driverController.leftTrigger()
                         )
                         .deadlineFor(
@@ -168,7 +171,6 @@ public class RobotContainer {
                                 () -> ref.shouldDescoreAlgae,
                                 superstructure.autoDescoreAlgae(
                                         operatorDashboard::getSelectedReefZoneSide,
-                                        operatorDashboard::getAlgaeDescoringElevatorGoal,
                                         driverController.rightBumper()
                                 )
                         ))
@@ -186,12 +188,14 @@ public class RobotContainer {
                         ).asProxy(),
                         superstructure.autoDescoreAlgae(
                                 operatorDashboard::getSelectedReefZoneSide,
-                                operatorDashboard::getAlgaeDescoringElevatorGoal,
                                 driverController.rightBumper()
                         ).asProxy(),
                         operatorDashboard.manualScoring::get
                 )
         ));
+
+        // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
+        // You must do this because if you don't, superstructure's default command will cancel your command
     }
 
     /**

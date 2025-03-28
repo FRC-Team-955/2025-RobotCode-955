@@ -6,10 +6,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
-import frc.robot.OperatorDashboard.LocalReefSide;
-import frc.robot.OperatorDashboard.ReefZoneSide;
 import frc.robot.Util;
 import frc.robot.subsystems.apriltagvision.AprilTagVisionConstants;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.util.AllianceBasedPose2d;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;
 
@@ -17,7 +17,6 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.Map;
 
-import static frc.robot.Util.shouldFlip;
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
 
 public class AutoAlignLocations {
@@ -87,20 +86,20 @@ public class AutoAlignLocations {
          * A bit rudimentary and imperfect, but definitely plenty good
          */
         public static boolean isAlignable(Pose2d currentPose, ReefZoneSide reefZoneSide) {
-            return currentPose.relativeTo(getReefAprilTagPoseAdjusted(reefZoneSide)).getX() > -0.15;
+            return currentPose.relativeTo(reefZoneSide.getAdjustedAprilTagPose()).getX() > -0.15;
         }
 
         public static Pose2d getFinalAlignPose(ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
-            return getReefAprilTagPoseAdjusted(reefZoneSide).plus(finalLocalReefSideAdjustment(localReefSide));
+            return reefZoneSide.getAdjustedAprilTagPose().plus(localReefSide.finalAdjust);
         }
 
         public static Pose2d getAlignPose(Pose2d currentPose, double elevatorPercentage, ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
-            Pose2d base = getReefAprilTagPoseAdjusted(reefZoneSide);
+            Pose2d base = reefZoneSide.getAdjustedAprilTagPose();
             Pose2d finalAlign = getFinalAlignPose(reefZoneSide, localReefSide);
 
 
             // If elevator isn't close enough, start by calculating the initial align
-            Pose2d initialBase = base.plus(initialLocalReefSideAdjustment(localReefSide));
+            Pose2d initialBase = base.plus(localReefSide.initialAdjust);
             Pose2d initialStart = initialBase.plus(initialAlignStartOffset);
             Pose2d initialEnd = initialBase.plus(initialAlignEndOffset);
             // Interpolate to initialBase based on y distance (left/right distance)
@@ -129,41 +128,20 @@ public class AutoAlignLocations {
             return initial.interpolate(finalAlign, elevatorPercentage * angularDiffInterp);
         }
 
-        private static final Transform2d adjustmentLeft = new Transform2d(0, -distanceCenterOfReefToBranchMeters, new Rotation2d());
-        private static final Transform2d adjustmentRight = new Transform2d(0, distanceCenterOfReefToBranchMeters, new Rotation2d());
-        private static final Transform2d adjustmentLeftRaise = new Transform2d(0, -distanceCenterOfReefToElevatorClearanceMeters, new Rotation2d());
-        private static final Transform2d adjustmentRightRaise = new Transform2d(0, distanceCenterOfReefToElevatorClearanceMeters, new Rotation2d());
+        public static AllianceBasedPose2d getAdjustedReefAprilTagPose(int aprilTagOffset) {
+            return new AllianceBasedPose2d(
+                    // blue
+                    getAprilTagPose(22 - ((aprilTagOffset + 3) % 6)).plus(bumperOffset),
 
-        private static Transform2d finalLocalReefSideAdjustment(LocalReefSide localReefSide) {
-            return switch (localReefSide) {
-                case Left -> adjustmentLeft;
-                case Right -> adjustmentRight;
-                case Middle -> new Transform2d();
-            };
-        }
-
-        private static Transform2d initialLocalReefSideAdjustment(LocalReefSide localReefSide) {
-            return switch (localReefSide) {
-                case Left -> adjustmentLeftRaise;
-                case Right -> adjustmentRightRaise;
-                case Middle -> new Transform2d();
-            };
-        }
-
-        private static Pose2d getReefAprilTagPoseAdjusted(ReefZoneSide reefZoneSide) {
-            if (!shouldFlip()) {
-                // blue
-                return getAprilTagPose(22 - ((reefZoneSide.aprilTagOffset + 3) % 6)).plus(bumperOffset);
-            } else {
-                // red
-                return getAprilTagPose(reefZoneSide.aprilTagOffset + 6).plus(bumperOffset);
-            }
+                    // red
+                    getAprilTagPose(aprilTagOffset + 6).plus(bumperOffset)
+            );
         }
 
         private static final double velocityLookaheadSeconds = 0.4;
         private static final Transform2d reefSideAngleOffset = new Transform2d(0.25, 0, new Rotation2d());
 
-        private static final EnumMap<ReefZoneSide, Pose2d> reefZoneSideToAdjustedPose = Util.createEnumMap(ReefZoneSide.class, ReefZoneSide.values(), ReefAlign::getReefAprilTagPoseAdjusted);
+        private static final EnumMap<ReefZoneSide, Pose2d> reefZoneSideToAdjustedPose = Util.createEnumMap(ReefZoneSide.class, ReefZoneSide.values(), ReefZoneSide::getAdjustedAprilTagPose);
 
         private static ReefZoneSide closestReefSideToPose(Pose2d currentPose) {
             return reefZoneSideToAdjustedPose.entrySet()
@@ -179,15 +157,15 @@ public class AutoAlignLocations {
             ReefZoneSide closestSide = closestReefSideToPose(currentPose);
             boolean lookahead = false;
 
-            // Get poses of sides left and right of closest, with an offset
-            Pose2d leftTagPose = getReefAprilTagPoseAdjusted(ReefZoneSide.fromAprilTagOffset(closestSide.aprilTagOffset - 1))
-                    .plus(reefSideAngleOffset);
+            if (joystickSetpointFieldRelative.vxMetersPerSecond != 0 || joystickSetpointFieldRelative.vyMetersPerSecond != 0) {
+                // Get poses of sides left and right of closest, with an offset
+                Pose2d leftTagPose = ReefZoneSide.fromOrdinal(closestSide.ordinal() - 1).getAdjustedAprilTagPose()
+                        .plus(reefSideAngleOffset);
 //        Logger.recordOutput("Superstructure/ClosestReefSide/LeftTagPose", leftTagPose);
-            Pose2d rightTagPose = getReefAprilTagPoseAdjusted(ReefZoneSide.fromAprilTagOffset(closestSide.aprilTagOffset + 1))
-                    .plus(reefSideAngleOffset);
+                Pose2d rightTagPose = ReefZoneSide.fromOrdinal(closestSide.ordinal() + 1).getAdjustedAprilTagPose()
+                        .plus(reefSideAngleOffset);
 //        Logger.recordOutput("Superstructure/ClosestReefSide/RightTagPose", rightTagPose);
 
-            if (joystickSetpointFieldRelative.vxMetersPerSecond != 0 || joystickSetpointFieldRelative.vyMetersPerSecond != 0) {
                 // Get angles to left and right
                 Rotation2d robotToLeft = leftTagPose.relativeTo(currentPose).getTranslation().getAngle();
 //            Logger.recordOutput("Superstructure/ClosestReefSide/RobotToLeft", robotToLeft);
@@ -200,7 +178,7 @@ public class AutoAlignLocations {
 
                 // Lookahead if the angle of the joystick setpoint angle is more CCW (positive) than the left pose or more CW (negative) than the right pose
                 // We have to make all rotations relative to the center tag so that CCW and CW are actually positive and negative and the inequalities work out
-                Pose2d centerTagPose = getReefAprilTagPoseAdjusted(closestSide);
+                Pose2d centerTagPose = closestSide.getAdjustedAprilTagPose();
                 Rotation2d relativeToCenterTag = centerTagPose.getRotation().unaryMinus().plus(Rotation2d.k180deg);
                 lookahead = joystickAngle.rotateBy(relativeToCenterTag).getRadians() > robotToLeft.rotateBy(relativeToCenterTag).getRadians() ||
                         joystickAngle.rotateBy(relativeToCenterTag).getRadians() < robotToRight.rotateBy(relativeToCenterTag).getRadians();
@@ -242,6 +220,45 @@ public class AutoAlignLocations {
                     ReefAlign.descoreAngularToleranceRad
             );
         }
+
+        @RequiredArgsConstructor
+        public enum ReefZoneSide {
+            LeftFront(getAdjustedReefAprilTagPose(0), Elevator.Goal.DESCORE_L2),
+            MiddleFront(getAdjustedReefAprilTagPose(1), Elevator.Goal.DESCORE_L3),
+            RightFront(getAdjustedReefAprilTagPose(2), Elevator.Goal.DESCORE_L2),
+            RightBack(getAdjustedReefAprilTagPose(3), Elevator.Goal.DESCORE_L3),
+            MiddleBack(getAdjustedReefAprilTagPose(4), Elevator.Goal.DESCORE_L2),
+            LeftBack(getAdjustedReefAprilTagPose(5), Elevator.Goal.DESCORE_L3);
+
+            private final AllianceBasedPose2d adjustedAprilTagPoses;
+            public final Elevator.Goal algaeDescoringElevatorGoal;
+
+            public static ReefZoneSide fromOrdinal(int ordinal) {
+                var values = ReefZoneSide.values();
+                return values[Util.positiveModulus(ordinal, values.length)];
+            }
+
+            public Pose2d getAdjustedAprilTagPose() {
+                return adjustedAprilTagPoses.get();
+            }
+        }
+
+        @RequiredArgsConstructor
+        public enum LocalReefSide {
+            Left(
+                    new Transform2d(0, -distanceCenterOfReefToElevatorClearanceMeters, new Rotation2d()),
+                    new Transform2d(0, -distanceCenterOfReefToBranchMeters, new Rotation2d())
+            ),
+            Right(
+                    new Transform2d(0, distanceCenterOfReefToElevatorClearanceMeters, new Rotation2d()),
+                    new Transform2d(0, distanceCenterOfReefToBranchMeters, new Rotation2d())
+            ),
+            Middle(new Transform2d(), new Transform2d()),
+            ;
+
+            public final Transform2d initialAdjust;
+            public final Transform2d finalAdjust;
+        }
     }
 
     public static class StationAlign {
@@ -262,32 +279,31 @@ public class AutoAlignLocations {
 
         @RequiredArgsConstructor
         public enum Station {
-            BargeSide(1, alignOffsetBargeSide),
-            ProcessorSide(0, alignOffsetProcessorSide),
-            ProcessorSideFriendly(0, alignOffsetProcessorSideFriendly);
+            BargeSide(StationAlign.getAlignPose(1, alignOffsetBargeSide)),
+            ProcessorSide(StationAlign.getAlignPose(0, alignOffsetProcessorSide)),
+            ProcessorSideFriendly(StationAlign.getAlignPose(0, alignOffsetProcessorSideFriendly));
 
-            private final int aprilTagOffset;
-            private final Transform2d alignOffset;
-        }
+            private final AllianceBasedPose2d alignPose;
 
-        private static Pose2d getStationAprilTagPoseAdjusted(Station station) {
-            if (!shouldFlip()) {
-                // blue
-                // 12 = processor side, 13 = barge side
-                return getAprilTagPose(12 + (station.aprilTagOffset % 2)).plus(bumperOffset);
-            } else {
-                // red
-                // 2 = processor side, 1 = barge side
-                return getAprilTagPose(1 + ((1 - station.aprilTagOffset) % 2)).plus(bumperOffset);
+            public Pose2d getAlignPose() {
+                return alignPose.get();
             }
         }
 
-        public static Pose2d getAlignPose(Station station) {
-            return getStationAprilTagPoseAdjusted(station).plus(station.alignOffset);
+        private static AllianceBasedPose2d getAlignPose(int aprilTagOffset, Transform2d alignOffset) {
+            return new AllianceBasedPose2d(
+                    // blue
+                    // 12 = processor side, 13 = barge side
+                    getAprilTagPose(12 + (aprilTagOffset % 2)).plus(bumperOffset).plus(alignOffset),
+
+                    // red
+                    // 2 = processor side, 1 = barge side
+                    getAprilTagPose(1 + ((1 - aprilTagOffset) % 2)).plus(bumperOffset).plus(alignOffset)
+            );
         }
 
         public static boolean atAlignPose(Pose2d currentPose, Station station) {
-            Pose2d align = getAlignPose(station);
+            Pose2d align = station.getAlignPose();
             boolean positionMet = Util.isAtPoseWithTolerance(currentPose, align, alignLinearToleranceMeters, alignAngularToleranceRad);
             Logger.recordOutput("Superstructure/StationAlign/PositionMet", positionMet);
             return positionMet;

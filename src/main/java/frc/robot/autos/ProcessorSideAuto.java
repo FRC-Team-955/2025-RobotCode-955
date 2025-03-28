@@ -2,10 +2,10 @@ package frc.robot.autos;
 
 import choreo.auto.AutoRoutine;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.OperatorDashboard.LocalReefSide;
-import frc.robot.OperatorDashboard.ReefZoneSide;
+import frc.robot.OperatorDashboard.CoralScoringLevel;
 import frc.robot.autos.AutoBuilder.IntakeScorePair;
-import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.superstructure.AutoAlignLocations.ReefAlign.LocalReefSide;
+import frc.robot.subsystems.superstructure.AutoAlignLocations.ReefAlign.ReefZoneSide;
 import frc.robot.subsystems.superstructure.AutoAlignLocations.StationAlign.Station;
 
 import java.util.List;
@@ -21,10 +21,10 @@ public class ProcessorSideAuto {
         final var fourthScoreTraj = routine.trajectory("Processor Side", 6);
 
         return AutoBuilder.createScoring(routine, List.of(
-                new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.RightBack, LocalReefSide.Left, Elevator.Goal.SCORE_L4),
-                new IntakeScorePair(secondStationTraj, Station.ProcessorSide, secondScoreTraj, ReefZoneSide.RightFront, LocalReefSide.Right, Elevator.Goal.SCORE_L4),
-                new IntakeScorePair(thirdStationTraj, Station.ProcessorSide, thirdScoreTraj, ReefZoneSide.RightFront, LocalReefSide.Left, Elevator.Goal.SCORE_L4),
-                new IntakeScorePair(fourthStationTraj, Station.ProcessorSide, fourthScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, Elevator.Goal.SCORE_L4)
+                new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.RightBack, LocalReefSide.Left, CoralScoringLevel.L4),
+                new IntakeScorePair(secondStationTraj, Station.ProcessorSide, secondScoreTraj, ReefZoneSide.RightFront, LocalReefSide.Right, CoralScoringLevel.L4),
+                new IntakeScorePair(thirdStationTraj, Station.ProcessorSide, thirdScoreTraj, ReefZoneSide.RightFront, LocalReefSide.Left, CoralScoringLevel.L4),
+                new IntakeScorePair(fourthStationTraj, Station.ProcessorSide, fourthScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, CoralScoringLevel.L4)
         ));
     }
 }

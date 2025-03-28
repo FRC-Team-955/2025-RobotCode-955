@@ -2,10 +2,10 @@ package frc.robot.autos;
 
 import choreo.auto.AutoRoutine;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.OperatorDashboard.LocalReefSide;
-import frc.robot.OperatorDashboard.ReefZoneSide;
+import frc.robot.OperatorDashboard.CoralScoringLevel;
 import frc.robot.autos.AutoBuilder.IntakeScorePair;
-import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.superstructure.AutoAlignLocations.ReefAlign.LocalReefSide;
+import frc.robot.subsystems.superstructure.AutoAlignLocations.ReefAlign.ReefZoneSide;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public class CenterAuto {
         final var firstScoreTraj = routine.trajectory("Center");
 
         return AutoBuilder.createScoring(routine, List.of(
-                new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.MiddleBack, LocalReefSide.Left, Elevator.Goal.SCORE_L4)
+                new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.MiddleBack, LocalReefSide.Left, CoralScoringLevel.L4)
         ));
     }
 }

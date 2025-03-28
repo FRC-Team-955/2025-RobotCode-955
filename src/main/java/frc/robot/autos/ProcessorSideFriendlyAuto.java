@@ -2,10 +2,10 @@ package frc.robot.autos;
 
 import choreo.auto.AutoRoutine;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.OperatorDashboard.LocalReefSide;
-import frc.robot.OperatorDashboard.ReefZoneSide;
+import frc.robot.OperatorDashboard.CoralScoringLevel;
 import frc.robot.autos.AutoBuilder.IntakeScorePair;
-import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.superstructure.AutoAlignLocations.ReefAlign.LocalReefSide;
+import frc.robot.subsystems.superstructure.AutoAlignLocations.ReefAlign.ReefZoneSide;
 import frc.robot.subsystems.superstructure.AutoAlignLocations.StationAlign.Station;
 
 import java.util.List;
@@ -19,9 +19,9 @@ public class ProcessorSideFriendlyAuto {
         final var thirdScoreTraj = routine.trajectory("Processor Side Friendly", 4);
 
         return AutoBuilder.createScoring(routine, List.of(
-                new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, Elevator.Goal.SCORE_L4),
-                new IntakeScorePair(secondStationTraj, Station.ProcessorSideFriendly, secondScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Left, Elevator.Goal.SCORE_L4),
-                new IntakeScorePair(thirdStationTraj, Station.ProcessorSideFriendly, thirdScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, Elevator.Goal.SCORE_L3)
+                new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, CoralScoringLevel.L4),
+                new IntakeScorePair(secondStationTraj, Station.ProcessorSideFriendly, secondScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Left, CoralScoringLevel.L4),
+                new IntakeScorePair(thirdStationTraj, Station.ProcessorSideFriendly, thirdScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, CoralScoringLevel.L3)
         ));
     }
 }
