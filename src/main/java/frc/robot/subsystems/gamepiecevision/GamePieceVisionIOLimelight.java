@@ -1,7 +1,7 @@
 package frc.robot.subsystems.gamepiecevision;
 
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
-import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.RobotController;
@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.RobotController;
 public class GamePieceVisionIOLimelight extends GamePieceVisionIO {
     private final DoubleSubscriber latencySubscriber;
     private final IntegerSubscriber tvSubscriber;
-    private final IntegerPublisher ledModePublisher;
+    private final DoublePublisher ledModePublisher;
 
     private boolean ledsOn = false;
 
@@ -18,7 +18,7 @@ public class GamePieceVisionIOLimelight extends GamePieceVisionIO {
 
         latencySubscriber = table.getDoubleTopic("tl").subscribe(0.0);
         tvSubscriber = table.getIntegerTopic("tv").subscribe(0);
-        ledModePublisher = table.getIntegerTopic("ledMode").publish();
+        ledModePublisher = table.getDoubleTopic("ledMode").publish();
         setLEDs(ledsOn);
     }
 
