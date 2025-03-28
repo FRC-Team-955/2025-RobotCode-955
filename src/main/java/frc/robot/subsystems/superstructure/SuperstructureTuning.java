@@ -1,8 +1,8 @@
 package frc.robot.subsystems.superstructure;
 
-import frc.robot.util.network.LoggedNetworkNumberExt;
+import frc.robot.util.network.LoggedTunableNumber;
 
 public class SuperstructureTuning {
-    public static final LoggedNetworkNumberExt funnelIntakeHomeInches =
-            new LoggedNetworkNumberExt("Superstructure/FunnelIntakeHomeInches", 2);
+    public static final LoggedTunableNumber funnelIntakeHomeInches =
+            new LoggedTunableNumber("Superstructure/FunnelIntakeHomeInches", 2);
 }

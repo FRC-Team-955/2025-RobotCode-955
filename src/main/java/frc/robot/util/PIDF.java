@@ -227,14 +227,14 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
             tunablekG = new LoggedTunableNumber(name + "/kG", kG);
         }
 
-        public void ifChanged(int hashCode, Consumer<PIDF> setNewGains) {
-            if (tunablekP.hasChanged(hashCode)
-                    || tunablekI.hasChanged(hashCode)
-                    || tunablekD.hasChanged(hashCode)
-                    || tunablekS.hasChanged(hashCode)
-                    || tunablekV.hasChanged(hashCode)
-                    || tunablekA.hasChanged(hashCode)
-                    || tunablekG.hasChanged(hashCode)
+        public void ifChanged(Consumer<PIDF> setNewGains) {
+            if (tunablekP.hasChanged()
+                    || tunablekI.hasChanged()
+                    || tunablekD.hasChanged()
+                    || tunablekS.hasChanged()
+                    || tunablekV.hasChanged()
+                    || tunablekA.hasChanged()
+                    || tunablekG.hasChanged()
             ) {
                 System.out.println("Setting gains for " + name);
                 setNewGains.accept(PIDF.ofPIDSVAG(

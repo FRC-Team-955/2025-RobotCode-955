@@ -43,7 +43,7 @@ public class GamePieceVision extends SubsystemBaseExt {
         // Update disconnected alert
         disconnectedAlert.set(!inputs.connected);
 
-        if (operatorDashboard.forceGamePieceLEDs.hasChanged(hashCode())) {
+        if (operatorDashboard.forceGamePieceLEDs.hasChanged()) {
             io.setLEDs(operatorDashboard.forceGamePieceLEDs.get());
         }
     }

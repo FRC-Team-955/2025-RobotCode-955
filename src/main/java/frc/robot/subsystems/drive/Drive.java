@@ -273,28 +273,28 @@ public class Drive extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
-        if (operatorDashboard.coastOverride.hasChanged(hashCode())) {
+        if (operatorDashboard.coastOverride.hasChanged()) {
             for (var module : modules) {
                 module.setBrakeMode(!operatorDashboard.coastOverride.get());
             }
         }
 
-        moduleDriveGainsTunable.ifChanged(hashCode(), gains -> {
+        moduleDriveGainsTunable.ifChanged(gains -> {
             for (var module : modules) {
                 module.setDrivePIDF(gains);
             }
         });
-        moduleTurnGainsTunable.ifChanged(hashCode(), gains -> {
+        moduleTurnGainsTunable.ifChanged(gains -> {
             for (var module : modules) {
                 module.setTurnPIDF(gains);
             }
         });
 
-        moveToLinearTunable.ifChanged(hashCode(), gains -> {
+        moveToLinearTunable.ifChanged(gains -> {
             moveToLinearX = gains.toProfiledPID(moveToLinearConstraintsMeters);
             moveToLinearY = gains.toProfiledPID(moveToLinearConstraintsMeters);
         });
-        moveToAngularTunable.ifChanged(hashCode(), gains -> moveToAngular = gains.toProfiledPIDWrapRadians(moveToAngularConstraintsRad));
+        moveToAngularTunable.ifChanged(gains -> moveToAngular = gains.toProfiledPIDWrapRadians(moveToAngularConstraintsRad));
 
         Logger.recordOutput("Drive/Goal", goal);
 

@@ -70,11 +70,11 @@ public class Funnel extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
-        if (operatorDashboard.coastOverride.hasChanged(hashCode())) {
+        if (operatorDashboard.coastOverride.hasChanged()) {
             beltIO.setBrakeMode(!operatorDashboard.coastOverride.get());
         }
 
-        velocityGainsTunable.ifChanged(hashCode(), beltIO::setVelocityPIDF);
+        velocityGainsTunable.ifChanged(beltIO::setVelocityPIDF);
 
         Logger.recordOutput("Funnel/Goal", goal);
         ////////////// BELT //////////////

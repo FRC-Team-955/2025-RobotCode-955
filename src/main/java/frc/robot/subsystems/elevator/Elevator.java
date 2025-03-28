@@ -173,14 +173,14 @@ public class Elevator extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
-        if (operatorDashboard.coastOverride.hasChanged(hashCode())) {
+        if (operatorDashboard.coastOverride.hasChanged()) {
             io.setBrakeMode(!operatorDashboard.coastOverride.get());
         }
 
-        gainsTunable.ifChanged(hashCode(), io::setPIDF);
+        gainsTunable.ifChanged(io::setPIDF);
 
-        if (maxVelocityMetersPerSecondTunable.hasChanged(hashCode())
-                || maxAccelerationMetersPerSecondSquaredTunable.hasChanged(hashCode())
+        if (maxVelocityMetersPerSecondTunable.hasChanged()
+                || maxAccelerationMetersPerSecondSquaredTunable.hasChanged()
         ) {
             profileFullVelocity = new TrapezoidProfile(new TrapezoidProfile.Constraints(
                     maxVelocityMetersPerSecondTunable.get(),

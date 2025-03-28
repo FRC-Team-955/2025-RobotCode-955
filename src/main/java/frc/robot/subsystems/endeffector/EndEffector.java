@@ -82,12 +82,12 @@ public class EndEffector extends SubsystemBaseExt {
 
     @Override
     public void periodicAfterCommands() {
-        if (operatorDashboard.coastOverride.hasChanged(hashCode())) {
+        if (operatorDashboard.coastOverride.hasChanged()) {
             rollersIO.setBrakeMode(!operatorDashboard.coastOverride.get());
         }
 
-        positionGainsTunable.ifChanged(hashCode(), rollersIO::setPositionPIDF);
-        velocityGainsTunable.ifChanged(hashCode(), rollersIO::setVelocityPIDF);
+        positionGainsTunable.ifChanged(rollersIO::setPositionPIDF);
+        velocityGainsTunable.ifChanged(rollersIO::setVelocityPIDF);
 
         ////////////// ROLLERS //////////////
         Logger.recordOutput("EndEffector/Rollers/Goal", rollersGoal);
