@@ -8,13 +8,10 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
-import frc.robot.Util;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.superstructure.ReefAlign;
-import frc.robot.util.characterization.FeedforwardCharacterization;
 import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
@@ -25,7 +22,6 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.*;
 import static frc.robot.RobotMechanism.middleOfRobot;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 import static frc.robot.subsystems.elevator.ElevatorTuning.*;
@@ -82,8 +78,6 @@ public class Elevator extends SubsystemBaseExt {
     @AutoLogOutput(key = "Elevator/DistanceFromScoringPositionMeters")
     private double distanceFromScoringPositionMeters = 0.0;
 
-    public final SysIdRoutine sysId;
-
     private final Alert emergencyStoppedAlert = new Alert("Elevator is emergency stopped.", Alert.AlertType.kError);
     private final Alert notZeroedAlert = new Alert("Elevator is not zeroed! Please zero.", Alert.AlertType.kError);
     private final Alert leaderDisconnectedAlert = new Alert("Elevator leader motor is disconnected.", Alert.AlertType.kError);
@@ -106,16 +100,6 @@ public class Elevator extends SubsystemBaseExt {
 
     private Elevator() {
         super(10);
-
-        sysId = Util.sysIdRoutine(
-                "Elevator",
-                (voltage) -> io.setOpenLoop(voltage.in(Volts)),
-                () -> goal = Goal.CHARACTERIZATION,
-                this,
-                Volts.per(Second).of(0.2),
-                Volts.of(3),
-                Seconds.of(20)
-        );
     }
 
     @Override
@@ -357,14 +341,6 @@ public class Elevator extends SubsystemBaseExt {
         return MathUtil.interpolate(1, DriveConstants.constraintScalarWhenElevatorAtMaxHeight, elevatorPosition / maxHeightMeters);
     }
 
-    public Command feedforwardCharacterization() {
-        return setGoal(() -> Goal.CHARACTERIZATION)
-                .andThen(new FeedforwardCharacterization(
-                        io::setOpenLoop,
-                        () -> new double[]{inputs.leaderVelocityRadPerSec},
-                        1,
-                        this
-                ));
     public Command zeroCoral() {
         return CommandsExt.eagerSequence(
                 setGoal(() -> Goal.ZERO_CORAL),
