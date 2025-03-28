@@ -127,7 +127,16 @@ public class RollersIOSparkMax extends RollersIO {
     }
 
     @Override
-    public void setVelocity(double velocityRadPerSec) {
+    public void setClosedLoopPosition(double positionRad) {
+        controller.setReference(
+                positionRad,
+                SparkBase.ControlType.kPosition,
+                ClosedLoopSlot.kSlot0 // position = slot0
+        );
+    }
+
+    @Override
+    public void setClosedLoopVelocity(double velocityRadPerSec) {
         var ffVolts = velocityFeedforward.calculate(velocityRadPerSec);
         controller.setReference(
                 velocityRadPerSec,
@@ -135,15 +144,6 @@ public class RollersIOSparkMax extends RollersIO {
                 ClosedLoopSlot.kSlot1,  // velocity = slot1
                 ffVolts,
                 SparkClosedLoopController.ArbFFUnits.kVoltage
-        );
-    }
-
-    @Override
-    public void setPosition(double positionRad) {
-        controller.setReference(
-                positionRad,
-                SparkBase.ControlType.kPosition,
-                ClosedLoopSlot.kSlot0 // position = slot0
         );
     }
 }

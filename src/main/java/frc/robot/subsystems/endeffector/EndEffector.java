@@ -99,7 +99,7 @@ public class EndEffector extends SubsystemBaseExt {
         } else if (rollersGoal.setpointRadPerSec != null) {
             // Velocity control
             var rollersVelocitySetpointRadPerSec = rollersGoal.setpointRadPerSec.getAsDouble();
-            rollersIO.setVelocity(rollersVelocitySetpointRadPerSec);
+            rollersIO.setClosedLoopVelocity(rollersVelocitySetpointRadPerSec);
             Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", false);
             Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", true);
             Logger.recordOutput("EndEffector/Rollers/Velocity/SetpointRadPerSec", rollersVelocitySetpointRadPerSec);
@@ -108,7 +108,7 @@ public class EndEffector extends SubsystemBaseExt {
             Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", true);
             Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", false);
             Logger.recordOutput("EndEffector/Rollers/Position/SetpointRad", rollersPositionSetpointRad);
-            rollersIO.setPosition(rollersPositionSetpointRad);
+            rollersIO.setClosedLoopPosition(rollersPositionSetpointRad);
         } else {
             Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", false);
             Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", false);

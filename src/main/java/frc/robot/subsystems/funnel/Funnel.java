@@ -85,7 +85,7 @@ public class Funnel extends SubsystemBaseExt {
         } else if (goal.setpointRadPerSec != null) {
             // Velocity control
             var beltVelocitySetpointRadPerSec = goal.setpointRadPerSec.getAsDouble();
-            beltIO.setVelocity(beltVelocitySetpointRadPerSec);
+            beltIO.setClosedLoopVelocity(beltVelocitySetpointRadPerSec);
             Logger.recordOutput("Funnel/Belt/ClosedLoop", true);
             Logger.recordOutput("Funnel/Belt/SetpointRadPerSec", beltVelocitySetpointRadPerSec);
         } else {
