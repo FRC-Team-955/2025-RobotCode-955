@@ -98,6 +98,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 gamePieceVisible = false;
 
                 if (endEffector.getRollersGoal() == EndEffector.RollersGoal.SCORE_CORAL
+                        || endEffector.getRollersGoal() == EndEffector.RollersGoal.SCORE_CORAL_L1
                         || endEffector.getRollersGoal() == EndEffector.RollersGoal.EJECT) {
                     coralState = CoralState.NO_CORAL;
 
@@ -115,7 +116,11 @@ public class SuperstructureIOSim extends SuperstructureIO {
                                     MetersPerSecond.of(-1.5),
                                     elevator.getGoal() == Elevator.Goal.SCORE_L4
                                             ? Degrees.of(65)
-                                            : Radians.of(endEffectorAngleRad)
+                                            : (
+                                            elevator.getGoal() == Elevator.Goal.SCORE_L1
+                                                    ? Degrees.of(0)
+                                                    : Radians.of(endEffectorAngleRad)
+                                    )
                             ));
                 }
             }
