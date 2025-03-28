@@ -13,6 +13,7 @@ import frc.robot.util.network.LoggedNetworkNumberExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -62,6 +63,9 @@ public class OperatorDashboard extends VirtualSubsystem {
     private final OperatorKeypad operatorKeypad = new OperatorKeypad();
     private final Alert operatorKeypadDisconnectedAlert = new Alert("Operator keypad is not connected!", Alert.AlertType.kError);
 
+    @Setter
+    private boolean ignoreClosestReefSideChanges = false;
+
     private static OperatorDashboard instance;
 
     public static OperatorDashboard get() {
@@ -98,7 +102,9 @@ public class OperatorDashboard extends VirtualSubsystem {
                 if (newReefZoneSide != null) selectedReefZoneSide = newReefZoneSide;
             } else {
                 manualReefSide.set(false);
-                selectedReefZoneSide = ReefAlign.determineClosestReefSide(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
+                if (!ignoreClosestReefSideChanges) {
+                    selectedReefZoneSide = ReefAlign.determineClosestReefSide(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
+                }
             }
             updateToggles(reefZoneSides, selectedReefZoneSide);
 
@@ -115,7 +121,9 @@ public class OperatorDashboard extends VirtualSubsystem {
             if (manualReefSide.get()) {
                 handleEnumToggles(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
             } else {
-                selectedReefZoneSide = ReefAlign.determineClosestReefSide(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
+                if (!ignoreClosestReefSideChanges) {
+                    selectedReefZoneSide = ReefAlign.determineClosestReefSide(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
+                }
                 updateToggles(reefZoneSides, selectedReefZoneSide);
             }
             handleEnumToggles(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);

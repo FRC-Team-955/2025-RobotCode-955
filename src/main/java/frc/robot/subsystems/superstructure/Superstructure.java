@@ -120,6 +120,10 @@ public class Superstructure extends SubsystemBaseExt {
     public void periodicBeforeCommands() {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Superstructure", inputs);
+
+        Logger.recordOutput("Superstructure/AutoForceable", autoForceable);
+        // OperatorDashboard periodicBeforeCommands runs after superstructure
+        operatorDashboard.setIgnoreClosestReefSideChanges(autoForceable);
     }
 
 
@@ -439,7 +443,7 @@ public class Superstructure extends SubsystemBaseExt {
                 CommandsExt.eagerSequence(
                         Commands.parallel(
                                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_ALIGN),
-                                drive.moveTo(station::getAlignPose)
+                                drive.moveTo(station::getAlignPose, () -> false)
                                         .until(() -> StationAlign.atAlignPose(robotState.getPose(), station))
                         ),
                         Commands.parallel(
@@ -490,7 +494,7 @@ public class Superstructure extends SubsystemBaseExt {
 
         Command initial = Commands.race(
                 // Drive to initial position
-                drive.moveTo(alignPoseSupplier),
+                drive.moveTo(alignPoseSupplier, () -> false),
                 Commands.parallel(
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_RAISE),
                         endEffector.setGoal(EndEffector.RollersGoal.IDLE),
@@ -514,14 +518,11 @@ public class Superstructure extends SubsystemBaseExt {
         );
         // Don't allow forcing for a bit, then check if force is true
         Command waitForForce = CommandsExt.eagerSequence(
-                Commands.parallel(
-                        Commands.waitSeconds(2),
-                        Commands.runOnce(() -> autoForceable = false)
-                ),
+                Commands.waitSeconds(2),
                 Commands.parallel(
                         Commands.waitUntil(forceCondition),
                         Commands.runOnce(() -> autoForceable = true)
-                ).deadlineFor(
+                ).finallyDo(() -> autoForceable = false).deadlineFor(
                         // We only want to offset the elevator position if we aren't aligned and are taking a while to align
                         elevator.setDistanceFromScoringPositionContinuous(
                                 () -> robotState.getPose().getTranslation()
@@ -551,7 +552,7 @@ public class Superstructure extends SubsystemBaseExt {
         if (duringAuto) {
             return wrapExposedCommand(
                     CommandsExt.eagerSequence(
-                            drive.moveTo(alignPoseSupplier)
+                            drive.moveTo(alignPoseSupplier, () -> false)
                                     // We don't really care about position tolerances right now,
                                     // checking velocity is a good way to approximate "we're at the position we want"
                                     .until(() -> Util.isWithinVelocityTolerance(drive.getMeasuredChassisSpeeds(), 0.2, Units.degreesToRadians(15))),
@@ -560,7 +561,7 @@ public class Superstructure extends SubsystemBaseExt {
                     CommandsExt.eagerSequence(
                             initial,
                             Commands.race(
-                                    drive.moveTo(alignPoseSupplier),
+                                    drive.moveTo(alignPoseSupplier, () -> false),
                                     CommandsExt.eagerSequence(
                                             Commands.race(
                                                     waitFinalAndElevator,
@@ -582,12 +583,12 @@ public class Superstructure extends SubsystemBaseExt {
                             CommandsExt.eagerSequence(
                                     initial,
                                     Commands.race(
-                                            drive.moveTo(alignPoseSupplier),
+                                            drive.moveTo(alignPoseSupplier, () -> autoForceable),
                                             waitFinalAndElevator,
                                             waitForForce
                                     ),
                                     backgroundCommandScheduler.scheduleInBackground(Commands.race(
-                                            drive.moveTo(alignPoseSupplier),
+                                            drive.moveTo(alignPoseSupplier, () -> false),
                                             CommandsExt.eagerSequence(
                                                     score,
                                                     finalize
@@ -604,7 +605,7 @@ public class Superstructure extends SubsystemBaseExt {
     ) {
         Command driveTo = Commands.race(
                 // Drive to position
-                drive.moveTo(() -> ReefAlign.getDescoreAlignPose(reefSideSupplier.get())),
+                drive.moveTo(() -> ReefAlign.getDescoreAlignPose(reefSideSupplier.get()), () -> false),
                 CommandsExt.eagerSequence(
                         Commands.parallel(
                                 setGoal(Goal.AUTO_DESCORE_ALGAE_WAIT_RAISE),
@@ -641,14 +642,11 @@ public class Superstructure extends SubsystemBaseExt {
                 );
 
         Command waitForForce = CommandsExt.eagerSequence(
-                Commands.parallel(
-                        Commands.waitSeconds(2),
-                        Commands.runOnce(() -> autoForceable = false)
-                ),
+                Commands.waitSeconds(2),
                 Commands.parallel(
                         Commands.waitUntil(forceCondition),
                         Commands.runOnce(() -> autoForceable = true)
-                )
+                ).finallyDo(() -> autoForceable = false)
         );
 
         return wrapExposedCommand(
