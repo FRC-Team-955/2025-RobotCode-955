@@ -311,14 +311,4 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
         double setpoint = MathUtil.inputModulus(positionRad, 0.0, 2 * Math.PI);
         turnController.setReference(setpoint, SparkBase.ControlType.kPosition);
     }
-
-    @Override
-    public void setDrivePosition(double positionRad) {
-        PhoenixUtil.tryUntilOkAsync(5, () -> driveTalon.setPosition(Units.radiansToRotations(positionRad), 0.25));
-    }
-
-    @Override
-    public void setTurnPosition(double positionRad) {
-        SparkUtil.tryUntilOkAsync(5, () -> turnEncoder.setPosition(positionRad));
-    }
 }

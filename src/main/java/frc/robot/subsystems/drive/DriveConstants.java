@@ -42,7 +42,7 @@ public class DriveConstants {
     public static final boolean disableGyro = false;
     public static final boolean useHighFrequencyOdometry = true;
 
-    public static final double odometryPositionDeltaDiscardMeters = 0.3;
+    public static final double odometryPositionDeltaDiscardMeters = Units.inchesToMeters(8);
 
     // Slow to 30% speed when elevator is at max height
     public static final double constraintScalarWhenElevatorAtMaxHeight = 0.3;

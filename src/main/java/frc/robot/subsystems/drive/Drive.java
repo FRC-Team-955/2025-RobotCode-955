@@ -188,31 +188,31 @@ public class Drive extends SubsystemBaseExt {
         if (useHighFrequencyOdometry) {
             // All timestamps will be synced by HighFrequencySamplingThread
             double[] sampleTimestamps = modules[0].getOdometryTimestamps();
+            boolean anySampleDiscarded = false;
             for (int sample = 0; sample < sampleTimestamps.length; sample++) {
-                boolean discardSample = false;
                 double sampleTimestamp = sampleTimestamps[sample];
+                boolean discardSample = false;
 
                 // Read wheel positions and deltas from each module
                 SwerveModulePosition[] modulePositions = new SwerveModulePosition[modules.length];
                 SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[modules.length];
                 for (int moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
                     double positionMeters = modules[moduleIndex].getOdometryDrivePositionsRad()[sample] * driveConfig.wheelRadiusMeters();
-                    double angle = modules[moduleIndex].getOdometryTurnPositionsRad()[sample];
-                    var modulePosition = new SwerveModulePosition(positionMeters, new Rotation2d(angle));
+                    Rotation2d angle = new Rotation2d(modules[moduleIndex].getOdometryTurnPositionsRad()[sample]);
+                    var modulePosition = new SwerveModulePosition(positionMeters, angle);
 
                     modulePositions[moduleIndex] = modulePosition;
                     moduleDeltas[moduleIndex] = new SwerveModulePosition(
                             modulePosition.distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
                             modulePosition.angle
                     );
-
-//                    if (moduleDeltas[moduleIndex].distanceMeters > odometryPositionDeltaDiscardMeters) {
-//                        discardSample = true;
-//                        modules[moduleIndex].setDrivePosition(lastModulePositions[moduleIndex].distanceMeters / driveConfig.wheelRadiusMeters());
-//                        modules[moduleIndex].setTurnPosition(lastModulePositions[moduleIndex].angle.getRadians());
-//                    } else {
                     lastModulePositions[moduleIndex] = modulePosition;
-//                    }
+
+                    // We actually don't really care if one of the motors is disconnected, because odometry
+                    // can handle one wheel position isn't changing. The issue is when one wheel changes drastically
+                    if (Math.abs(moduleDeltas[moduleIndex].distanceMeters) > odometryPositionDeltaDiscardMeters) {
+                        discardSample = true;
+                    }
                 }
 
                 // Update gyro angle
@@ -227,10 +227,19 @@ public class Drive extends SubsystemBaseExt {
                 }
 
                 // Apply update
-                if (!discardSample) {
+                if (discardSample) {
+                    anySampleDiscarded = true;
+                    // If we need to discard it, apply the update and then revert the pose back to the pose before applying the update
+                    // This means that the previous wheel positions stored by odometry will be updated to the new wheel positions,
+                    // but the pose won't change
+                    Pose2d prevPose = robotState.getPose();
+                    robotState.applyOdometryUpdate(sampleTimestamp, rawGyroRotation, modulePositions);
+                    robotState.setPose(prevPose);
+                } else {
                     robotState.applyOdometryUpdate(sampleTimestamp, rawGyroRotation, modulePositions);
                 }
             }
+            Logger.recordOutput("Drive/SampleDiscarded", anySampleDiscarded);
         } else {
             boolean discardSample = false;
 
@@ -238,8 +247,8 @@ public class Drive extends SubsystemBaseExt {
             SwerveModulePosition[] modulePositions = new SwerveModulePosition[modules.length];
             SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[modules.length];
             for (int moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
-                double positionMeters = modules[moduleIndex].getPositionRad() * driveConfig.wheelRadiusMeters();
-                Rotation2d angle = modules[moduleIndex].getAngle();
+                double positionMeters = modules[moduleIndex].getDrivePositionRad() * driveConfig.wheelRadiusMeters();
+                Rotation2d angle = modules[moduleIndex].getTurnAngle();
                 var modulePosition = new SwerveModulePosition(positionMeters, angle);
 
                 modulePositions[moduleIndex] = modulePosition;
@@ -249,13 +258,11 @@ public class Drive extends SubsystemBaseExt {
                 );
                 lastModulePositions[moduleIndex] = modulePosition;
 
-//                if (moduleDeltas[moduleIndex].distanceMeters > odometryPositionDeltaDiscardMeters) {
-//                    discardSample = true;
-//                    modules[moduleIndex].setDrivePosition(lastModulePositions[moduleIndex].distanceMeters / driveConfig.wheelRadiusMeters());
-//                    modules[moduleIndex].setTurnPosition(lastModulePositions[moduleIndex].angle.getRadians());
-//                } else {
-                lastModulePositions[moduleIndex] = modulePosition;
-//                }
+                // We actually don't really care if one of the motors is disconnected, because odometry
+                // can handle one wheel position isn't changing. The issue is when one wheel changes drastically
+                if (Math.abs(moduleDeltas[moduleIndex].distanceMeters) > odometryPositionDeltaDiscardMeters) {
+                    discardSample = true;
+                }
             }
 
             // Update gyro angle
@@ -269,9 +276,17 @@ public class Drive extends SubsystemBaseExt {
             }
 
             // Apply update
-            if (!discardSample) {
+            if (discardSample) {
+                // If we need to discard it, apply the update and then revert the pose back to the pose before applying the update
+                // This means that the previous wheel positions stored by odometry will be updated to the new wheel positions,
+                // but the pose won't change
+                Pose2d prevPose = robotState.getPose();
+                robotState.applyOdometryUpdate(Timer.getTimestamp(), rawGyroRotation, modulePositions);
+                robotState.setPose(prevPose);
+            } else {
                 robotState.applyOdometryUpdate(Timer.getTimestamp(), rawGyroRotation, modulePositions);
             }
+            Logger.recordOutput("Drive/SampleDiscarded", discardSample);
         }
     }
 
@@ -659,7 +674,7 @@ public class Drive extends SubsystemBaseExt {
                     }
                 },
                 () -> Arrays.stream(modules)
-                        .mapToDouble(Module::getVelocityRadPerSec)
+                        .mapToDouble(Module::getDriveVelocityRadPerSec)
                         .toArray(),
                 modules.length,
                 this
@@ -719,7 +734,7 @@ public class Drive extends SubsystemBaseExt {
         }
 
         private double[] getWheelRadiusCharacterizationPositions() {
-            return Arrays.stream(modules).mapToDouble(Module::getPositionRad).toArray();
+            return Arrays.stream(modules).mapToDouble(Module::getDrivePositionRad).toArray();
         }
 
         @Override

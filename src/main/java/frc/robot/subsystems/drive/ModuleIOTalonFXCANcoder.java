@@ -286,14 +286,4 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
             case TorqueCurrentFOC -> positionTorqueCurrentRequest.withPosition(positionRot);
         });
     }
-
-    @Override
-    public void setDrivePosition(double positionRad) {
-        tryUntilOkAsync(5, () -> driveTalon.setPosition(Units.radiansToRotations(positionRad), 0.25));
-    }
-
-    @Override
-    public void setTurnPosition(double positionRad) {
-        tryUntilOkAsync(5, () -> turnTalon.setPosition(Units.radiansToRotations(positionRad), 0.25));
-    }
 }

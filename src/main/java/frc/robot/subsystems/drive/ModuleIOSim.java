@@ -179,16 +179,6 @@ public class ModuleIOSim extends ModuleIO {
         turnController.setSetpoint(positionRad);
     }
 
-    @Override
-    public void setDrivePosition(double positionRad) {
-        System.out.println("Setting drive position in sim");
-    }
-
-    @Override
-    public void setTurnPosition(double positionRad) {
-        System.out.println("Setting turn position in sim");
-    }
-
     protected static double[] getSimulationOdometryTimeStamps() {
         final double[] odometryTimeStamps = new double[SimulatedArena.getSimulationSubTicksIn1Period()];
         for (int i = 0; i < odometryTimeStamps.length; i++) {

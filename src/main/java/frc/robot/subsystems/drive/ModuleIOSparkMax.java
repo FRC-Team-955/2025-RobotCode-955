@@ -272,14 +272,4 @@ public class ModuleIOSparkMax extends ModuleIO {
         double setpoint = MathUtil.inputModulus(positionRad + absoluteEncoderOffsetRad, 0.0, 2 * Math.PI);
         turnController.setReference(setpoint, ControlType.kPosition);
     }
-
-    @Override
-    public void setDrivePosition(double positionRad) {
-        tryUntilOkAsync(5, () -> driveEncoder.setPosition(positionRad));
-    }
-
-    @Override
-    public void setTurnPosition(double positionRad) {
-        System.out.println("Setting turn absolute position");
-    }
 }
