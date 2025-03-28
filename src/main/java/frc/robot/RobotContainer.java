@@ -79,7 +79,14 @@ public class RobotContainer {
         autoChooser.addOption("Processor Side Friendly", ProcessorSideFriendlyAuto.get(factory.newRoutine("Processor Side Friendly")));
         autoChooser.addOption("Center", CenterAuto.get(factory.newRoutine("Center")));
 
-        autoChooser.addOption("Characterization", Commands.deferredProxy(characterizationChooser::get));
+        autoChooser.addOption(
+                "Characterization",
+                // We need to require the superstructure during characterization so that the default command doesn't get run
+                Commands.deferredProxy(() -> CommandsExt.eagerSequence(
+                        superstructure.cancel(),
+                        characterizationChooser.get()
+                ))
+        );
     }
 
     private void addCharacterizations() {
