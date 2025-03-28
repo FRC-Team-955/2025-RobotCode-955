@@ -275,25 +275,34 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
-    private Command handoffAndHome() {
-        return CommandsExt.eagerSequence(
-                waitUntilEndEffectorTriggered(Commands.none())
-                        .deadlineFor(Commands.parallel(
-                                setGoal(Goal.HANDOFF),
-                                endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
-                                funnelSetGoalIntakeAlternate()
-                        )),
-                Commands.parallel(
-                        setGoal(Goal.HOME),
-                        CommandsExt.eagerSequence(
-                                endEffector.moveByAndWaitUntilDone(funnelIntakeInitialMeters::get),
-                                endEffector.setGoal(EndEffector.RollersGoal.ZERO_CORAL),
-                                Commands.waitSeconds(0.1),
-                                endEffector.moveByAndWaitUntilDone(funnelIntakeHomeMeters::get)
-                        ).deadlineFor(elevator.zeroCoral()),
-                        funnel.setGoal(Funnel.Goal.IDLE)
-                )
+    private Command handoff() {
+        return waitUntilEndEffectorTriggered(Commands.none())
+                .deadlineFor(Commands.parallel(
+                        setGoal(Goal.HANDOFF),
+                        endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
+                        funnelSetGoalIntakeAlternate()
+                ));
+    }
+
+    /** does NOT check if there is coral in the end effector */
+    private Command homeInternal() {
+        return Commands.parallel(
+                setGoal(Goal.HOME),
+                CommandsExt.eagerSequence(
+                        endEffector.moveByAndWaitUntilDone(funnelIntakeInitialMeters::get),
+                        endEffector.setGoal(EndEffector.RollersGoal.ZERO_CORAL),
+                        Commands.waitSeconds(0.1),
+                        endEffector.moveByAndWaitUntilDone(funnelIntakeHomeMeters::get)
+                ).deadlineFor(elevator.zeroCoral()),
+                funnel.setGoal(Funnel.Goal.IDLE)
         );
+    }
+
+    public Command home() {
+        return wrapExposedCommand(CommandsExt.onlyIf(
+                () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
+                homeInternal()
+        ));
     }
 
     private Command shake() {
@@ -418,7 +427,10 @@ public class Superstructure extends SubsystemBaseExt {
                     () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                     CommandsExt.eagerSequence(
                             intake,
-                            backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
+                            backgroundCommandScheduler.scheduleInBackground(CommandsExt.eagerSequence(
+                                    handoff(),
+                                    homeInternal()
+                            ))
                     )
             ));
         } else {
@@ -426,7 +438,10 @@ public class Superstructure extends SubsystemBaseExt {
                     () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                     CommandsExt.eagerSequence(
                             intake,
-                            backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
+                            backgroundCommandScheduler.scheduleInBackground(CommandsExt.eagerSequence(
+                                    handoff(),
+                                    homeInternal()
+                            ))
                     )
             ));
         }
@@ -459,7 +474,10 @@ public class Superstructure extends SubsystemBaseExt {
                             () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                             CommandsExt.eagerSequence(
                                     intake,
-                                    backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
+                                    backgroundCommandScheduler.scheduleInBackground(CommandsExt.eagerSequence(
+                                            handoff(),
+                                            homeInternal()
+                                    ))
                             )
                     )
             );
@@ -470,7 +488,10 @@ public class Superstructure extends SubsystemBaseExt {
                             () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                             CommandsExt.eagerSequence(
                                     intake,
-                                    backgroundCommandScheduler.scheduleInBackground(handoffAndHome())
+                                    backgroundCommandScheduler.scheduleInBackground(CommandsExt.eagerSequence(
+                                            handoff(),
+                                            homeInternal()
+                                    ))
                             )
                     )
             );

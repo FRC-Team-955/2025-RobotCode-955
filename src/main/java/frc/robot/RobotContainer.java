@@ -137,6 +137,8 @@ public class RobotContainer {
 
         driverController.x().whileTrue(superstructure.eject());
 
+        driverController.a().onTrue(superstructure.home());
+
         driverController.rightTrigger().whileTrue(superstructure.funnelIntake(false).asProxy().repeatedly());
 
         var ref = new Object() {
