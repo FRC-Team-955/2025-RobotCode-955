@@ -7,6 +7,7 @@ import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import edu.wpi.first.math.controller.*;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import frc.robot.Constants;
 import frc.robot.util.network.LoggedTunableNumber;
 
 import java.util.function.Consumer;
@@ -217,35 +218,49 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
         private final LoggedTunableNumber tunablekG;
 
         private Tunable(String name) {
-            this.name = name;
-            tunablekP = new LoggedTunableNumber(name + "/kP", kP);
-            tunablekI = new LoggedTunableNumber(name + "/kI", kI);
-            tunablekD = new LoggedTunableNumber(name + "/kD", kD);
-            tunablekS = new LoggedTunableNumber(name + "/kS", kS);
-            tunablekV = new LoggedTunableNumber(name + "/kV", kV);
-            tunablekA = new LoggedTunableNumber(name + "/kA", kA);
-            tunablekG = new LoggedTunableNumber(name + "/kG", kG);
+            if (Constants.tuningMode) {
+                this.name = name;
+                tunablekP = new LoggedTunableNumber(name + "/kP", kP);
+                tunablekI = new LoggedTunableNumber(name + "/kI", kI);
+                tunablekD = new LoggedTunableNumber(name + "/kD", kD);
+                tunablekS = new LoggedTunableNumber(name + "/kS", kS);
+                tunablekV = new LoggedTunableNumber(name + "/kV", kV);
+                tunablekA = new LoggedTunableNumber(name + "/kA", kA);
+                tunablekG = new LoggedTunableNumber(name + "/kG", kG);
+            } else {
+                this.name = null;
+                tunablekP = null;
+                tunablekI = null;
+                tunablekD = null;
+                tunablekS = null;
+                tunablekV = null;
+                tunablekA = null;
+                tunablekG = null;
+            }
         }
 
+        @SuppressWarnings("DataFlowIssue") // tunable numbers are guaranteed not to be null if tuning mode is true
         public void ifChanged(Consumer<PIDF> setNewGains) {
-            if (tunablekP.hasChanged()
-                    || tunablekI.hasChanged()
-                    || tunablekD.hasChanged()
-                    || tunablekS.hasChanged()
-                    || tunablekV.hasChanged()
-                    || tunablekA.hasChanged()
-                    || tunablekG.hasChanged()
-            ) {
-                System.out.println("Setting gains for " + name);
-                setNewGains.accept(PIDF.ofPIDSVAG(
-                        tunablekP.get(),
-                        tunablekI.get(),
-                        tunablekD.get(),
-                        tunablekS.get(),
-                        tunablekV.get(),
-                        tunablekA.get(),
-                        tunablekG.get()
-                ));
+            if (Constants.tuningMode) {
+                if (tunablekP.hasChanged()
+                        || tunablekI.hasChanged()
+                        || tunablekD.hasChanged()
+                        || tunablekS.hasChanged()
+                        || tunablekV.hasChanged()
+                        || tunablekA.hasChanged()
+                        || tunablekG.hasChanged()
+                ) {
+                    System.out.println("Setting gains for " + name);
+                    setNewGains.accept(PIDF.ofPIDSVAG(
+                            tunablekP.get(),
+                            tunablekI.get(),
+                            tunablekD.get(),
+                            tunablekS.get(),
+                            tunablekV.get(),
+                            tunablekA.get(),
+                            tunablekG.get()
+                    ));
+                }
             }
         }
     }
