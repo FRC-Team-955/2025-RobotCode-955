@@ -584,7 +584,7 @@ public class Drive extends SubsystemBaseExt {
                     if (mergeJoystickDrive.getAsBoolean()) {
                         goal = Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED;
                         ChassisSpeeds joystickDriveSpeeds = joystickDrive.getSetpointRobotRelative(robotState.getRotation());
-                        closedLoopSetpoint = moveToSpeeds.times(0.7).plus(joystickDriveSpeeds.times(0.3));
+                        closedLoopSetpoint = moveToSpeeds.plus(joystickDriveSpeeds.times(0.3));
                     } else {
                         goal = Goal.MOVE_TO;
                         closedLoopSetpoint = moveToSpeeds;
