@@ -5,9 +5,9 @@ import edu.wpi.first.wpilibj.GenericHID;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.JoystickDrive;
 import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.superstructure.AutoAlignLocations;
-import frc.robot.subsystems.superstructure.AutoAlignLocations.ReefAlign.LocalReefSide;
-import frc.robot.subsystems.superstructure.AutoAlignLocations.ReefAlign.ReefZoneSide;
+import frc.robot.subsystems.superstructure.ReefAlign;
+import frc.robot.subsystems.superstructure.ReefAlign.LocalReefSide;
+import frc.robot.subsystems.superstructure.ReefAlign.ReefZoneSide;
 import frc.robot.util.network.LoggedNetworkBooleanExt;
 import frc.robot.util.network.LoggedNetworkNumberExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
@@ -98,7 +98,7 @@ public class OperatorDashboard extends VirtualSubsystem {
                 if (newReefZoneSide != null) selectedReefZoneSide = newReefZoneSide;
             } else {
                 manualReefSide.set(false);
-                selectedReefZoneSide = AutoAlignLocations.ReefAlign.determineClosestReefSide(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
+                selectedReefZoneSide = ReefAlign.determineClosestReefSide(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
             }
             updateToggles(reefZoneSides, selectedReefZoneSide);
 
@@ -115,7 +115,7 @@ public class OperatorDashboard extends VirtualSubsystem {
             if (manualReefSide.get()) {
                 handleEnumToggles(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
             } else {
-                selectedReefZoneSide = AutoAlignLocations.ReefAlign.determineClosestReefSide(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
+                selectedReefZoneSide = ReefAlign.determineClosestReefSide(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
                 updateToggles(reefZoneSides, selectedReefZoneSide);
             }
             handleEnumToggles(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);

@@ -6,7 +6,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import frc.robot.OperatorDashboard;
-import frc.robot.subsystems.superstructure.AutoAlignLocations;
+import frc.robot.subsystems.superstructure.ReefAlign;
+import frc.robot.subsystems.superstructure.StationAlign;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.util.commands.CommandsExt;
 
@@ -83,10 +84,10 @@ public class AutoBuilder {
 
     public record IntakeScorePair(
             AutoTrajectory stationTraj,
-            AutoAlignLocations.StationAlign.Station station,
+            StationAlign.Station station,
             AutoTrajectory scoreTraj,
-            AutoAlignLocations.ReefAlign.ReefZoneSide reefZoneSide,
-            AutoAlignLocations.ReefAlign.LocalReefSide localReefSide,
+            ReefAlign.ReefZoneSide reefZoneSide,
+            ReefAlign.LocalReefSide localReefSide,
             OperatorDashboard.CoralScoringLevel coralScoringLevel
     ) {
         private Command scoreCommand(Superstructure superstructure) {

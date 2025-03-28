@@ -184,7 +184,7 @@ public class RobotContainer {
                 () -> superstructure.getGoal() == Superstructure.Goal.IDLE,
                 Commands.either(
                         superstructure.descoreAlgaeManual(
-                                operatorDashboard::getAlgaeDescoringElevatorGoal
+                                operatorDashboard::getSelectedReefZoneSide,
                         ).asProxy(),
                         superstructure.autoDescoreAlgae(
                                 operatorDashboard::getSelectedReefZoneSide,

@@ -4,9 +4,9 @@ import choreo.auto.AutoRoutine;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.OperatorDashboard.CoralScoringLevel;
 import frc.robot.autos.AutoBuilder.IntakeScorePair;
-import frc.robot.subsystems.superstructure.AutoAlignLocations.ReefAlign.LocalReefSide;
-import frc.robot.subsystems.superstructure.AutoAlignLocations.ReefAlign.ReefZoneSide;
-import frc.robot.subsystems.superstructure.AutoAlignLocations.StationAlign.Station;
+import frc.robot.subsystems.superstructure.ReefAlign.LocalReefSide;
+import frc.robot.subsystems.superstructure.ReefAlign.ReefZoneSide;
+import frc.robot.subsystems.superstructure.StationAlign.Station;
 
 import java.util.List;
 
