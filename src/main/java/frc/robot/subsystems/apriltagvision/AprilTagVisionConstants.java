@@ -45,7 +45,7 @@ public class AprilTagVisionConstants {
     public enum Camera {
         StationCam(
                 new Transform3d(
-                        Units.inchesToMeters(-6.5), Units.inchesToMeters(-8.375), Units.inchesToMeters(27.5),
+                        Units.inchesToMeters(-6.625), Units.inchesToMeters(-9.125), Units.inchesToMeters(27.25),
                         // Rotation order matters
                         new Rotation3d(0.0, Units.degreesToRadians(-15), 0.0)
                                 .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-30)))
@@ -61,7 +61,7 @@ public class AprilTagVisionConstants {
         ),
         ReefCam(
                 new Transform3d(
-                        Units.inchesToMeters(-8), Units.inchesToMeters(8.75), Units.inchesToMeters(25.75),
+                        Units.inchesToMeters(-7.75), Units.inchesToMeters(8.875), Units.inchesToMeters(26.5),
                         // Rotation order matters
                         new Rotation3d(0.0, Units.degreesToRadians(35), 0.0)
                                 .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-170)))
