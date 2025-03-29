@@ -14,7 +14,10 @@
 package frc.robot;
 
 import edu.wpi.first.hal.AllianceStationID;
-import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -202,7 +205,7 @@ public class Robot extends LoggedRobot {
     @Override
     public void robotPeriodic() {
         // Switch thread to high priority to improve loop timing
-        Threads.setCurrentThreadPriority(true, 99);
+//        Threads.setCurrentThreadPriority(true, 99);
 
         robotContainer.periodicBeforeAll();
 
@@ -249,7 +252,7 @@ public class Robot extends LoggedRobot {
         }
 
         // Return to normal thread priority
-        Threads.setCurrentThreadPriority(false, 10);
+//        Threads.setCurrentThreadPriority(false, 10);
     }
 
     @Override
