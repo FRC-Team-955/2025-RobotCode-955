@@ -205,7 +205,7 @@ public class Elevator extends SubsystemBaseExt {
                 offsetSetAlert.set(false);
             }
 
-            boolean usingGentleVelocity = setpointMeters < positionMeters // If we are going down
+            boolean usingGentleVelocity = (velocityMetersPerSec < 0 || setpointMeters + 0.1 < positionMeters) // If we are going down
                     // If we are below the hardstop slowdown zone
                     && positionMeters < hardstopSlowdownMeters;
             // Only actually use the gentle profile if we are close enough to the max velocity to avoid jumping directly to max velocity
