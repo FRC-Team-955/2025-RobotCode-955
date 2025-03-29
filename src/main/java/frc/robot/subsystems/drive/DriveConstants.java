@@ -44,8 +44,9 @@ public class DriveConstants {
 
     public static final double odometryPositionDeltaDiscardMeters = Units.inchesToMeters(8);
 
-    // Slow to 30% speed when elevator is at max height
-    public static final double constraintScalarWhenElevatorAtMaxHeight = 0.3;
+    // Slow to 30% speed during driver control and 80% speed during automated control when elevator is at max height
+    public static final double constraintScalarWhenElevatorAtMaxHeightDriver = 0.3;
+    public static final double constraintScalarWhenElevatorAtMaxHeightAutomated = 0.8;
 
     public static final DriveConfig driveConfig = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> new DriveConfig(

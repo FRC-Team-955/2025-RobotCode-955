@@ -462,7 +462,7 @@ public class Drive extends SubsystemBaseExt {
             return driveConfig.moduleLimits();
         }
 
-        return driveConfig.moduleLimits().times(elevator.getDriveConstraintScalar());
+        return driveConfig.moduleLimits().times(elevator.getDriveConstraintScalar(!(goal == Goal.MOVE_TO || goal == Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED)));
     }
 
     public AutoFactory createAutoFactory() {
@@ -536,7 +536,7 @@ public class Drive extends SubsystemBaseExt {
                         Logger.recordOutput("Drive/MoveTo/CalculatingConstraints", true);
                         Rotation2d directionOfTravel = currentToGoal.getAngle();
 //                                Logger.recordOutput("Drive/MoveTo/DirectionOfTravel", directionOfTravel);
-                        calculateMoveToLinearConstraints(directionOfTravel, elevator.getDriveConstraintScalar(), (x, y) -> {
+                        calculateMoveToLinearConstraints(directionOfTravel, elevator.getDriveConstraintScalar(false), (x, y) -> {
 //                                    Logger.recordOutput("Drive/MoveTo/Constraints/MaxVelocityX", x.maxVelocity);
 //                                    Logger.recordOutput("Drive/MoveTo/Constraints/MaxVelocityY", y.maxVelocity);
 //                                    Logger.recordOutput("Drive/MoveTo/Constraints/MaxAccelerationX", x.maxAcceleration);

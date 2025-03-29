@@ -333,12 +333,18 @@ public class Elevator extends SubsystemBaseExt {
     }
 
     @AutoLogOutput(key = "Elevator/DriveConstraintScalar")
-    public double getDriveConstraintScalar() {
+    public double getDriveConstraintScalar(boolean isDriverControl) {
         double elevatorSetpoint = goal.setpointMeters != null
                 ? goal.setpointMeters.getAsDouble()
                 : 0;
         double elevatorPosition = Math.max(getPositionMeters(), elevatorSetpoint);
-        return MathUtil.interpolate(1, DriveConstants.constraintScalarWhenElevatorAtMaxHeight, elevatorPosition / maxHeightMeters);
+        return MathUtil.interpolate(
+                1,
+                isDriverControl
+                        ? DriveConstants.constraintScalarWhenElevatorAtMaxHeightDriver
+                        : DriveConstants.constraintScalarWhenElevatorAtMaxHeightAutomated,
+                elevatorPosition / maxHeightMeters
+        );
     }
 
     public Command zeroCoral() {
