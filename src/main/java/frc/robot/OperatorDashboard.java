@@ -2,6 +2,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.JoystickDrive;
 import frc.robot.subsystems.elevator.Elevator;
@@ -95,18 +96,29 @@ public class OperatorDashboard extends VirtualSubsystem {
 
         if (operatorKeypad.isConnected()) {
             operatorKeypadDisconnectedAlert.set(false);
+            operatorKeypad.update();
 
-            if (operatorKeypad.getManualReefSide()) {
+            if (operatorKeypad.canUseManualReefZoneSide) {
                 manualReefSide.set(true);
                 ReefZoneSide newReefZoneSide = operatorKeypad.getReefZoneSide();
                 if (newReefZoneSide != null) selectedReefZoneSide = newReefZoneSide;
-            } else {
+            } else if (operatorKeypad.canUseOverrides) {
+                // We only want to do closest side if the timeout is done (so if we can use overrides)
                 manualReefSide.set(false);
                 if (!ignoreClosestReefSideChanges) {
                     selectedReefZoneSide = ReefAlign.determineClosestReefSide(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
                 }
             }
             updateToggles(reefZoneSides, selectedReefZoneSide);
+
+            if (operatorKeypad.canUseOverrides) {
+                coralStuckInRobotMode.set(operatorKeypad.getOverride1());
+                manualScoring.set(operatorKeypad.getOverride2());
+                ignoreEndEffectorBeamBreak.set(operatorKeypad.getOverride3());
+                elevatorEStop.set(operatorKeypad.getOverride4());
+                // TODO: useRealElevatorState gets set to false immediately, like a button - need this to happen on the operator keypad as well
+//                useRealElevatorState.set(operatorKeypad.getOverride5());
+            }
 
             CoralScoringLevel newCoralScoringLevel = operatorKeypad.getCoralScoringLevel();
             if (newCoralScoringLevel != null) selectedCoralScoringLevel = newCoralScoringLevel;
@@ -199,6 +211,43 @@ public class OperatorDashboard extends VirtualSubsystem {
     private static class OperatorKeypad {
         private final GenericHID hid = new GenericHID(1);
 
+        private boolean canUseManualReefZoneSide = false;
+        private boolean canUseOverrides = true;
+
+        private boolean lastManualReefSide = false;
+        private final Timer sinceManualReefSideChanged = new Timer();
+
+        public void update() {
+            // It takes a bit of time for the buttons to switch whenever
+            // use manual reef side is changed, since we have to use the
+            // same buttons for reef side and overrides. To ensure that
+            // we don't process something unwanted (such as enabling an
+            // override we do not want), we don't want to allow either
+            // reef side or overrides to be read for 0.5 seconds after
+            // use manual reef side is changed.
+            boolean manualReefSide = getManualReefSide();
+            if (lastManualReefSide != manualReefSide) {
+                if (!sinceManualReefSideChanged.isRunning()) {
+                    // We have a change and haven't dealt with it, start the timer
+                    sinceManualReefSideChanged.restart();
+                    canUseManualReefZoneSide = false;
+                    canUseOverrides = false;
+                } else if (sinceManualReefSideChanged.hasElapsed(0.5)) {
+                    // If it's been long enough, stop the timer, update lastManualReefSide,
+                    // and allow either overrides or manual reef zone side to be used
+                    sinceManualReefSideChanged.stop();
+                    lastManualReefSide = manualReefSide;
+                    // At this point, both of them should be false, so we only need
+                    // to change one of them to true
+                    if (manualReefSide) {
+                        canUseManualReefZoneSide = true;
+                    } else {
+                        canUseOverrides = true;
+                    }
+                }
+            }
+        }
+
         public boolean isConnected() {
             return hid.isConnected();
         }
@@ -211,6 +260,30 @@ public class OperatorDashboard extends VirtualSubsystem {
             if (hid.getRawButton(5)) return ReefZoneSide.MiddleBack;
             if (hid.getRawButton(6)) return ReefZoneSide.LeftBack;
             return null;
+        }
+
+        public boolean getOverride1() {
+            return hid.getRawButton(1);
+        }
+
+        public boolean getOverride2() {
+            return hid.getRawButton(2);
+        }
+
+        public boolean getOverride3() {
+            return hid.getRawButton(3);
+        }
+
+        public boolean getOverride4() {
+            return hid.getRawButton(4);
+        }
+
+        public boolean getOverride5() {
+            return hid.getRawButton(5);
+        }
+
+        public boolean getOverride6() {
+            return hid.getRawButton(6);
         }
 
         public CoralScoringLevel getCoralScoringLevel() {
@@ -227,10 +300,8 @@ public class OperatorDashboard extends VirtualSubsystem {
             return null;
         }
 
-        public boolean getManualReefSide() {
-            if (hid.getRawButton(13)) return true;
-            if (hid.getRawButton(14)) return false;
-            return true;
+        private boolean getManualReefSide() {
+            return hid.getRawButton(13);
         }
     }
 }
