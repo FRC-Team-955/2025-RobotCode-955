@@ -9,6 +9,7 @@ import edu.wpi.first.math.util.Units;
 import frc.robot.Util;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.util.AllianceBasedPose2d;
+import frc.robot.util.network.LoggedTunableNumber;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;
 
@@ -117,7 +118,7 @@ public class ReefAlign {
         );
     }
 
-    private static final double velocityLookaheadSeconds = 0.4;
+    private static final LoggedTunableNumber velocityLookaheadSeconds = new LoggedTunableNumber("ReefAlign/VelocityLookaheadSeconds", 0.4);
     private static final Transform2d reefSideAngleOffset = new Transform2d(0.25, 0, new Rotation2d());
 
     private static ReefZoneSide closestReefSideToPose(Pose2d currentPose) {
@@ -158,7 +159,7 @@ public class ReefAlign {
             lookahead = joystickAngle.rotateBy(relativeToCenterTag).getRadians() > robotToLeft.rotateBy(relativeToCenterTag).getRadians() ||
                     joystickAngle.rotateBy(relativeToCenterTag).getRadians() < robotToRight.rotateBy(relativeToCenterTag).getRadians();
         }
-        Pose2d currentPoseWithLookahead = currentPose.exp(ChassisSpeeds.fromFieldRelativeSpeeds(joystickSetpointFieldRelative, currentPose.getRotation()).toTwist2d(velocityLookaheadSeconds));
+        Pose2d currentPoseWithLookahead = currentPose.exp(ChassisSpeeds.fromFieldRelativeSpeeds(joystickSetpointFieldRelative, currentPose.getRotation()).toTwist2d(velocityLookaheadSeconds.get()));
 //        Logger.recordOutput("Superstructure/ClosestReefSide/Lookahead", currentPoseWithLookahead);
         if (lookahead) {
             return closestReefSideToPose(currentPoseWithLookahead);
