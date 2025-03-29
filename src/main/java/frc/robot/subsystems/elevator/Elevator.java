@@ -332,7 +332,6 @@ public class Elevator extends SubsystemBaseExt {
         }
     }
 
-    @AutoLogOutput(key = "Elevator/DriveConstraintScalar")
     public double getDriveConstraintScalar(boolean isDriverControl) {
         double elevatorSetpoint = goal.setpointMeters != null
                 ? goal.setpointMeters.getAsDouble()
