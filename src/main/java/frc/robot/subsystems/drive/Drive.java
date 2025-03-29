@@ -529,14 +529,10 @@ public class Drive extends SubsystemBaseExt {
 
                     // Update profile constraints
                     Translation2d currentToGoal = goalPose.getTranslation().minus(currentPose.getTranslation());
-                    double currentToGoalDistance = currentToGoal.getNorm();
-//                            Logger.recordOutput("Drive/MoveTo/CurrentToGoalDistance", currentToGoalDistance);
-                    // Direction of travel becomes unstable when we get onto the point
-                    if (currentToGoalDistance > 0.1) {
-                        Logger.recordOutput("Drive/MoveTo/CalculatingConstraints", true);
+                    if (currentToGoal.getX() != 0 || currentToGoal.getY() != 0) {
                         Rotation2d directionOfTravel = currentToGoal.getAngle();
 //                                Logger.recordOutput("Drive/MoveTo/DirectionOfTravel", directionOfTravel);
-                        calculateMoveToLinearConstraints(directionOfTravel, elevator.getDriveConstraintScalar(false), (x, y) -> {
+                        calculateMoveToLinearConstraints(directionOfTravel, (x, y) -> {
 //                                    Logger.recordOutput("Drive/MoveTo/Constraints/MaxVelocityX", x.maxVelocity);
 //                                    Logger.recordOutput("Drive/MoveTo/Constraints/MaxVelocityY", y.maxVelocity);
 //                                    Logger.recordOutput("Drive/MoveTo/Constraints/MaxAccelerationX", x.maxAcceleration);
@@ -544,8 +540,6 @@ public class Drive extends SubsystemBaseExt {
                             moveToLinearX.setConstraints(x);
                             moveToLinearY.setConstraints(y);
                         });
-                    } else {
-                        Logger.recordOutput("Drive/MoveTo/CalculatingConstraints", false);
                     }
 
                     double linearXVelocityMetersPerSec = moveToLinearX.calculate(
