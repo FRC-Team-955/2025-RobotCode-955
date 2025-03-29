@@ -49,7 +49,7 @@ public class DriveConstants {
     public static final double constraintScalarWhenElevatorAtMaxHeightAutomated = 0.8;
 
     public static final DriveConfig driveConfig = switch (Constants.identity) {
-        case COMPBOT, SIMBOT -> new DriveConfig(
+        case COMPBOT -> new DriveConfig(
                 Units.inchesToMeters(1.935948620917915),
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(22.75),
@@ -60,6 +60,20 @@ public class DriveConstants {
                 new ModuleLimits(
                         4.58,
                         20,
+                        20
+                )
+        );
+        case SIMBOT -> new DriveConfig(
+                Units.inchesToMeters(2),
+                Units.inchesToMeters(22.75),
+                Units.inchesToMeters(22.75),
+                Units.inchesToMeters(35),
+                Units.inchesToMeters(35),
+                PIDF.ofPD(3.5, 0),
+                PIDF.ofPD(3, 0),
+                new ModuleLimits(
+                        3.83,
+                        25,
                         20
                 )
         );
@@ -113,7 +127,7 @@ public class DriveConstants {
                 60
         );
         case SIMBOT -> new ModuleConfig(
-                PIDF.ofPDSV(0.05, 0.0, 0.02522, 0.14115),
+                PIDF.ofPDSV(0.05, 0.0, 0.04075, 0.14117),
                 PIDF.ofPD(10.0, 0.07),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
