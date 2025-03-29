@@ -557,8 +557,8 @@ public class Drive extends SubsystemBaseExt {
                     Logger.recordOutput("Drive/MoveTo/LinearYSetpoint", moveToLinearY.getSetpoint().velocity);
 
                     double angularVelocityRadPerSec = moveToAngular.calculate(
-                            currentPose.getRotation().getRadians(),
-                            goalPose.getRotation().getRadians()
+                            MathUtil.angleModulus(currentPose.getRotation().getRadians()),
+                            MathUtil.angleModulus(goalPose.getRotation().getRadians())
                     ) + moveToAngular.getSetpoint().velocity;
                     Logger.recordOutput("Drive/MoveTo/AngularMeasurement", currentVelocities.omegaRadiansPerSecond);
                     Logger.recordOutput("Drive/MoveTo/AngularSetpoint", moveToAngular.getSetpoint().velocity);
