@@ -22,7 +22,7 @@ public class DriveConstants {
     public static final PIDF moveToAngular = PIDF.ofPD(2, 0);
     public static final TrapezoidProfile.Constraints moveToAngularConstraintsRad = new TrapezoidProfile.Constraints(3, 2);
 
-    public static void calculateMoveToLinearConstraints(Rotation2d directionOfTravel, double scalar, BiConsumer<TrapezoidProfile.Constraints, TrapezoidProfile.Constraints> applyXYConstraints) {
+    public static void calculateMoveToLinearConstraints(Rotation2d directionOfTravel, BiConsumer<TrapezoidProfile.Constraints, TrapezoidProfile.Constraints> applyXYConstraints) {
         Translation2d maxVelocities = new Pose2d(new Translation2d(), directionOfTravel)
                 .transformBy(new Transform2d(DriveTuning.moveToLinearMaxVelocityTunable.get(), 0, new Rotation2d()))
                 .getTranslation();
@@ -31,9 +31,9 @@ public class DriveConstants {
                 .getTranslation();
         applyXYConstraints.accept(
                 // X
-                new TrapezoidProfile.Constraints(Math.abs(maxVelocities.getX() * scalar), Math.abs(maxAccelerations.getX() * scalar)),
+                new TrapezoidProfile.Constraints(Math.abs(maxVelocities.getX()), Math.abs(maxAccelerations.getX())),
                 // Y
-                new TrapezoidProfile.Constraints(Math.abs(maxVelocities.getY() * scalar), Math.abs(maxAccelerations.getY() * scalar))
+                new TrapezoidProfile.Constraints(Math.abs(maxVelocities.getY()), Math.abs(maxAccelerations.getY()))
         );
     }
 
@@ -44,9 +44,8 @@ public class DriveConstants {
 
     public static final double odometryPositionDeltaDiscardMeters = Units.inchesToMeters(8);
 
-    // Slow to 30% speed during driver control and 80% speed during automated control when elevator is at max height
+    // Slow to 30% speed during driver control
     public static final double constraintScalarWhenElevatorAtMaxHeightDriver = 0.3;
-    public static final double constraintScalarWhenElevatorAtMaxHeightAutomated = 0.8;
 
     public static final DriveConfig driveConfig = switch (Constants.identity) {
         case COMPBOT -> new DriveConfig(

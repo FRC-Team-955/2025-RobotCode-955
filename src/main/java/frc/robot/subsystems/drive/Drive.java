@@ -458,11 +458,11 @@ public class Drive extends SubsystemBaseExt {
     }
 
     public ModuleLimits getModuleLimits() {
-        if (operatorDashboard.coralStuckInRobotMode.get()) {
+        if (operatorDashboard.coralStuckInRobotMode.get() || goal == Goal.MOVE_TO || goal == Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED) {
             return driveConfig.moduleLimits();
         }
 
-        return driveConfig.moduleLimits().times(elevator.getDriveConstraintScalar(!(goal == Goal.MOVE_TO || goal == Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED)));
+        return driveConfig.moduleLimits().times(elevator.getDriveConstraintScalar());
     }
 
     public AutoFactory createAutoFactory() {

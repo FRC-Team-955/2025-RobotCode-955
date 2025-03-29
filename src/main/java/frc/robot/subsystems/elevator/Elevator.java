@@ -332,16 +332,14 @@ public class Elevator extends SubsystemBaseExt {
         }
     }
 
-    public double getDriveConstraintScalar(boolean isDriverControl) {
+    public double getDriveConstraintScalar() {
         double elevatorSetpoint = goal.setpointMeters != null
                 ? goal.setpointMeters.getAsDouble()
                 : 0;
         double elevatorPosition = Math.max(getPositionMeters(), elevatorSetpoint);
         return MathUtil.interpolate(
                 1,
-                isDriverControl
-                        ? DriveConstants.constraintScalarWhenElevatorAtMaxHeightDriver
-                        : DriveConstants.constraintScalarWhenElevatorAtMaxHeightAutomated,
+                DriveConstants.constraintScalarWhenElevatorAtMaxHeightDriver,
                 elevatorPosition / maxHeightMeters
         );
     }
