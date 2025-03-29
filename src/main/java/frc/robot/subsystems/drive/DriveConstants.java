@@ -113,7 +113,7 @@ public class DriveConstants {
         );
         case SIMBOT -> new ModuleConfig(
                 PIDF.ofPDSV(0.05, 0.0, 0.02522, 0.14115),
-                PIDF.ofPD(8.0, 0.07),
+                PIDF.ofPD(10.0, 0.07),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,

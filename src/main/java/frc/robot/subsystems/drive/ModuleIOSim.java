@@ -45,7 +45,7 @@ public class ModuleIOSim extends ModuleIO {
                     // Specify gyro type (for realistic gyro drifting and error simulation)
                     .withGyro(COTS.ofPigeon2())
                     // Specify swerve module (for realistic swerve dynamics)
-                    .withSwerveModule(COTS.ofMark4(
+                    .withSwerveModule(COTS.ofMark4i(
                             DCMotor.getKrakenX60(1),
                             DCMotor.getNEO(1),
                             COTS.WHEELS.DEFAULT_NEOPRENE_TREAD.cof,
