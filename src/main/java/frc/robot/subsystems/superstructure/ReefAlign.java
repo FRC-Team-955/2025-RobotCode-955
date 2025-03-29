@@ -20,13 +20,13 @@ public class ReefAlign {
     private static final double distanceCenterOfReefToElevatorClearanceMeters = distanceCenterOfReefToBranchMeters + Units.inchesToMeters(8);
 
     private static final Transform2d initialAlignStartOffset = new Transform2d(1, 0, new Rotation2d());
-    private static final Transform2d initialAlignEndOffset = new Transform2d(0.4, 0, new Rotation2d());
+    private static final Transform2d initialAlignEndOffset = new Transform2d(0.3, 0, new Rotation2d());
     private static final double initialAlignDistForStartMeters = 1.0;
 
     private static final double finalAlignAngularDiffForInitialRad = Units.degreesToRadians(30);
 
     // Distance at which to start raising the elevator
-    public static final double elevatorRaiseDistanceMeters = 1.5;
+    public static final double elevatorRaiseDistanceMeters = 1.0;
     // Distance at which elevator cannot be raised
     public static final double elevatorStowDistanceMeters = initialAlignEndOffset.getX() / 2.0;
     public static final double elevatorRaiseAngularToleranceRad = Units.degreesToRadians(45);
