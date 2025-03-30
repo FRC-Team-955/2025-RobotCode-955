@@ -17,10 +17,10 @@ public class DriveConstants {
     public static final double assistDirectionToleranceRad = Units.degreesToRadians(50);
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
-    public static final PIDF moveToLinear = PIDF.ofPD(2, 0);
-    public static final TrapezoidProfile.Constraints moveToLinearConstraintsMeters = new TrapezoidProfile.Constraints(4, 4);
+    public static final PIDF moveToLinear = PIDF.ofPD(1, 0);
+    public static final TrapezoidProfile.Constraints moveToLinearConstraintsMeters = new TrapezoidProfile.Constraints(3.8, 5);
     public static final PIDF moveToAngular = PIDF.ofPD(2, 0);
-    public static final TrapezoidProfile.Constraints moveToAngularConstraintsRad = new TrapezoidProfile.Constraints(3, 2);
+    public static final TrapezoidProfile.Constraints moveToAngularConstraintsRad = new TrapezoidProfile.Constraints(3, 3);
 
     public static void calculateMoveToLinearConstraints(Rotation2d directionOfTravel, BiConsumer<TrapezoidProfile.Constraints, TrapezoidProfile.Constraints> applyXYConstraints) {
         Translation2d maxVelocities = new Pose2d(new Translation2d(), directionOfTravel)
@@ -114,7 +114,7 @@ public class DriveConstants {
         case COMPBOT -> new ModuleConfig(
                 PIDF.ofPDSVA(
                         0.0, 0.0,
-                        0.183, 0.1205, 0.005
+                        0.19, 0.125, 0.005
                 ),
                 PIDF.ofPD(5, 0.04),
                 Mk4iGearRatios.L2,
