@@ -36,7 +36,7 @@ public class AprilTagVisionConstants {
     public static final double linearStdDevBaselineTrigMeters = 0.1;
     public static final double angularStdDevBaselineTrigRad = Units.degreesToRadians(30);
     public static final double linearStdDevBaseline3dSolveMeters = 0.3;
-    public static final double angularStdDevBaseline3dSolveRad = Units.degreesToRadians(15);
+    public static final double angularStdDevBaseline3dSolveRad = Units.degreesToRadians(60);
 
     // Distance from a tag for trig estimation to be used
     public static final double distanceFromTagForTrigMeters = 1;
