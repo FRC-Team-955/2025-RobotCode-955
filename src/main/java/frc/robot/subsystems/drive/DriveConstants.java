@@ -1,41 +1,24 @@
 package frc.robot.subsystems.drive;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.Util;
 import frc.robot.util.PIDF;
 import frc.robot.util.swerve.ModuleLimits;
 
-import java.util.function.BiConsumer;
-
 public class DriveConstants {
     public static final double assistDirectionToleranceRad = Units.degreesToRadians(50);
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
-    public static final PIDF moveToLinear = PIDF.ofPD(1, 0);
-    public static final TrapezoidProfile.Constraints moveToLinearConstraintsMeters = new TrapezoidProfile.Constraints(3.8, 5);
-    public static final PIDF moveToAngular = PIDF.ofPD(2, 0);
-    public static final TrapezoidProfile.Constraints moveToAngularConstraintsRad = new TrapezoidProfile.Constraints(3, 3);
-
-    public static void calculateMoveToLinearConstraints(Rotation2d directionOfTravel, BiConsumer<TrapezoidProfile.Constraints, TrapezoidProfile.Constraints> applyXYConstraints) {
-        Translation2d maxVelocities = new Pose2d(new Translation2d(), directionOfTravel)
-                .transformBy(new Transform2d(DriveTuning.moveToLinearMaxVelocityTunable.get(), 0, new Rotation2d()))
-                .getTranslation();
-        Translation2d maxAccelerations = new Pose2d(new Translation2d(), directionOfTravel)
-                .transformBy(new Transform2d(DriveTuning.moveToLinearMaxAccelerationTunable.get(), 0, new Rotation2d()))
-                .getTranslation();
-        applyXYConstraints.accept(
-                // X
-                new TrapezoidProfile.Constraints(Math.abs(maxVelocities.getX()), Math.abs(maxAccelerations.getX())),
-                // Y
-                new TrapezoidProfile.Constraints(Math.abs(maxVelocities.getY()), Math.abs(maxAccelerations.getY()))
-        );
-    }
+    public static final MoveToConfig moveToConfig = new MoveToConfig(
+            PIDF.ofPD(5, 0),
+            PIDF.ofPD(6, 0),
+            0.01,
+            0.05,
+            Units.degreesToRadians(1),
+            Units.degreesToRadians(5)
+    );
 
     public static final boolean useSetpointGenerator = true;
     public static final boolean disableDriving = false;
@@ -196,6 +179,15 @@ public class DriveConstants {
             case SIMBOT -> new GyroIOSim();
         };
     }
+
+    public record MoveToConfig(
+            PIDF linear,
+            PIDF angular,
+            double linearPositionToleranceMeters,
+            double linearVelocityToleranceMetersPerSec,
+            double angularPositionToleranceRad,
+            double angularVelocityToleranceRadPerSec
+    ) {}
 
     public record DriveConfig(
             double wheelRadiusMeters,

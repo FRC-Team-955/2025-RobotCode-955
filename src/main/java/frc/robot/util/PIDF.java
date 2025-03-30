@@ -179,9 +179,22 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
         return new PIDController(kP, kI, kD);
     }
 
+    public PIDController toPID(double errorTolerance, double errorDerivativeTolerance) {
+        var pid = new PIDController(kP, kI, kD);
+        pid.setTolerance(errorTolerance, errorDerivativeTolerance);
+        return pid;
+    }
+
     public PIDController toPIDWrapRadians() {
         var pid = new PIDController(kP, kI, kD);
         pid.enableContinuousInput(-Math.PI, Math.PI);
+        return pid;
+    }
+
+    public PIDController toPIDWrapRadians(double errorTolerance, double errorDerivativeTolerance) {
+        var pid = new PIDController(kP, kI, kD);
+        pid.enableContinuousInput(-Math.PI, Math.PI);
+        pid.setTolerance(errorTolerance, errorDerivativeTolerance);
         return pid;
     }
 
