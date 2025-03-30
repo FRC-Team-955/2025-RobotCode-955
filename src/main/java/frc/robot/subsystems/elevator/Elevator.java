@@ -348,7 +348,7 @@ public class Elevator extends SubsystemBaseExt {
         return CommandsExt.eagerSequence(
                 setGoal(() -> Goal.ZERO_CORAL),
                 startEnd(
-                        () -> io.setOpenLoop(-1),
+                        () -> io.setOpenLoop(-0.7),
                         () -> io.setOpenLoop(0)
                 )
         );

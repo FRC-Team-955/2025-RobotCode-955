@@ -37,8 +37,8 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static frc.robot.subsystems.superstructure.SuperstructureConstants.*;
-import static frc.robot.subsystems.superstructure.SuperstructureTuning.funnelIntakeHomeMeters;
-import static frc.robot.subsystems.superstructure.SuperstructureTuning.funnelIntakeInitialMeters;
+import static frc.robot.subsystems.superstructure.SuperstructureTuning.homeFinalMeters;
+import static frc.robot.subsystems.superstructure.SuperstructureTuning.homeInitialMeters;
 
 public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
@@ -289,11 +289,17 @@ public class Superstructure extends SubsystemBaseExt {
         return Commands.parallel(
                 setGoal(Goal.HOME),
                 CommandsExt.eagerSequence(
-                        endEffector.moveByAndWaitUntilDone(funnelIntakeInitialMeters::get),
-                        endEffector.setGoal(EndEffector.RollersGoal.ZERO_CORAL),
-                        Commands.waitSeconds(0.1),
-                        endEffector.moveByAndWaitUntilDone(funnelIntakeHomeMeters::get)
-                ).deadlineFor(elevator.zeroCoral()),
+                        CommandsExt.eagerSequence(
+                                endEffector.moveByAndWaitUntilDone(homeInitialMeters::get),
+                                endEffector.setGoal(EndEffector.RollersGoal.ZERO_CORAL),
+                                Commands.waitSeconds(0.1)
+                        ).deadlineFor(elevator.zeroCoral()),
+                        CommandsExt.eagerSequence(
+                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                Commands.waitSeconds(0.05),
+                                endEffector.moveByAndWaitUntilDone(homeFinalMeters::get)
+                        ).deadlineFor(elevator.setGoal(() -> Elevator.Goal.STOW))
+                ),
                 funnel.setGoal(Funnel.Goal.IDLE)
         );
     }

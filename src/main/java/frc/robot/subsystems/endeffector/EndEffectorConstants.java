@@ -30,7 +30,7 @@ public class EndEffectorConstants {
             40,
             9,
             switch (Constants.identity) {
-                case COMPBOT -> PIDF.ofP(1);
+                case COMPBOT -> PIDF.ofP(0.5);
                 case SIMBOT -> PIDF.ofP(3);
                 case ALPHABOT -> PIDF.ofP(0);
             },
