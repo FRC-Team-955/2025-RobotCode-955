@@ -305,10 +305,7 @@ public class Superstructure extends SubsystemBaseExt {
     }
 
     public Command home() {
-        return wrapExposedCommand(CommandsExt.onlyIf(
-                () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
-                homeInternal()
-        ));
+        return wrapExposedCommand(homeInternal());
     }
 
     private Command shake() {
