@@ -19,7 +19,7 @@ public class GamePieceVision extends SubsystemBaseExt {
 
     private final Alert disconnectedAlert = new Alert("Game piece vision is disconnected.", Alert.AlertType.kError);
 
-    private final Debouncer visibleDebouncer = new Debouncer(0.25);
+    private final Debouncer visibleDebouncer = new Debouncer(0.03);
 
     private static GamePieceVision instance;
 
