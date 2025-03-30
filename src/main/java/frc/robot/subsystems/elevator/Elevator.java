@@ -347,10 +347,12 @@ public class Elevator extends SubsystemBaseExt {
     public Command zeroCoral() {
         return CommandsExt.eagerSequence(
                 setGoal(() -> Goal.ZERO_CORAL),
-                startEnd(
+                startEndWaitUntil(
                         () -> io.setOpenLoop(-0.7),
-                        () -> io.setOpenLoop(0)
-                )
+                        () -> io.setOpenLoop(0),
+                        () -> getPositionMeters() < 0.01
+                ),
+                Commands.idle()
         );
     }
 }
