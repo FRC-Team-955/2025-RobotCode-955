@@ -565,13 +565,13 @@ public class Superstructure extends SubsystemBaseExt {
                 waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
         );
         // Wait for coral to settle and send the elevator back down
-        Command finalize = Commands.parallel(
-                elevator.setGoal(() -> Elevator.Goal.STOW),
+        Command finalize = CommandsExt.eagerSequence(
                 Commands.either(
                         Commands.waitSeconds(scoreCoralL1SettleSeconds),
                         Commands.waitSeconds(scoreCoralSettleSeconds),
                         () -> coralScoringLevelSupplier.get() == CoralScoringLevel.L1
-                )
+                ),
+                elevator.setGoal(() -> Elevator.Goal.STOW)
         );
         if (duringAuto) {
             return wrapExposedCommand(
