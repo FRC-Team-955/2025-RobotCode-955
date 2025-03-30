@@ -70,44 +70,78 @@ class OverrideButtons:
         else:
             gamepad.release_buttons(self.outputIds[index])
 
+class SimpleButtons:
+    def __init__(self, inputIds, outputIds, color, dim):
+        self.inputIds = inputIds
+        self.outputIds = outputIds
+        self.toggles = [False for _ in inputIds]
+        self.color = color
+        self.dim = dim
+
+    def handle_inputs(self, number, pressed):
+        if number in self.inputIds:
+            index = self.inputIds.index(number)
+            self.toggles[index] = pressed
+            self.set(index)
+
+    def display_colors(self):
+        # Update the colors
+        for number in self.inputIds:
+            index = self.inputIds.index(number)
+            self.set(index)
+
+    def set(self, index):
+        set_keys(self.toggles[index], self.color, self.dim, self.inputIds[index])
+        if self.toggles[index]:
+            gamepad.press_buttons(self.outputIds[index])
+        else:
+            gamepad.release_buttons(self.outputIds[index])
+
 # reverse order so that l4 is the default
 level = Button_Group([6, 7, 8, 11], [10, 9, 8, 7], (230, 100, 0), 0.02)
 # front left default I guess
 reefSides = Button_Group([3, 0, 1, 2, 4, 5], [1, 6, 5, 4, 2, 3], (150, 0, 10), 0.02)
 # left default
 localSide = Button_Group([9, 10], [11, 12], (60, 60, 60), 0.02)
-overrides = OverrideButtons([0, 1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 6], (10, 0, 150), 0.02)
+overrides = OverrideButtons([0, 1, 2, 4], [1, 2, 3, 5], (10, 0, 150), 0.02)
+overrideButtons = SimpleButtons([3, 5], [4, 6], (10, 0, 150), 0.02)
 
 # Encoder switch
 useReefSides = False
+gamepad.release_buttons(13)
 level.display_colors()
 localSide.display_colors()
 overrides.display_colors()
-gamepad.release_buttons(13)
+overrideButtons.display_colors()
 
 while True:
     key_event = macropad.keys.events.get()
     macropad.encoder_switch_debounced.update()
 
-    if key_event:
-        if key_event.pressed:
-            if useReefSides:
-                reefSides.handle_inputs(key_event.key_number)
-            else:
-                overrides.handle_inputs(key_event.key_number)
-            level.handle_inputs(key_event.key_number)
-            localSide.handle_inputs(key_event.key_number)
-
-    if key_event and key_event.pressed:
-        print("Key pressed: {}".format(key_event.key_number))
-    #print("Encoder: {}".format(macropad.encoder))
-
     if macropad.encoder_switch_debounced.fell:
         print("Encoder switch pressed")
         useReefSides = not useReefSides
         if useReefSides:
-            reefSides.display_colors()
             gamepad.press_buttons(13)
+            reefSides.display_colors()
         else:
-            overrides.display_colors()
             gamepad.release_buttons(13)
+            overrides.display_colors()
+            overrideButtons.display_colors()
+
+    if key_event:
+        if key_event.pressed:
+            print("Key pressed: {}".format(key_event.key_number))
+        elif key_event.released:
+            print("Key released: {}".format(key_event.key_number))
+
+    if key_event:
+        if key_event.pressed:
+            level.handle_inputs(key_event.key_number)
+            localSide.handle_inputs(key_event.key_number)
+            if useReefSides:
+                reefSides.handle_inputs(key_event.key_number)
+            else:
+                overrides.handle_inputs(key_event.key_number)
+        if not useReefSides:
+            overrideButtons.handle_inputs(key_event.key_number, key_event.pressed)
