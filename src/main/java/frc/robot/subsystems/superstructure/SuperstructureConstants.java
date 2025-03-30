@@ -8,6 +8,7 @@ import frc.robot.Constants;
 class SuperstructureConstants {
     public static final double scoreCoralSettleSeconds = 0.25;
     public static final double scoreCoralL1SettleSeconds = 0.5;
+    public static final double scoreCoralForceSettleSeconds = 1;
 
     public static final Transform3d coralAboveFunnel = new Transform3d(
             Units.inchesToMeters(5),

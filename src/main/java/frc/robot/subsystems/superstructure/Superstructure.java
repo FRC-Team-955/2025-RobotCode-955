@@ -121,15 +121,30 @@ public class Superstructure extends SubsystemBaseExt {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/Superstructure", inputs);
 
-        Logger.recordOutput("Superstructure/AutoForceable", autoForceable);
         // OperatorDashboard periodicBeforeCommands runs after superstructure
-        operatorDashboard.setIgnoreClosestReefSideChanges(autoForceable);
+        operatorDashboard.setIgnoreClosestReefSideChanges(switch (goal) {
+            case AUTO_SCORE_CORAL_WAIT_ALIGN, AUTO_SCORE_CORAL_WAIT_ELEVATOR, AUTO_SCORE_CORAL_SCORING,
+                 AUTO_DESCORE_ALGAE_WAIT_ALIGN, AUTO_DESCORE_ALGAE_WAIT_AMPERAGE, AUTO_DESCORE_ALGAE_MOVE_BACK -> true;
+
+            // Allow reef side changes before elevator raises during auto align sequences
+            case AUTO_SCORE_CORAL_WAIT_RAISE, AUTO_DESCORE_ALGAE_WAIT_RAISE,
+                 // All goals that don't involve auto choose side
+                 IDLE,
+                 MANUAL_SCORE_CORAL_WAIT_ELEVATOR, MANUAL_SCORE_CORAL_WAIT_CONFIRM, MANUAL_SCORE_CORAL_SCORING,
+                 DESCORE_ALGAE_WAIT_ELEVATOR, DESCORE_ALGAE_DESCORING,
+                 HANDOFF, HOME,
+                 FUNNEL_INTAKE_WAITING,
+                 AUTO_FUNNEL_INTAKE_WAITING_ALIGN, AUTO_FUNNEL_INTAKE_WAITING_SHAKE,
+                 EJECT -> false;
+        });
     }
 
 
     @Override
     public void periodicAfterCommands() {
         Logger.recordOutput("Superstructure/Goal", goal);
+        Logger.recordOutput("Superstructure/Forceable", forceable);
+        Logger.recordOutput("Superstructure/WasForced", wasForced);
 
         Color color = DriverStation.isDisabled()
                 ? DashboardColors.disabled.get()
@@ -140,7 +155,7 @@ public class Superstructure extends SubsystemBaseExt {
 
             case AUTO_SCORE_CORAL_WAIT_ALIGN, AUTO_SCORE_CORAL_WAIT_ELEVATOR,
                  AUTO_DESCORE_ALGAE_WAIT_ALIGN, AUTO_DESCORE_ALGAE_WAIT_AMPERAGE ->
-                    autoForceable ? DashboardColors.driverConfirm.get() : DashboardColors.autoScoring.get();
+                    forceable ? DashboardColors.driverConfirm.get() : DashboardColors.autoScoring.get();
 
             case DESCORE_ALGAE_WAIT_ELEVATOR, MANUAL_SCORE_CORAL_WAIT_ELEVATOR -> DashboardColors.waitElevator.get();
 
@@ -502,7 +517,8 @@ public class Superstructure extends SubsystemBaseExt {
     }
 
     @Getter
-    private boolean autoForceable = false;
+    private boolean forceable = false;
+    private boolean wasForced = false;
 
     public Command autoScoreCoral(
             boolean duringAuto,
@@ -542,17 +558,22 @@ public class Superstructure extends SubsystemBaseExt {
         );
         // Don't allow forcing for a bit, then check if force is true
         Command waitForForce = CommandsExt.eagerSequence(
+                Commands.runOnce(() -> {
+                    forceable = false;
+                    wasForced = false;
+                }),
                 Commands.waitSeconds(2),
                 Commands.parallel(
                         Commands.waitUntil(forceCondition),
-                        Commands.runOnce(() -> autoForceable = true)
-                ).finallyDo(() -> autoForceable = false).deadlineFor(
+                        Commands.runOnce(() -> forceable = true)
+                ).deadlineFor(
                         // We only want to offset the elevator position if we aren't aligned and are taking a while to align
                         elevator.setDistanceFromScoringPositionContinuous(
                                 () -> robotState.getPose().getTranslation()
                                         .getDistance(ReefAlign.getFinalAlignPose(reefSideSupplier.get(), sideSupplier.get()).getTranslation())
                         )
-                )
+                ),
+                Commands.runOnce(() -> wasForced = true)
         );
 
         Command score = Commands.parallel(
@@ -567,9 +588,13 @@ public class Superstructure extends SubsystemBaseExt {
         // Wait for coral to settle and send the elevator back down
         Command finalize = CommandsExt.eagerSequence(
                 Commands.either(
-                        Commands.waitSeconds(scoreCoralL1SettleSeconds),
-                        Commands.waitSeconds(scoreCoralSettleSeconds),
-                        () -> coralScoringLevelSupplier.get() == CoralScoringLevel.L1
+                        Commands.waitSeconds(scoreCoralForceSettleSeconds),
+                        Commands.either(
+                                Commands.waitSeconds(scoreCoralL1SettleSeconds),
+                                Commands.waitSeconds(scoreCoralSettleSeconds),
+                                () -> coralScoringLevelSupplier.get() == CoralScoringLevel.L1
+                        ),
+                        () -> wasForced
                 ),
                 elevator.setGoal(() -> Elevator.Goal.STOW)
         );
@@ -607,9 +632,10 @@ public class Superstructure extends SubsystemBaseExt {
                             CommandsExt.eagerSequence(
                                     initial,
                                     Commands.race(
-                                            drive.moveTo(alignPoseSupplier, () -> autoForceable),
                                             waitFinalAndElevator,
-                                            waitForForce
+                                            waitForForce,
+                                            // move to must execute after waitForForce so that we forceable gets reset to false before move to
+                                            drive.moveTo(alignPoseSupplier, () -> forceable)
                                     ),
                                     backgroundCommandScheduler.scheduleInBackground(Commands.race(
                                             drive.moveTo(alignPoseSupplier, () -> false),
@@ -666,11 +692,16 @@ public class Superstructure extends SubsystemBaseExt {
                 );
 
         Command waitForForce = CommandsExt.eagerSequence(
+                Commands.runOnce(() -> {
+                    forceable = false;
+                    wasForced = false;
+                }),
                 Commands.waitSeconds(2),
                 Commands.parallel(
                         Commands.waitUntil(forceCondition),
-                        Commands.runOnce(() -> autoForceable = true)
-                ).finallyDo(() -> autoForceable = false)
+                        Commands.runOnce(() -> forceable = true)
+                ),
+                Commands.runOnce(() -> wasForced = true)
         );
 
         return wrapExposedCommand(
