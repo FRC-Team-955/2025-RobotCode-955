@@ -169,7 +169,7 @@ public class ReefAlign {
     }
 
     // Distance at which to raise the elevator when descoring
-    public static final double descoreElevatorRaiseDistanceMeters = 1.5;
+    public static final double descoreElevatorRaiseDistanceMeters = 1.0;
     private static final double descoreLinearToleranceMeters = 0.1;
     private static final double descoreAngularToleranceRad = Units.degreesToRadians(10);
 
