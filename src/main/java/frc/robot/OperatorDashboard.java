@@ -240,7 +240,7 @@ public class OperatorDashboard extends VirtualSubsystem {
                 // we want to restart the timer again
                 lastManualReefSide = manualReefSide;
             }
-            if (sinceManualReefSideChanged.isRunning() && sinceManualReefSideChanged.hasElapsed(0.5)) {
+            if (sinceManualReefSideChanged.isRunning() && sinceManualReefSideChanged.hasElapsed(0.2)) {
                 // If it's been long enough, stop the timer and allow
                 // either overrides or manual reef zone side to be used
                 sinceManualReefSideChanged.stop();
