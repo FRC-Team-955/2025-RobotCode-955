@@ -61,7 +61,7 @@ public class AprilTagVisionConstants {
         ),
         ReefCam(
                 new Transform3d(
-                        Units.inchesToMeters(-7.75), Units.inchesToMeters(8.875), Units.inchesToMeters(26.5),
+                        Units.inchesToMeters(-8), Units.inchesToMeters(8.875), Units.inchesToMeters(26.5),
                         // Rotation order matters
                         new Rotation3d(0.0, Units.degreesToRadians(35), 0.0)
                                 .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-170)))
