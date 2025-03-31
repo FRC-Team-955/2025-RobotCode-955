@@ -305,9 +305,12 @@ public class Superstructure extends SubsystemBaseExt {
                 setGoal(Goal.HOME),
                 CommandsExt.eagerSequence(
                         CommandsExt.eagerSequence(
-                                endEffector.moveByAndWaitUntilDone(homeInitialMeters::get),
+                                CommandsExt.onlyIf(
+                                        () -> !endEffectorTriggeredLong(),
+                                        endEffector.moveByAndWaitUntilDone(homeInitialMeters::get)
+                                ),
                                 endEffector.setGoal(EndEffector.RollersGoal.ZERO_CORAL),
-                                Commands.waitSeconds(0.1)
+                                Commands.waitSeconds(0.12)
                         ).deadlineFor(elevator.zeroCoral()),
                         CommandsExt.eagerSequence(
                                 endEffector.setGoal(EndEffector.RollersGoal.IDLE),
