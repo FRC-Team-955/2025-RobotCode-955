@@ -18,7 +18,6 @@ import java.util.Comparator;
 
 public class ReefAlign {
     private static final double distanceCenterOfReefToBranchMeters = Units.inchesToMeters(6.5);
-    private static final double distanceCenterOfReefToElevatorClearanceMeters = distanceCenterOfReefToBranchMeters + Units.inchesToMeters(5);
 
     private static final Transform2d initialAlignStartOffset = new Transform2d(1, 0, new Rotation2d());
     private static final Transform2d initialAlignEndOffset = new Transform2d(0.3, 0, new Rotation2d());
@@ -70,18 +69,16 @@ public class ReefAlign {
     }
 
     public static Pose2d getFinalAlignPose(ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
-        return reefZoneSide.getAdjustedAprilTagPose().plus(localReefSide.finalAdjust);
+        return reefZoneSide.getAdjustedAprilTagPose().plus(localReefSide.adjust);
     }
 
     public static Pose2d getAlignPose(Pose2d currentPose, double elevatorPercentage, ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
-        Pose2d base = reefZoneSide.getAdjustedAprilTagPose();
         Pose2d finalAlign = getFinalAlignPose(reefZoneSide, localReefSide);
 
 
         // If elevator isn't close enough, start by calculating the initial align
-        Pose2d initialBase = base.plus(localReefSide.initialAdjust);
-        Pose2d initialStart = initialBase.plus(initialAlignStartOffset);
-        Pose2d initialEnd = initialBase.plus(initialAlignEndOffset);
+        Pose2d initialStart = finalAlign.plus(initialAlignStartOffset);
+        Pose2d initialEnd = finalAlign.plus(initialAlignEndOffset);
         // Interpolate to initialBase based on y distance (left/right distance)
         double initialDistY = Math.abs(new Transform2d(initialEnd, currentPose).getY());
         // No clamping needed, Pose2d.interpolate will handle it
@@ -221,18 +218,11 @@ public class ReefAlign {
 
     @RequiredArgsConstructor
     public enum LocalReefSide {
-        Left(
-                new Transform2d(0, -distanceCenterOfReefToElevatorClearanceMeters, new Rotation2d()),
-                new Transform2d(0, -distanceCenterOfReefToBranchMeters, new Rotation2d())
-        ),
-        Right(
-                new Transform2d(0, distanceCenterOfReefToElevatorClearanceMeters, new Rotation2d()),
-                new Transform2d(0, distanceCenterOfReefToBranchMeters, new Rotation2d())
-        ),
-        Middle(new Transform2d(), new Transform2d()),
+        Left(new Transform2d(0, -distanceCenterOfReefToBranchMeters, new Rotation2d())),
+        Right(new Transform2d(0, distanceCenterOfReefToBranchMeters, new Rotation2d())),
+        Middle(new Transform2d()),
         ;
 
-        public final Transform2d initialAdjust;
-        public final Transform2d finalAdjust;
+        public final Transform2d adjust;
     }
 }
