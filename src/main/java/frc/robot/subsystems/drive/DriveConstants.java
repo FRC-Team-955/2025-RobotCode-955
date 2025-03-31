@@ -12,12 +12,12 @@ public class DriveConstants {
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
     public static final MoveToConfig moveToConfig = new MoveToConfig(
-            PIDF.ofPD(4, 0.05),
+            PIDF.ofPD(4.5, 0.05),
             PIDF.ofPD(4.5, 0.05),
             0.02,
-            0.05,
+            0.1,
             Units.degreesToRadians(2),
-            Units.degreesToRadians(5)
+            Units.degreesToRadians(10)
     );
 
     public static final boolean useSetpointGenerator = true;
