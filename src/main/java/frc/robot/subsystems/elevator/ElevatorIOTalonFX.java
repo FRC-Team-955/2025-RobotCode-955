@@ -60,13 +60,13 @@ public class ElevatorIOTalonFX extends ElevatorIO {
     private double lastVelocitySetpointRadPerSec = 0;
 
     public ElevatorIOTalonFX(
-            int leadCanID,
-            int followCanID,
+            int leaderCanID,
+            int followerCanID,
             boolean leaderInverted,
             boolean followerInvertedRelativeToLeader
     ) {
-        leaderTalon = new TalonFX(leadCanID, Constants.CANivore.busName);
-        followerTalon = new TalonFX(followCanID, Constants.CANivore.busName);
+        leaderTalon = new TalonFX(leaderCanID, Constants.CANivore.busName);
+        followerTalon = new TalonFX(followerCanID, Constants.CANivore.busName);
 
         // Configure leader motor
         leaderConfig = new TalonFXConfiguration();
