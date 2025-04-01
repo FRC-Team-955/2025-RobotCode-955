@@ -56,6 +56,7 @@ public class Elevator extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Elevator/HasZeroed")
     private boolean hasZeroed = false;
+
     private boolean autoStop = false;
     private final Timer autoStopTimer = new Timer();
     private boolean prevEmergencyStopped = false;
@@ -84,8 +85,6 @@ public class Elevator extends SubsystemBaseExt {
     private final Alert followerDisconnectedAlert = new Alert("Elevator follower motor is disconnected.", Alert.AlertType.kError);
     private final Alert offsetSetAlert = new Alert("Elevator offset is not zero, bad things may happen.", Alert.AlertType.kWarning);
     private final Alert temperatureAlert = new Alert("Elevator motor temperature is high.", Alert.AlertType.kWarning);
-    private final Alert trustingLeaderAlert = new Alert("Currently trusting elevator leader motor.", Alert.AlertType.kInfo);
-    private final Alert trustingFollowerAlert = new Alert("Currently trusting elevator follower motor.", Alert.AlertType.kInfo);
 
     private static Elevator instance;
 
@@ -111,9 +110,6 @@ public class Elevator extends SubsystemBaseExt {
         followerDisconnectedAlert.set(!inputs.followerConnected);
 
         temperatureAlert.set(Math.max(inputs.leaderTemperatureCelsius, inputs.followerTemperatureCelsius) > 60);
-
-        trustingLeaderAlert.set(!trustFollowerMotor());
-        trustingFollowerAlert.set(trustFollowerMotor());
 
         // Check emergency stop and limits for auto stop
         var positionMeters = getPositionMeters();
@@ -288,31 +284,14 @@ public class Elevator extends SubsystemBaseExt {
         return runOnceAndWaitUntil(() -> this.goal = goal.get(), this::atGoal);
     }
 
-    @AutoLogOutput(key = "Elevator/TrustFollowerMotor")
-    private boolean trustFollowerMotor() {
-        return inputs.followerConnected && (operatorDashboard.trustElevatorFollower.get() || !inputs.leaderConnected);
-    }
-
     @AutoLogOutput(key = "Elevator/Measurement/PositionMeters")
     public double getPositionMeters() {
-        return radToMeters(
-                trustFollowerMotor()
-                        ? inputs.followerPositionRad
-                        : inputs.leaderPositionRad
-        );
-//        var avgPositionRad = (inputs.leaderPositionRad + inputs.followerPositionRad) / 2.0;
-//        return radToMeters(avgPositionRad);
+        return radToMeters(inputs.leaderPositionRad);
     }
 
     @AutoLogOutput(key = "Elevator/Measurement/VelocityMetersPerSec")
     public double getVelocityMetersPerSec() {
-        return radToMeters(
-                trustFollowerMotor()
-                        ? inputs.followerVelocityRadPerSec
-                        : inputs.leaderVelocityRadPerSec
-        );
-//        var avgVelocityRadPerSec = (inputs.leaderVelocityRadPerSec + inputs.followerVelocityRadPerSec) / 2.0;
-//        return radToMeters(avgVelocityRadPerSec);
+        return radToMeters(inputs.leaderVelocityRadPerSec);
     }
 
     public Command setDistanceFromScoringPositionContinuous(DoubleSupplier distanceFromScoringPositionMeters) {
