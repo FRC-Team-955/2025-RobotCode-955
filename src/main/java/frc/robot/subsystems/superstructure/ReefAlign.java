@@ -19,16 +19,18 @@ import java.util.Comparator;
 public class ReefAlign {
     private static final double distanceCenterOfReefToBranchMeters = Units.inchesToMeters(6.5);
 
-    private static final Transform2d initialAlignStartOffset = new Transform2d(1, 0, new Rotation2d());
-    private static final Transform2d initialAlignEndOffset = new Transform2d(0.3, 0, new Rotation2d());
-    private static final double initialAlignDistForStartMeters = 1.0;
+    private static final Transform2d initialAlignStartOffset = new Transform2d(1.5, 0, new Rotation2d());
+    private static final Transform2d initialAlignEndOffset = new Transform2d(0.5, 0, new Rotation2d());
+    private static final double initialAlignDistYForStartMeters = 1.5;
+    private static final double initialAlignDistYOffset = 0.5;
+    private static final double initialAlignDistXForFullAngle = 0.5;
 
     private static final double finalAlignAngularDiffForInitialRad = Units.degreesToRadians(30);
 
     // Distance at which to start raising the elevator
-    public static final double elevatorRaiseDistanceMeters = 1.0;
+    public static final double elevatorRaiseDistanceMeters = 1.5;
     // Distance at which elevator cannot be raised
-    public static final double elevatorStowDistanceMeters = initialAlignEndOffset.getX() / 2.0;
+    public static final double elevatorStowDistanceXMeters = initialAlignEndOffset.getX() / 2.0;
     public static final double elevatorRaiseAngularToleranceRad = Units.degreesToRadians(45);
 
     public static final double alignLinearToleranceMeters = 0.04;
@@ -41,7 +43,8 @@ public class ReefAlign {
         Transform2d relative = new Transform2d(finalAlign, currentPose);
 
         double distance = Math.abs(relative.getTranslation().getNorm());
-        boolean distanceMet = distance < elevatorRaiseDistanceMeters && distance > elevatorStowDistanceMeters;
+        boolean distanceMet = distance < elevatorRaiseDistanceMeters
+                && relative.getX() > elevatorStowDistanceXMeters;
 
         boolean rotationMet = Math.abs(MathUtil.angleModulus(relative.getRotation().getRadians())) < elevatorRaiseAngularToleranceRad;
 
@@ -75,16 +78,30 @@ public class ReefAlign {
     public static Pose2d getAlignPose(Pose2d currentPose, double elevatorPercentage, ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
         Pose2d finalAlign = getFinalAlignPose(reefZoneSide, localReefSide);
 
-
-        // If elevator isn't close enough, start by calculating the initial align
+        // Start by calculating the initial align
         Pose2d initialStart = finalAlign.plus(initialAlignStartOffset);
-        Pose2d initialEnd = finalAlign.plus(initialAlignEndOffset);
+        // We want to transform the end offset towards the robot to prevent
+        // it from going straight forward into the reef if it doesn't need to
+        // The angle from current to final gets unstable when we get really close to the point; at this point
+        // we are close enough that we should just use the normal final align rotation
+        // We also want to use the normal final align rotation if we haven't raised the elevator because
+        // it will get stuck otherwise
+        Rotation2d angleForTransformation = finalAlign.getRotation().interpolate(
+                currentPose.getTranslation().minus(finalAlign.getTranslation()).getAngle(),
+                Math.abs(new Transform2d(finalAlign, currentPose).getX()) / initialAlignDistXForFullAngle
+        );
+        Pose2d initialEnd = new Pose2d(
+                new Pose2d(finalAlign.getTranslation(), angleForTransformation)
+                        .transformBy(initialAlignEndOffset)
+                        .getTranslation(),
+                finalAlign.getRotation()
+        );
+
         // Interpolate to initialBase based on y distance (left/right distance)
-        double initialDistY = Math.abs(new Transform2d(initialEnd, currentPose).getY());
+        double initialDistY = Math.abs(new Transform2d(initialEnd, currentPose).getY()) - initialAlignDistYOffset;
         // No clamping needed, Pose2d.interpolate will handle it
-        // Note: initialInterp is inverted (0 = end, 1 = start)
-        double initialInterp = initialDistY / initialAlignDistForStartMeters;
-        Pose2d initial = initialEnd.interpolate(initialStart, initialInterp);
+        double initialInterp = 1.0 - (initialDistY / initialAlignDistYForStartMeters);
+        Pose2d initial = initialStart.interpolate(initialEnd, initialInterp);
 
         // Now interpolate from initial to final end based on elevator percentage
         // Fully at final when 100% raised, fully at initial when 0% raised
