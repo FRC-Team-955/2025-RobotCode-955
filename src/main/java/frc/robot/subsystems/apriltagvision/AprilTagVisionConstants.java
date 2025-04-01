@@ -61,10 +61,10 @@ public class AprilTagVisionConstants {
         ),
         ReefCam(
                 new Transform3d(
-                        Units.inchesToMeters(-8), Units.inchesToMeters(8.875), Units.inchesToMeters(26.5),
+                        Units.inchesToMeters(-7.5), Units.inchesToMeters(9.875), Units.inchesToMeters(24.75),
                         // Rotation order matters
                         new Rotation3d(0.0, Units.degreesToRadians(35), 0.0)
-                                .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-170)))
+                                .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-155)))
                 ),
                 (cam) -> switch (Constants.identity) {
                     case COMPBOT -> new AprilTagVisionIOPhotonVision("ReefCam");
