@@ -248,7 +248,7 @@ public class Superstructure extends SubsystemBaseExt {
                 backgroundCommandScheduler.cancelIfRunning(),
                 setGoal(Goal.IDLE),
                 elevator.setGoal(() -> Elevator.Goal.STOW),
-                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                endEffector.setGoal(EndEffector.Goal.IDLE),
                 funnel.setGoal(Funnel.Goal.IDLE)
         );
     }
@@ -294,7 +294,7 @@ public class Superstructure extends SubsystemBaseExt {
         return waitUntilEndEffectorTriggered(Commands.none())
                 .deadlineFor(Commands.parallel(
                         setGoal(Goal.HANDOFF),
-                        endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
+                        endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE),
                         funnelSetGoalIntakeAlternate()
                 ));
     }
@@ -309,11 +309,11 @@ public class Superstructure extends SubsystemBaseExt {
                                         () -> !endEffectorTriggeredLong(),
                                         endEffector.moveByAndWaitUntilDone(homeInitialMeters::get)
                                 ),
-                                endEffector.setGoal(EndEffector.RollersGoal.ZERO_CORAL),
+                                endEffector.setGoal(EndEffector.Goal.ZERO_CORAL),
                                 Commands.waitSeconds(0.12)
                         ).deadlineFor(elevator.zeroCoral()),
                         CommandsExt.eagerSequence(
-                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                endEffector.setGoal(EndEffector.Goal.IDLE),
                                 Commands.waitSeconds(0.05),
                                 endEffector.moveByAndWaitUntilDone(homeFinalMeters::get)
                         ).deadlineFor(elevator.setGoal(() -> Elevator.Goal.STOW))
@@ -333,22 +333,28 @@ public class Superstructure extends SubsystemBaseExt {
     }
 
     public Command eject() {
-        Timer funnelTimer = new Timer();
+        Timer alternateTimer = new Timer();
         return wrapExposedCommand(Commands.parallel(
                 setGoal(Goal.EJECT),
-                endEffector.setGoal(EndEffector.RollersGoal.EJECT),
-                funnel.startRun(
-                        funnelTimer::restart,
-                        () -> {
-                            boolean backwards = funnelTimer.hasElapsed(0.86);
-                            if (backwards) {
-                                funnel.setGoalInstantaneous(Funnel.Goal.EJECT_BACKWARDS);
-                                funnelTimer.advanceIfElapsed(1.0);
-                            } else {
-                                funnel.setGoalInstantaneous(Funnel.Goal.EJECT_FORWARDS);
-                            }
-                        }
-                )
+                Commands.runOnce(alternateTimer::restart),
+                endEffector.run(() -> {
+                    boolean backwards = alternateTimer.hasElapsed(0.86);
+                    if (backwards) {
+                        endEffector.setGoalInstantaneous(EndEffector.Goal.EJECT_BACKWARDS);
+                        alternateTimer.advanceIfElapsed(1.0);
+                    } else {
+                        endEffector.setGoalInstantaneous(EndEffector.Goal.EJECT_FORWARDS);
+                    }
+                }),
+                funnel.run(() -> {
+                    boolean backwards = alternateTimer.hasElapsed(0.86);
+                    if (backwards) {
+                        funnel.setGoalInstantaneous(Funnel.Goal.EJECT_BACKWARDS);
+                        alternateTimer.advanceIfElapsed(1.0);
+                    } else {
+                        funnel.setGoalInstantaneous(Funnel.Goal.EJECT_FORWARDS);
+                    }
+                })
         ));
     }
 
@@ -359,7 +365,7 @@ public class Superstructure extends SubsystemBaseExt {
     ) {
         Command raiseElevator = Commands.parallel(
                 setGoal(Goal.MANUAL_SCORE_CORAL_WAIT_ELEVATOR),
-                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                endEffector.setGoal(EndEffector.Goal.IDLE),
                 elevator.setGoalAndWaitUntilAtGoal(() -> coralScoringLevelSupplier.get().coralScoringElevatorGoal)
         );
 
@@ -376,8 +382,8 @@ public class Superstructure extends SubsystemBaseExt {
         Command score = Commands.parallel(
                 setGoal(Goal.MANUAL_SCORE_CORAL_SCORING),
                 Commands.either(
-                        endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL_L1),
-                        endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
+                        endEffector.setGoal(EndEffector.Goal.SCORE_CORAL_L1),
+                        endEffector.setGoal(EndEffector.Goal.SCORE_CORAL),
                         () -> coralScoringLevelSupplier.get() == CoralScoringLevel.L1
                 ),
                 elevator.setGoal(() -> coralScoringLevelSupplier.get().coralScoringElevatorGoal),
@@ -421,12 +427,12 @@ public class Superstructure extends SubsystemBaseExt {
                 CommandsExt.eagerSequence(
                         Commands.parallel(
                                 setGoal(Goal.DESCORE_ALGAE_WAIT_ELEVATOR),
-                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                endEffector.setGoal(EndEffector.Goal.IDLE),
                                 elevator.setGoalAndWaitUntilAtGoal(() -> reefZoneSideSupplier.get().algaeDescoringElevatorGoal)
                         ),
                         Commands.parallel(
                                 setGoal(Goal.DESCORE_ALGAE_DESCORING),
-                                endEffector.setGoal(EndEffector.RollersGoal.DESCORE_ALGAE),
+                                endEffector.setGoal(EndEffector.Goal.DESCORE_ALGAE),
                                 elevator.setGoal(() -> reefZoneSideSupplier.get().algaeDescoringElevatorGoal),
                                 Commands.idle()
                         )
@@ -440,7 +446,7 @@ public class Superstructure extends SubsystemBaseExt {
                 waitUntilFunnelTriggered()
         ).deadlineFor(
                 setGoal(Goal.FUNNEL_INTAKE_WAITING),
-                endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
+                endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE),
                 funnelSetGoalIntakeAlternate()
         );
         if (duringAuto) {
@@ -474,7 +480,7 @@ public class Superstructure extends SubsystemBaseExt {
                 waitUntilFunnelTriggered(),
                 gamePieceVision.waitForGamePiece()
         ).deadlineFor(
-                endEffector.setGoal(EndEffector.RollersGoal.FUNNEL_INTAKE),
+                endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE),
                 funnelSetGoalIntakeAlternate(),
                 CommandsExt.eagerSequence(
                         Commands.parallel(
@@ -540,7 +546,7 @@ public class Superstructure extends SubsystemBaseExt {
                 drive.moveTo(alignPoseSupplier, () -> false),
                 Commands.parallel(
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_RAISE),
-                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                        endEffector.setGoal(EndEffector.Goal.IDLE),
                         elevator.setGoal(() -> Elevator.Goal.STOW),
                         Commands.waitUntil(() -> ReefAlign.canRaiseElevator(robotState.getPose(), reefSideSupplier.get(), sideSupplier.get()))
                 )
@@ -549,7 +555,7 @@ public class Superstructure extends SubsystemBaseExt {
         Command waitFinalAndElevator = CommandsExt.eagerSequence(
                 Commands.parallel(
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_ALIGN),
-                        endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                        endEffector.setGoal(EndEffector.Goal.IDLE),
                         elevator.setGoal(() -> coralScoringLevelSupplier.get().coralScoringElevatorGoal),
                         Commands.waitUntil(() -> ReefAlign.atFinalAlign(robotState.getPose(), drive.getMeasuredChassisSpeeds(), reefSideSupplier.get(), sideSupplier.get()))
                 ),
@@ -582,8 +588,8 @@ public class Superstructure extends SubsystemBaseExt {
         Command score = Commands.parallel(
                 setGoal(Goal.AUTO_SCORE_CORAL_SCORING),
                 Commands.either(
-                        endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL_L1),
-                        endEffector.setGoal(EndEffector.RollersGoal.SCORE_CORAL),
+                        endEffector.setGoal(EndEffector.Goal.SCORE_CORAL_L1),
+                        endEffector.setGoal(EndEffector.Goal.SCORE_CORAL),
                         () -> coralScoringLevelSupplier.get() == CoralScoringLevel.L1
                 ),
                 waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
@@ -662,13 +668,13 @@ public class Superstructure extends SubsystemBaseExt {
                 CommandsExt.eagerSequence(
                         Commands.parallel(
                                 setGoal(Goal.AUTO_DESCORE_ALGAE_WAIT_RAISE),
-                                endEffector.setGoal(EndEffector.RollersGoal.IDLE),
+                                endEffector.setGoal(EndEffector.Goal.IDLE),
                                 elevator.setGoal(() -> Elevator.Goal.STOW),
                                 Commands.waitUntil(() -> ReefAlign.descoreCanRaiseElevator(robotState.getPose(), reefSideSupplier.get()))
                         ),
                         Commands.parallel(
                                 setGoal(Goal.AUTO_DESCORE_ALGAE_WAIT_ALIGN),
-                                endEffector.setGoal(EndEffector.RollersGoal.DESCORE_ALGAE),
+                                endEffector.setGoal(EndEffector.Goal.DESCORE_ALGAE),
                                 elevator.setGoal(() -> reefSideSupplier.get().algaeDescoringElevatorGoal),
                                 Commands.waitUntil(() -> ReefAlign.descoreIsAligned(robotState.getPose(), reefSideSupplier.get()))
                         )

@@ -63,7 +63,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
                         Arrays.stream(stationLocations)
                                 .anyMatch(t -> t.getDistance(current) < 1.5)
                                 && (funnel.getGoal() == Funnel.Goal.INTAKE_FORWARDS || funnel.getGoal() == Funnel.Goal.INTAKE_BACKWARDS)
-                                && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE
+                                && endEffector.getGoal() == EndEffector.Goal.FUNNEL_INTAKE
                 ) {
                     if (!sinceAtStation.isRunning()) sinceAtStation.restart();
 
@@ -81,7 +81,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
             case INTAKING -> {
                 if (
                         (funnel.getGoal() == Funnel.Goal.INTAKE_FORWARDS || funnel.getGoal() == Funnel.Goal.INTAKE_BACKWARDS)
-                                && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE
+                                && endEffector.getGoal() == EndEffector.Goal.FUNNEL_INTAKE
                 ) {
                     if (!sinceCoralIntaked.isRunning()) sinceCoralIntaked.restart();
                     if (sinceCoralIntaked.hasElapsed(indexTime)) {
@@ -97,9 +97,9 @@ public class SuperstructureIOSim extends SuperstructureIO {
             case IN_END_EFFECTOR -> {
                 gamePieceVisible = false;
 
-                if (endEffector.getRollersGoal() == EndEffector.RollersGoal.SCORE_CORAL
-                        || endEffector.getRollersGoal() == EndEffector.RollersGoal.SCORE_CORAL_L1
-                        || endEffector.getRollersGoal() == EndEffector.RollersGoal.EJECT) {
+                if (endEffector.getGoal() == EndEffector.Goal.SCORE_CORAL
+                        || endEffector.getGoal() == EndEffector.Goal.SCORE_CORAL_L1
+                        || endEffector.getGoal() == EndEffector.Goal.EJECT_FORWARDS) {
                     coralState = CoralState.NO_CORAL;
 
                     var endEffectorAngleRad = endEffector.getAngleRad();
