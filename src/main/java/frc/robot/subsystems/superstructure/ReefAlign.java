@@ -26,6 +26,7 @@ public class ReefAlign {
     private static final double initialAlignDistXForFullAngle = 0.5;
 
     private static final double finalAlignAngularDiffForInitialRad = Units.degreesToRadians(30);
+    private static final double finalAlignElevatorPercentageMultiplier = 2.0;
 
     // Distance at which to start raising the elevator
     public static final double elevatorRaiseDistanceMeters = 1.5;
@@ -105,6 +106,7 @@ public class ReefAlign {
 
         // Now interpolate from initial to final end based on elevator percentage
         // Fully at final when 100% raised, fully at initial when 0% raised
+        elevatorPercentage *= finalAlignElevatorPercentageMultiplier;
         if (elevatorPercentage >= 0.9) {
             elevatorPercentage = 1.0;
         } else {
