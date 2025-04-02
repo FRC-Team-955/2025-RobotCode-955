@@ -8,7 +8,7 @@ public class ElevatorConstants {
     /** Gains in radians */
     public static final PIDF gains = switch (Constants.identity) {
         case COMPBOT -> PIDF.ofPDSVAG(0.1, 0, 0.15, 0.093, 0.005, 0.41);
-        case SIMBOT -> PIDF.ofPDVAG(0, 0, 0.102, 0.005, 1.5015);
+        case SIMBOT -> PIDF.ofPDVAG(0, 0, 0.11, 0.005, 1.5015);
         case ALPHABOT -> PIDF.ofP(0);
     };
 
