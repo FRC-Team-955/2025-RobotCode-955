@@ -26,13 +26,13 @@ public class ReefAlign {
     private static final double initialAlignDistXForFullAngle = 0.5;
 
     private static final double finalAlignAngularDiffForInitialRad = Units.degreesToRadians(30);
-    private static final double finalAlignElevatorPercentageMultiplier = 2.0;
+    private static final double finalAlignElevatorPercentageMultiplier = 1.5;
 
     // Distance at which to start raising the elevator
-    public static final double elevatorRaiseDistanceMeters = 1.5;
+    public static final double elevatorRaiseDistanceMeters = 2.0;
     // Distance at which elevator cannot be raised
     public static final double elevatorStowDistanceXMeters = initialAlignEndOffset.getX() / 2.0;
-    public static final double elevatorRaiseAngularToleranceRad = Units.degreesToRadians(45);
+    public static final double elevatorRaiseAngularToleranceRad = Units.degreesToRadians(60);
 
     public static final double alignLinearToleranceMeters = 0.04;
     public static final double alignAngularToleranceRad = Units.degreesToRadians(4);
@@ -43,8 +43,7 @@ public class ReefAlign {
         Pose2d finalAlign = getFinalAlignPose(reefZoneSide, localReefSide);
         Transform2d relative = new Transform2d(finalAlign, currentPose);
 
-        double distance = Math.abs(relative.getTranslation().getNorm());
-        boolean distanceMet = distance < elevatorRaiseDistanceMeters
+        boolean distanceMet = relative.getTranslation().getNorm() < elevatorRaiseDistanceMeters
                 && relative.getX() > elevatorStowDistanceXMeters;
 
         boolean rotationMet = Math.abs(MathUtil.angleModulus(relative.getRotation().getRadians())) < elevatorRaiseAngularToleranceRad;
