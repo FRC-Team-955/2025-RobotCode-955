@@ -35,11 +35,10 @@ public class SuperstructureIOSim extends SuperstructureIO {
 
     private final Timer sinceAtStation = new Timer();
     private static final double stationGamePieceVisibleTime = 0.25;
-    private static final double stationIntakeTime = 1;
+    private static final double stationIntakeTime = 0.3;
 
     private final Timer sinceCoralIntaked = new Timer();
-    private static final double indexTime = 1;
-
+    private static final double indexTime = 0.5;
     private CoralState coralState = CoralState.IN_END_EFFECTOR; // preload
 
     private enum CoralState {
