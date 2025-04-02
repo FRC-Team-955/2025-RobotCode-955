@@ -20,7 +20,7 @@ public class ElevatorConstants {
     public static final double drumRadiusMeters = sprocketRadiusMeters * 3; // 3 stages
 
     public static final double setpointPositionToleranceMeters = Units.inchesToMeters(2);
-    public static final double setpointVelocityToleranceMetersPerSec = Units.inchesToMeters(0.02);
+    public static final double setpointVelocityToleranceMetersPerSec = Units.inchesToMeters(2);
 
     public static final double maxHeightMeters = 1.72;
     public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 3);
