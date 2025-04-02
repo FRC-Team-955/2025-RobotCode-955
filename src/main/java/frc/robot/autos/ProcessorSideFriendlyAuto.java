@@ -17,11 +17,14 @@ public class ProcessorSideFriendlyAuto {
         final var secondScoreTraj = routine.trajectory("Processor Side Friendly", 2);
         final var thirdStationTraj = routine.trajectory("Processor Side Friendly", 3);
         final var thirdScoreTraj = routine.trajectory("Processor Side Friendly", 4);
+        final var fourthStationTraj = routine.trajectory("Processor Side Friendly", 5);
+        final var fourthScoreTraj = routine.trajectory("Processor Side Friendly", 6);
 
         return AutoBuilder.createScoring(routine, List.of(
                 new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, CoralScoringLevel.L4),
                 new IntakeScorePair(secondStationTraj, Station.ProcessorSideFriendly, secondScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Left, CoralScoringLevel.L4),
-                new IntakeScorePair(thirdStationTraj, Station.ProcessorSideFriendly, thirdScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, CoralScoringLevel.L3)
+                new IntakeScorePair(thirdStationTraj, Station.ProcessorSideFriendly, thirdScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, CoralScoringLevel.L2),
+                new IntakeScorePair(fourthStationTraj, Station.ProcessorSideFriendly, fourthScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Left, CoralScoringLevel.L2)
         ));
     }
 }
