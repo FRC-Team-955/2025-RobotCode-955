@@ -75,6 +75,12 @@ public class DriveConstants {
         );
     };
 
+    public static final ModuleLimits moveToModuleLimits = new ModuleLimits(
+            driveConfig.moduleLimits().maxDriveVelocityMetersPerSec(),
+            driveConfig.moduleLimits().maxDriveAccelerationMetersPerSecSquared() * 0.75,
+            driveConfig.moduleLimits().maxTurnVelocityRadPerSec()
+    );
+
     /**
      * FL, FR, BL, BR
      */

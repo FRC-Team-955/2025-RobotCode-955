@@ -450,7 +450,11 @@ public class Drive extends SubsystemBaseExt {
     }
 
     public ModuleLimits getModuleLimits() {
-        if (operatorDashboard.coralStuckInRobotMode.get() || goal == Goal.MOVE_TO || goal == Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED) {
+        if (goal == Goal.MOVE_TO || goal == Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED) {
+            return moveToModuleLimits;
+        }
+
+        if (operatorDashboard.coralStuckInRobotMode.get()) {
             return driveConfig.moduleLimits();
         }
 
@@ -503,7 +507,6 @@ public class Drive extends SubsystemBaseExt {
                 },
                 () -> {
                     Pose2d currentPose = robotState.getPose();
-                    ChassisSpeeds currentVelocities = getMeasuredChassisSpeedsFieldRelative();
 
                     Pose2d goalPose = poseSupplier.get();
                     Logger.recordOutput("Drive/MoveTo/Goal", goalPose);
