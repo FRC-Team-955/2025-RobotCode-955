@@ -108,4 +108,9 @@ public class ElevatorIOSim extends ElevatorIO {
     public void setEncoder(double positionRad) {
         sim.setState(radToMeters(positionRad), sim.getVelocityMetersPerSecond());
     }
+
+    @Override
+    public void setManualCurrentLimit(boolean manualCurrentLimit) {
+        System.out.println("manual current limit: " + manualCurrentLimit);
+    }
 }

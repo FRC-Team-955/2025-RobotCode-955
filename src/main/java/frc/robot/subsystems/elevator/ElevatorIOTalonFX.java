@@ -24,6 +24,8 @@ import static frc.robot.util.PhoenixUtil.tryUntilOk;
 import static frc.robot.util.PhoenixUtil.tryUntilOkAsync;
 
 public class ElevatorIOTalonFX extends ElevatorIO {
+    private static final double currentLimitAmps = 120;
+
     // Hardware objects
     private final TalonFX leaderTalon;
     private final TalonFX followerTalon;
@@ -73,9 +75,9 @@ public class ElevatorIOTalonFX extends ElevatorIO {
         leaderConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         leaderConfig.Slot0 = Slot0Configs.from(gains.toPhoenixWithoutFeedforward());
         leaderConfig.Feedback.SensorToMechanismRatio = gearRatio;
-        leaderConfig.TorqueCurrent.PeakForwardTorqueCurrent = 120;
-        leaderConfig.TorqueCurrent.PeakReverseTorqueCurrent = 120;
-        leaderConfig.CurrentLimits.StatorCurrentLimit = 120;
+        leaderConfig.TorqueCurrent.PeakForwardTorqueCurrent = currentLimitAmps;
+        leaderConfig.TorqueCurrent.PeakReverseTorqueCurrent = -currentLimitAmps;
+        leaderConfig.CurrentLimits.StatorCurrentLimit = currentLimitAmps;
         leaderConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         leaderConfig.MotorOutput.Inverted =
                 leaderInverted
@@ -202,5 +204,14 @@ public class ElevatorIOTalonFX extends ElevatorIO {
         double positionRot = Units.radiansToRotations(positionRad);
         tryUntilOkAsync(5, () -> leaderTalon.setPosition(positionRot, 0.25));
         tryUntilOkAsync(5, () -> followerTalon.setPosition(positionRot, 0.25));
+    }
+
+    @Override
+    public void setManualCurrentLimit(boolean manualCurrentLimit) {
+        double newCurrentLimit = manualCurrentLimit ? 60 : currentLimitAmps;
+        leaderConfig.TorqueCurrent.PeakForwardTorqueCurrent = newCurrentLimit;
+        leaderConfig.TorqueCurrent.PeakReverseTorqueCurrent = -newCurrentLimit;
+        leaderConfig.CurrentLimits.StatorCurrentLimit = newCurrentLimit;
+        tryUntilOkAsync(5, () -> leaderTalon.getConfigurator().apply(leaderConfig, 0.25));
     }
 }

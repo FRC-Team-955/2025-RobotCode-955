@@ -140,7 +140,6 @@ public class RobotContainer {
         driverController.x().whileTrue(superstructure.eject());
 
         driverController.a().onTrue(superstructure.home());
-        operatorDashboard.operatorKeypad.getOverride4().onTrue(superstructure.home());
 
         driverController.rightTrigger().whileTrue(superstructure.funnelIntake(false).asProxy().repeatedly());
 
@@ -196,6 +195,22 @@ public class RobotContainer {
                         operatorDashboard.manualScoring::get
                 )
         ));
+
+        operatorDashboard.operatorKeypad.getOverride4()
+                .and(() -> !operatorDashboard.manualElevator.get())
+                .onTrue(Commands.print("TODO: elevator zeroing sequence"));
+        operatorDashboard.operatorKeypad.getOverride6()
+                .and(() -> !operatorDashboard.manualElevator.get())
+                .onTrue(Commands.runOnce(() -> operatorDashboard.useRealElevatorState.set(true)));
+
+        operatorDashboard.operatorKeypad.getOverride4()
+                .or(operatorDashboard.manualElevatorUp::get)
+                .and(operatorDashboard.manualElevator::get)
+                .whileTrue(elevator.setManualVoltage(0.5));
+        operatorDashboard.operatorKeypad.getOverride6()
+                .or(operatorDashboard.manualElevatorDown::get)
+                .and(operatorDashboard.manualElevator::get)
+                .whileTrue(elevator.setManualVoltage(-0.5));
 
         // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
         // You must do this because if you don't, superstructure's default command will cancel your command

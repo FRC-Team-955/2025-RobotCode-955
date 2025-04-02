@@ -3,7 +3,6 @@ package frc.robot;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.JoystickDrive;
@@ -41,6 +40,9 @@ public class OperatorDashboard extends VirtualSubsystem {
     public final LoggedNetworkBooleanExt useRealElevatorState = new LoggedNetworkBooleanExt(prefix + "UseRealElevatorState", false);
     public final LoggedNetworkBooleanExt forceZeroElevator = new LoggedNetworkBooleanExt(prefix + "ForceZeroElevator", false);
     public final LoggedNetworkNumberExt elevatorOffsetMeters = new LoggedNetworkNumberExt(prefix + "ElevatorOffsetMeters", 0);
+    public final LoggedNetworkBooleanExt manualElevator = new LoggedNetworkBooleanExt(prefix + "ManualElevator", false);
+    public final LoggedNetworkBooleanExt manualElevatorUp = new LoggedNetworkBooleanExt(prefix + "ManualElevatorUp", false);
+    public final LoggedNetworkBooleanExt manualElevatorDown = new LoggedNetworkBooleanExt(prefix + "ManualElevatorDown", false);
 
     private final EnumMap<ReefZoneSide, LoggedNetworkBooleanExt> reefZoneSides = generateTogglesForEnum("ReefZoneSides", ReefZoneSide.values(), ReefZoneSide.class);
     private final EnumMap<LocalReefSide, LoggedNetworkBooleanExt> localReefSides = generateTogglesForEnum("LocalReefSides", Arrays.stream(LocalReefSide.values()).filter(side -> side != LocalReefSide.Middle).toArray(LocalReefSide[]::new), LocalReefSide.class);
@@ -83,8 +85,6 @@ public class OperatorDashboard extends VirtualSubsystem {
         if (Constants.tuningMode || DriveConstants.disableDriving || DriveConstants.disableGyro) {
             constantSetAlert.set(true);
         }
-
-        operatorKeypad.getOverride6().onTrue(Commands.runOnce(() -> useRealElevatorState.set(true)));
     }
 
     @Override
@@ -119,8 +119,7 @@ public class OperatorDashboard extends VirtualSubsystem {
                 manualScoring.set(operatorKeypad.getOverride2());
                 ignoreEndEffectorBeamBreak.set(operatorKeypad.getOverride3());
                 profiledMoveTo.set(operatorKeypad.getOverride5());
-                // override 4 is handled in RobotContainer
-                // override 6 is handled in OperatorDashboard constructor
+                // overrides 4 and 6 are handled in RobotContainer
             }
 
             CoralScoringLevel newCoralScoringLevel = operatorKeypad.getCoralScoringLevel();
@@ -292,7 +291,7 @@ public class OperatorDashboard extends VirtualSubsystem {
             return hid.getRawButton(5);
         }
 
-        private Trigger getOverride6() {
+        public Trigger getOverride6() {
             // Override 6 is a simple button; will be disabled upon release
             return new Trigger(() -> canUseOverrides && hid.getRawButton(6));
         }

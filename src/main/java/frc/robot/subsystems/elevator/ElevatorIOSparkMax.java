@@ -16,6 +16,8 @@ import static frc.robot.subsystems.elevator.ElevatorConstants.gearRatio;
 import static frc.robot.util.SparkUtil.*;
 
 public class ElevatorIOSparkMax extends ElevatorIO {
+    private static final int currentLimitAmps = 60;
+
     // Hardware objects
     private final SparkMax leaderSpark;
     private final SparkMax followerSpark;
@@ -56,7 +58,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         leaderConfig
                 .inverted(leaderInverted)
                 .idleMode(SparkBaseConfig.IdleMode.kBrake)
-                .smartCurrentLimit(60)
+                .smartCurrentLimit(currentLimitAmps)
                 .voltageCompensation(12.0);
         leaderConfig
                 .encoder
@@ -193,5 +195,20 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     public void setEncoder(double positionRad) {
         tryUntilOkAsync(5, () -> leaderEncoder.setPosition(positionRad));
         tryUntilOkAsync(5, () -> followerEncoder.setPosition(positionRad));
+    }
+
+    @Override
+    public void setManualCurrentLimit(boolean manualCurrentLimit) {
+        var newConfig = new SparkMaxConfig().smartCurrentLimit(manualCurrentLimit ? 30 : currentLimitAmps);
+        tryUntilOkAsync(5, () -> leaderSpark.configure(
+                newConfig,
+                SparkBase.ResetMode.kNoResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters
+        ));
+        tryUntilOkAsync(5, () -> followerSpark.configure(
+                newConfig,
+                SparkBase.ResetMode.kNoResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters
+        ));
     }
 }

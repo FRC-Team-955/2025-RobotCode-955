@@ -62,22 +62,21 @@ public class Elevator extends SubsystemBaseExt {
     private boolean prevEmergencyStopped = false;
 
     /** NOTE: UNITS IN METERS! */
-    private TrapezoidProfile profileFullVelocity = new TrapezoidProfile(
-            new TrapezoidProfile.Constraints(
-                    maxVelocityMetersPerSecond,
-                    maxAccelerationMetersPerSecondSquared
-            )
-    );
-    private TrapezoidProfile profileGentleVelocity = new TrapezoidProfile(
-            new TrapezoidProfile.Constraints(
-                    gentleMaxVelocityMetersPerSecond,
-                    maxAccelerationMetersPerSecondSquared
-            )
-    );
+    private TrapezoidProfile profileFullVelocity = new TrapezoidProfile(new TrapezoidProfile.Constraints(
+            maxVelocityMetersPerSecond,
+            maxAccelerationMetersPerSecondSquared
+    ));
+    private TrapezoidProfile profileGentleVelocity = new TrapezoidProfile(new TrapezoidProfile.Constraints(
+            gentleMaxVelocityMetersPerSecond,
+            maxAccelerationMetersPerSecondSquared
+    ));
     private TrapezoidProfile.State previousStateMeters = null;
 
     @AutoLogOutput(key = "Elevator/DistanceFromScoringPositionMeters")
     private double distanceFromScoringPositionMeters = 0.0;
+
+    private boolean manualCurrentLimitApplied = false;
+    private double manualVoltage = gains.kG();
 
     private final Alert emergencyStoppedAlert = new Alert("Elevator is emergency stopped.", Alert.AlertType.kError);
     private final Alert notZeroedAlert = new Alert("Elevator is not zeroed! Please zero.", Alert.AlertType.kError);
@@ -174,6 +173,19 @@ public class Elevator extends SubsystemBaseExt {
             hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecondTunable.get());
             robotMechanism.elevator.updateHardstopSlowdownPosition();
         }
+
+        // Update current limit
+        if (operatorDashboard.manualElevator.get()) {
+            if (!manualCurrentLimitApplied) {
+                io.setManualCurrentLimit(true);
+                manualCurrentLimitApplied = true;
+            }
+        } else {
+            if (manualCurrentLimitApplied) {
+                io.setManualCurrentLimit(false);
+                manualCurrentLimitApplied = false;
+            }
+        }
     }
 
     @Override
@@ -182,6 +194,10 @@ public class Elevator extends SubsystemBaseExt {
         if (DriverStation.isDisabled()) {
             Logger.recordOutput("Elevator/ClosedLoop", false);
             io.setOpenLoop(0);
+            previousStateMeters = null;
+        } else if (operatorDashboard.manualElevator.get()) {
+            Logger.recordOutput("Elevator/ClosedLoop", false);
+            io.setOpenLoop(manualVoltage);
             previousStateMeters = null;
         } else if (goal.setpointMeters != null) {
             double positionMeters = getPositionMeters();
@@ -254,8 +270,7 @@ public class Elevator extends SubsystemBaseExt {
         }
 
         // Check limit switch and zero if needed
-        var forceZero = operatorDashboard.forceZeroElevator.get();
-        if (forceZero) {
+        if (operatorDashboard.forceZeroElevator.get()) {
             io.setEncoder(0);
             hasZeroed = true;
             // Turn off the toggle instantly so it's like a button
@@ -332,6 +347,14 @@ public class Elevator extends SubsystemBaseExt {
                         () -> getPositionMeters() < 0.01
                 ),
                 Commands.idle()
+        );
+    }
+
+    public Command setManualVoltage(double addedVoltage) {
+        // Note - doesn't require subsystem to allow other commands that would require elevator to work
+        return Commands.startEnd(
+                () -> manualVoltage = gains.kG() + addedVoltage,
+                () -> manualVoltage = gains.kG()
         );
     }
 }
