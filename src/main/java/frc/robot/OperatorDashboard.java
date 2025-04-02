@@ -35,6 +35,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     public final LoggedNetworkBooleanExt autoChosen = new LoggedNetworkBooleanExt(prefix + "AutoChosen", false);
     public final LoggedNetworkBooleanExt manualReefSide = new LoggedNetworkBooleanExt(prefix + "ManualReefSide", false);
     public final LoggedNetworkBooleanExt forceGamePieceLEDs = new LoggedNetworkBooleanExt(prefix + "ForceGamePieceLEDs", false);
+    public final LoggedNetworkBooleanExt profiledMoveTo = new LoggedNetworkBooleanExt(prefix + "ProfiledMoveTo", false);
 
     public final LoggedNetworkBooleanExt elevatorEStop = new LoggedNetworkBooleanExt(prefix + "ElevatorEStop", false);
     public final LoggedNetworkBooleanExt useRealElevatorState = new LoggedNetworkBooleanExt(prefix + "UseRealElevatorState", false);
@@ -117,6 +118,7 @@ public class OperatorDashboard extends VirtualSubsystem {
                 coralStuckInRobotMode.set(operatorKeypad.getOverride1());
                 manualScoring.set(operatorKeypad.getOverride2());
                 ignoreEndEffectorBeamBreak.set(operatorKeypad.getOverride3());
+                profiledMoveTo.set(operatorKeypad.getOverride5());
                 // override 4 is handled in RobotContainer
                 // override 6 is handled in OperatorDashboard constructor
             }

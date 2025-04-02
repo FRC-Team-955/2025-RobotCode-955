@@ -7,11 +7,14 @@ import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
 import static frc.robot.subsystems.drive.DriveConstants.moveToConfig;
 
 public class DriveTuning {
-    public static final LoggedTunableNumber characterizationSpeedRadPerSec = new LoggedTunableNumber("Drive/WheelRadiusCharacterizationSpeedRadPerSec", 1.0);
+    public static final LoggedTunableNumber characterizationSpeedRadPerSec = new LoggedTunableNumber("Drive/WheelRadiusCharacterizationSpeedRadPerSecond", 1.0);
 
     public static final PIDF.Tunable moduleDriveGainsTunable = moduleConfig.driveGains().tunable("Drive/ModuleDrive");
     public static final PIDF.Tunable moduleTurnGainsTunable = moduleConfig.turnGains().tunable("Drive/ModuleTurn");
 
-    public static final PIDF.Tunable moveToLinearTunable = moveToConfig.linear().tunable("Drive/MoveToLinear");
-    public static final PIDF.Tunable moveToAngularTunable = moveToConfig.angular().tunable("Drive/MoveToAngular");
+    public static final PIDF.Tunable moveToPureLinearTunable = moveToConfig.pureLinear().tunable("Drive/MoveToPureLinear");
+    public static final PIDF.Tunable moveToPureAngularTunable = moveToConfig.pureAngular().tunable("Drive/MoveToPureAngular");
+
+    public static final PIDF.Profiled.Tunable moveToProfiledLinearTunable = moveToConfig.profiledLinear().tunable("Drive/MoveToProfiledLinear");
+    public static final PIDF.Profiled.Tunable moveToProfiledAngularTunable = moveToConfig.profiledAngular().tunable("Drive/MoveToProfiledAngular");
 }

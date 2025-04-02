@@ -152,10 +152,8 @@ public class Elevator extends SubsystemBaseExt {
         var endEffectorY = Units.inchesToMeters(7) + getPositionMeters();
         robotMechanism.endEffector.root.setPosition(endEffectorX, endEffectorY);
         robotMechanism.endEffector.topRollersRoot.setPosition(endEffectorX - Units.inchesToMeters(3), endEffectorY + Units.inchesToMeters(10));
-    }
 
-    @Override
-    public void periodicAfterCommands() {
+        // Apply network inputs
         if (operatorDashboard.coastOverride.hasChanged()) {
             io.setBrakeMode(!operatorDashboard.coastOverride.get());
         }
@@ -176,8 +174,10 @@ public class Elevator extends SubsystemBaseExt {
             hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecondTunable.get());
             robotMechanism.elevator.updateHardstopSlowdownPosition();
         }
+    }
 
-        // Goal control
+    @Override
+    public void periodicAfterCommands() {
         Logger.recordOutput("Elevator/Goal", goal);
         if (DriverStation.isDisabled()) {
             Logger.recordOutput("Elevator/ClosedLoop", false);

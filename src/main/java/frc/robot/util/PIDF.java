@@ -9,6 +9,8 @@ import edu.wpi.first.math.controller.*;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import frc.robot.Constants;
 import frc.robot.util.network.LoggedTunableNumber;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 
 import java.util.function.Consumer;
 
@@ -93,6 +95,10 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
         return new Tunable(name);
     }
 
+    public Profiled profiled(double maxVelocity, double maxAcceleration) {
+        return new Profiled(new TrapezoidProfile.Constraints(maxVelocity, maxAcceleration));
+    }
+
     public void applySparkWithoutFeedforward(ClosedLoopConfig config, ClosedLoopSlot slot) {
         // We do spark unit conversions on controller so no need for unit conversions
         config.pid(kP, kI, kD, slot);
@@ -175,6 +181,14 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
                 .withStaticFeedforwardSign(staticFeedforwardSign);
     }
 
+    public void applyPID(PIDController controller) {
+        controller.setPID(kP, kI, kD);
+    }
+
+    public void applyPID(ProfiledPIDController controller) {
+        controller.setPID(kP, kI, kD);
+    }
+
     public PIDController toPID() {
         return new PIDController(kP, kI, kD);
     }
@@ -198,16 +212,6 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
         return pid;
     }
 
-    public ProfiledPIDController toProfiledPID(TrapezoidProfile.Constraints constraints) {
-        return new ProfiledPIDController(kP, kI, kD, constraints);
-    }
-
-    public ProfiledPIDController toProfiledPIDWrapRadians(TrapezoidProfile.Constraints constraints) {
-        var pid = new ProfiledPIDController(kP, kI, kD, constraints);
-        pid.enableContinuousInput(-Math.PI, Math.PI);
-        return pid;
-    }
-
     public SimpleMotorFeedforward toSimpleFF() {
         return new SimpleMotorFeedforward(kS, kV, kA);
     }
@@ -218,6 +222,81 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
 
     public ElevatorFeedforward toElevatorFF() {
         return new ElevatorFeedforward(kS, kG, kV, kA);
+    }
+
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+    public class Profiled {
+        private final TrapezoidProfile.Constraints constraints;
+
+        public ProfiledPIDController toPID() {
+            return new ProfiledPIDController(kP, kI, kD, constraints);
+        }
+
+        public ProfiledPIDController toPID(double errorTolerance, double errorDerivativeTolerance) {
+            var pid = new ProfiledPIDController(kP, kI, kD, constraints);
+            pid.setTolerance(errorTolerance, errorDerivativeTolerance);
+            return pid;
+        }
+
+        public ProfiledPIDController toPIDWrapRadians() {
+            var pid = new ProfiledPIDController(kP, kI, kD, constraints);
+            pid.enableContinuousInput(-Math.PI, Math.PI);
+            return pid;
+        }
+
+        public ProfiledPIDController toPIDWrapRadians(double errorTolerance, double errorDerivativeTolerance) {
+            var pid = new ProfiledPIDController(kP, kI, kD, constraints);
+            pid.enableContinuousInput(-Math.PI, Math.PI);
+            pid.setTolerance(errorTolerance, errorDerivativeTolerance);
+            return pid;
+        }
+
+        public Tunable tunable(String name) {
+            return new Tunable(name);
+        }
+
+        public class Tunable {
+            private final PIDF.Tunable outer;
+            private final LoggedTunableNumber tunableMaxVelocity;
+            private final LoggedTunableNumber tunableMaxAcceleration;
+
+            private Tunable(String name) {
+                if (Constants.tuningMode) {
+                    outer = new PIDF.Tunable(name);
+                    tunableMaxVelocity = new LoggedTunableNumber(name + "/MaxVelocity", constraints.maxVelocity);
+                    tunableMaxAcceleration = new LoggedTunableNumber(name + "/MaxAcceleration", constraints.maxAcceleration);
+                } else {
+                    outer = null;
+                    tunableMaxVelocity = null;
+                    tunableMaxAcceleration = null;
+                }
+            }
+
+            @SuppressWarnings("DataFlowIssue") // tunable numbers are guaranteed not to be null if tuning mode is true
+            public void ifChanged(
+                    Consumer<PIDF> setNewGains,
+                    Consumer<TrapezoidProfile.Constraints> setNewConstraints
+            ) {
+                if (Constants.tuningMode) {
+                    outer.ifChanged(setNewGains);
+                    if (tunableMaxVelocity.hasChanged()
+                            || tunableMaxAcceleration.hasChanged()
+                    ) {
+                        System.out.println("Setting constraints for " + outer.name);
+                        setNewConstraints.accept(getConstraints());
+                    }
+                }
+            }
+
+            @SuppressWarnings("DataFlowIssue") // tunable numbers are guaranteed not to be null if tuning mode is true
+            public TrapezoidProfile.Constraints getConstraints() {
+                if (Constants.tuningMode) {
+                    return new TrapezoidProfile.Constraints(tunableMaxVelocity.get(), tunableMaxAcceleration.get());
+                } else {
+                    return constraints;
+                }
+            }
+        }
     }
 
     public class Tunable {

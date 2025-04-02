@@ -67,6 +67,8 @@ public class Funnel extends SubsystemBaseExt {
         beltDisconnectedAlert.set(!beltInputs.connected);
 
         robotMechanism.funnel.beltLigament.setAngle(Units.radiansToDegrees(-beltInputs.positionRad));
+
+        velocityGainsTunable.ifChanged(beltIO::setVelocityPIDF);
     }
 
     @Override
@@ -74,8 +76,6 @@ public class Funnel extends SubsystemBaseExt {
         if (operatorDashboard.coastOverride.hasChanged()) {
             beltIO.setBrakeMode(!operatorDashboard.coastOverride.get());
         }
-
-        velocityGainsTunable.ifChanged(beltIO::setVelocityPIDF);
 
         Logger.recordOutput("Funnel/Goal", goal);
         ////////////// BELT //////////////

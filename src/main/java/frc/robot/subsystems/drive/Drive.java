@@ -7,9 +7,11 @@ import edu.wpi.first.hal.FRCNetComm;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -121,9 +123,31 @@ public class Drive extends SubsystemBaseExt {
     private final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackOmega = driveConfig.choreoFeedbackOmega().toPIDWrapRadians();
 
-    private PIDController moveToLinearX = moveToConfig.linear().toPID(moveToConfig.linearPositionToleranceMeters(), moveToConfig.linearVelocityToleranceMetersPerSec());
-    private PIDController moveToLinearY = moveToConfig.linear().toPID(moveToConfig.linearPositionToleranceMeters(), moveToConfig.linearVelocityToleranceMetersPerSec());
-    private PIDController moveToAngular = moveToConfig.angular().toPIDWrapRadians(moveToConfig.angularPositionToleranceRad(), moveToConfig.angularVelocityToleranceRadPerSec());
+    private final PIDController moveToPureLinearX = moveToConfig.pureLinear().toPID(
+            moveToConfig.linearPositionToleranceMeters(),
+            moveToConfig.linearVelocityToleranceMetersPerSec()
+    );
+    private final PIDController moveToPureLinearY = moveToConfig.pureLinear().toPID(
+            moveToConfig.linearPositionToleranceMeters(),
+            moveToConfig.linearVelocityToleranceMetersPerSec()
+    );
+    private final PIDController moveToPureAngular = moveToConfig.pureAngular().toPIDWrapRadians(
+            moveToConfig.angularPositionToleranceRad(),
+            moveToConfig.angularVelocityToleranceRadPerSec()
+    );
+
+    private final ProfiledPIDController moveToProfiledLinearX = moveToConfig.profiledLinear().toPID(
+            moveToConfig.linearPositionToleranceMeters(),
+            moveToConfig.linearVelocityToleranceMetersPerSec()
+    );
+    private final ProfiledPIDController moveToProfiledLinearY = moveToConfig.profiledLinear().toPID(
+            moveToConfig.linearPositionToleranceMeters(),
+            moveToConfig.linearVelocityToleranceMetersPerSec()
+    );
+    private final ProfiledPIDController moveToProfiledAngular = moveToConfig.profiledAngular().toPIDWrapRadians(
+            moveToConfig.angularPositionToleranceRad(),
+            moveToConfig.angularVelocityToleranceRadPerSec()
+    );
 
     private static Drive instance;
 
@@ -284,10 +308,8 @@ public class Drive extends SubsystemBaseExt {
             }
             Logger.recordOutput("Drive/SampleDiscarded", discardSample);
         }
-    }
 
-    @Override
-    public void periodicAfterCommands() {
+        // Apply network inputs
         if (operatorDashboard.coastOverride.hasChanged()) {
             for (var module : modules) {
                 module.setBrakeMode(!operatorDashboard.coastOverride.get());
@@ -305,12 +327,28 @@ public class Drive extends SubsystemBaseExt {
             }
         });
 
-        moveToLinearTunable.ifChanged(gains -> {
-            moveToLinearX = gains.toPID(moveToConfig.linearPositionToleranceMeters(), moveToConfig.linearVelocityToleranceMetersPerSec());
-            moveToLinearY = gains.toPID(moveToConfig.linearPositionToleranceMeters(), moveToConfig.linearVelocityToleranceMetersPerSec());
+        moveToPureLinearTunable.ifChanged(gains -> {
+            gains.applyPID(moveToPureLinearX);
+            gains.applyPID(moveToPureLinearY);
         });
-        moveToAngularTunable.ifChanged(gains -> moveToAngular = gains.toPIDWrapRadians(moveToConfig.angularPositionToleranceRad(), moveToConfig.angularVelocityToleranceRadPerSec()));
+        moveToPureAngularTunable.ifChanged(gains -> gains.applyPID(moveToPureAngular));
 
+        moveToProfiledLinearTunable.ifChanged(
+                gains -> {
+                    gains.applyPID(moveToProfiledLinearX);
+                    gains.applyPID(moveToProfiledLinearY);
+                },
+                // Constraints will be calculated and applied in move to
+                constraints -> {}
+        );
+        moveToProfiledAngularTunable.ifChanged(
+                gains -> gains.applyPID(moveToProfiledAngular),
+                moveToProfiledAngular::setConstraints
+        );
+    }
+
+    @Override
+    public void periodicAfterCommands() {
         Logger.recordOutput("Drive/Goal", goal);
 
         // Stop moving when idle or disabled
@@ -501,9 +539,26 @@ public class Drive extends SubsystemBaseExt {
                 () -> {
                     goal = mergeJoystickDrive.getAsBoolean() ? Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED : Goal.MOVE_TO;
 
-                    moveToLinearX.reset();
-                    moveToLinearY.reset();
-                    moveToAngular.reset();
+                    if (operatorDashboard.profiledMoveTo.get()) {
+                        Pose2d currentPose = robotState.getPose();
+                        ChassisSpeeds currentVelocities = getMeasuredChassisSpeedsFieldRelative();
+                        moveToProfiledLinearX.reset(
+                                currentPose.getX(),
+                                currentVelocities.vxMetersPerSecond
+                        );
+                        moveToProfiledLinearY.reset(
+                                currentPose.getY(),
+                                currentVelocities.vyMetersPerSecond
+                        );
+                        moveToProfiledAngular.reset(
+                                MathUtil.angleModulus(currentPose.getRotation().getRadians()),
+                                currentVelocities.omegaRadiansPerSecond
+                        );
+                    } else {
+                        moveToPureLinearX.reset();
+                        moveToPureLinearY.reset();
+                        moveToPureAngular.reset();
+                    }
                 },
                 () -> {
                     Pose2d currentPose = robotState.getPose();
@@ -511,31 +566,99 @@ public class Drive extends SubsystemBaseExt {
                     Pose2d goalPose = poseSupplier.get();
                     Logger.recordOutput("Drive/MoveTo/Goal", goalPose);
 
-                    double linearXVelocityMetersPerSec = moveToLinearX.calculate(
-                            currentPose.getX(),
-                            goalPose.getX()
-                    );
-                    boolean linearXAtSetpoint = moveToLinearX.atSetpoint();
+                    double linearXVelocityMetersPerSec;
+                    boolean linearXAtSetpoint;
+                    double linearYVelocityMetersPerSec;
+                    boolean linearYAtSetpoint;
+                    double angularVelocityRadPerSec;
+                    boolean angularAtSetpoint;
+                    if (operatorDashboard.profiledMoveTo.get()) {
+                        ChassisSpeeds currentVelocities = getMeasuredChassisSpeedsFieldRelative();
+
+                        if (operatorDashboard.profiledMoveTo.hasChanged()) {
+                            moveToProfiledLinearX.reset(
+                                    currentPose.getX(),
+                                    currentVelocities.vxMetersPerSecond
+                            );
+                            moveToProfiledLinearY.reset(
+                                    currentPose.getY(),
+                                    currentVelocities.vyMetersPerSecond
+                            );
+                            moveToProfiledAngular.reset(
+                                    MathUtil.angleModulus(currentPose.getRotation().getRadians()),
+                                    currentVelocities.omegaRadiansPerSecond
+                            );
+                        }
+
+                        // Update profile constraints
+                        Translation2d currentToGoal = goalPose.getTranslation().minus(currentPose.getTranslation());
+                        if (currentToGoal.getX() != 0 || currentToGoal.getY() != 0) {
+                            Rotation2d directionOfTravel = currentToGoal.getAngle();
+                            calculateMoveToProfiledLinearConstraints(moveToProfiledLinearTunable.getConstraints(), directionOfTravel, (x, y) -> {
+                                moveToProfiledLinearX.setConstraints(x);
+                                moveToProfiledLinearY.setConstraints(y);
+                            });
+                        }
+
+                        linearXVelocityMetersPerSec = moveToProfiledLinearX.calculate(
+                                currentPose.getX(),
+                                goalPose.getX()
+                        ) + moveToProfiledLinearX.getSetpoint().velocity;
+                        linearXAtSetpoint = moveToProfiledLinearX.atSetpoint();
+
+                        linearYVelocityMetersPerSec = moveToProfiledLinearY.calculate(
+                                currentPose.getY(),
+                                goalPose.getY()
+                        ) + moveToProfiledLinearY.getSetpoint().velocity;
+                        linearYAtSetpoint = moveToProfiledLinearY.atSetpoint();
+
+                        angularVelocityRadPerSec = moveToProfiledAngular.calculate(
+                                MathUtil.angleModulus(currentPose.getRotation().getRadians()),
+                                MathUtil.angleModulus(goalPose.getRotation().getRadians())
+                        ) + moveToProfiledAngular.getSetpoint().velocity;
+                        angularAtSetpoint = moveToProfiledAngular.atSetpoint();
+
+                        Logger.recordOutput("Drive/MoveTo/Setpoint", new Pose2d(
+                                moveToProfiledLinearX.getSetpoint().position,
+                                moveToProfiledLinearY.getSetpoint().position,
+                                new Rotation2d(moveToProfiledAngular.getSetpoint().position)
+                        ));
+                    } else {
+                        if (operatorDashboard.profiledMoveTo.hasChanged()) {
+                            moveToPureLinearX.reset();
+                            moveToPureLinearY.reset();
+                            moveToPureAngular.reset();
+                        }
+
+                        linearXVelocityMetersPerSec = moveToPureLinearX.calculate(
+                                currentPose.getX(),
+                                goalPose.getX()
+                        );
+                        linearXAtSetpoint = moveToPureLinearX.atSetpoint();
+
+                        linearYVelocityMetersPerSec = moveToPureLinearY.calculate(
+                                currentPose.getY(),
+                                goalPose.getY()
+                        );
+                        linearYAtSetpoint = moveToPureLinearY.atSetpoint();
+
+                        angularVelocityRadPerSec = moveToPureAngular.calculate(
+                                MathUtil.angleModulus(currentPose.getRotation().getRadians()),
+                                MathUtil.angleModulus(goalPose.getRotation().getRadians())
+                        );
+                        angularAtSetpoint = moveToPureAngular.atSetpoint();
+                    }
+
                     Logger.recordOutput("Drive/MoveTo/LinearXAtSetpoint", linearXAtSetpoint);
                     if (linearXAtSetpoint) {
                         linearXVelocityMetersPerSec = 0.0;
                     }
 
-                    double linearYVelocityMetersPerSec = moveToLinearY.calculate(
-                            currentPose.getY(),
-                            goalPose.getY()
-                    );
-                    boolean linearYAtSetpoint = moveToLinearY.atSetpoint();
                     Logger.recordOutput("Drive/MoveTo/LinearYAtSetpoint", linearYAtSetpoint);
                     if (linearYAtSetpoint) {
                         linearYVelocityMetersPerSec = 0.0;
                     }
 
-                    double angularVelocityRadPerSec = moveToAngular.calculate(
-                            MathUtil.angleModulus(currentPose.getRotation().getRadians()),
-                            MathUtil.angleModulus(goalPose.getRotation().getRadians())
-                    );
-                    boolean angularAtSetpoint = moveToAngular.atSetpoint();
                     Logger.recordOutput("Drive/MoveTo/AngularAtSetpoint", angularAtSetpoint);
                     if (angularAtSetpoint) {
                         angularVelocityRadPerSec = 0.0;

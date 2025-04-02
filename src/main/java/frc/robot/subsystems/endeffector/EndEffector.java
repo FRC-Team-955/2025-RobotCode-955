@@ -77,20 +77,22 @@ public class EndEffector extends SubsystemBaseExt {
 
         rollersDisconnectedAlert.set(!rollersInputs.connected);
 
+        // Update mechanism
         robotMechanism.endEffector.ligament.setAngle(180 - Units.radiansToDegrees(getAngleRad()));
         // top rollers are reversed relative to motor
         robotMechanism.endEffector.topRollersLigament.setAngle(Units.radiansToDegrees(-rollersInputs.positionRad));
-    }
 
-    @Override
-    public void periodicAfterCommands() {
+        // Apply network inputs
         if (operatorDashboard.coastOverride.hasChanged()) {
             rollersIO.setBrakeMode(!operatorDashboard.coastOverride.get());
         }
 
         positionGainsTunable.ifChanged(rollersIO::setPositionPIDF);
         velocityGainsTunable.ifChanged(rollersIO::setVelocityPIDF);
+    }
 
+    @Override
+    public void periodicAfterCommands() {
         ////////////// ROLLERS //////////////
         Logger.recordOutput("EndEffector/Rollers/Goal", goal);
         if (DriverStation.isDisabled()) {
