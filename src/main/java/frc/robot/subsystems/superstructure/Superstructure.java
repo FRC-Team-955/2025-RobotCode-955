@@ -536,9 +536,7 @@ public class Superstructure extends SubsystemBaseExt {
             Supplier<CoralScoringLevel> coralScoringLevelSupplier,
             BooleanSupplier forceCondition
     ) {
-        DoubleSupplier elevatorPercentageSupplier = () -> operatorDashboard.disableInterpolateAutoAlign.get()
-                ? 1
-                : elevator.getPositionMeters() / coralScoringLevelSupplier.get().coralScoringElevatorGoal.setpointMeters.getAsDouble();
+        DoubleSupplier elevatorPercentageSupplier = () -> elevator.getPositionMeters() / coralScoringLevelSupplier.get().coralScoringElevatorGoal.setpointMeters.getAsDouble();
         Supplier<Pose2d> alignPoseSupplier = () -> ReefAlign.getAlignPose(robotState.getPose(), elevatorPercentageSupplier.getAsDouble(), reefSideSupplier.get(), sideSupplier.get());
 
         Command initial = Commands.race(
