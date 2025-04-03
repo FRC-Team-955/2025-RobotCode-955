@@ -662,7 +662,8 @@ public class Superstructure extends SubsystemBaseExt {
 
     public Command autoDescoreAlgae(
             Supplier<ReefZoneSide> reefSideSupplier,
-            BooleanSupplier forceCondition
+            BooleanSupplier forceCondition,
+            boolean duringAuto
     ) {
         Command driveTo = Commands.race(
                 // Drive to position
@@ -715,22 +716,38 @@ public class Superstructure extends SubsystemBaseExt {
                 Commands.runOnce(() -> wasForced = true)
         );
 
-        return wrapExposedCommand(
-                drive.stop(),
-                CommandsExt.onlyIf(
-                        () -> (!endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
-                                && ReefAlign.isAlignable(robotState.getPose(), reefSideSupplier.get()),
-                        CommandsExt.eagerSequence(
-                                Commands.race(
-                                        CommandsExt.eagerSequence(
-                                                driveTo,
-                                                waitAlgae
-                                        ),
-                                        waitForForce
-                                ),
-                                driveBack
-                        )
-                )
-        );
+        if (duringAuto) {
+            return wrapExposedCommand(
+                    drive.stop(),
+                    CommandsExt.eagerSequence(
+                            Commands.race(
+                                    CommandsExt.eagerSequence(
+                                            driveTo,
+                                            waitAlgae
+                                    ),
+                                    waitForForce
+                            ),
+                            driveBack
+                    )
+            );
+        } else {
+            return wrapExposedCommand(
+                    drive.stop(),
+                    CommandsExt.onlyIf(
+                            () -> (!endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get())
+                                    && ReefAlign.isAlignable(robotState.getPose(), reefSideSupplier.get()),
+                            CommandsExt.eagerSequence(
+                                    Commands.race(
+                                            CommandsExt.eagerSequence(
+                                                    driveTo,
+                                                    waitAlgae
+                                            ),
+                                            waitForForce
+                                    ),
+                                    driveBack
+                            )
+                    )
+            );
+        }
     }
 }

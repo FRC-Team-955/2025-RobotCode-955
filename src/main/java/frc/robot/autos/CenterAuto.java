@@ -21,7 +21,7 @@ public class CenterAuto {
 
         return descore ? CommandsExt.eagerSequence(
                 auto,
-                Superstructure.get().autoDescoreAlgae(() -> ReefZoneSide.MiddleBack, () -> true).asProxy()
+                Superstructure.get().autoDescoreAlgae(() -> ReefZoneSide.MiddleBack, () -> true, true).asProxy()
         ) : auto;
     }
 }

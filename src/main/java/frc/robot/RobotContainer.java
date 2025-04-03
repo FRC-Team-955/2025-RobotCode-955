@@ -174,7 +174,8 @@ public class RobotContainer {
                                 () -> ref.shouldDescoreAlgae,
                                 superstructure.autoDescoreAlgae(
                                         operatorDashboard::getSelectedReefZoneSide,
-                                        driverController.rightBumper()
+                                        driverController.rightBumper(),
+                                        false
                                 )
                         )
                 ).asProxy(),
@@ -191,7 +192,8 @@ public class RobotContainer {
                         ).asProxy(),
                         superstructure.autoDescoreAlgae(
                                 operatorDashboard::getSelectedReefZoneSide,
-                                driverController.rightBumper()
+                                driverController.rightBumper(),
+                                false
                         ).asProxy(),
                         operatorDashboard.manualScoring::get
                 )
