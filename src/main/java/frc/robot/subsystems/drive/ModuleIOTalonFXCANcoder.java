@@ -110,7 +110,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         driveConfig.Slot0 = Slot0Configs.from(moduleConfig.driveGains().toPhoenix());
         driveConfig.Feedback.SensorToMechanismRatio = moduleConfig.driveGearRatio();
         driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = moduleConfig.driveCurrentLimit();
-        driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = moduleConfig.driveCurrentLimit();
+        driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = -moduleConfig.driveCurrentLimit();
         driveConfig.CurrentLimits.StatorCurrentLimit = moduleConfig.driveCurrentLimit();
         driveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         driveConfig.MotorOutput.Inverted =
@@ -128,7 +128,7 @@ public class ModuleIOTalonFXCANcoder extends ModuleIO {
         turnConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
         turnConfig.Feedback.RotorToSensorRatio = moduleConfig.turnGearRatio();
         turnConfig.TorqueCurrent.PeakForwardTorqueCurrent = moduleConfig.turnCurrentLimit();
-        turnConfig.TorqueCurrent.PeakReverseTorqueCurrent = moduleConfig.turnCurrentLimit();
+        turnConfig.TorqueCurrent.PeakReverseTorqueCurrent = -moduleConfig.turnCurrentLimit();
         turnConfig.CurrentLimits.StatorCurrentLimit = moduleConfig.turnCurrentLimit();
         turnConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         turnConfig.MotionMagic.MotionMagicCruiseVelocity = 100.0 / moduleConfig.turnGearRatio();

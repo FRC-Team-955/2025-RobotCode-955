@@ -119,7 +119,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
         driveConfig.Slot0 = Slot0Configs.from(moduleConfig.driveGains().toPhoenix());
         driveConfig.Feedback.SensorToMechanismRatio = moduleConfig.driveGearRatio();
         driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = moduleConfig.driveCurrentLimit();
-        driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = moduleConfig.driveCurrentLimit();
+        driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = -moduleConfig.driveCurrentLimit();
         driveConfig.CurrentLimits.StatorCurrentLimit = moduleConfig.driveCurrentLimit();
         driveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         driveConfig.MotorOutput.Inverted =
