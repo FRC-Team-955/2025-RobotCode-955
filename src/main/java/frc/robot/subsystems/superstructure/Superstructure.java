@@ -560,10 +560,7 @@ public class Superstructure extends SubsystemBaseExt {
                 Commands.parallel(
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_ELEVATOR),
                         elevator.waitUntilAtGoal()
-                ),
-                duringAuto
-                        ? Commands.waitSeconds(0.1)
-                        : Commands.waitSeconds(0.2)
+                )
         );
         // Don't allow forcing for a bit, then check if force is true
         Command waitForForce = CommandsExt.eagerSequence(
@@ -585,14 +582,19 @@ public class Superstructure extends SubsystemBaseExt {
                 Commands.runOnce(() -> wasForced = true)
         );
 
-        Command score = Commands.parallel(
+        Command score = CommandsExt.eagerSequence(
                 setGoal(Goal.AUTO_SCORE_CORAL_SCORING),
-                Commands.either(
-                        endEffector.setGoal(EndEffector.Goal.SCORE_CORAL_L1),
-                        endEffector.setGoal(EndEffector.Goal.SCORE_CORAL),
-                        () -> coralScoringLevelSupplier.get() == CoralScoringLevel.L1
-                ),
-                waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
+                duringAuto
+                        ? Commands.waitSeconds(0.1)
+                        : Commands.waitSeconds(0.2),
+                Commands.parallel(
+                        Commands.either(
+                                endEffector.setGoal(EndEffector.Goal.SCORE_CORAL_L1),
+                                endEffector.setGoal(EndEffector.Goal.SCORE_CORAL),
+                                () -> coralScoringLevelSupplier.get() == CoralScoringLevel.L1
+                        ),
+                        waitUntilEndEffectorNotTriggered(Commands.waitSeconds(0.5))
+                )
         );
         // Wait for coral to settle and send the elevator back down
         Command finalize = CommandsExt.eagerSequence(
