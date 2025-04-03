@@ -209,9 +209,13 @@ public class RobotContainer {
         driverController.povUp().whileTrue(superstructure.climbAwayFromRobot());
 
         operatorDashboard.operatorKeypad.getOverride4()
-                .or(operatorDashboard.zeroElevatorSequence::get)
+                .or(operatorDashboard.zeroElevator::get)
                 .and(() -> !operatorDashboard.manualElevator.get())
-                .toggleOnTrue(superstructure.zeroElevator());
+                .toggleOnTrue(Commands.parallel(
+                        superstructure.zeroElevator(),
+                        // Turn off the toggle instantly so it's like a button
+                        Commands.runOnce(() -> operatorDashboard.zeroElevator.set(false))
+                ));
         operatorDashboard.operatorKeypad.getOverride6()
                 .and(() -> !operatorDashboard.manualElevator.get())
                 .onTrue(Commands.runOnce(() -> operatorDashboard.useRealElevatorState.set(true)));

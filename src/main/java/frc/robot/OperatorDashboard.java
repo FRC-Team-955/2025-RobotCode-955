@@ -38,12 +38,11 @@ public class OperatorDashboard extends VirtualSubsystem {
 
     public final LoggedNetworkBooleanExt elevatorEStop = new LoggedNetworkBooleanExt(prefix + "ElevatorEStop", false);
     public final LoggedNetworkBooleanExt useRealElevatorState = new LoggedNetworkBooleanExt(prefix + "UseRealElevatorState", false);
-    public final LoggedNetworkBooleanExt forceZeroElevator = new LoggedNetworkBooleanExt(prefix + "ForceZeroElevator", false);
+    public final LoggedNetworkBooleanExt zeroElevator = new LoggedNetworkBooleanExt(prefix + "ZeroElevator", false);
     public final LoggedNetworkNumberExt elevatorOffsetMeters = new LoggedNetworkNumberExt(prefix + "ElevatorOffsetMeters", 0);
     public final LoggedNetworkBooleanExt manualElevator = new LoggedNetworkBooleanExt(prefix + "ManualElevator", false);
     public final LoggedNetworkBooleanExt manualElevatorUp = new LoggedNetworkBooleanExt(prefix + "ManualElevatorUp", false);
     public final LoggedNetworkBooleanExt manualElevatorDown = new LoggedNetworkBooleanExt(prefix + "ManualElevatorDown", false);
-    public final LoggedNetworkBooleanExt zeroElevatorSequence = new LoggedNetworkBooleanExt(prefix + "ZeroElevatorSequence", false);
 
     public final LoggedNetworkBooleanExt climberEStop = new LoggedNetworkBooleanExt(prefix + "ClimberEStop", false);
 

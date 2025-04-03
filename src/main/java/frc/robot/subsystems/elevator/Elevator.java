@@ -270,13 +270,7 @@ public class Elevator extends SubsystemBaseExt {
             previousStateMeters = null;
         }
 
-        // Check limit switch and zero if needed
-        if (operatorDashboard.forceZeroElevator.get()) {
-            io.setEncoder(0);
-            hasZeroed = true;
-            // Turn off the toggle instantly so it's like a button
-            operatorDashboard.forceZeroElevator.set(false);
-        }
+        // Update zeroed alert - after commands, since that would be when it gets zeroed
         notZeroedAlert.set(!hasZeroed);
     }
 
@@ -355,24 +349,29 @@ public class Elevator extends SubsystemBaseExt {
         var elevatorInitialPosition = new Object() {
             double val = 0.0;
         };
-        return CommandsExt.eagerSequence(
-                setGoal(() -> Goal.ZERO_ELEVATOR),
-                runOnce(() -> {
-                    operatorDashboard.zeroElevatorSequence.set(false);
-                    io.setOpenLoop(-0.5);
-                }),
-                Commands.waitSeconds(0.2),
-                Commands.waitUntil(() -> getVelocityMetersPerSec() < 0.02),
-                runOnce(() -> {
-                    elevatorInitialPosition.val = getPositionMeters();
-                    io.setOpenLoop(0.0);
-                }),
-                Commands.waitSeconds(1),
-                runOnce(() -> {
-                    if (Math.abs(getPositionMeters() - elevatorInitialPosition.val) < 0.02) {
-                        io.setEncoder(0);
-                    }
-                })
+        return Commands.either(
+                CommandsExt.eagerSequence(
+                        setGoal(() -> Goal.ZERO_ELEVATOR),
+                        runOnce(() -> io.setOpenLoop(-0.5)),
+                        Commands.waitSeconds(0.2),
+                        Commands.waitUntil(() -> getVelocityMetersPerSec() < 0.02),
+                        runOnce(() -> {
+                            elevatorInitialPosition.val = getPositionMeters();
+                            io.setOpenLoop(0.0);
+                        }),
+                        Commands.waitSeconds(1),
+                        runOnce(() -> {
+                            if (Math.abs(getPositionMeters() - elevatorInitialPosition.val) < 0.02) {
+                                io.setEncoder(0);
+                                hasZeroed = true;
+                            }
+                        })
+                ).ignoringDisable(false).asProxy(), // Notice the proxy - it is important
+                Commands.runOnce(() -> {
+                    io.setEncoder(0);
+                    hasZeroed = true;
+                }).ignoringDisable(true),
+                DriverStation::isEnabled
         );
     }
 
