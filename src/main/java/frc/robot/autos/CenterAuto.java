@@ -12,16 +12,24 @@ import frc.robot.util.commands.CommandsExt;
 import java.util.List;
 
 public class CenterAuto {
-    public static Command get(AutoRoutine routine, boolean descore) {
+    public static Command get(AutoRoutine routine, Type type) {
         final var firstScoreTraj = routine.trajectory("Center");
 
         Command auto = AutoBuilder.createScoring(routine, List.of(
                 new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.MiddleBack, LocalReefSide.Left, CoralScoringLevel.L4)
         ));
 
-        return descore ? CommandsExt.eagerSequence(
-                auto,
-                Superstructure.get().autoDescoreAlgae(() -> ReefZoneSide.MiddleBack, () -> true, true).asProxy()
-        ) : auto;
+        return switch (type) {
+            case Descore -> CommandsExt.eagerSequence(
+                    auto,
+                    Superstructure.get().autoDescoreAlgae(() -> ReefZoneSide.MiddleBack, () -> true, true).asProxy()
+            );
+            case Normal -> auto;
+        };
+    }
+
+    public enum Type {
+        Normal,
+        Descore,
     }
 }

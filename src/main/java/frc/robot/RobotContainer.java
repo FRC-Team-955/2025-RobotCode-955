@@ -80,13 +80,17 @@ public class RobotContainer {
         autoChooser.addOption("None", Commands.none());
         autoChooser.addOption("Leave", drive.runRobotRelative(() -> new ChassisSpeeds(-0.5, 0, 0)).withTimeout(5));
 
-        autoChooser.addOption("Barge Side", BargeSideAuto.get(factory.newRoutine("Barge Side"), false));
-        autoChooser.addOption("Barge Side Alternate", BargeSideAuto.get(factory.newRoutine("Barge Side Alternate"), true));
-        autoChooser.addOption("Processor Side", ProcessorSideAuto.get(factory.newRoutine("Processor Side"), false));
-        autoChooser.addOption("Processor Side Alternate", ProcessorSideAuto.get(factory.newRoutine("Processor Side Alternate"), true));
-        autoChooser.addOption("Processor Side Friendly", ProcessorSideFriendlyAuto.get(factory.newRoutine("Processor Side Friendly")));
-        autoChooser.addOption("Center", CenterAuto.get(factory.newRoutine("Center"), false));
-        autoChooser.addOption("Center Descore", CenterAuto.get(factory.newRoutine("Center Descore"), true));
+        autoChooser.addOption("Barge Side - Normal", BargeSideAuto.get(factory.newRoutine("Barge Side - Normal"), BargeSideAuto.Type.Normal));
+        autoChooser.addOption("Barge Side - Avoid Middle Front", BargeSideAuto.get(factory.newRoutine("Barge Side - Avoid Middle Front"), BargeSideAuto.Type.AvoidMiddleFront));
+        autoChooser.addOption("Barge Side - Avoid Middle Front And Adjacent", BargeSideAuto.get(factory.newRoutine("Barge Side - Avoid Middle Front And Adjacent"), BargeSideAuto.Type.AvoidMiddleFrontAndAdjacent));
+
+        autoChooser.addOption("Processor Side - Normal", ProcessorSideAuto.get(factory.newRoutine("Processor Side - Normal"), ProcessorSideAuto.Type.Normal));
+        autoChooser.addOption("Processor Side - Avoid Middle Front", ProcessorSideAuto.get(factory.newRoutine("Processor Side - Avoid Middle Front"), ProcessorSideAuto.Type.AvoidMiddleFront));
+        autoChooser.addOption("Processor Side - Avoid Middle Front And Adjacent", ProcessorSideAuto.get(factory.newRoutine("Processor Side - Avoid Middle Front And Adjacent"), ProcessorSideAuto.Type.AvoidMiddleFrontAndAdjacent));
+
+        autoChooser.addOption("Processor Side - Friendly", ProcessorSideFriendlyAuto.get(factory.newRoutine("Processor Side - Friendly")));
+        autoChooser.addOption("Center", CenterAuto.get(factory.newRoutine("Center"), CenterAuto.Type.Normal));
+        autoChooser.addOption("Center - Descore", CenterAuto.get(factory.newRoutine("Center - Descore"), CenterAuto.Type.Descore));
 
         autoChooser.addOption(
                 "Characterization",
