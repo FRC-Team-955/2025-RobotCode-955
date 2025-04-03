@@ -173,9 +173,12 @@ public class Elevator extends SubsystemBaseExt {
             hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecondTunable.get());
             robotMechanism.elevator.updateHardstopSlowdownPosition();
         }
+    }
 
+    @Override
+    public void periodicAfterCommands() {
         // Update current limit
-        if (operatorDashboard.manualElevator.get()) {
+        if (operatorDashboard.manualElevator.get() || goal == Goal.ZERO_ELEVATOR) {
             if (!manualCurrentLimitApplied) {
                 io.setManualCurrentLimit(true);
                 manualCurrentLimitApplied = true;
@@ -186,10 +189,8 @@ public class Elevator extends SubsystemBaseExt {
                 manualCurrentLimitApplied = false;
             }
         }
-    }
 
-    @Override
-    public void periodicAfterCommands() {
+        // Handle goal
         Logger.recordOutput("Elevator/Goal", goal);
         if (DriverStation.isDisabled()) {
             Logger.recordOutput("Elevator/ClosedLoop", false);
@@ -358,7 +359,6 @@ public class Elevator extends SubsystemBaseExt {
                 setGoal(() -> Goal.ZERO_ELEVATOR),
                 runOnce(() -> {
                     operatorDashboard.zeroElevatorSequence.set(false);
-                    io.setManualCurrentLimit(true);
                     io.setOpenLoop(-0.5);
                 }),
                 Commands.waitSeconds(0.2),
@@ -372,7 +372,6 @@ public class Elevator extends SubsystemBaseExt {
                     if (Math.abs(getPositionMeters() - elevatorInitialPosition.val) < 0.02) {
                         io.setEncoder(0);
                     }
-                    io.setManualCurrentLimit(false);
                 })
         );
     }
