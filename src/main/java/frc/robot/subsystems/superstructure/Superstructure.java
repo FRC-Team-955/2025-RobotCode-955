@@ -560,8 +560,10 @@ public class Superstructure extends SubsystemBaseExt {
                 Commands.parallel(
                         setGoal(Goal.AUTO_SCORE_CORAL_WAIT_ELEVATOR),
                         elevator.waitUntilAtGoal()
-                )
-//                Commands.waitSeconds(0.3)
+                ),
+                duringAuto
+                        ? Commands.waitSeconds(0.1)
+                        : Commands.waitSeconds(0.2)
         );
         // Don't allow forcing for a bit, then check if force is true
         Command waitForForce = CommandsExt.eagerSequence(
