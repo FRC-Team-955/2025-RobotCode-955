@@ -636,12 +636,8 @@ public class Superstructure extends SubsystemBaseExt {
         Command score = CommandsExt.eagerSequence(
                 setGoal(Goal.AUTO_SCORE_CORAL_SCORING),
                 duringAuto
-                        ? Commands.either(
-                        Commands.waitSeconds(0.1),
-                        Commands.none(),
-                        () -> DriverStation.getMatchTime() < 1.1
-                )
-                        : Commands.waitSeconds(0.2),
+                        ? Commands.waitSeconds(0.2)
+                        : Commands.waitSeconds(0.3),
                 Commands.parallel(
                         Commands.either(
                                 endEffector.setGoal(EndEffector.Goal.SCORE_CORAL_L1),
