@@ -44,12 +44,14 @@ public class BackgroundCommandScheduler {
         return Commands.runOnce(() -> this.nextCommand = command);
     }
 
+    public void cancelIfRunningInstantaneous() {
+        if (currentCommand != null) {
+            end(true);
+        }
+    }
+
     public Command cancelIfRunning() {
-        return Commands.runOnce(() -> {
-            if (currentCommand != null) {
-                end(true);
-            }
-        });
+        return Commands.runOnce(this::cancelIfRunningInstantaneous);
     }
 
     public Command waitUntilFinish() {

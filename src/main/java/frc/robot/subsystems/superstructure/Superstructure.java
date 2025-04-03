@@ -243,6 +243,20 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
+    private Command waitUntilHasNoCoral() {
+        Timer sinceHadCoral = new Timer();
+        return CommandsExt.startIdleWaitUntil(
+                sinceHadCoral::restart,
+                () -> {
+                    boolean hasAnyCoral = endEffectorTriggeredShort() || funnelTriggeredShort();
+                    if (hasAnyCoral) {
+                        sinceHadCoral.restart();
+                    }
+                    return sinceHadCoral.hasElapsed(1);
+                }
+        );
+    }
+
     public Command cancel() {
         return Commands.parallel(
                 backgroundCommandScheduler.cancelIfRunning(),
@@ -610,13 +624,22 @@ public class Superstructure extends SubsystemBaseExt {
                 elevator.setGoal(() -> Elevator.Goal.STOW)
         );
         if (duringAuto) {
+            var shouldCancel = new Object() {
+                boolean val = false;
+            };
             return wrapExposedCommand(
                     CommandsExt.eagerSequence(
                             drive.moveTo(alignPoseSupplier, () -> false)
                                     // We don't really care about position tolerances right now,
                                     // checking velocity is a good way to approximate "we're at the position we want"
                                     .until(() -> Util.isWithinVelocityTolerance(drive.getMeasuredChassisSpeeds(), 0.2, Units.degreesToRadians(15))),
-                            shake()
+                            Commands.parallel(
+                                    shake(),
+                                    CommandsExt.eagerSequence(
+                                            waitUntilHasNoCoral(),
+                                            Commands.runOnce(() -> shouldCancel.val = true)
+                                    )
+                            )
                     ),
                     CommandsExt.eagerSequence(
                             initial,
@@ -632,7 +655,14 @@ public class Superstructure extends SubsystemBaseExt {
                                     )
                             )
                     )
-            );
+            )
+                    .onlyWhile(() -> !shouldCancel.val)
+                    .finallyDo(() -> {
+                        if (shouldCancel.val) {
+                            backgroundCommandScheduler.cancelIfRunningInstantaneous();
+                        }
+                        shouldCancel.val = false;
+                    });
         } else
             return wrapExposedCommand(
                     drive.stop(),
