@@ -36,7 +36,7 @@ public class ReefAlign {
 
     public static final double alignLinearToleranceMeters = 0.04;
     public static final double alignAngularToleranceRad = Units.degreesToRadians(4);
-    public static final double alignLinearToleranceMetersPerSecond = 0.04;
+    public static final double alignLinearToleranceMetersPerSecond = 0.02;
     public static final double alignAngularToleranceRadPerSecond = Units.degreesToRadians(8);
 
     public static boolean canRaiseElevator(Pose2d currentPose, ReefZoneSide reefZoneSide, LocalReefSide localReefSide) {
