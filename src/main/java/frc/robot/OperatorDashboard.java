@@ -43,6 +43,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     public final LoggedNetworkBooleanExt manualElevator = new LoggedNetworkBooleanExt(prefix + "ManualElevator", false);
     public final LoggedNetworkBooleanExt manualElevatorUp = new LoggedNetworkBooleanExt(prefix + "ManualElevatorUp", false);
     public final LoggedNetworkBooleanExt manualElevatorDown = new LoggedNetworkBooleanExt(prefix + "ManualElevatorDown", false);
+    public final LoggedNetworkBooleanExt zeroElevatorSequence = new LoggedNetworkBooleanExt(prefix + "ZeroElevatorSequence", false);
 
     private final EnumMap<ReefZoneSide, LoggedNetworkBooleanExt> reefZoneSides = generateTogglesForEnum("ReefZoneSides", ReefZoneSide.values(), ReefZoneSide.class);
     private final EnumMap<LocalReefSide, LoggedNetworkBooleanExt> localReefSides = generateTogglesForEnum("LocalReefSides", Arrays.stream(LocalReefSide.values()).filter(side -> side != LocalReefSide.Middle).toArray(LocalReefSide[]::new), LocalReefSide.class);

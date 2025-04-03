@@ -44,7 +44,7 @@ public class Elevator extends SubsystemBaseExt {
         DESCORE_L2(descoreL2GoalSetpoint::get, false),
         DESCORE_L3(descoreL3GoalSetpoint::get, false),
         ZERO_CORAL(null, false),
-        ;
+        ZERO_ELEVATOR(null, false);
 
         /** Should be constant for every loop cycle */
         public final DoubleSupplier setpointMeters;
@@ -347,6 +347,33 @@ public class Elevator extends SubsystemBaseExt {
                         () -> getPositionMeters() < 0.01
                 ),
                 Commands.idle()
+        );
+    }
+
+    public Command zeroElevator() {
+        var elevatorInitialPosition = new Object() {
+            double val = 0.0;
+        };
+        return CommandsExt.eagerSequence(
+                setGoal(() -> Goal.ZERO_ELEVATOR),
+                runOnce(() -> {
+                    operatorDashboard.zeroElevatorSequence.set(false);
+                    io.setManualCurrentLimit(true);
+                    io.setOpenLoop(-0.5);
+                }),
+                Commands.waitSeconds(0.2),
+                Commands.waitUntil(() -> getVelocityMetersPerSec() < 0.02),
+                runOnce(() -> {
+                    elevatorInitialPosition.val = getPositionMeters();
+                    io.setOpenLoop(0.0);
+                }),
+                Commands.waitSeconds(1),
+                runOnce(() -> {
+                    if (Math.abs(getPositionMeters() - elevatorInitialPosition.val) < 0.02) {
+                        io.setEncoder(0);
+                    }
+                    io.setManualCurrentLimit(false);
+                })
         );
     }
 

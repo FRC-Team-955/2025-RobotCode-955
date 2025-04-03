@@ -200,8 +200,9 @@ public class RobotContainer {
         ));
 
         operatorDashboard.operatorKeypad.getOverride4()
+                .or(operatorDashboard.zeroElevatorSequence::get)
                 .and(() -> !operatorDashboard.manualElevator.get())
-                .onTrue(Commands.print("TODO: elevator zeroing sequence"));
+                .toggleOnTrue(superstructure.zeroElevator());
         operatorDashboard.operatorKeypad.getOverride6()
                 .and(() -> !operatorDashboard.manualElevator.get())
                 .onTrue(Commands.runOnce(() -> operatorDashboard.useRealElevatorState.set(true)));

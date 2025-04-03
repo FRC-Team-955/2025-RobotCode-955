@@ -340,6 +340,10 @@ public class Superstructure extends SubsystemBaseExt {
         return wrapExposedCommand(homeInternal());
     }
 
+    public Command zeroElevator() {
+        return wrapExposedCommand(elevator.zeroElevator());
+    }
+
     private Command shake() {
         return drive.runRobotRelative(() -> Timer.getTimestamp() % 0.25 < 0.125
                 ? new ChassisSpeeds(-0.05, -0.05, -0.3)
