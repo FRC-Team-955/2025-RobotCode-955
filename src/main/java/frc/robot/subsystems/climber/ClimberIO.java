@@ -1,0 +1,30 @@
+package frc.robot.subsystems.climber;
+
+import org.littletonrobotics.junction.AutoLog;
+
+public class ClimberIO {
+    @AutoLog
+    public static class ClimberIOInputs {
+        public boolean connected = false;
+        public double positionRad = 0.0;
+        public double velocityRadPerSec = 0.0;
+        public double appliedVolts = 0.0;
+        public double currentAmps = 0.0;
+        public double temperatureCelsius = 0.0;
+
+        public boolean absoluteEncoderConnected = false;
+        public double absolutePositionRad = 0.0;
+    }
+
+    public void updateInputs(ClimberIOInputs inputs) {
+    }
+
+    public void setBrakeMode(boolean enable) {
+    }
+
+    /**
+     * Run the motor at the specified voltage.
+     */
+    public void setVoltage(double voltage) {
+    }
+}

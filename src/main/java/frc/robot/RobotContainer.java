@@ -12,6 +12,7 @@ import frc.robot.autos.CenterAuto;
 import frc.robot.autos.ProcessorSideAuto;
 import frc.robot.autos.ProcessorSideFriendlyAuto;
 import frc.robot.subsystems.apriltagvision.AprilTagVision;
+import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.JoystickDrive;
 import frc.robot.subsystems.elevator.Elevator;
@@ -50,6 +51,7 @@ public class RobotContainer {
     public final Elevator elevator = Elevator.get();
     public final EndEffector endEffector = EndEffector.get();
     public final Funnel funnel = Funnel.get();
+    public final Climber climber = Climber.get();
     public final Drive drive = Drive.get();
     public final AprilTagVision aprilTagVision = AprilTagVision.get();
     public final GamePieceVision gamePieceVision = GamePieceVision.get();
@@ -202,6 +204,9 @@ public class RobotContainer {
                         operatorDashboard.manualScoring::get
                 )
         ));
+
+        driverController.povDown().whileTrue(superstructure.climbTowardsRobot());
+        driverController.povUp().whileTrue(superstructure.climbAwayFromRobot());
 
         operatorDashboard.operatorKeypad.getOverride4()
                 .or(operatorDashboard.zeroElevatorSequence::get)

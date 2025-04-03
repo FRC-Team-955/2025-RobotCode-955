@@ -16,6 +16,7 @@ import frc.robot.OperatorDashboard.CoralScoringLevel;
 import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
 import frc.robot.Util;
+import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
@@ -49,6 +50,7 @@ public class Superstructure extends SubsystemBaseExt {
     private final Elevator elevator = Elevator.get();
     private final EndEffector endEffector = EndEffector.get();
     private final Funnel funnel = Funnel.get();
+    private final Climber climber = Climber.get();
     private final GamePieceVision gamePieceVision = GamePieceVision.get();
 
     private final SuperstructureIO io = createIO();
@@ -84,6 +86,11 @@ public class Superstructure extends SubsystemBaseExt {
         AUTO_FUNNEL_INTAKE_WAITING_SHAKE,
 
         EJECT,
+
+        ZERO_ELEVATOR,
+
+        CLIMB_TOWARDS_ROBOT,
+        CLIMB_AWAY_FROM_ROBOT,
     }
 
     @Getter
@@ -135,7 +142,9 @@ public class Superstructure extends SubsystemBaseExt {
                  HANDOFF, HOME,
                  FUNNEL_INTAKE_WAITING,
                  AUTO_FUNNEL_INTAKE_WAITING_ALIGN, AUTO_FUNNEL_INTAKE_WAITING_SHAKE,
-                 EJECT -> false;
+                 EJECT,
+                 ZERO_ELEVATOR,
+                 CLIMB_AWAY_FROM_ROBOT, CLIMB_TOWARDS_ROBOT -> false;
         });
     }
 
@@ -166,9 +175,9 @@ public class Superstructure extends SubsystemBaseExt {
             case HOME, HANDOFF,
                  MANUAL_SCORE_CORAL_SCORING, DESCORE_ALGAE_DESCORING -> DashboardColors.finalizing.get();
 
-            case EJECT -> DashboardColors.eject.get();
+            case EJECT, ZERO_ELEVATOR -> DashboardColors.eject.get();
 
-            case IDLE -> Color.kBlack;
+            case IDLE, CLIMB_AWAY_FROM_ROBOT, CLIMB_TOWARDS_ROBOT -> Color.kBlack;
         };
         Logger.recordOutput("Superstructure/Color", color.toHexString());
         robotMechanism.superstructure.color.setColor(new Color8Bit(color));
@@ -257,13 +266,16 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
+    private boolean hasClimbed = false;
+
     public Command cancel() {
         return Commands.parallel(
                 backgroundCommandScheduler.cancelIfRunning(),
                 setGoal(Goal.IDLE),
                 elevator.setGoal(() -> Elevator.Goal.STOW),
                 endEffector.setGoal(EndEffector.Goal.IDLE),
-                funnel.setGoal(Funnel.Goal.IDLE)
+                funnel.setGoal(Funnel.Goal.IDLE),
+                climber.setGoal(() -> hasClimbed ? Climber.Goal.HOLD : Climber.Goal.STOW)
         );
     }
 
@@ -341,7 +353,28 @@ public class Superstructure extends SubsystemBaseExt {
     }
 
     public Command zeroElevator() {
-        return wrapExposedCommand(elevator.zeroElevator());
+        return wrapExposedCommand(Commands.parallel(
+                setGoal(Goal.ZERO_ELEVATOR),
+                elevator.zeroElevator()
+        ));
+    }
+
+    public Command climbTowardsRobot() {
+        return wrapExposedCommand(Commands.parallel(
+                setGoal(Goal.CLIMB_TOWARDS_ROBOT),
+                Commands.runOnce(() -> hasClimbed = true),
+                climber.setGoal(() -> Climber.Goal.CLIMB_TOWARDS_ROBOT),
+                Commands.idle()
+        ));
+    }
+
+    public Command climbAwayFromRobot() {
+        return wrapExposedCommand(Commands.parallel(
+                setGoal(Goal.CLIMB_AWAY_FROM_ROBOT),
+                Commands.runOnce(() -> hasClimbed = true),
+                climber.setGoal(() -> Climber.Goal.CLIMB_AWAY_FROM_ROBOT),
+                Commands.idle()
+        ));
     }
 
     private Command shake() {
