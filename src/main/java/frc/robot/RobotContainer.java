@@ -85,7 +85,8 @@ public class RobotContainer {
         autoChooser.addOption("Processor Side", ProcessorSideAuto.get(factory.newRoutine("Processor Side"), false));
         autoChooser.addOption("Processor Side Alternate", ProcessorSideAuto.get(factory.newRoutine("Processor Side Alternate"), true));
         autoChooser.addOption("Processor Side Friendly", ProcessorSideFriendlyAuto.get(factory.newRoutine("Processor Side Friendly")));
-        autoChooser.addOption("Center", CenterAuto.get(factory.newRoutine("Center")));
+        autoChooser.addOption("Center", CenterAuto.get(factory.newRoutine("Center"), false));
+        autoChooser.addOption("Center Descore", CenterAuto.get(factory.newRoutine("Center Descore"), true));
 
         autoChooser.addOption(
                 "Characterization",

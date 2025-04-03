@@ -6,15 +6,22 @@ import frc.robot.OperatorDashboard.CoralScoringLevel;
 import frc.robot.autos.AutoBuilder.IntakeScorePair;
 import frc.robot.subsystems.superstructure.ReefAlign.LocalReefSide;
 import frc.robot.subsystems.superstructure.ReefAlign.ReefZoneSide;
+import frc.robot.subsystems.superstructure.Superstructure;
+import frc.robot.util.commands.CommandsExt;
 
 import java.util.List;
 
 public class CenterAuto {
-    public static Command get(AutoRoutine routine) {
+    public static Command get(AutoRoutine routine, boolean descore) {
         final var firstScoreTraj = routine.trajectory("Center");
 
-        return AutoBuilder.createScoring(routine, List.of(
+        Command auto = AutoBuilder.createScoring(routine, List.of(
                 new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.MiddleBack, LocalReefSide.Left, CoralScoringLevel.L4)
         ));
+
+        return descore ? CommandsExt.eagerSequence(
+                auto,
+                Superstructure.get().autoDescoreAlgae(() -> ReefZoneSide.MiddleBack, () -> true).asProxy()
+        ) : auto;
     }
 }
