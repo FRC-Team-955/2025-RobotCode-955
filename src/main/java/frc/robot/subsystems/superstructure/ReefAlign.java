@@ -86,16 +86,17 @@ public class ReefAlign {
         // we are close enough that we should just use the normal final align rotation
         // We also want to use the normal final align rotation if we haven't raised the elevator because
         // it will get stuck otherwise
-        Rotation2d angleForTransformation = finalAlign.getRotation().interpolate(
-                currentPose.getTranslation().minus(finalAlign.getTranslation()).getAngle(),
-                Math.abs(new Transform2d(finalAlign, currentPose).getX()) / initialAlignDistXForFullAngle
-        );
-        Pose2d initialEnd = new Pose2d(
-                new Pose2d(finalAlign.getTranslation(), angleForTransformation)
-                        .transformBy(initialAlignEndOffset)
-                        .getTranslation(),
-                finalAlign.getRotation()
-        );
+//        Rotation2d angleForTransformation = finalAlign.getRotation().interpolate(
+//                currentPose.getTranslation().minus(finalAlign.getTranslation()).getAngle(),
+//                Math.abs(new Transform2d(finalAlign, currentPose).getX()) / initialAlignDistXForFullAngle
+//        );
+//        Pose2d initialEnd = new Pose2d(
+//                new Pose2d(finalAlign.getTranslation(), angleForTransformation)
+//                        .transformBy(initialAlignEndOffset)
+//                        .getTranslation(),
+//                finalAlign.getRotation()
+//        );
+        Pose2d initialEnd = finalAlign.plus(initialAlignEndOffset);
 
         // Interpolate to initialBase based on y distance (left/right distance)
         double initialDistY = Math.abs(new Transform2d(initialEnd, currentPose).getY()) - initialAlignDistYOffset;
