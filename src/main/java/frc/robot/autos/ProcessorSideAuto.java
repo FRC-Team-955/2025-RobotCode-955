@@ -19,7 +19,8 @@ public class ProcessorSideAuto {
                         routine.trajectory("Processor Side", 0),
                         ReefZoneSide.RightBack,
                         LocalReefSide.Left,
-                        CoralScoringLevel.L4
+                        CoralScoringLevel.L4,
+                        false
                 ),
                 new IntakeScorePair(
                         routine.trajectory("Processor Side", 1),
@@ -27,7 +28,8 @@ public class ProcessorSideAuto {
                         routine.trajectory("Processor Side", 2),
                         ReefZoneSide.RightFront,
                         LocalReefSide.Right,
-                        CoralScoringLevel.L4
+                        CoralScoringLevel.L4,
+                        false
                 ),
                 switch (type) {
                     case Normal, AvoidMiddleFront -> new IntakeScorePair(
@@ -36,7 +38,8 @@ public class ProcessorSideAuto {
                             routine.trajectory("Processor Side", 4),
                             ReefZoneSide.RightFront,
                             LocalReefSide.Left,
-                            CoralScoringLevel.L4
+                            CoralScoringLevel.L4,
+                            false
                     );
                     case AvoidMiddleFrontAndAdjacent -> new IntakeScorePair(
                             routine.trajectory("Processor Side", 3),
@@ -44,7 +47,8 @@ public class ProcessorSideAuto {
                             routine.trajectory("Processor Side - Alternate Right"),
                             ReefZoneSide.RightBack,
                             LocalReefSide.Right,
-                            CoralScoringLevel.L4
+                            CoralScoringLevel.L4,
+                            false
                     );
                 },
                 switch (type) {
@@ -54,7 +58,8 @@ public class ProcessorSideAuto {
                             routine.trajectory("Processor Side", 6),
                             ReefZoneSide.MiddleFront,
                             LocalReefSide.Right,
-                            CoralScoringLevel.L4
+                            CoralScoringLevel.L2,
+                            false
                     );
                     case AvoidMiddleFront, AvoidMiddleFrontAndAdjacent -> new IntakeScorePair(
                             routine.trajectory("Processor Side", 5),
@@ -62,7 +67,8 @@ public class ProcessorSideAuto {
                             routine.trajectory("Processor Side - Alternate Left"),
                             ReefZoneSide.RightBack,
                             LocalReefSide.Left,
-                            CoralScoringLevel.L2
+                            CoralScoringLevel.L2,
+                            false
                     );
                 }
         ));

@@ -585,7 +585,8 @@ public class Superstructure extends SubsystemBaseExt {
             Supplier<ReefZoneSide> reefSideSupplier,
             Supplier<LocalReefSide> sideSupplier,
             Supplier<CoralScoringLevel> coralScoringLevelSupplier,
-            BooleanSupplier forceCondition
+            BooleanSupplier forceCondition,
+            boolean safe
     ) {
         DoubleSupplier elevatorPercentageSupplier = () -> elevator.getPositionMeters() / coralScoringLevelSupplier.get().coralScoringElevatorGoal.setpointMeters.getAsDouble();
         Supplier<Pose2d> alignPoseSupplier = () -> ReefAlign.getAlignPose(robotState.getPose(), elevatorPercentageSupplier.getAsDouble(), reefSideSupplier.get(), sideSupplier.get());
@@ -635,7 +636,9 @@ public class Superstructure extends SubsystemBaseExt {
 
         Command score = CommandsExt.eagerSequence(
                 setGoal(Goal.AUTO_SCORE_CORAL_SCORING),
-                Commands.waitSeconds(0.3),
+                safe
+                        ? Commands.waitSeconds(1)
+                        : Commands.waitSeconds(0.3),
                 Commands.parallel(
                         Commands.either(
                                 endEffector.setGoal(EndEffector.Goal.SCORE_CORAL_L1),

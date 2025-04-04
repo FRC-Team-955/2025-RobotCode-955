@@ -165,7 +165,8 @@ public class RobotContainer {
                                 operatorDashboard::getSelectedReefZoneSide,
                                 operatorDashboard::getSelectedLocalReefSide,
                                 operatorDashboard::getSelectedCoralScoringLevel,
-                                driverController.leftTrigger()
+                                driverController.leftTrigger(),
+                                false
                         ).deadlineFor(
                                 Commands.startRun(
                                         () -> ref.shouldDescoreAlgae = false,

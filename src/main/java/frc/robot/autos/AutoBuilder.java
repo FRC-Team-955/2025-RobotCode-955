@@ -88,7 +88,8 @@ public class AutoBuilder {
             AutoTrajectory scoreTraj,
             ReefAlign.ReefZoneSide reefZoneSide,
             ReefAlign.LocalReefSide localReefSide,
-            OperatorDashboard.CoralScoringLevel coralScoringLevel
+            OperatorDashboard.CoralScoringLevel coralScoringLevel,
+            boolean safe
     ) {
         private Command scoreCommand(Superstructure superstructure) {
             return superstructure.autoScoreCoral(
@@ -96,7 +97,8 @@ public class AutoBuilder {
                     () -> reefZoneSide,
                     () -> localReefSide,
                     () -> coralScoringLevel,
-                    () -> true
+                    () -> true,
+                    safe
             );
         }
     }

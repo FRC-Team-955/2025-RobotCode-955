@@ -26,10 +26,10 @@ public class ReefAlign {
     private static final double initialAlignDistXForFullAngle = 0.5;
 
     private static final double finalAlignAngularDiffForInitialRad = Units.degreesToRadians(30);
-    private static final double finalAlignElevatorPercentageMultiplier = 1.5;
+    private static final double finalAlignElevatorPercentageMultiplier = 1.25;
 
     // Distance at which to start raising the elevator
-    public static final double elevatorRaiseDistanceMeters = 2.0;
+    public static final double elevatorRaiseDistanceMeters = 1.5;
     // Distance at which elevator cannot be raised
     public static final double elevatorStowDistanceXMeters = initialAlignEndOffset.getX() / 2.0;
     public static final double elevatorRaiseAngularToleranceRad = Units.degreesToRadians(60);
@@ -105,22 +105,13 @@ public class ReefAlign {
 
         // Now interpolate from initial to final end based on elevator percentage
         // Fully at final when 100% raised, fully at initial when 0% raised
-        elevatorPercentage *= finalAlignElevatorPercentageMultiplier;
-        if (elevatorPercentage >= 0.9) {
+        if (elevatorPercentage >= 0.95) {
             elevatorPercentage = 1.0;
-        } else {
-            elevatorPercentage = MathUtil.clamp(elevatorPercentage, 0.0, 1.0);
         }
+        elevatorPercentage *= finalAlignElevatorPercentageMultiplier;
+        elevatorPercentage = MathUtil.clamp(elevatorPercentage, 0.0, 1.0);
 
-        // Also consider rotational difference when aligning - we don't want to fully align if we aren't pointing in the right direction
-        double finalAngularDiff = Math.abs(MathUtil.angleModulus(new Transform2d(finalAlign, currentPose).getRotation().getRadians()));
-        if (finalAngularDiff < alignAngularToleranceRad) {
-            finalAngularDiff = 0.0;
-        }
-        // Clamp needed since we're multiplying
-        double angularDiffInterp = MathUtil.clamp(1.0 - (finalAngularDiff / finalAlignAngularDiffForInitialRad), 0.0, 1.0);
-
-        return initial.interpolate(finalAlign, elevatorPercentage * angularDiffInterp);
+        return initial.interpolate(finalAlign, elevatorPercentage);
     }
 
     public static AllianceBasedPose2d getAdjustedReefAprilTagPose(int aprilTagOffset) {
