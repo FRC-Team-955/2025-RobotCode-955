@@ -100,7 +100,11 @@ public class Climber extends SubsystemBaseExt {
             double value = goal.value.getAsDouble();
             switch (goal.type) {
                 case Voltage -> io.setVoltage(value);
-                case Position -> io.setVoltage(controller.calculate(inputs.absolutePositionRad, value));
+                case Position -> io.setVoltage(
+                        inputs.absoluteEncoderConnected
+                                ? controller.calculate(inputs.absolutePositionRad, value)
+                                : 0
+                );
             }
         }
     }
