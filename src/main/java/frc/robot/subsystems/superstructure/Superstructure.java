@@ -108,6 +108,8 @@ public class Superstructure extends SubsystemBaseExt {
     private final Debouncer funnelBeamBreakDebouncerShort = new Debouncer(3 * 0.02);
     private final Debouncer funnelBeamBreakDebouncerLong = new Debouncer(0.25);
 
+    private final Debouncer hasCoralDebouncer = new Debouncer(1, Debouncer.DebounceType.kFalling);
+
     private static Superstructure instance;
 
     public static Superstructure get() {
@@ -232,6 +234,11 @@ public class Superstructure extends SubsystemBaseExt {
         return funnelBeamBreakDebouncerLong.calculate(inputs.funnelBeamBreakTriggered);
     }
 
+    @AutoLogOutput(key = "Superstructure/HasCoral")
+    private boolean hasCoral() {
+        return hasCoralDebouncer.calculate(endEffectorTriggeredShort() || funnelTriggeredShort() || gamePieceVision.visibleDebounced());
+    }
+
     private Command waitUntilEndEffectorTriggered(Command ifIgnored) {
         return Commands.either(
                 ifIgnored,
@@ -253,17 +260,7 @@ public class Superstructure extends SubsystemBaseExt {
     }
 
     private Command waitUntilHasNoCoral() {
-        Timer sinceHadCoral = new Timer();
-        return CommandsExt.startIdleWaitUntil(
-                sinceHadCoral::restart,
-                () -> {
-                    boolean hasAnyCoral = endEffectorTriggeredShort() || funnelTriggeredShort();
-                    if (hasAnyCoral) {
-                        sinceHadCoral.restart();
-                    }
-                    return sinceHadCoral.hasElapsed(1);
-                }
-        );
+        return Commands.waitUntil(() -> !hasCoral());
     }
 
     private boolean hasClimbed = false;
