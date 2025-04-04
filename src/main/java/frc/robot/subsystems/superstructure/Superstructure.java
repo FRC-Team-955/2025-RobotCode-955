@@ -5,10 +5,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.OperatorDashboard;
@@ -38,8 +35,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static frc.robot.subsystems.superstructure.SuperstructureConstants.*;
-import static frc.robot.subsystems.superstructure.SuperstructureTuning.homeFinalMeters;
-import static frc.robot.subsystems.superstructure.SuperstructureTuning.homeInitialMeters;
+import static frc.robot.subsystems.superstructure.SuperstructureTuning.*;
 
 public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
@@ -287,12 +283,34 @@ public class Superstructure extends SubsystemBaseExt {
     }
 
     private Command handoff() {
-        return waitUntilEndEffectorTriggered(Commands.none())
-                .deadlineFor(Commands.parallel(
-                        setGoal(Goal.HANDOFF),
-                        endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE),
-                        funnelSetGoalIntakeAlternate()
-                ));
+        return Commands.either(
+                waitUntilEndEffectorTriggered(Commands.none())
+                        .deadlineFor(Commands.parallel(
+                                setGoal(Goal.HANDOFF),
+                                endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE),
+                                funnelSetGoalIntakeAlternate()
+                        )),
+                CommandsExt.eagerSequence(
+                        Commands.parallel(
+                                setGoal(Goal.HANDOFF),
+                                endEffector.setGoal(EndEffector.Goal.IDLE),
+                                funnel.setGoal(Funnel.Goal.ZERO_CORAL),
+                                CommandsExt.eagerSequence(
+                                        waitUntilFunnelTriggered(),
+                                        Commands.waitSeconds(0.2)
+                                )
+                        ),
+                        Commands.parallel(
+                                funnel.setGoal(Funnel.Goal.IDLE),
+                                Commands.waitSeconds(0.05)
+                        ),
+                        Commands.parallel(
+                                endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE_MANUAL),
+                                funnel.moveByAndWaitUntilDone(manualFunnelIntakeMeters::get)
+                        )
+                ),
+                () -> !operatorDashboard.manualIntaking.get()
+        );
     }
 
     /** does NOT check if there is coral in the end effector */
@@ -302,11 +320,15 @@ public class Superstructure extends SubsystemBaseExt {
                 CommandsExt.eagerSequence(
                         CommandsExt.eagerSequence(
                                 CommandsExt.onlyIf(
-                                        () -> !endEffectorTriggeredLong(),
+                                        () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                                         endEffector.moveByAndWaitUntilDone(homeInitialMeters::get)
                                 ),
                                 endEffector.setGoal(EndEffector.Goal.ZERO_CORAL),
-                                Commands.waitSeconds(0.12)
+                                Commands.either(
+                                        Commands.waitSeconds(0.2),
+                                        Commands.waitSeconds(0.12),
+                                        operatorDashboard.manualIntaking::get
+                                )
                         ).deadlineFor(elevator.zeroCoral()),
                         CommandsExt.eagerSequence(
                                 endEffector.setGoal(EndEffector.Goal.IDLE),
@@ -467,8 +489,15 @@ public class Superstructure extends SubsystemBaseExt {
                 waitUntilFunnelTriggered()
         ).deadlineFor(
                 setGoal(Goal.FUNNEL_INTAKE_WAITING),
-                endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE),
-                funnelSetGoalIntakeAlternate()
+                CommandsExt.onlyIf(
+                        () -> !operatorDashboard.manualIntaking.get(),
+                        endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE)
+                ),
+                Commands.either(
+                        funnel.setGoal(Funnel.Goal.ZERO_CORAL),
+                        funnelSetGoalIntakeAlternate(),
+                        operatorDashboard.manualIntaking::get
+                )
         );
         if (duringAuto) {
             return wrapExposedCommand(CommandsExt.onlyIf(
@@ -501,8 +530,15 @@ public class Superstructure extends SubsystemBaseExt {
                 waitUntilFunnelTriggered(),
                 gamePieceVision.waitForGamePiece()
         ).deadlineFor(
-                endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE),
-                funnelSetGoalIntakeAlternate(),
+                CommandsExt.onlyIf(
+                        () -> !operatorDashboard.manualIntaking.get(),
+                        endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE)
+                ),
+                Commands.either(
+                        funnel.setGoal(Funnel.Goal.ZERO_CORAL),
+                        funnelSetGoalIntakeAlternate(),
+                        operatorDashboard.manualIntaking::get
+                ),
                 CommandsExt.eagerSequence(
                         Commands.parallel(
                                 setGoal(Goal.AUTO_FUNNEL_INTAKE_WAITING_ALIGN),

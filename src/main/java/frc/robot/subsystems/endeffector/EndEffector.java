@@ -38,20 +38,21 @@ public class EndEffector extends SubsystemBaseExt {
         IDLE(() -> 0),
         HANDOFF(() -> 0),
         FUNNEL_INTAKE(funnelIntakeGoalSetpoint::get),
+        FUNNEL_INTAKE_MANUAL(funnelIntakeManualGoalSetpoint::get),
         SCORE_CORAL(scoreCoralGoalSetpoint::get),
         SCORE_CORAL_L1(scoreCoralL1GoalSetpoint::get),
         DESCORE_ALGAE(descoreAlgaeGoalSetpoint::get),
         EJECT_FORWARDS(ejectGoalSetpoint::get),
         EJECT_BACKWARDS(() -> -ejectGoalSetpoint.get()),
         ZERO_CORAL(zeroCoralGoalSetpoint::get),
-        GO_TO_POSITION(null); // Handled specially in periodic and with rollersPositionSetpointRad
+        GO_TO_POSITION(null); // Handled specially in periodic and with positionSetpointRad
 
         private final DoubleSupplier setpointRadPerSec;
     }
 
     @Getter
     private Goal goal = Goal.IDLE;
-    private Double rollersPositionSetpointRad = null;
+    private Double positionSetpointRad = null;
 
     private final Alert rollersDisconnectedAlert = new Alert("End effector rollers motor is disconnected.", Alert.AlertType.kError);
 
@@ -106,12 +107,12 @@ public class EndEffector extends SubsystemBaseExt {
             Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", false);
             Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", true);
             Logger.recordOutput("EndEffector/Rollers/Velocity/SetpointRadPerSec", rollersVelocitySetpointRadPerSec);
-        } else if (goal == Goal.GO_TO_POSITION && rollersPositionSetpointRad != null) {
+        } else if (goal == Goal.GO_TO_POSITION && positionSetpointRad != null) {
             // Position control
+            rollersIO.setClosedLoopPosition(positionSetpointRad);
             Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", true);
             Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", false);
-            Logger.recordOutput("EndEffector/Rollers/Position/SetpointRad", rollersPositionSetpointRad);
-            rollersIO.setClosedLoopPosition(rollersPositionSetpointRad);
+            Logger.recordOutput("EndEffector/Rollers/Position/SetpointRad", positionSetpointRad);
         } else {
             Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", false);
             Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", false);
@@ -140,13 +141,13 @@ public class EndEffector extends SubsystemBaseExt {
         return startEndWaitUntil(
                 () -> {
                     this.goal = Goal.GO_TO_POSITION;
-                    rollersPositionSetpointRad = rollersInputs.positionRad + rollersRadiansForMeters(positionDeltaMeters.getAsDouble());
+                    positionSetpointRad = rollersInputs.positionRad + rollersRadiansForMeters(positionDeltaMeters.getAsDouble());
                 },
                 () -> {
                     this.goal = Goal.IDLE;
-                    rollersPositionSetpointRad = null;
+                    positionSetpointRad = null;
                 },
-                () -> Math.abs(rollersInputs.positionRad - rollersPositionSetpointRad) <= rollersPositionToleranceRad
+                () -> Math.abs(rollersInputs.positionRad - positionSetpointRad) <= rollersPositionToleranceRad
         );
     }
 

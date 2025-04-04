@@ -11,6 +11,8 @@ public class FunnelTuning {
 
     public static final LoggedTunableNumber intakeGoalSetpoint =
             new LoggedTunableNumber("Funnel/Belt/Goal/Intake", Units.rotationsPerMinuteToRadiansPerSecond(900));
+    public static final LoggedTunableNumber intakeManualGoalSetpoint =
+            new LoggedTunableNumber("Funnel/Belt/Goal/IntakeManual", Units.rotationsPerMinuteToRadiansPerSecond(300));
     public static final LoggedTunableNumber ejectGoalSetpoint =
             new LoggedTunableNumber("Funnel/Belt/Goal/Eject", Units.rotationsPerMinuteToRadiansPerSecond(1000));
 }

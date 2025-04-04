@@ -30,6 +30,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     public final LoggedNetworkBooleanExt coastOverride = new LoggedNetworkBooleanExt(prefix + "CoastOverride", false);
     public final LoggedNetworkBooleanExt coralStuckInRobotMode = new LoggedNetworkBooleanExt(prefix + "CoralStuckInRobotMode", false);
     public final LoggedNetworkBooleanExt manualScoring = new LoggedNetworkBooleanExt(prefix + "ManualScoring", false);
+    public final LoggedNetworkBooleanExt manualIntaking = new LoggedNetworkBooleanExt(prefix + "ManualIntaking", false);
     public final LoggedNetworkBooleanExt ignoreEndEffectorBeamBreak = new LoggedNetworkBooleanExt(prefix + "IgnoreEndEffectorBeamBreak", false);
     public final LoggedNetworkBooleanExt autoChosen = new LoggedNetworkBooleanExt(prefix + "AutoChosen", false);
     public final LoggedNetworkBooleanExt manualReefSide = new LoggedNetworkBooleanExt(prefix + "ManualReefSide", false);
@@ -62,6 +63,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     private final Alert manualScoringAlert = new Alert("Manual scoring is enabled.", Alert.AlertType.kWarning);
     private final Alert ignoreEndEffectorBeamBreakAlert = new Alert("Ignore end effector beam break is enabled.", Alert.AlertType.kWarning);
     private final Alert autoNotChosenAlert = new Alert("Auto is not chosen!", Alert.AlertType.kError);
+    private final Alert manualIntakingAlert = new Alert("Manual intaking is enabled.", Alert.AlertType.kWarning);
     @SuppressWarnings("FieldCanBeLocal")
     private final Alert constantSetAlert = new Alert("Constants are set.", Alert.AlertType.kInfo);
     private final Alert manualReefSideAlert = new Alert("Manual reef side choosing is enabled.", Alert.AlertType.kWarning);
@@ -91,14 +93,6 @@ public class OperatorDashboard extends VirtualSubsystem {
 
     @Override
     public void periodicBeforeCommands() {
-        // Note - we only handle alerts for general overrides.
-        // So subsystem toggles are handled in their respective subsystems
-        coastOverrideAlert.set(coastOverride.get());
-        coralStuckInRobotModeAlert.set(coralStuckInRobotMode.get());
-        manualScoringAlert.set(manualScoring.get());
-        ignoreEndEffectorBeamBreakAlert.set(ignoreEndEffectorBeamBreak.get());
-        autoNotChosenAlert.set(!autoChosen.get());
-
         if (operatorKeypad.isConnected()) {
             operatorKeypadDisconnectedAlert.set(false);
             operatorKeypad.update();
@@ -119,6 +113,7 @@ public class OperatorDashboard extends VirtualSubsystem {
             if (operatorKeypad.canUseOverrides) {
                 coralStuckInRobotMode.set(operatorKeypad.getOverride1());
                 manualScoring.set(operatorKeypad.getOverride2());
+                manualIntaking.set(operatorKeypad.getOverride3());
                 ignoreEndEffectorBeamBreak.set(operatorKeypad.getOverride3());
                 profiledMoveTo.set(operatorKeypad.getOverride5());
                 // overrides 4 and 6 are handled in RobotContainer
@@ -144,8 +139,20 @@ public class OperatorDashboard extends VirtualSubsystem {
             }
             handleEnumToggles(localReefSides, selectedLocalReefSide, selectNew -> selectedLocalReefSide = selectNew);
             handleEnumToggles(coralScoringLevels, selectedCoralScoringLevel, selectNew -> selectedCoralScoringLevel = selectNew);
+
+            if (manualIntaking.hasChanged()) {
+                ignoreEndEffectorBeamBreak.set(manualIntaking.get());
+            }
         }
 
+        // Note - we only handle alerts for general overrides.
+        // So subsystem toggles are handled in their respective subsystems
+        coastOverrideAlert.set(coastOverride.get());
+        coralStuckInRobotModeAlert.set(coralStuckInRobotMode.get());
+        manualScoringAlert.set(manualScoring.get());
+        manualIntakingAlert.set(manualIntaking.get());
+        ignoreEndEffectorBeamBreakAlert.set(ignoreEndEffectorBeamBreak.get());
+        autoNotChosenAlert.set(!autoChosen.get());
         manualReefSideAlert.set(manualReefSide.get());
     }
 

@@ -17,7 +17,7 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
 
-import static frc.robot.subsystems.funnel.FunnelConstants.createBeltIO;
+import static frc.robot.subsystems.funnel.FunnelConstants.*;
 import static frc.robot.subsystems.funnel.FunnelTuning.*;
 
 public class Funnel extends SubsystemBaseExt {
@@ -33,14 +33,18 @@ public class Funnel extends SubsystemBaseExt {
         IDLE(() -> 0),
         INTAKE_FORWARDS(intakeGoalSetpoint::get),
         INTAKE_BACKWARDS(() -> -intakeGoalSetpoint.get()),
+        INTAKE_MANUAL(intakeManualGoalSetpoint::get),
+        ZERO_CORAL(() -> -ejectGoalSetpoint.get()),
         EJECT_FORWARDS(ejectGoalSetpoint::get),
-        EJECT_BACKWARDS(() -> -ejectGoalSetpoint.get());
+        EJECT_BACKWARDS(() -> -ejectGoalSetpoint.get()),
+        GO_TO_POSITION(null); // Handled specially in periodic and with positionSetpointRad
 
         private final DoubleSupplier setpointRadPerSec;
     }
 
     @Getter
     private Goal goal = Goal.IDLE;
+    private Double positionSetpointRad = null;
 
     private final Alert beltDisconnectedAlert = new Alert("Funnel belt motor is disconnected.", Alert.AlertType.kError);
 
@@ -80,14 +84,22 @@ public class Funnel extends SubsystemBaseExt {
         Logger.recordOutput("Funnel/Goal", goal);
         ////////////// BELT //////////////
         if (DriverStation.isDisabled()) {
-            Logger.recordOutput("Funnel/Belt/ClosedLoop", false);
+            Logger.recordOutput("Funnel/Belt/Position/ClosedLoop", false);
+            Logger.recordOutput("Funnel/Belt/Velocity/ClosedLoop", false);
             beltIO.setOpenLoop(0);
         } else if (goal.setpointRadPerSec != null) {
             // Velocity control
             var beltVelocitySetpointRadPerSec = goal.setpointRadPerSec.getAsDouble();
             beltIO.setClosedLoopVelocity(beltVelocitySetpointRadPerSec);
-            Logger.recordOutput("Funnel/Belt/ClosedLoop", true);
-            Logger.recordOutput("Funnel/Belt/SetpointRadPerSec", beltVelocitySetpointRadPerSec);
+            Logger.recordOutput("Funnel/Belt/Position/ClosedLoop", false);
+            Logger.recordOutput("Funnel/Belt/Velocity/ClosedLoop", true);
+            Logger.recordOutput("Funnel/Belt/Velocity/SetpointRadPerSec", beltVelocitySetpointRadPerSec);
+        } else if (goal == Goal.GO_TO_POSITION && positionSetpointRad != null) {
+            // Position control
+            beltIO.setClosedLoopPosition(positionSetpointRad);
+            Logger.recordOutput("Funnel/Belt/Position/ClosedLoop", true);
+            Logger.recordOutput("Funnel/Belt/Velocity/ClosedLoop", false);
+            Logger.recordOutput("Funnel/Belt/Position/SetpointRad", positionSetpointRad);
         } else {
             Logger.recordOutput("Funnel/Belt/ClosedLoop", false);
         }
@@ -99,6 +111,21 @@ public class Funnel extends SubsystemBaseExt {
 
     public void setGoalInstantaneous(Goal goal) {
         this.goal = goal;
+    }
+
+    /** Goes positionDeltaMeters forward (or backwards) from current position */
+    public Command moveByAndWaitUntilDone(DoubleSupplier positionDeltaMeters) {
+        return startEndWaitUntil(
+                () -> {
+                    this.goal = Goal.GO_TO_POSITION;
+                    positionSetpointRad = beltInputs.positionRad + beltRadiansForMeters(positionDeltaMeters.getAsDouble());
+                },
+                () -> {
+                    this.goal = Goal.IDLE;
+                    positionSetpointRad = null;
+                },
+                () -> Math.abs(beltInputs.positionRad - positionSetpointRad) <= beltPositionToleranceRad
+        );
     }
 
     public Command beltFeedforwardCharacterization() {
