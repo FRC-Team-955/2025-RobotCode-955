@@ -216,7 +216,7 @@ public class RobotContainer {
                         superstructure.zeroElevator(),
                         // Turn off the toggle instantly so it's like a button
                         Commands.runOnce(() -> operatorDashboard.zeroElevator.set(false))
-                ));
+                ).ignoringDisable(true));
         operatorDashboard.operatorKeypad.getOverride6()
                 .and(() -> !operatorDashboard.manualElevator.get())
                 .onTrue(Commands.runOnce(() -> operatorDashboard.useRealElevatorState.set(true)));

@@ -372,7 +372,7 @@ public class Elevator extends SubsystemBaseExt {
                     hasZeroed = true;
                 }).ignoringDisable(true),
                 DriverStation::isEnabled
-        ).ignoringDisable(true);
+        );
     }
 
     public Command setManualVoltage(double addedVoltage) {
