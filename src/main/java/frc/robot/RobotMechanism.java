@@ -35,7 +35,6 @@ public class RobotMechanism {
     @AutoLogOutput(key = "RobotState/Mechanism")
     public final LoggedMechanism2d mechanism = new LoggedMechanism2d(middleOfRobot * 2, 2.1, new Color8Bit(Color.kBlack));
 
-    public final Superstructure superstructure = new Superstructure();
     public final Elevator elevator = new Elevator();
     public final EndEffector endEffector = new EndEffector();
     public final Funnel funnel = new Funnel();
@@ -61,17 +60,6 @@ public class RobotMechanism {
                 90,
                 new Color8Bit(Color.kBlue)
         ));
-    }
-
-    public class Superstructure {
-        public final LoggedMechanismLigament2d color = mechanism.getRoot("superstructure_color", middleOfRobot, 1)
-                .append(new LoggedMechanismLigament2d(
-                        "superstructure_color",
-                        Units.inchesToMeters(10),
-                        90,
-                        11,
-                        new Color8Bit(Color.kBlack)
-                ));
     }
 
     public class Funnel {

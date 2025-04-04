@@ -157,33 +157,6 @@ public class Superstructure extends SubsystemBaseExt {
         Logger.recordOutput("Superstructure/Forceable", forceable);
         Logger.recordOutput("Superstructure/WasForced", wasForced);
 
-        Color color = DriverStation.isDisabled()
-                ? DashboardColors.disabled.get()
-                : switch (goal) {
-            case AUTO_SCORE_CORAL_WAIT_RAISE, AUTO_SCORE_CORAL_SCORING,
-                 AUTO_FUNNEL_INTAKE_WAITING_ALIGN, AUTO_FUNNEL_INTAKE_WAITING_SHAKE,
-                 AUTO_DESCORE_ALGAE_WAIT_RAISE, AUTO_DESCORE_ALGAE_MOVE_BACK -> DashboardColors.autoScoring.get();
-
-            case AUTO_SCORE_CORAL_WAIT_ALIGN, AUTO_SCORE_CORAL_WAIT_ELEVATOR,
-                 AUTO_DESCORE_ALGAE_WAIT_ALIGN, AUTO_DESCORE_ALGAE_WAIT_AMPERAGE ->
-                    forceable ? DashboardColors.driverConfirm.get() : DashboardColors.autoScoring.get();
-
-            case DESCORE_ALGAE_WAIT_ELEVATOR, MANUAL_SCORE_CORAL_WAIT_ELEVATOR -> DashboardColors.waitElevator.get();
-
-            case FUNNEL_INTAKE_WAITING -> DashboardColors.funnelIntaking.get();
-
-            case MANUAL_SCORE_CORAL_WAIT_CONFIRM -> DashboardColors.driverConfirm.get();
-
-            case HOME, HANDOFF,
-                 MANUAL_SCORE_CORAL_SCORING, DESCORE_ALGAE_DESCORING -> DashboardColors.finalizing.get();
-
-            case EJECT, ZERO_ELEVATOR -> DashboardColors.eject.get();
-
-            case IDLE, CLIMB_AWAY_FROM_ROBOT, CLIMB_TOWARDS_ROBOT -> Color.kBlack;
-        };
-        Logger.recordOutput("Superstructure/Color", color.toHexString());
-        robotMechanism.superstructure.color.setColor(new Color8Bit(color));
-
         Pose3d robotPose = new Pose3d(robotState.getPose());
 
         if (gamePieceVision.visibleNotDebounced()) {
