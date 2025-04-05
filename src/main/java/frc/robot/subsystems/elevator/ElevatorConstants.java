@@ -28,7 +28,7 @@ public class ElevatorConstants {
 
     public static final double positionOffsetPerMeterOfDistance = 0.9;
 
-    public static final double hardstopMeters = Units.inchesToMeters(20);
+    public static final double hardstopMeters = Units.inchesToMeters(13);
     public static final double gentleMaxVelocityMetersPerSecond = 0.4;
     /**
      * While we could calculate this based on the current velocity, it caused the gentle profile to be used
