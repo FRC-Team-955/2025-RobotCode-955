@@ -35,7 +35,8 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import static frc.robot.subsystems.superstructure.SuperstructureConstants.*;
-import static frc.robot.subsystems.superstructure.SuperstructureTuning.*;
+import static frc.robot.subsystems.superstructure.SuperstructureTuning.homeFinalMeters;
+import static frc.robot.subsystems.superstructure.SuperstructureTuning.homeInitialMeters;
 
 public class Superstructure extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
@@ -266,7 +267,7 @@ public class Superstructure extends SubsystemBaseExt {
         );
     }
 
-    private Command funnelSetGoalIntakeAlternate() {
+    private Command funnelSetGoalIntakeAlternate(boolean manual) {
         Timer funnelTimer = new Timer();
         return funnel.startRun(
                 funnelTimer::restart,
@@ -276,44 +277,29 @@ public class Superstructure extends SubsystemBaseExt {
                         funnel.setGoalInstantaneous(Funnel.Goal.INTAKE_BACKWARDS);
                         funnelTimer.advanceIfElapsed(1.0);
                     } else {
-                        funnel.setGoalInstantaneous(Funnel.Goal.INTAKE_FORWARDS);
+                        funnel.setGoalInstantaneous(manual ? Funnel.Goal.INTAKE_MANUAL : Funnel.Goal.INTAKE_FORWARDS);
                     }
                 }
         );
     }
 
     private Command handoff() {
-        return Commands.either(
-                waitUntilEndEffectorTriggered(Commands.none())
-                        .deadlineFor(Commands.parallel(
-                                setGoal(Goal.HANDOFF),
-                                endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE),
-                                funnelSetGoalIntakeAlternate()
-                        )),
-                CommandsExt.eagerSequence(
-                        Commands.parallel(
-                                setGoal(Goal.HANDOFF),
-                                endEffector.setGoal(EndEffector.Goal.IDLE),
-                                funnel.setGoal(Funnel.Goal.ZERO_CORAL),
-                                CommandsExt.eagerSequence(
-                                        waitUntilFunnelTriggered(),
-                                        Commands.waitSeconds(0.2)
-                                )
-                        ),
-                        Commands.parallel(
-                                funnel.setGoal(Funnel.Goal.IDLE),
-                                Commands.waitSeconds(0.05)
-                        ),
-                        Commands.parallel(
+        return waitUntilEndEffectorTriggered(Commands.none())
+                .deadlineFor(Commands.parallel(
+                        setGoal(Goal.HANDOFF),
+                        Commands.either(
                                 endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE_MANUAL),
-                                funnel.moveByAndWaitUntilDone(manualFunnelIntakeMeters::get)
+                                endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE),
+                                operatorDashboard.ignoreEndEffectorBeamBreak::get
+                        ),
+                        Commands.either(
+                                funnelSetGoalIntakeAlternate(true),
+                                funnelSetGoalIntakeAlternate(false),
+                                operatorDashboard.ignoreEndEffectorBeamBreak::get
                         )
-                ),
-                () -> !operatorDashboard.manualIntaking.get()
-        );
+                ));
     }
 
-    /** does NOT check if there is coral in the end effector */
     private Command homeInternal() {
         return Commands.parallel(
                 setGoal(Goal.HOME),
@@ -324,11 +310,7 @@ public class Superstructure extends SubsystemBaseExt {
                                         endEffector.moveByAndWaitUntilDone(homeInitialMeters::get)
                                 ),
                                 endEffector.setGoal(EndEffector.Goal.ZERO_CORAL),
-                                Commands.either(
-                                        Commands.waitSeconds(0.2),
-                                        Commands.waitSeconds(0.12),
-                                        operatorDashboard.manualIntaking::get
-                                )
+                                Commands.waitSeconds(0.15)
                         ).deadlineFor(elevator.zeroCoral()),
                         CommandsExt.eagerSequence(
                                 endEffector.setGoal(EndEffector.Goal.IDLE),
@@ -489,14 +471,15 @@ public class Superstructure extends SubsystemBaseExt {
                 waitUntilFunnelTriggered()
         ).deadlineFor(
                 setGoal(Goal.FUNNEL_INTAKE_WAITING),
-                CommandsExt.onlyIf(
-                        () -> !operatorDashboard.manualIntaking.get(),
-                        endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE)
+                Commands.either(
+                        endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE_MANUAL),
+                        endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE),
+                        operatorDashboard.ignoreEndEffectorBeamBreak::get
                 ),
                 Commands.either(
-                        funnel.setGoal(Funnel.Goal.ZERO_CORAL),
-                        funnelSetGoalIntakeAlternate(),
-                        operatorDashboard.manualIntaking::get
+                        funnelSetGoalIntakeAlternate(true),
+                        funnelSetGoalIntakeAlternate(false),
+                        operatorDashboard.ignoreEndEffectorBeamBreak::get
                 )
         );
         if (duringAuto) {
@@ -530,14 +513,15 @@ public class Superstructure extends SubsystemBaseExt {
                 waitUntilFunnelTriggered(),
                 gamePieceVision.waitForGamePiece()
         ).deadlineFor(
-                CommandsExt.onlyIf(
-                        () -> !operatorDashboard.manualIntaking.get(),
-                        endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE)
+                Commands.either(
+                        endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE_MANUAL),
+                        endEffector.setGoal(EndEffector.Goal.FUNNEL_INTAKE),
+                        operatorDashboard.ignoreEndEffectorBeamBreak::get
                 ),
                 Commands.either(
-                        funnel.setGoal(Funnel.Goal.ZERO_CORAL),
-                        funnelSetGoalIntakeAlternate(),
-                        operatorDashboard.manualIntaking::get
+                        funnelSetGoalIntakeAlternate(true),
+                        funnelSetGoalIntakeAlternate(false),
+                        operatorDashboard.ignoreEndEffectorBeamBreak::get
                 ),
                 CommandsExt.eagerSequence(
                         Commands.parallel(

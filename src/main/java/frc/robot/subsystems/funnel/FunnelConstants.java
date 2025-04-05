@@ -1,7 +1,6 @@
 package frc.robot.subsystems.funnel;
 
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.subsystems.rollers.RollersConfig;
 import frc.robot.subsystems.rollers.RollersIO;
@@ -10,13 +9,6 @@ import frc.robot.subsystems.rollers.RollersIOSparkMax;
 import frc.robot.util.PIDF;
 
 public class FunnelConstants {
-    public static final double beltPositionToleranceRad = Units.degreesToRadians(15);
-    public static final double beltPulleyRadiusMeters = Units.inchesToMeters(0.5);
-
-    public static double beltRadiansForMeters(double meters) {
-        return meters / beltPulleyRadiusMeters;
-    }
-
     public static final RollersConfig beltConfig = new RollersConfig(
             true,
             true,

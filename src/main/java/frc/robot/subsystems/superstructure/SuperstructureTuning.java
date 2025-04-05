@@ -8,7 +8,4 @@ public class SuperstructureTuning {
             new LoggedTunableNumber("Superstructure/HomeInitialMeters", Units.inchesToMeters(1.5));
     public static final LoggedTunableNumber homeFinalMeters =
             new LoggedTunableNumber("Superstructure/HomeFinalMeters", Units.inchesToMeters(2.5));
-
-    public static final LoggedTunableNumber manualFunnelIntakeMeters =
-            new LoggedTunableNumber("Superstructure/ManualFunnelIntakeMeters", 1.25);
 }
