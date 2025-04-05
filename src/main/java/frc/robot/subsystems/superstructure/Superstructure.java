@@ -13,7 +13,6 @@ import frc.robot.OperatorDashboard.CoralScoringLevel;
 import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
 import frc.robot.Util;
-import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
@@ -47,7 +46,6 @@ public class Superstructure extends SubsystemBaseExt {
     private final Elevator elevator = Elevator.get();
     private final EndEffector endEffector = EndEffector.get();
     private final Funnel funnel = Funnel.get();
-    private final Climber climber = Climber.get();
     private final GamePieceVision gamePieceVision = GamePieceVision.get();
 
     private final SuperstructureIO io = createIO();
@@ -85,9 +83,6 @@ public class Superstructure extends SubsystemBaseExt {
         EJECT,
 
         ZERO_ELEVATOR,
-
-        CLIMB_TOWARDS_ROBOT,
-        CLIMB_AWAY_FROM_ROBOT,
     }
 
     @Getter
@@ -142,8 +137,7 @@ public class Superstructure extends SubsystemBaseExt {
                  FUNNEL_INTAKE_WAITING,
                  AUTO_FUNNEL_INTAKE_WAITING_ALIGN, AUTO_FUNNEL_INTAKE_WAITING_SHAKE,
                  EJECT,
-                 ZERO_ELEVATOR,
-                 CLIMB_AWAY_FROM_ROBOT, CLIMB_TOWARDS_ROBOT -> false;
+                 ZERO_ELEVATOR -> false;
         });
     }
 
@@ -233,16 +227,13 @@ public class Superstructure extends SubsystemBaseExt {
         return Commands.waitUntil(() -> !hasCoral());
     }
 
-    private boolean hasClimbed = false;
-
     public Command cancel() {
         return Commands.parallel(
                 backgroundCommandScheduler.cancelIfRunning(),
                 setGoal(Goal.IDLE),
                 elevator.setGoal(() -> Elevator.Goal.STOW),
                 endEffector.setGoal(EndEffector.Goal.IDLE),
-                funnel.setGoal(Funnel.Goal.IDLE),
-                climber.setGoal(() -> hasClimbed ? Climber.Goal.HOLD : Climber.Goal.STOW)
+                funnel.setGoal(Funnel.Goal.IDLE)
         );
     }
 
@@ -330,24 +321,6 @@ public class Superstructure extends SubsystemBaseExt {
         return wrapExposedCommand(Commands.parallel(
                 setGoal(Goal.ZERO_ELEVATOR),
                 elevator.zeroElevator()
-        ));
-    }
-
-    public Command climbTowardsRobot() {
-        return wrapExposedCommand(Commands.parallel(
-                setGoal(Goal.CLIMB_TOWARDS_ROBOT),
-                Commands.runOnce(() -> hasClimbed = true),
-                climber.setGoal(() -> Climber.Goal.CLIMB_TOWARDS_ROBOT),
-                Commands.idle()
-        ));
-    }
-
-    public Command climbAwayFromRobot() {
-        return wrapExposedCommand(Commands.parallel(
-                setGoal(Goal.CLIMB_AWAY_FROM_ROBOT),
-                Commands.runOnce(() -> hasClimbed = true),
-                climber.setGoal(() -> Climber.Goal.CLIMB_AWAY_FROM_ROBOT),
-                Commands.idle()
         ));
     }
 
