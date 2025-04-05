@@ -103,7 +103,7 @@ public class AprilTagVision extends SubsystemBaseExt {
 
                 double tagDistance = observation.cameraToTarget().getTranslation().getNorm();
 
-                if (tagDistance < distanceFromTagForTrigMeters && headingSampleOptional.isPresent()) {
+                if (false && tagDistance < distanceFromTagForTrigMeters && headingSampleOptional.isPresent()) {
                     // https://github.com/PhotonVision/photonvision/blob/0ef7c803f91a387a1a95377bf64338509218a240/photon-lib/src/main/java/org/photonvision/PhotonPoseEstimator.java#L496
                     Rotation2d headingSample = headingSampleOptional.get();
 
