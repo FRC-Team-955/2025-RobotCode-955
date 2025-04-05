@@ -32,7 +32,7 @@ public class ReefAlign {
     public static final double elevatorRaiseDistanceMeters = 1.5;
     // Distance at which elevator cannot be raised
     public static final double elevatorStowDistanceXMeters = initialAlignEndOffset.getX() / 2.0;
-    public static final double elevatorStowDistanceYMeters = 0.4;
+    public static final double elevatorStowDistanceYMeters = 0.3;
     public static final double elevatorRaiseAngularToleranceRad = Units.degreesToRadians(60);
 
     public static final double alignLinearToleranceMeters = 0.04;
