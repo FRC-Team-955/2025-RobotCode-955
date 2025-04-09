@@ -6,8 +6,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import frc.robot.OperatorDashboard;
-import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.superstructure.AutoAlignLocations;
+import frc.robot.subsystems.superstructure.ReefAlign;
+import frc.robot.subsystems.superstructure.StationAlign;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.util.commands.CommandsExt;
 
@@ -30,11 +30,9 @@ public class AutoBuilder {
 
         IntakeScorePair first = trajectories.get(0);
 
-        routine.active().onTrue(
-                Commands.sequence(
-                        first.scoreTraj.resetOdometry(),
-                        first.scoreTraj.cmd()
-                )
+        Command startCmd = CommandsExt.eagerSequence(
+                first.scoreTraj.resetOdometry(),
+                first.scoreTraj.cmd()
         );
 
         IntakeScorePair last = first;
@@ -44,26 +42,38 @@ public class AutoBuilder {
                 // Skip first trajectory
                 if (next == first || next.station == null || next.stationTraj == null) continue;
 
-                last.scoreTraj.atTime("score").onTrue(Commands.sequence(
+                last.scoreTraj.atTime("score").onTrue(CommandsExt.eagerSequence(
                         last.scoreCommand(superstructure),
-                        CommandsExt.schedule(next.stationTraj.cmd()) // schedule so subsystems run their default commands and so the command doesn't cancel itself
+                        // scheduling the trajectory wastes a cycle; instead, reset the superstructure and run the trajectory at the same time
+                        Commands.parallel(
+                                superstructure.ensureNotBusyAndResetGoals(),
+                                next.stationTraj.cmd()
+                        )
                 ));
 
-                next.stationTraj.atTime("intake").onTrue(Commands.sequence(
-                        superstructure.funnelIntakeWithAutoAlign(true, next.station),
-                        next.scoreTraj.cmd()
+                next.stationTraj.atTime("intake").onTrue(CommandsExt.eagerSequence(
+                        superstructure.autoFunnelIntake(true, next.station),
+                        // scheduling the trajectory wastes a cycle; instead, reset the superstructure and run the trajectory at the same time
+                        Commands.parallel(
+                                superstructure.ensureNotBusyAndResetGoals(),
+                                next.scoreTraj.cmd()
+                        )
                 ));
 
                 last = next;
             }
         }
 
-        last.scoreTraj.atTime("score").onTrue(Commands.sequence(
+        last.scoreTraj.atTime("score").onTrue(CommandsExt.eagerSequence(
                 last.scoreCommand(superstructure),
                 Commands.runOnce(() -> ref.isFinished = true)
         ));
 
-        return new WrapperCommand(routine.cmd(() -> ref.isFinished)) {
+        return new WrapperCommand(
+                routine.cmd(() -> ref.isFinished)
+                        // routine.active() wastes a cycle. We can just start it now as a parallel command
+                        .alongWith(startCmd.asProxy())
+        ) {
             @Override
             public void initialize() {
                 ref.isFinished = false;
@@ -74,20 +84,21 @@ public class AutoBuilder {
 
     public record IntakeScorePair(
             AutoTrajectory stationTraj,
-            AutoAlignLocations.Station station,
+            StationAlign.Station station,
             AutoTrajectory scoreTraj,
-            OperatorDashboard.ReefZoneSide reefZoneSide,
-            OperatorDashboard.LocalReefSide localReefSide,
-            Elevator.Goal elevatorGoal
+            ReefAlign.ReefZoneSide reefZoneSide,
+            ReefAlign.LocalReefSide localReefSide,
+            OperatorDashboard.CoralScoringLevel coralScoringLevel,
+            boolean safe
     ) {
         private Command scoreCommand(Superstructure superstructure) {
-            return superstructure.autoAlignAndScore(
+            return superstructure.autoScoreCoral(
                     true,
                     () -> reefZoneSide,
                     () -> localReefSide,
-                    () -> elevatorGoal,
+                    () -> coralScoringLevel,
                     () -> true,
-                    () -> false
+                    safe
             );
         }
     }

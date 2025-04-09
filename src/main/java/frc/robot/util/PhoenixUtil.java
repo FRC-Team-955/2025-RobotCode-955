@@ -15,13 +15,11 @@ package frc.robot.util;
 
 import com.ctre.phoenix6.StatusCode;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
-public class PhoenixUtil {
-    protected static final Executor asyncExecutor = Executors.newFixedThreadPool(4);
+import static frc.robot.Util.asyncExecutor;
 
+public class PhoenixUtil {
     /**
      * Attempts to run the command until no error is produced.
      */

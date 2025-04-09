@@ -1,7 +1,6 @@
 package frc.robot.subsystems.endeffector;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -13,6 +12,7 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
 import frc.robot.util.characterization.FeedforwardCharacterization;
+import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -33,26 +33,26 @@ public class EndEffector extends SubsystemBaseExt {
     private final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
 
     @RequiredArgsConstructor
-    public enum RollersGoal {
+    public enum Goal {
         CHARACTERIZATION(null),
         IDLE(() -> 0),
         HANDOFF(() -> 0),
         FUNNEL_INTAKE(funnelIntakeGoalSetpoint::get),
+        FUNNEL_INTAKE_MANUAL(funnelIntakeManualGoalSetpoint::get),
         SCORE_CORAL(scoreCoralGoalSetpoint::get),
         SCORE_CORAL_L1(scoreCoralL1GoalSetpoint::get),
         DESCORE_ALGAE(descoreAlgaeGoalSetpoint::get),
-        EJECT(ejectGoalSetpoint::get),
-        GO_TO_POSITION(null); // Handled specially in periodic and with rollersPositionSetpointRad
+        EJECT_FORWARDS(ejectGoalSetpoint::get),
+        EJECT_BACKWARDS(() -> -ejectGoalSetpoint.get()),
+        ZERO_CORAL(zeroCoralGoalSetpoint::get),
+        GO_TO_POSITION(null); // Handled specially in periodic and with positionSetpointRad
 
         private final DoubleSupplier setpointRadPerSec;
     }
 
     @Getter
-    private RollersGoal rollersGoal = RollersGoal.IDLE;
-    private Double rollersPositionSetpointRad = null;
-
-    // TODO: Tune time
-    private final Debouncer descoreAmperageDebouncer = new Debouncer(0.25);
+    private Goal goal = Goal.IDLE;
+    private Double positionSetpointRad = null;
 
     private final Alert rollersDisconnectedAlert = new Alert("End effector rollers motor is disconnected.", Alert.AlertType.kError);
 
@@ -68,6 +68,7 @@ public class EndEffector extends SubsystemBaseExt {
     }
 
     private EndEffector() {
+        super(10);
     }
 
     @Override
@@ -77,89 +78,97 @@ public class EndEffector extends SubsystemBaseExt {
 
         rollersDisconnectedAlert.set(!rollersInputs.connected);
 
-        robotMechanism.endEffector.ligament.setAngle(getAngleDegrees());
-        robotMechanism.endEffector.ligament.setAngle(getAngleDegrees());
+        // Update mechanism
+        robotMechanism.endEffector.ligament.setAngle(180 - Units.radiansToDegrees(getAngleRad()));
         // top rollers are reversed relative to motor
         robotMechanism.endEffector.topRollersLigament.setAngle(Units.radiansToDegrees(-rollersInputs.positionRad));
+
+        // Apply network inputs
+        if (operatorDashboard.coastOverride.hasChanged()) {
+            rollersIO.setBrakeMode(!operatorDashboard.coastOverride.get());
+        }
+
+        positionGainsTunable.ifChanged(rollersIO::setPositionPIDF);
+        velocityGainsTunable.ifChanged(rollersIO::setVelocityPIDF);
     }
 
     @Override
     public void periodicAfterCommands() {
-        if (operatorDashboard.coastOverride.hasChanged(hashCode())) {
-            rollersIO.setBrakeMode(!operatorDashboard.coastOverride.get());
-        }
-
-        positionGainsTunable.ifChanged(hashCode(), rollersIO::setPositionPIDF);
-        velocityGainsTunable.ifChanged(hashCode(), rollersIO::setVelocityPIDF);
-
         ////////////// ROLLERS //////////////
-        Logger.recordOutput("EndEffector/Rollers/Goal", rollersGoal);
+        Logger.recordOutput("EndEffector/Rollers/Goal", goal);
         if (DriverStation.isDisabled()) {
             Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", false);
             Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", false);
             rollersIO.setOpenLoop(0);
-        } else if (rollersGoal.setpointRadPerSec != null) {
+        } else if (goal.setpointRadPerSec != null) {
             // Velocity control
-            var rollersVelocitySetpointRadPerSec = rollersGoal.setpointRadPerSec.getAsDouble();
-            rollersIO.setVelocity(rollersVelocitySetpointRadPerSec);
+            var rollersVelocitySetpointRadPerSec = goal.setpointRadPerSec.getAsDouble();
+            rollersIO.setClosedLoopVelocity(rollersVelocitySetpointRadPerSec);
             Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", false);
             Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", true);
             Logger.recordOutput("EndEffector/Rollers/Velocity/SetpointRadPerSec", rollersVelocitySetpointRadPerSec);
-        } else if (rollersGoal == RollersGoal.GO_TO_POSITION && rollersPositionSetpointRad != null) {
+        } else if (goal == Goal.GO_TO_POSITION && positionSetpointRad != null) {
             // Position control
+            rollersIO.setClosedLoopPosition(positionSetpointRad);
             Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", true);
             Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", false);
-            Logger.recordOutput("EndEffector/Rollers/Position/SetpointRad", rollersPositionSetpointRad);
-            rollersIO.setPosition(rollersPositionSetpointRad);
+            Logger.recordOutput("EndEffector/Rollers/Position/SetpointRad", positionSetpointRad);
         } else {
             Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", false);
             Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", false);
         }
     }
 
-    @AutoLogOutput(key = "EndEffector/DescoreAmperageTriggered")
-    public boolean descoreAmperageTriggered() {
-        //return descoreAmperageDebouncer.calculate(Math.abs(rollersInputs.currentAmps) > descoreTriggerAmps);
-        return Math.abs(rollersInputs.currentAmps) > descoreTriggerAmps;
+    @AutoLogOutput(key = "EndEffector/DescoreAlgaeAmperageTriggered")
+    private boolean descoreAlgaeAmperageTriggered() {
+        return Math.abs(rollersInputs.currentAmps) > descoreAlgaeTriggerAmps;
     }
 
-    public Command waitUntilDescoreAmperageTriggered() {
-        return Commands.waitUntil(this::descoreAmperageTriggered);
+    public Command waitUntilDescoreAlgaeAmperageTriggered() {
+        return Commands.waitUntil(this::descoreAlgaeAmperageTriggered);
     }
 
-    public Command setGoal(RollersGoal rollersGoal) {
-        return runOnce(() -> this.rollersGoal = rollersGoal);
+    public Command setGoal(Goal goal) {
+        return runOnce(() -> this.goal = goal);
     }
 
-    public void setGoalInstantaneous(RollersGoal rollersGoal) {
-        this.rollersGoal = rollersGoal;
-    }
-
-    public boolean atPositionSetpoint() {
-        return Math.abs(rollersInputs.positionRad - rollersPositionSetpointRad) <= rollersPositionToleranceRad;
+    public void setGoalInstantaneous(Goal goal) {
+        this.goal = goal;
     }
 
     /** Goes positionDeltaMeters forward (or backwards) from current position */
-    public void moveByInstantaneous(double positionDeltaMeters) {
-        this.rollersGoal = RollersGoal.GO_TO_POSITION;
-        rollersPositionSetpointRad = rollersInputs.positionRad + rollersRadiansForMeters(positionDeltaMeters);
+    public Command moveByAndWaitUntilDone(DoubleSupplier positionDeltaMeters) {
+        return startEndWaitUntil(
+                () -> {
+                    this.goal = Goal.GO_TO_POSITION;
+                    positionSetpointRad = rollersInputs.positionRad + rollersRadiansForMeters(positionDeltaMeters.getAsDouble());
+                },
+                () -> {
+                    this.goal = Goal.IDLE;
+                    positionSetpointRad = null;
+                },
+                () -> Math.abs(rollersInputs.positionRad - positionSetpointRad) <= rollersPositionToleranceRad
+        );
     }
 
-    public double getAngleDegrees() {
-        return MathUtil.clamp(
-                // After 5 inches, interpolate to 40 degrees finishing at 7.25 inches
-                90 + (40 / Units.inchesToMeters(2.25) * (elevator.getPositionMeters() - Units.inchesToMeters(5))),
-                90, 130
+    @AutoLogOutput(key = "EndEffector/AngleRad")
+    public double getAngleRad() {
+        return MathUtil.interpolate(
+                angleWhenRetractedRad,
+                angleWhenExtendedRad,
+                (elevator.getPositionMeters() - extendStartMeters) / extendDistanceMeters
         );
     }
 
     public Command rollersFeedforwardCharacterization() {
-        return setGoal(RollersGoal.CHARACTERIZATION)
-                .andThen(new FeedforwardCharacterization(
+        return CommandsExt.eagerSequence(
+                setGoal(Goal.CHARACTERIZATION),
+                new FeedforwardCharacterization(
                         rollersIO::setOpenLoop,
                         () -> new double[]{rollersInputs.velocityRadPerSec},
                         1,
                         this
-                ));
+                )
+        );
     }
 }

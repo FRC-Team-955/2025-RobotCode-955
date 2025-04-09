@@ -9,7 +9,8 @@ import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 
-import static frc.robot.subsystems.elevator.ElevatorConstants.*;
+import static frc.robot.subsystems.elevator.ElevatorConstants.hardstopMeters;
+import static frc.robot.subsystems.elevator.ElevatorConstants.hardstopSlowdownMeters;
 
 /** Holds the Mechanism2d and all roots and ligaments that visualizes the robot state */
 public class RobotMechanism {
@@ -25,41 +26,39 @@ public class RobotMechanism {
     }
 
     private RobotMechanism() {
+        addBumpers();
     }
 
     /** Middle of the robot in the mechanism */
     public static final double middleOfRobot = 0.75;
 
     @AutoLogOutput(key = "RobotState/Mechanism")
-    public final LoggedMechanism2d mechanism = new LoggedMechanism2d(1.5, 2.1, new Color8Bit(Color.kBlack));
+    public final LoggedMechanism2d mechanism = new LoggedMechanism2d(middleOfRobot * 2, 2.1, new Color8Bit(Color.kBlack));
 
-    private final Bumpers bumpers = new Bumpers();
     public final Elevator elevator = new Elevator();
     public final EndEffector endEffector = new EndEffector();
     public final Funnel funnel = new Funnel();
 
-    public class Bumpers {
-        private Bumpers() {
-            double bumperThickness = Units.inchesToMeters(3.375);
+    private void addBumpers() {
+        double bumperThickness = Units.inchesToMeters(3.375);
 
-            LoggedMechanismRoot2d frontBumperRoot = mechanism.getRoot("bumpers_front", middleOfRobot + (DriveConstants.driveConfig.bumperLengthMeters() / 2) - bumperThickness, -0.25);
-            frontBumperRoot.append(new LoggedMechanismLigament2d(
-                    "bumpers_front",
-                    bumperThickness - 0.0025,
-                    0,
-                    90,
-                    new Color8Bit(Color.kBlue)
-            ));
+        LoggedMechanismRoot2d frontBumperRoot = mechanism.getRoot("bumpers_front", middleOfRobot + (DriveConstants.driveConfig.bumperLengthMeters() / 2) - bumperThickness, -0.25);
+        frontBumperRoot.append(new LoggedMechanismLigament2d(
+                "bumpers_front",
+                bumperThickness - 0.0025,
+                0,
+                90,
+                new Color8Bit(Color.kBlue)
+        ));
 
-            LoggedMechanismRoot2d backBumperRoot = mechanism.getRoot("bumpers_back", middleOfRobot - (DriveConstants.driveConfig.bumperLengthMeters() / 2), -0.25);
-            backBumperRoot.append(new LoggedMechanismLigament2d(
-                    "bumpers_back",
-                    bumperThickness,
-                    0,
-                    90,
-                    new Color8Bit(Color.kBlue)
-            ));
-        }
+        LoggedMechanismRoot2d backBumperRoot = mechanism.getRoot("bumpers_back", middleOfRobot - (DriveConstants.driveConfig.bumperLengthMeters() / 2), -0.25);
+        backBumperRoot.append(new LoggedMechanismLigament2d(
+                "bumpers_back",
+                bumperThickness,
+                0,
+                90,
+                new Color8Bit(Color.kBlue)
+        ));
     }
 
     public class Funnel {
@@ -68,19 +67,6 @@ public class RobotMechanism {
         private static final double angle = 90;
 
         public final LoggedMechanismRoot2d root = mechanism.getRoot("funnel", x, y + 0.065);
-
-        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot(
-                "funnel_beamBreak",
-                x - Units.inchesToMeters(9.5),
-                y + Units.inchesToMeters(5)
-        );
-        public final LoggedMechanismLigament2d beamBreakLigament = beamBreakRoot.append(new LoggedMechanismLigament2d(
-                "funnel_beamBreak",
-                Units.inchesToMeters(1),
-                angle,
-                11,
-                new Color8Bit(Color.kRed)
-        ));
 
         public final LoggedMechanismRoot2d beltRoot = mechanism.getRoot(
                 "funnel_belt",
@@ -171,24 +157,6 @@ public class RobotMechanism {
                     11,
                     new Color8Bit(Color.kYellow)
             ));
-
-            var autoStopUpperRoot = mechanism.getRoot("elevator_autoStopUpper", middleOfRobot - Units.inchesToMeters(15), Units.inchesToMeters(2.85) + upperLimit.positionMeters());
-            autoStopUpperRoot.append(new LoggedMechanismLigament2d(
-                    "autoStopUpper",
-                    Units.inchesToMeters(1),
-                    90,
-                    11,
-                    new Color8Bit(Color.kRed)
-            ));
-
-            var autoStopLowerRoot = mechanism.getRoot("elevator_autoStopLower", middleOfRobot - Units.inchesToMeters(15), Units.inchesToMeters(2.85) + lowerLimit.positionMeters());
-            autoStopLowerRoot.append(new LoggedMechanismLigament2d(
-                    "autoStopLower",
-                    Units.inchesToMeters(1),
-                    90,
-                    11,
-                    new Color8Bit(Color.kRed)
-            ));
         }
     }
 
@@ -200,15 +168,6 @@ public class RobotMechanism {
                 90,
                 10,
                 new Color8Bit(Color.kPurple)
-        ));
-
-        public final LoggedMechanismRoot2d beamBreakRoot = mechanism.getRoot("endEffector_beamBreak", 0, 0);
-        public final LoggedMechanismLigament2d beamBreakLigament = beamBreakRoot.append(new LoggedMechanismLigament2d(
-                "beamBreak",
-                Units.inchesToMeters(1),
-                0,
-                11,
-                new Color8Bit(Color.kRed)
         ));
 
         public final LoggedMechanismRoot2d topRollersRoot = mechanism.getRoot("endEffector_topRollers", 0, 0);

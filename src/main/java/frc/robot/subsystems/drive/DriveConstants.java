@@ -1,33 +1,60 @@
 package frc.robot.subsystems.drive;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.Util;
 import frc.robot.util.PIDF;
+import frc.robot.util.swerve.ModuleLimits;
+
+import java.util.function.BiConsumer;
 
 public class DriveConstants {
     public static final double assistDirectionToleranceRad = Units.degreesToRadians(50);
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
-    public static final PIDF moveToLinear = PIDF.ofPD(2.5, 0);
-    public static final TrapezoidProfile.Constraints moveToLinearConstraintsMeters = new TrapezoidProfile.Constraints(3, 4);
-    public static final PIDF moveToAngular = PIDF.ofPD(1.5, 0);
-    public static final TrapezoidProfile.Constraints moveToAngularConstraintsRad = new TrapezoidProfile.Constraints(5, 6);
+    public static final MoveToConfig moveToConfig = new MoveToConfig(
+            PIDF.ofPD(4.5, 0.05),
+            PIDF.ofPD(4.5, 0.05),
+            PIDF.ofPD(1, 0).profiled(3.8, 5),
+            PIDF.ofPD(2, 0).profiled(3, 3),
+            0.02,
+            0.1,
+            Units.degreesToRadians(2),
+            Units.degreesToRadians(10)
+    );
+
+    public static void calculateMoveToProfiledLinearConstraints(TrapezoidProfile.Constraints overallConstraints, Rotation2d directionOfTravel, BiConsumer<TrapezoidProfile.Constraints, TrapezoidProfile.Constraints> applyXYConstraints) {
+        Translation2d maxVelocities = new Pose2d(new Translation2d(), directionOfTravel)
+                .transformBy(new Transform2d(overallConstraints.maxVelocity, 0, new Rotation2d()))
+                .getTranslation();
+        Translation2d maxAccelerations = new Pose2d(new Translation2d(), directionOfTravel)
+                .transformBy(new Transform2d(overallConstraints.maxAcceleration, 0, new Rotation2d()))
+                .getTranslation();
+        applyXYConstraints.accept(
+                // X
+                new TrapezoidProfile.Constraints(Math.abs(maxVelocities.getX()), Math.abs(maxAccelerations.getX())),
+                // Y
+                new TrapezoidProfile.Constraints(Math.abs(maxVelocities.getY()), Math.abs(maxAccelerations.getY()))
+        );
+    }
 
     public static final boolean useSetpointGenerator = true;
     public static final boolean disableDriving = false;
     public static final boolean disableGyro = false;
     public static final boolean useHighFrequencyOdometry = true;
 
-    public static final double odometryPositionDeltaDiscardMeters = 0.3;
+    public static final double odometryPositionDeltaDiscardMeters = Units.inchesToMeters(8);
 
-    // Slow to 30% speed when elevator is at max height
-    public static final double elevatorSlowdownScalar = 0.7;
+    // Slow to 30% speed during driver control
+    public static final double constraintScalarWhenElevatorAtMaxHeightDriver = 0.3;
 
     public static final DriveConfig driveConfig = switch (Constants.identity) {
-        case COMPBOT, SIMBOT -> new DriveConfig(
+        case COMPBOT -> new DriveConfig(
                 Units.inchesToMeters(1.935948620917915),
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(22.75),
@@ -35,9 +62,25 @@ public class DriveConstants {
                 Units.inchesToMeters(35),
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
-                4.58,
-                20,
-                20
+                new ModuleLimits(
+                        4.58,
+                        20,
+                        20
+                )
+        );
+        case SIMBOT -> new DriveConfig(
+                Units.inchesToMeters(2),
+                Units.inchesToMeters(22.75),
+                Units.inchesToMeters(22.75),
+                Units.inchesToMeters(35),
+                Units.inchesToMeters(35),
+                PIDF.ofPD(3.5, 0),
+                PIDF.ofPD(3, 0),
+                new ModuleLimits(
+                        3.83,
+                        25,
+                        20
+                )
         );
         case ALPHABOT -> new DriveConfig(
                 Units.inchesToMeters(2),
@@ -47,11 +90,19 @@ public class DriveConstants {
                 Units.inchesToMeters(30),
                 PIDF.ofPD(1.5, 0),
                 PIDF.ofPD(1.5, 0),
-                4.637,
-                20,
-                Units.degreesToRadians(1080)
+                new ModuleLimits(
+                        4.637,
+                        20,
+                        20
+                )
         );
     };
+
+    public static final ModuleLimits moveToModuleLimits = new ModuleLimits(
+            driveConfig.moduleLimits().maxDriveVelocityMetersPerSec(),
+            driveConfig.moduleLimits().maxDriveAccelerationMetersPerSecSquared() * 0.75,
+            driveConfig.moduleLimits().maxTurnVelocityRadPerSec()
+    );
 
     /**
      * FL, FR, BL, BR
@@ -66,7 +117,7 @@ public class DriveConstants {
     public static final double drivebaseRadiusMeters = Math.hypot(driveConfig.trackWidthMeters / 2.0, driveConfig.trackLengthMeters / 2.0);
 
     /** Maximum angular velocity of the whole drivetrain if all drive motors/wheels are going at full speed. */
-    public static final double maxAngularVelocityRadPerSec = driveConfig.maxDriveVelocityMetersPerSec() / drivebaseRadiusMeters;
+    public static final double maxAngularVelocityRadPerSec = driveConfig.moduleLimits().maxDriveVelocityMetersPerSec() / drivebaseRadiusMeters;
 
     public static final double joystickMaxAngularSpeedRadPerSec = Math.min(Units.degreesToRadians(315), maxAngularVelocityRadPerSec);
     public static final double joystickDriveDeadband = 0.1;
@@ -75,7 +126,7 @@ public class DriveConstants {
         case COMPBOT -> new ModuleConfig(
                 PIDF.ofPDSVA(
                         0.0, 0.0,
-                        0.183, 0.1205, 0.005
+                        0.19, 0.125, 0.005
                 ),
                 PIDF.ofPD(5, 0.04),
                 Mk4iGearRatios.L2,
@@ -87,8 +138,8 @@ public class DriveConstants {
                 60
         );
         case SIMBOT -> new ModuleConfig(
-                PIDF.ofPDSV(0.05, 0.0, 0.02522, 0.14115),
-                PIDF.ofPD(5.0, 0.07),
+                PIDF.ofPDSV(0.05, 0.0, 0.04075, 0.14117),
+                PIDF.ofPD(10.0, 0.07),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
@@ -158,6 +209,18 @@ public class DriveConstants {
         };
     }
 
+    public record MoveToConfig(
+            PIDF pureLinear,
+            PIDF pureAngular,
+            PIDF.Profiled profiledLinear,
+            PIDF.Profiled profiledAngular,
+            double linearPositionToleranceMeters,
+            double linearVelocityToleranceMetersPerSec,
+            double angularPositionToleranceRad,
+            double angularVelocityToleranceRadPerSec
+    ) {
+    }
+
     public record DriveConfig(
             double wheelRadiusMeters,
             double trackWidthMeters, // Measured from the center of the swerve wheels
@@ -166,9 +229,7 @@ public class DriveConstants {
             double bumperLengthMeters,
             PIDF choreoFeedbackXY,
             PIDF choreoFeedbackOmega,
-            double maxDriveVelocityMetersPerSec, // Maximum velocity of the drive motor
-            double maxDriveAccelMetersPerSecSquared, // Maximum acceleration of the drive motor
-            double maxTurnVelocityRadPerSec // Maximum velocity of the turn motor
+            ModuleLimits moduleLimits // See ModuleLimits for docs on each value
     ) {
     }
 

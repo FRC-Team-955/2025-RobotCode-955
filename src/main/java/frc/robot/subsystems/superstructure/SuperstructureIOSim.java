@@ -1,9 +1,5 @@
 package frc.robot.subsystems.superstructure;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
@@ -35,10 +31,14 @@ public class SuperstructureIOSim extends SuperstructureIO {
     private final Elevator elevator = Elevator.get();
     private final Funnel funnel = Funnel.get();
 
-    private final Timer sinceCoralIntaked = new Timer();
-    private static final double indexTime = 1;
+    public static boolean gamePieceVisible = false;
+
     private final Timer sinceAtStation = new Timer();
-    private static final double stationIntakeTime = 1;
+    private static final double stationGamePieceVisibleTime = 0.25;
+    private static final double stationIntakeTime = 0.3;
+
+    private final Timer sinceCoralIntaked = new Timer();
+    private static final double indexTime = 0.5;
     private CoralState coralState = CoralState.IN_END_EFFECTOR; // preload
 
     private enum CoralState {
@@ -54,12 +54,18 @@ public class SuperstructureIOSim extends SuperstructureIO {
     @Override
     public void updateInputs(SuperstructureIOInputs inputs) {
         var pose = robotState.getPose();
-        Transform3d coralRobotRelative = null;
         switch (coralState) {
             case NO_CORAL -> {
                 var current = robotState.getPose().getTranslation();
-                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 1.5) && (funnel.getGoal() == Funnel.Goal.INTAKE_FORWARDS || funnel.getGoal() == Funnel.Goal.INTAKE_BACKWARDS) && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
+
+                if (
+                        Arrays.stream(stationLocations)
+                                .anyMatch(t -> t.getDistance(current) < 1.5)
+                                && (funnel.getGoal() == Funnel.Goal.INTAKE_FORWARDS || funnel.getGoal() == Funnel.Goal.INTAKE_BACKWARDS)
+                                && endEffector.getGoal() == EndEffector.Goal.FUNNEL_INTAKE
+                ) {
                     if (!sinceAtStation.isRunning()) sinceAtStation.restart();
+
                     if (sinceAtStation.hasElapsed(stationIntakeTime)) {
                         coralState = CoralState.INTAKING;
                         sinceCoralIntaked.restart();
@@ -68,9 +74,14 @@ public class SuperstructureIOSim extends SuperstructureIO {
                     sinceAtStation.stop();
                     sinceAtStation.reset();
                 }
+
+                gamePieceVisible = sinceAtStation.hasElapsed(stationGamePieceVisibleTime);
             }
             case INTAKING -> {
-                if ((funnel.getGoal() == Funnel.Goal.INTAKE_FORWARDS || funnel.getGoal() == Funnel.Goal.INTAKE_BACKWARDS) && endEffector.getRollersGoal() == EndEffector.RollersGoal.FUNNEL_INTAKE) {
+                if (
+                        (funnel.getGoal() == Funnel.Goal.INTAKE_FORWARDS || funnel.getGoal() == Funnel.Goal.INTAKE_BACKWARDS)
+                                && endEffector.getGoal() == EndEffector.Goal.FUNNEL_INTAKE
+                ) {
                     if (!sinceCoralIntaked.isRunning()) sinceCoralIntaked.restart();
                     if (sinceCoralIntaked.hasElapsed(indexTime)) {
                         coralState = CoralState.IN_END_EFFECTOR;
@@ -79,56 +90,41 @@ public class SuperstructureIOSim extends SuperstructureIO {
                     sinceCoralIntaked.stop();
                     sinceCoralIntaked.reset();
                 }
-                var interp = MathUtil.clamp(sinceCoralIntaked.get() / indexTime, 0, 1);
-                coralRobotRelative = new Transform3d(
-                        Units.inchesToMeters(5) - Units.inchesToMeters(9) * interp,
-                        0,
-                        Units.inchesToMeters(11) + Units.inchesToMeters(1) * interp,
-                        new Rotation3d(0, Units.degreesToRadians(7), 0)
-                );
+
+                gamePieceVisible = !sinceCoralIntaked.hasElapsed(0.25);
             }
             case IN_END_EFFECTOR -> {
-                var angle = Units.degreesToRadians(-endEffector.getAngleDegrees() - 90);
-                var coralOffsetX = Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angle);
-                // TODO: fix the trig, it doesn't actually work but is good enough for sim
-                var coralOffsetZ = Units.inchesToMeters(13.5) + elevator.getPositionMeters() + Units.inchesToMeters(4) * Math.tan(angle);
-                if (endEffector.getRollersGoal() == EndEffector.RollersGoal.SCORE_CORAL || endEffector.getRollersGoal() == EndEffector.RollersGoal.EJECT) {
+                gamePieceVisible = false;
+
+                if (endEffector.getGoal() == EndEffector.Goal.SCORE_CORAL
+                        || endEffector.getGoal() == EndEffector.Goal.SCORE_CORAL_L1
+                        || endEffector.getGoal() == EndEffector.Goal.EJECT_FORWARDS) {
                     coralState = CoralState.NO_CORAL;
+
+                    var endEffectorAngleRad = endEffector.getAngleRad();
+                    var coralInEndEffector = SuperstructureConstants.coralInEndEffector(elevator.getPositionMeters(), endEffectorAngleRad);
                     SimulatedArena.getInstance()
                             .addGamePieceProjectile(new ReefscapeCoralOnFly(
                                     pose.getTranslation(),
-                                    new Translation2d(coralOffsetX - Units.inchesToMeters(2), 0),
+                                    new Translation2d(coralInEndEffector.getX() - Units.inchesToMeters(2), 0),
                                     ModuleIOSim.driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
                                     pose.getRotation(),
                                     // The height at which the coral is ejected
-                                    Meters.of(coralOffsetZ + Units.inchesToMeters(2)),
+                                    Meters.of(coralInEndEffector.getZ()),
                                     // The initial speed of the coral
-                                    MetersPerSecond.of(-1),
-                                    Degrees.of(65)
+                                    MetersPerSecond.of(-1.5),
+                                    elevator.getGoal() == Elevator.Goal.SCORE_L4
+                                            ? Degrees.of(65)
+                                            : (
+                                            elevator.getGoal() == Elevator.Goal.SCORE_L1
+                                                    ? Degrees.of(0)
+                                                    : Radians.of(endEffectorAngleRad)
+                                    )
                             ));
-                } else {
-                    coralRobotRelative = new Transform3d(
-                            coralOffsetX,
-                            0,
-                            coralOffsetZ,
-                            new Rotation3d(0, angle, 0)
-                    );
                 }
             }
         }
         Logger.recordOutput("FieldSimulation/CoralState", coralState);
-        if (coralRobotRelative != null) {
-            Logger.recordOutput("FieldSimulation/CoralInRobot", new Pose3d[]{
-                    new Pose3d(
-                            pose.getX(),
-                            pose.getY(),
-                            0,
-                            new Rotation3d(0, 0, pose.getRotation().getRadians())
-                    ).transformBy(coralRobotRelative)
-            });
-        } else {
-            Logger.recordOutput("FieldSimulation/CoralInRobot", new Pose3d[]{});
-        }
 
         switch (coralState) {
             case INTAKING -> {

@@ -96,16 +96,4 @@ public class ModuleIO {
      */
     public void setTurnClosedLoop(double positionRad) {
     }
-
-    /**
-     * Zero the drive motor to the specified position.
-     */
-    public void setDrivePosition(double positionRad) {
-    }
-
-    /**
-     * Zero the turn motor to the specified position.
-     */
-    public void setTurnPosition(double positionRad) {
-    }
 }

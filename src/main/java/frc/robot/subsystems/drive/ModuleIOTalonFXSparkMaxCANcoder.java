@@ -119,7 +119,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
         driveConfig.Slot0 = Slot0Configs.from(moduleConfig.driveGains().toPhoenix());
         driveConfig.Feedback.SensorToMechanismRatio = moduleConfig.driveGearRatio();
         driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = moduleConfig.driveCurrentLimit();
-        driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = moduleConfig.driveCurrentLimit();
+        driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = -moduleConfig.driveCurrentLimit();
         driveConfig.CurrentLimits.StatorCurrentLimit = moduleConfig.driveCurrentLimit();
         driveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         driveConfig.MotorOutput.Inverted =
@@ -147,7 +147,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
                 .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder)
                 .positionWrappingEnabled(true)
                 .positionWrappingInputRange(0.0, 2 * Math.PI);
-        moduleConfig.turnGains().applySparkPID(turnConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        moduleConfig.turnGains().applySparkWithoutFeedforward(turnConfig.closedLoop, ClosedLoopSlot.kSlot0);
         turnConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
@@ -260,7 +260,7 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
     public void setTurnPIDF(PIDF newGains) {
         System.out.println("Setting turn gains");
         var newConfig = new SparkMaxConfig();
-        newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        newGains.applySparkWithoutFeedforward(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
         SparkUtil.tryUntilOkAsync(5, () -> turnSpark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
@@ -310,15 +310,5 @@ public class ModuleIOTalonFXSparkMaxCANcoder extends ModuleIO {
     public void setTurnClosedLoop(double positionRad) {
         double setpoint = MathUtil.inputModulus(positionRad, 0.0, 2 * Math.PI);
         turnController.setReference(setpoint, SparkBase.ControlType.kPosition);
-    }
-
-    @Override
-    public void setDrivePosition(double positionRad) {
-        driveTalon.setPosition(Units.radiansToRotations(positionRad));
-    }
-
-    @Override
-    public void setTurnPosition(double positionRad) {
-        turnEncoder.setPosition(positionRad);
     }
 }

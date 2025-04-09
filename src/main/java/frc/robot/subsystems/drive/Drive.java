@@ -9,7 +9,10 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -19,15 +22,14 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotState;
 import frc.robot.Util;
 import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.util.characterization.FeedforwardCharacterization;
+import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import frc.robot.util.swerve.ModuleLimits;
 import frc.robot.util.swerve.SwerveSetpoint;
@@ -39,7 +41,7 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.function.DoubleSupplier;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.Volts;
@@ -51,6 +53,7 @@ public class Drive extends SubsystemBaseExt {
     private final RobotState robotState = RobotState.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final Elevator elevator = Elevator.get();
+    private final JoystickDrive joystickDrive = JoystickDrive.get();
 
     private final GyroIO gyroIO = createGyroIO();
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
@@ -63,6 +66,7 @@ public class Drive extends SubsystemBaseExt {
         DRIVE_JOYSTICK(ControlMode.CLOSED_LOOP_OPTIMIZED),
         DRIVE_JOYSTICK_ASSISTED(ControlMode.CLOSED_LOOP_OPTIMIZED),
         MOVE_TO(ControlMode.CLOSED_LOOP_OPTIMIZED),
+        MOVE_TO_DRIVE_JOYSTICK_MERGED(ControlMode.CLOSED_LOOP_OPTIMIZED),
         FOLLOW_TRAJECTORY(ControlMode.CLOSED_LOOP_DIRECT),
         VELOCITY_ROBOT_RELATIVE(ControlMode.CLOSED_LOOP_OPTIMIZED);
 
@@ -107,8 +111,6 @@ public class Drive extends SubsystemBaseExt {
     @Getter
     private Rotation2d rawGyroRotation = new Rotation2d();
 
-    private Rotation2d lastJoystickDriveLinearDirection = new Rotation2d();
-
     private final SwerveSetpointGenerator setpointGenerator = new SwerveSetpointGenerator(robotState.getKinematics());
     /** If null, it will be set to the measured ChassisSpeeds and module states when the setpoint generator starts to be used */
     private SwerveSetpoint prevSetpoint = null;
@@ -121,9 +123,31 @@ public class Drive extends SubsystemBaseExt {
     private final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackOmega = driveConfig.choreoFeedbackOmega().toPIDWrapRadians();
 
-    private ProfiledPIDController moveToLinearX = DriveConstants.moveToLinear.toProfiledPID(moveToLinearConstraintsMeters);
-    private ProfiledPIDController moveToLinearY = DriveConstants.moveToLinear.toProfiledPID(moveToLinearConstraintsMeters);
-    private ProfiledPIDController moveToAngular = DriveConstants.moveToAngular.toProfiledPIDWrapRadians(moveToAngularConstraintsRad);
+    private final PIDController moveToPureLinearX = moveToConfig.pureLinear().toPID(
+            moveToConfig.linearPositionToleranceMeters(),
+            moveToConfig.linearVelocityToleranceMetersPerSec()
+    );
+    private final PIDController moveToPureLinearY = moveToConfig.pureLinear().toPID(
+            moveToConfig.linearPositionToleranceMeters(),
+            moveToConfig.linearVelocityToleranceMetersPerSec()
+    );
+    private final PIDController moveToPureAngular = moveToConfig.pureAngular().toPIDWrapRadians(
+            moveToConfig.angularPositionToleranceRad(),
+            moveToConfig.angularVelocityToleranceRadPerSec()
+    );
+
+    private final ProfiledPIDController moveToProfiledLinearX = moveToConfig.profiledLinear().toPID(
+            moveToConfig.linearPositionToleranceMeters(),
+            moveToConfig.linearVelocityToleranceMetersPerSec()
+    );
+    private final ProfiledPIDController moveToProfiledLinearY = moveToConfig.profiledLinear().toPID(
+            moveToConfig.linearPositionToleranceMeters(),
+            moveToConfig.linearVelocityToleranceMetersPerSec()
+    );
+    private final ProfiledPIDController moveToProfiledAngular = moveToConfig.profiledAngular().toPIDWrapRadians(
+            moveToConfig.angularPositionToleranceRad(),
+            moveToConfig.angularVelocityToleranceRadPerSec()
+    );
 
     private static Drive instance;
 
@@ -137,6 +161,8 @@ public class Drive extends SubsystemBaseExt {
     }
 
     private Drive() {
+        super(0);
+
         var moduleIO = createModuleIO();
         // Array is currently four nulls, so length works just fine
         for (int i = 0; i < modules.length; i++) {
@@ -182,31 +208,31 @@ public class Drive extends SubsystemBaseExt {
         if (useHighFrequencyOdometry) {
             // All timestamps will be synced by HighFrequencySamplingThread
             double[] sampleTimestamps = modules[0].getOdometryTimestamps();
+            boolean anySampleDiscarded = false;
             for (int sample = 0; sample < sampleTimestamps.length; sample++) {
-                boolean discardSample = false;
                 double sampleTimestamp = sampleTimestamps[sample];
+                boolean discardSample = false;
 
                 // Read wheel positions and deltas from each module
                 SwerveModulePosition[] modulePositions = new SwerveModulePosition[modules.length];
                 SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[modules.length];
                 for (int moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
                     double positionMeters = modules[moduleIndex].getOdometryDrivePositionsRad()[sample] * driveConfig.wheelRadiusMeters();
-                    double angle = modules[moduleIndex].getOdometryTurnPositionsRad()[sample];
-                    var modulePosition = new SwerveModulePosition(positionMeters, new Rotation2d(angle));
+                    Rotation2d angle = new Rotation2d(modules[moduleIndex].getOdometryTurnPositionsRad()[sample]);
+                    var modulePosition = new SwerveModulePosition(positionMeters, angle);
 
                     modulePositions[moduleIndex] = modulePosition;
                     moduleDeltas[moduleIndex] = new SwerveModulePosition(
                             modulePosition.distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
                             modulePosition.angle
                     );
-
-//                    if (moduleDeltas[moduleIndex].distanceMeters > odometryPositionDeltaDiscardMeters) {
-//                        discardSample = true;
-//                        modules[moduleIndex].setDrivePosition(lastModulePositions[moduleIndex].distanceMeters / driveConfig.wheelRadiusMeters());
-//                        modules[moduleIndex].setTurnPosition(lastModulePositions[moduleIndex].angle.getRadians());
-//                    } else {
                     lastModulePositions[moduleIndex] = modulePosition;
-//                    }
+
+                    // We actually don't really care if one of the motors is disconnected, because odometry
+                    // can handle one wheel position isn't changing. The issue is when one wheel changes drastically
+                    if (Math.abs(moduleDeltas[moduleIndex].distanceMeters) > odometryPositionDeltaDiscardMeters) {
+                        discardSample = true;
+                    }
                 }
 
                 // Update gyro angle
@@ -221,10 +247,19 @@ public class Drive extends SubsystemBaseExt {
                 }
 
                 // Apply update
-                if (!discardSample) {
+                if (discardSample) {
+                    anySampleDiscarded = true;
+                    // If we need to discard it, apply the update and then revert the pose back to the pose before applying the update
+                    // This means that the previous wheel positions stored by odometry will be updated to the new wheel positions,
+                    // but the pose won't change
+                    Pose2d prevPose = robotState.getPose();
+                    robotState.applyOdometryUpdate(sampleTimestamp, rawGyroRotation, modulePositions);
+                    robotState.setPose(prevPose);
+                } else {
                     robotState.applyOdometryUpdate(sampleTimestamp, rawGyroRotation, modulePositions);
                 }
             }
+            Logger.recordOutput("Drive/SampleDiscarded", anySampleDiscarded);
         } else {
             boolean discardSample = false;
 
@@ -232,8 +267,8 @@ public class Drive extends SubsystemBaseExt {
             SwerveModulePosition[] modulePositions = new SwerveModulePosition[modules.length];
             SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[modules.length];
             for (int moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
-                double positionMeters = modules[moduleIndex].getPositionRad() * driveConfig.wheelRadiusMeters();
-                Rotation2d angle = modules[moduleIndex].getAngle();
+                double positionMeters = modules[moduleIndex].getDrivePositionRad() * driveConfig.wheelRadiusMeters();
+                Rotation2d angle = modules[moduleIndex].getTurnAngle();
                 var modulePosition = new SwerveModulePosition(positionMeters, angle);
 
                 modulePositions[moduleIndex] = modulePosition;
@@ -243,13 +278,11 @@ public class Drive extends SubsystemBaseExt {
                 );
                 lastModulePositions[moduleIndex] = modulePosition;
 
-//                if (moduleDeltas[moduleIndex].distanceMeters > odometryPositionDeltaDiscardMeters) {
-//                    discardSample = true;
-//                    modules[moduleIndex].setDrivePosition(lastModulePositions[moduleIndex].distanceMeters / driveConfig.wheelRadiusMeters());
-//                    modules[moduleIndex].setTurnPosition(lastModulePositions[moduleIndex].angle.getRadians());
-//                } else {
-                lastModulePositions[moduleIndex] = modulePosition;
-//                }
+                // We actually don't really care if one of the motors is disconnected, because odometry
+                // can handle one wheel position isn't changing. The issue is when one wheel changes drastically
+                if (Math.abs(moduleDeltas[moduleIndex].distanceMeters) > odometryPositionDeltaDiscardMeters) {
+                    discardSample = true;
+                }
             }
 
             // Update gyro angle
@@ -263,37 +296,59 @@ public class Drive extends SubsystemBaseExt {
             }
 
             // Apply update
-            if (!discardSample) {
+            if (discardSample) {
+                // If we need to discard it, apply the update and then revert the pose back to the pose before applying the update
+                // This means that the previous wheel positions stored by odometry will be updated to the new wheel positions,
+                // but the pose won't change
+                Pose2d prevPose = robotState.getPose();
+                robotState.applyOdometryUpdate(Timer.getTimestamp(), rawGyroRotation, modulePositions);
+                robotState.setPose(prevPose);
+            } else {
                 robotState.applyOdometryUpdate(Timer.getTimestamp(), rawGyroRotation, modulePositions);
             }
+            Logger.recordOutput("Drive/SampleDiscarded", discardSample);
         }
-    }
 
-    @Override
-    public void periodicAfterCommands() {
-        if (operatorDashboard.coastOverride.hasChanged(hashCode())) {
+        // Apply network inputs
+        if (operatorDashboard.coastOverride.hasChanged()) {
             for (var module : modules) {
                 module.setBrakeMode(!operatorDashboard.coastOverride.get());
             }
         }
 
-        moduleDriveGainsTunable.ifChanged(hashCode(), gains -> {
+        moduleDriveGainsTunable.ifChanged(gains -> {
             for (var module : modules) {
                 module.setDrivePIDF(gains);
             }
         });
-        moduleTurnGainsTunable.ifChanged(hashCode(), gains -> {
+        moduleTurnGainsTunable.ifChanged(gains -> {
             for (var module : modules) {
                 module.setTurnPIDF(gains);
             }
         });
 
-        moveToLinearTunable.ifChanged(hashCode(), gains -> {
-            moveToLinearX = gains.toProfiledPID(moveToLinearConstraintsMeters);
-            moveToLinearY = gains.toProfiledPID(moveToLinearConstraintsMeters);
+        moveToPureLinearTunable.ifChanged(gains -> {
+            gains.applyPID(moveToPureLinearX);
+            gains.applyPID(moveToPureLinearY);
         });
-        moveToAngularTunable.ifChanged(hashCode(), gains -> moveToAngular = gains.toProfiledPIDWrapRadians(moveToAngularConstraintsRad));
+        moveToPureAngularTunable.ifChanged(gains -> gains.applyPID(moveToPureAngular));
 
+        moveToProfiledLinearTunable.ifChanged(
+                gains -> {
+                    gains.applyPID(moveToProfiledLinearX);
+                    gains.applyPID(moveToProfiledLinearY);
+                },
+                // Constraints will be calculated and applied in move to
+                constraints -> {}
+        );
+        moveToProfiledAngularTunable.ifChanged(
+                gains -> gains.applyPID(moveToProfiledAngular),
+                moveToProfiledAngular::setConstraints
+        );
+    }
+
+    @Override
+    public void periodicAfterCommands() {
         Logger.recordOutput("Drive/Goal", goal);
 
         // Stop moving when idle or disabled
@@ -358,7 +413,7 @@ public class Drive extends SubsystemBaseExt {
                 // Calculate module setpoints
                 ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(closedLoopSetpoint, 0.02);
                 SwerveModuleState[] setpointStates = robotState.getKinematics().toSwerveModuleStates(discreteSpeeds);
-                SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, driveConfig.maxDriveVelocityMetersPerSec());
+                SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, driveConfig.moduleLimits().maxDriveVelocityMetersPerSec());
 
                 Logger.recordOutput("Drive/ModuleStates/Setpoints", setpointStates);
 
@@ -405,7 +460,7 @@ public class Drive extends SubsystemBaseExt {
     public ChassisSpeeds getMeasuredChassisSpeedsFieldRelative() {
         return ChassisSpeeds.fromRobotRelativeSpeeds(
                 robotState.getKinematics().toChassisSpeeds(getMeasuredModuleStates()),
-                robotState.getRotation() // Field are absolute, don't flip
+                robotState.getRotation() // Field is absolute, don't flip
         );
     }
 
@@ -432,43 +487,16 @@ public class Drive extends SubsystemBaseExt {
         return states;
     }
 
-    @AutoLogOutput(key = "Drive/ChassisSpeeds/MeasuredLinearVelocity")
-    public double getMeasuredChassisLinearVelocityMetersPerSec() {
-        ChassisSpeeds measuredChassisSpeeds = getMeasuredChassisSpeeds();
-        return Math.sqrt(
-                measuredChassisSpeeds.vxMetersPerSecond * measuredChassisSpeeds.vxMetersPerSecond +
-                        measuredChassisSpeeds.vyMetersPerSecond * measuredChassisSpeeds.vyMetersPerSecond
-        );
-    }
-
-    public double getMeasuredChassisAngularVelocityRadPerSec() {
-        return getMeasuredChassisSpeeds().omegaRadiansPerSecond;
-    }
-
-    @AutoLogOutput(key = "Drive/ModuleLimits")
     public ModuleLimits getModuleLimits() {
-        if (operatorDashboard.coralStuckInRobotMode.get()) {
-            return new ModuleLimits(
-                    driveConfig.maxDriveVelocityMetersPerSec(),
-                    driveConfig.maxDriveAccelMetersPerSecSquared(),
-                    driveConfig.maxTurnVelocityRadPerSec()
-            );
+        if (goal == Goal.MOVE_TO || goal == Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED) {
+            return moveToModuleLimits;
         }
 
-        var elevatorSetpoint = elevator.getGoal().setpointMeters != null
-                ? elevator.getGoal().setpointMeters.getAsDouble()
-                : 0;
-        var elevatorPosition = Math.max(elevator.getPositionMeters(), elevatorSetpoint);
-        var scalar = MathUtil.clamp(
-                1 - elevatorSlowdownScalar * elevatorPosition / ElevatorConstants.maxHeightMeters,
-                1 - elevatorSlowdownScalar,
-                1
-        );
-        return new ModuleLimits(
-                driveConfig.maxDriveVelocityMetersPerSec() * scalar,
-                driveConfig.maxDriveAccelMetersPerSecSquared() * scalar,
-                driveConfig.maxTurnVelocityRadPerSec()
-        );
+        if (operatorDashboard.coralStuckInRobotMode.get()) {
+            return driveConfig.moduleLimits();
+        }
+
+        return driveConfig.moduleLimits().times(elevator.getDriveConstraintScalar());
     }
 
     public AutoFactory createAutoFactory() {
@@ -506,22 +534,160 @@ public class Drive extends SubsystemBaseExt {
         }
     }
 
-    private void runDrive(Translation2d linearVelocity, double omega) {
-        // Convert to field relative speeds & send command
-        closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
-                linearVelocity.getX() * driveConfig.maxDriveVelocityMetersPerSec(),
-                linearVelocity.getY() * driveConfig.maxDriveVelocityMetersPerSec(),
-                omega * joystickMaxAngularSpeedRadPerSec,
-                Util.flipIfNeeded(robotState.getRotation()) // Driver is alliance relative, flip
+    public Command moveTo(Supplier<Pose2d> poseSupplier, BooleanSupplier mergeJoystickDrive) {
+        return startRun(
+                () -> {
+                    goal = mergeJoystickDrive.getAsBoolean() ? Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED : Goal.MOVE_TO;
+
+                    if (operatorDashboard.profiledMoveTo.get()) {
+                        Pose2d currentPose = robotState.getPose();
+                        ChassisSpeeds currentVelocities = getMeasuredChassisSpeedsFieldRelative();
+                        moveToProfiledLinearX.reset(
+                                currentPose.getX(),
+                                currentVelocities.vxMetersPerSecond
+                        );
+                        moveToProfiledLinearY.reset(
+                                currentPose.getY(),
+                                currentVelocities.vyMetersPerSecond
+                        );
+                        moveToProfiledAngular.reset(
+                                MathUtil.angleModulus(currentPose.getRotation().getRadians()),
+                                currentVelocities.omegaRadiansPerSecond
+                        );
+                    } else {
+                        moveToPureLinearX.reset();
+                        moveToPureLinearY.reset();
+                        moveToPureAngular.reset();
+                    }
+                },
+                () -> {
+                    Pose2d currentPose = robotState.getPose();
+
+                    Pose2d goalPose = poseSupplier.get();
+                    Logger.recordOutput("Drive/MoveTo/Goal", goalPose);
+
+                    double linearXVelocityMetersPerSec;
+                    boolean linearXAtSetpoint;
+                    double linearYVelocityMetersPerSec;
+                    boolean linearYAtSetpoint;
+                    double angularVelocityRadPerSec;
+                    boolean angularAtSetpoint;
+                    if (operatorDashboard.profiledMoveTo.get()) {
+                        ChassisSpeeds currentVelocities = getMeasuredChassisSpeedsFieldRelative();
+
+                        if (operatorDashboard.profiledMoveTo.hasChanged()) {
+                            moveToProfiledLinearX.reset(
+                                    currentPose.getX(),
+                                    currentVelocities.vxMetersPerSecond
+                            );
+                            moveToProfiledLinearY.reset(
+                                    currentPose.getY(),
+                                    currentVelocities.vyMetersPerSecond
+                            );
+                            moveToProfiledAngular.reset(
+                                    MathUtil.angleModulus(currentPose.getRotation().getRadians()),
+                                    currentVelocities.omegaRadiansPerSecond
+                            );
+                        }
+
+                        // Update profile constraints
+                        Translation2d currentToGoal = goalPose.getTranslation().minus(currentPose.getTranslation());
+                        if (currentToGoal.getX() != 0 || currentToGoal.getY() != 0) {
+                            Rotation2d directionOfTravel = currentToGoal.getAngle();
+                            calculateMoveToProfiledLinearConstraints(moveToProfiledLinearTunable.getConstraints(), directionOfTravel, (x, y) -> {
+                                moveToProfiledLinearX.setConstraints(x);
+                                moveToProfiledLinearY.setConstraints(y);
+                            });
+                        }
+
+                        linearXVelocityMetersPerSec = moveToProfiledLinearX.calculate(
+                                currentPose.getX(),
+                                goalPose.getX()
+                        ) + moveToProfiledLinearX.getSetpoint().velocity;
+                        linearXAtSetpoint = moveToProfiledLinearX.atSetpoint();
+
+                        linearYVelocityMetersPerSec = moveToProfiledLinearY.calculate(
+                                currentPose.getY(),
+                                goalPose.getY()
+                        ) + moveToProfiledLinearY.getSetpoint().velocity;
+                        linearYAtSetpoint = moveToProfiledLinearY.atSetpoint();
+
+                        angularVelocityRadPerSec = moveToProfiledAngular.calculate(
+                                MathUtil.angleModulus(currentPose.getRotation().getRadians()),
+                                MathUtil.angleModulus(goalPose.getRotation().getRadians())
+                        ) + moveToProfiledAngular.getSetpoint().velocity;
+                        angularAtSetpoint = moveToProfiledAngular.atSetpoint();
+
+                        Logger.recordOutput("Drive/MoveTo/Setpoint", new Pose2d(
+                                moveToProfiledLinearX.getSetpoint().position,
+                                moveToProfiledLinearY.getSetpoint().position,
+                                new Rotation2d(moveToProfiledAngular.getSetpoint().position)
+                        ));
+                    } else {
+                        if (operatorDashboard.profiledMoveTo.hasChanged()) {
+                            moveToPureLinearX.reset();
+                            moveToPureLinearY.reset();
+                            moveToPureAngular.reset();
+                        }
+
+                        linearXVelocityMetersPerSec = moveToPureLinearX.calculate(
+                                currentPose.getX(),
+                                goalPose.getX()
+                        );
+                        linearXAtSetpoint = moveToPureLinearX.atSetpoint();
+
+                        linearYVelocityMetersPerSec = moveToPureLinearY.calculate(
+                                currentPose.getY(),
+                                goalPose.getY()
+                        );
+                        linearYAtSetpoint = moveToPureLinearY.atSetpoint();
+
+                        angularVelocityRadPerSec = moveToPureAngular.calculate(
+                                MathUtil.angleModulus(currentPose.getRotation().getRadians()),
+                                MathUtil.angleModulus(goalPose.getRotation().getRadians())
+                        );
+                        angularAtSetpoint = moveToPureAngular.atSetpoint();
+                    }
+
+                    Logger.recordOutput("Drive/MoveTo/LinearXAtSetpoint", linearXAtSetpoint);
+                    if (linearXAtSetpoint) {
+                        linearXVelocityMetersPerSec = 0.0;
+                    }
+
+                    Logger.recordOutput("Drive/MoveTo/LinearYAtSetpoint", linearYAtSetpoint);
+                    if (linearYAtSetpoint) {
+                        linearYVelocityMetersPerSec = 0.0;
+                    }
+
+                    Logger.recordOutput("Drive/MoveTo/AngularAtSetpoint", angularAtSetpoint);
+                    if (angularAtSetpoint) {
+                        angularVelocityRadPerSec = 0.0;
+                    }
+
+                    // Scale linear speed by angular speed so that angular change is prioritized
+                    // When going max angular speed, reduce linear to 75%
+                    double linearScalar = MathUtil.clamp(1 - angularVelocityRadPerSec / maxAngularVelocityRadPerSec, 0.75, 1);
+
+                    ChassisSpeeds moveToSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                            linearXVelocityMetersPerSec * linearScalar,
+                            linearYVelocityMetersPerSec * linearScalar,
+                            angularVelocityRadPerSec,
+                            currentPose.getRotation() // Move to is absolute, don't flip
+                    );
+                    if (mergeJoystickDrive.getAsBoolean()) {
+                        goal = Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED;
+                        ChassisSpeeds joystickDriveSpeeds = joystickDrive.getSetpointRobotRelative(robotState.getRotation());
+                        closedLoopSetpoint = moveToSpeeds.plus(joystickDriveSpeeds.times(0.3));
+                    } else {
+                        goal = Goal.MOVE_TO;
+                        closedLoopSetpoint = moveToSpeeds;
+                    }
+                }
         );
     }
 
-    private void runDriveAssisted(Pose2d assistPose, Translation2d linearVelocity, double linearMagnitude, double omegaMagnitude) {
+    private void runDriveAssisted(Pose2d assistPose) {
         var currentPose = robotState.getPose();
-
-        var driverX = linearVelocity.getX() * driveConfig.maxDriveVelocityMetersPerSec();
-        var driverY = linearVelocity.getY() * driveConfig.maxDriveVelocityMetersPerSec();
-        var driverOmega = omegaMagnitude * joystickMaxAngularSpeedRadPerSec;
 
         double assistX = 0;
         double assistY = 0;
@@ -549,177 +715,48 @@ public class Drive extends SubsystemBaseExt {
 //        assistOmega *= Math.max(omegaMagnitude, linearMagnitude);
 
         closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
-                0.75 * assistX,
-                0.75 * assistY,
-                0.75 * assistOmega,
-                currentPose.getRotation() // Move to is absolute, don't flip
-        ).plus(ChassisSpeeds.fromFieldRelativeSpeeds(
-                0.25 * driverX,
-                0.25 * driverY,
-                0.25 * driverOmega,
-                Util.flipIfNeeded(currentPose.getRotation()) // Driver is alliance relative, flip
-        ));
-    }
-
-    public Command moveTo(Supplier<Pose2d> poseSupplier) {
-        return withGoal(
-                Goal.MOVE_TO,
-                startRun(
-                        () -> {
-                            Pose2d currentPose = robotState.getPose();
-                            ChassisSpeeds currentVelocities = getMeasuredChassisSpeedsFieldRelative();
-                            moveToLinearX.reset(
-                                    currentPose.getX(),
-                                    currentVelocities.vxMetersPerSecond
-                            );
-                            moveToLinearY.reset(
-                                    currentPose.getY(),
-                                    currentVelocities.vyMetersPerSecond
-                            );
-                            moveToAngular.reset(
-                                    currentPose.getRotation().getRadians(),
-                                    currentVelocities.omegaRadiansPerSecond
-                            );
-                        },
-                        () -> {
-                            Pose2d currentPose = robotState.getPose();
-                            ChassisSpeeds currentVelocities = getMeasuredChassisSpeedsFieldRelative();
-
-                            Pose2d goalPose = poseSupplier.get();
-                            Logger.recordOutput("Drive/MoveTo/Goal", goalPose);
-
-                            double linearXVelocityMetersPerSec = moveToLinearX.calculate(
-                                    currentPose.getX(),
-                                    goalPose.getX()
-                            ) + moveToLinearX.getSetpoint().velocity;
-                            Logger.recordOutput("Drive/MoveTo/LinearXMeasurement", currentVelocities.vxMetersPerSecond);
-                            Logger.recordOutput("Drive/MoveTo/LinearXSetpoint", moveToLinearX.getSetpoint().velocity);
-
-                            double linearYVelocityMetersPerSec = moveToLinearY.calculate(
-                                    currentPose.getY(),
-                                    goalPose.getY()
-                            ) + moveToLinearY.getSetpoint().velocity;
-                            Logger.recordOutput("Drive/MoveTo/LinearYMeasurement", currentVelocities.vyMetersPerSecond);
-                            Logger.recordOutput("Drive/MoveTo/LinearYSetpoint", moveToLinearY.getSetpoint().velocity);
-
-                            double angularVelocityRadPerSec = moveToAngular.calculate(
-                                    currentPose.getRotation().getRadians(),
-                                    goalPose.getRotation().getRadians()
-                            ) + moveToAngular.getSetpoint().velocity;
-                            Logger.recordOutput("Drive/MoveTo/AngularMeasurement", currentVelocities.omegaRadiansPerSecond);
-                            Logger.recordOutput("Drive/MoveTo/AngularSetpoint", moveToAngular.getSetpoint().velocity);
-
-                            Logger.recordOutput("Drive/MoveTo/Setpoint", new Pose2d(
-                                    moveToLinearX.getSetpoint().position,
-                                    moveToLinearY.getSetpoint().position,
-                                    new Rotation2d(moveToAngular.getSetpoint().position)
-                            ));
-
-                            closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
-                                    linearXVelocityMetersPerSec,
-                                    linearYVelocityMetersPerSec,
-                                    angularVelocityRadPerSec,
-                                    currentPose.getRotation() // Move to is absolute, don't flip
-                            );
-                        }
+                        assistX,
+                        assistY,
+                        assistOmega,
+                        currentPose.getRotation() // Move to is absolute, don't flip
                 )
-        ).withName("Drive Move To");
+                .times(0.75)
+                .plus(joystickDrive.getSetpointRobotRelative(currentPose.getRotation()).times(0.25));
     }
 
-    public Command driveJoystick(DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier, Supplier<Optional<Pose2d>> assistPoseSupplier) {
+    public Command driveJoystick(Supplier<Optional<Pose2d>> assistPoseSupplier) {
         return run(() -> {
             // Reset goal from assisted every loop
             goal = Goal.DRIVE_JOYSTICK;
-
-            // Joystick inputs
-            var x = xSupplier.getAsDouble();
-            var y = ySupplier.getAsDouble();
-            var omega = omegaSupplier.getAsDouble();
-
-            Logger.recordOutput("Drive/JoystickDrive/Suppliers/X", x);
-            Logger.recordOutput("Drive/JoystickDrive/Suppliers/Y", y);
-            Logger.recordOutput("Drive/JoystickDrive/Suppliers/Omega", omega);
-
-            // Calculate linear velocity and omega from joystick inputs
-            var linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), joystickDriveDeadband);
-            linearMagnitude = linearMagnitude * linearMagnitude;
-
-            var omegaMagnitude = MathUtil.applyDeadband(omega, joystickDriveDeadband);
-            omegaMagnitude = Math.copySign(omegaMagnitude * omegaMagnitude, omegaMagnitude);
-            // Scale linear magnitude by omega - when going full omega, want half linear
-            linearMagnitude *= MathUtil.clamp(1 - Math.abs(omegaMagnitude / 2), 0.5, 1);
-
-            // If x and y are both 0, Rotation2d will not be happy
-            if (x != 0 || y != 0) {
-                lastJoystickDriveLinearDirection = new Rotation2d(x, y);
-            }
-            var linearVelocity = new Pose2d(new Translation2d(), lastJoystickDriveLinearDirection)
-                    .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
-                    .getTranslation();
-
-            Logger.recordOutput("Drive/JoystickDrive/LinearMagnitude", linearMagnitude);
-            Logger.recordOutput("Drive/JoystickDrive/LinearDirection", lastJoystickDriveLinearDirection);
-            Logger.recordOutput("Drive/JoystickDrive/LinearVelocity", linearVelocity);
-            Logger.recordOutput("Drive/JoystickDrive/OmegaMagnitude", omegaMagnitude);
 
             var optionalAssistPose = assistPoseSupplier.get();
             if (optionalAssistPose.isPresent()) {
                 // Mark assist pose as present
                 Logger.recordOutput("Drive/Assist/Present", true);
+                Pose2d assistPose = optionalAssistPose.get();
 
-                var currentPose = robotState.getPose();
-                var assistPose = optionalAssistPose.get();
-                Logger.recordOutput("Drive/Assist/Pose", assistPose);
-
-                // Get the translation between robot and assist
-                var robotToAssist = assistPose.getTranslation().minus(currentPose.getTranslation());
-                // Calculate direction from robot to assist
-                var robotToAssistDirection = new Rotation2d(robotToAssist.getX(), robotToAssist.getY());
-                Logger.recordOutput("Drive/Assist/RobotToAssistDirection", robotToAssistDirection);
-
-                // Flip joystick direction to match robot to assist direction
-                // Joystick direction is relative to alliance wall and needs to be flipped on red alliance to match origin
-                var joystickLinearDirectionFlipped = Util.flipIfNeeded(lastJoystickDriveLinearDirection);
-                Logger.recordOutput("Drive/Assist/FlippedJoystickLinearDirection", joystickLinearDirectionFlipped);
-
-                // Get difference between joystick direction and assist direction
-                var directionDiff = robotToAssistDirection.minus(joystickLinearDirectionFlipped);
-                Logger.recordOutput("Drive/Assist/DirectionDifference", directionDiff);
-
-                // Get distance to assist pose
-                var distanceToAssist = currentPose.getTranslation().getDistance(assistPose.getTranslation());
-                Logger.recordOutput("Drive/Assist/DistanceToAssist", distanceToAssist);
-
-                // If we are:
-                if (
-                    // - above linear joystick deadband (so we are moving linearly in some way - if we are only rotating, don't assist)
-                        (Math.abs(x) > joystickDriveDeadband || Math.abs(y) > joystickDriveDeadband) &&
-                                // - going towards the assist pose based on threshold
-                                Math.abs(directionDiff.getRadians()) < assistDirectionToleranceRad &&
-                                // - close enough to assist pose
-                                distanceToAssist < assistMaximumDistanceMeters
-                ) {
-                    // then use automatic control.
-                    Logger.recordOutput("Drive/Assist/Running", true);
+                if (joystickDrive.shouldAssist(robotState.getPose(), assistPose)) {
                     goal = Goal.DRIVE_JOYSTICK_ASSISTED;
-                    runDriveAssisted(assistPose, linearVelocity, linearMagnitude, omegaMagnitude);
+                    runDriveAssisted(assistPose);
                 } else {
-                    Logger.recordOutput("Drive/Assist/Running", false);
-                    runDrive(linearVelocity, omegaMagnitude);
+                    closedLoopSetpoint = joystickDrive.getSetpointRobotRelative(robotState.getRotation());
                 }
             } else {
                 Logger.recordOutput("Drive/Assist/Present", false);
-                Logger.recordOutput("Drive/Assist/Running", false);
-                runDrive(linearVelocity, omegaMagnitude);
+                closedLoopSetpoint = joystickDrive.getSetpointRobotRelative(robotState.getRotation());
             }
-        }).withName("Drive Joystick");
+        });
     }
 
     public Command runRobotRelative(Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
         return withGoal(
                 Goal.VELOCITY_ROBOT_RELATIVE,
                 run(() -> closedLoopSetpoint = chassisSpeedsSupplier.get())
-        ).withName("Drive Run Velocity");
+        );
+    }
+
+    public Command stop() {
+        return runOnce(() -> goal = Goal.IDLE);
     }
 
     public Command feedforwardCharacterization() {
@@ -730,7 +767,7 @@ public class Drive extends SubsystemBaseExt {
                     }
                 },
                 () -> Arrays.stream(modules)
-                        .mapToDouble(Module::getVelocityRadPerSec)
+                        .mapToDouble(Module::getDriveVelocityRadPerSec)
                         .toArray(),
                 modules.length,
                 this
@@ -738,7 +775,7 @@ public class Drive extends SubsystemBaseExt {
     }
 
     public Command fullSpeedCharacterization() {
-        return withGoal(Goal.CHARACTERIZATION, Commands.sequence(
+        return withGoal(Goal.CHARACTERIZATION, CommandsExt.eagerSequence(
                 startIdle(
                         () -> {
                             for (var module : modules) {
@@ -762,7 +799,7 @@ public class Drive extends SubsystemBaseExt {
     }
 
     public Command wheelRadiusCharacterization(WheelRadiusCharacterization.Direction direction) {
-        return withGoal(Goal.WHEEL_RADIUS_CHARACTERIZATION, new WheelRadiusCharacterization(direction)).withName("Drive Wheel Radius Characterization");
+        return withGoal(Goal.WHEEL_RADIUS_CHARACTERIZATION, new WheelRadiusCharacterization(direction));
     }
 
     public class WheelRadiusCharacterization extends Command {
@@ -790,7 +827,7 @@ public class Drive extends SubsystemBaseExt {
         }
 
         private double[] getWheelRadiusCharacterizationPositions() {
-            return Arrays.stream(modules).mapToDouble(Module::getPositionRad).toArray();
+            return Arrays.stream(modules).mapToDouble(Module::getDrivePositionRad).toArray();
         }
 
         @Override

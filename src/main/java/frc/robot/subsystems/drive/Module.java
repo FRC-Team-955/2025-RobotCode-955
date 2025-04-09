@@ -63,7 +63,7 @@ public class Module {
      */
     public void runSetpoint(SwerveModuleState state, boolean optimize) {
         // Optimize velocity setpoint
-        var currentAngle = getAngle();
+        var currentAngle = getTurnAngle();
         if (optimize) {
             state.optimize(currentAngle);
         }
@@ -111,40 +111,32 @@ public class Module {
         io.setTurnBrakeMode(enable);
     }
 
-    public void setDrivePosition(double positionRad) {
-        io.setDrivePosition(positionRad);
-    }
-
-    public void setTurnPosition(double positionRad) {
-        io.setTurnPosition(positionRad);
-    }
-
     /**
      * Returns the current turn angle of the module.
      */
-    public Rotation2d getAngle() {
+    public Rotation2d getTurnAngle() {
         return new Rotation2d(MathUtil.angleModulus(inputs.turnPositionRad));
     }
 
-    public double getPositionRad() {
+    public double getDrivePositionRad() {
         return inputs.drivePositionRad;
     }
 
-    public double getVelocityRadPerSec() {
+    public double getDriveVelocityRadPerSec() {
         return inputs.driveVelocityRadPerSec;
     }
 
     /**
      * Returns the current drive position of the module in meters.
      */
-    public double getPositionMeters() {
+    public double getDrivePositionMeters() {
         return inputs.drivePositionRad * driveConfig.wheelRadiusMeters();
     }
 
     /**
      * Returns the current drive velocity of the module in meters per second.
      */
-    public double getVelocityMetersPerSec() {
+    public double getDriveVelocityMetersPerSec() {
         return inputs.driveVelocityRadPerSec * driveConfig.wheelRadiusMeters();
     }
 
@@ -152,14 +144,14 @@ public class Module {
      * Returns the module position (turn angle and drive position).
      */
     public SwerveModulePosition getPosition() {
-        return new SwerveModulePosition(getPositionMeters(), getAngle());
+        return new SwerveModulePosition(getDrivePositionMeters(), getTurnAngle());
     }
 
     /**
      * Returns the module state (turn angle and drive velocity).
      */
     public SwerveModuleState getState() {
-        return new SwerveModuleState(getVelocityMetersPerSec(), getAngle());
+        return new SwerveModuleState(getDriveVelocityMetersPerSec(), getTurnAngle());
     }
 
     /**
@@ -175,12 +167,5 @@ public class Module {
 
     public double[] getOdometryTurnPositionsRad() {
         return inputs.odometryTurnPositionsRad;
-    }
-
-    /**
-     * Returns the module position in radians.
-     */
-    public double getWheelRadiusCharacterizationPosition() {
-        return inputs.drivePositionRad;
     }
 }

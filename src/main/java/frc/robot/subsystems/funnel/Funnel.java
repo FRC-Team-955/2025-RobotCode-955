@@ -9,6 +9,7 @@ import frc.robot.RobotMechanism;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
 import frc.robot.util.characterization.FeedforwardCharacterization;
+import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class Funnel extends SubsystemBaseExt {
         IDLE(() -> 0),
         INTAKE_FORWARDS(intakeGoalSetpoint::get),
         INTAKE_BACKWARDS(() -> -intakeGoalSetpoint.get()),
+        INTAKE_MANUAL(intakeManualGoalSetpoint::get),
         EJECT_FORWARDS(ejectGoalSetpoint::get),
         EJECT_BACKWARDS(() -> -ejectGoalSetpoint.get());
 
@@ -55,6 +57,7 @@ public class Funnel extends SubsystemBaseExt {
     }
 
     private Funnel() {
+        super(10);
     }
 
     @Override
@@ -65,15 +68,15 @@ public class Funnel extends SubsystemBaseExt {
         beltDisconnectedAlert.set(!beltInputs.connected);
 
         robotMechanism.funnel.beltLigament.setAngle(Units.radiansToDegrees(-beltInputs.positionRad));
+
+        velocityGainsTunable.ifChanged(beltIO::setVelocityPIDF);
     }
 
     @Override
     public void periodicAfterCommands() {
-        if (operatorDashboard.coastOverride.hasChanged(hashCode())) {
+        if (operatorDashboard.coastOverride.hasChanged()) {
             beltIO.setBrakeMode(!operatorDashboard.coastOverride.get());
         }
-
-        velocityGainsTunable.ifChanged(hashCode(), beltIO::setVelocityPIDF);
 
         Logger.recordOutput("Funnel/Goal", goal);
         ////////////// BELT //////////////
@@ -83,7 +86,7 @@ public class Funnel extends SubsystemBaseExt {
         } else if (goal.setpointRadPerSec != null) {
             // Velocity control
             var beltVelocitySetpointRadPerSec = goal.setpointRadPerSec.getAsDouble();
-            beltIO.setVelocity(beltVelocitySetpointRadPerSec);
+            beltIO.setClosedLoopVelocity(beltVelocitySetpointRadPerSec);
             Logger.recordOutput("Funnel/Belt/ClosedLoop", true);
             Logger.recordOutput("Funnel/Belt/SetpointRadPerSec", beltVelocitySetpointRadPerSec);
         } else {
@@ -100,12 +103,14 @@ public class Funnel extends SubsystemBaseExt {
     }
 
     public Command beltFeedforwardCharacterization() {
-        return setGoal(Goal.CHARACTERIZATION)
-                .andThen(new FeedforwardCharacterization(
+        return CommandsExt.eagerSequence(
+                setGoal(Goal.CHARACTERIZATION),
+                new FeedforwardCharacterization(
                         beltIO::setOpenLoop,
                         () -> new double[]{beltInputs.velocityRadPerSec},
                         1,
                         this
-                ));
+                )
+        );
     }
 }

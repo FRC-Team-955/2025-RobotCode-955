@@ -67,6 +67,7 @@
 package frc.robot.util.swerve;
 
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -232,7 +233,7 @@ public class SwerveSetpointGenerator {
                     necessaryRotation = necessaryRotation.rotateBy(Rotation2d.k180deg);
                 }
                 // getRadians() bounds to +/- Pi.
-                final double numStepsNeeded = Math.abs(necessaryRotation.getRadians()) / max_theta_step;
+                final double numStepsNeeded = Math.abs(MathUtil.angleModulus(necessaryRotation.getRadians())) / max_theta_step;
 
                 if (numStepsNeeded <= 1.0) {
                     // Steer directly to goal angle.

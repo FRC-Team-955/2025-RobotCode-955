@@ -2,11 +2,11 @@ package frc.robot.autos;
 
 import choreo.auto.AutoRoutine;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.OperatorDashboard.LocalReefSide;
-import frc.robot.OperatorDashboard.ReefZoneSide;
+import frc.robot.OperatorDashboard.CoralScoringLevel;
 import frc.robot.autos.AutoBuilder.IntakeScorePair;
-import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.superstructure.AutoAlignLocations.Station;
+import frc.robot.subsystems.superstructure.ReefAlign.LocalReefSide;
+import frc.robot.subsystems.superstructure.ReefAlign.ReefZoneSide;
+import frc.robot.subsystems.superstructure.StationAlign.Station;
 
 import java.util.List;
 
@@ -17,11 +17,14 @@ public class ProcessorSideFriendlyAuto {
         final var secondScoreTraj = routine.trajectory("Processor Side Friendly", 2);
         final var thirdStationTraj = routine.trajectory("Processor Side Friendly", 3);
         final var thirdScoreTraj = routine.trajectory("Processor Side Friendly", 4);
+        final var fourthStationTraj = routine.trajectory("Processor Side Friendly", 5);
+        final var fourthScoreTraj = routine.trajectory("Processor Side Friendly", 6);
 
         return AutoBuilder.createScoring(routine, List.of(
-                new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, Elevator.Goal.SCORE_L4),
-                new IntakeScorePair(secondStationTraj, Station.ProcessorSideFriendly, secondScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Left, Elevator.Goal.SCORE_L4),
-                new IntakeScorePair(thirdStationTraj, Station.ProcessorSideFriendly, thirdScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, Elevator.Goal.SCORE_L3)
+                new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, CoralScoringLevel.L4, false),
+                new IntakeScorePair(secondStationTraj, Station.ProcessorSideFriendly, secondScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Left, CoralScoringLevel.L4, false),
+                new IntakeScorePair(thirdStationTraj, Station.ProcessorSideFriendly, thirdScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, CoralScoringLevel.L2, false),
+                new IntakeScorePair(fourthStationTraj, Station.ProcessorSideFriendly, fourthScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Left, CoralScoringLevel.L2, false)
         ));
     }
 }

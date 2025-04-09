@@ -1,37 +1,28 @@
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.autos.BargeSideAuto;
 import frc.robot.autos.CenterAuto;
 import frc.robot.autos.ProcessorSideAuto;
 import frc.robot.autos.ProcessorSideFriendlyAuto;
+import frc.robot.subsystems.apriltagvision.AprilTagVision;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.JoystickDrive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
-import frc.robot.subsystems.leds.LEDs;
+import frc.robot.subsystems.gamepiecevision.GamePieceVision;
 import frc.robot.subsystems.superstructure.Superstructure;
-import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.commands.CommandsExt;
-import frc.robot.util.subsystem.VirtualSubsystem;
-import org.ironmaple.simulation.SimulatedArena;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import java.util.Optional;
-
-import static frc.robot.Constants.mode;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -39,7 +30,7 @@ import static frc.robot.Constants.mode;
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
-public class RobotContainer extends VirtualSubsystem {
+public class RobotContainer {
     // Controller
     private final CommandXboxController driverController = RobotBase.isSimulation()
             ? Constants.Simulation.simController.apply(0)
@@ -52,22 +43,35 @@ public class RobotContainer extends VirtualSubsystem {
 
     public final RobotState robotState = RobotState.get();
     public final OperatorDashboard operatorDashboard = OperatorDashboard.get();
+    public final JoystickDrive joystickDrive = JoystickDrive.get();
 
     /* Subsystems */
     // Note: order does matter
     public final Elevator elevator = Elevator.get();
     public final EndEffector endEffector = EndEffector.get();
     public final Funnel funnel = Funnel.get();
-    public final Vision vision = Vision.get();
     public final Drive drive = Drive.get();
+    public final AprilTagVision aprilTagVision = AprilTagVision.get();
+    public final GamePieceVision gamePieceVision = GamePieceVision.get();
     public final Superstructure superstructure = Superstructure.get();
-    public final LEDs leds = LEDs.get();
 
     public RobotContainer() {
         addAutos();
         addCharacterizations();
         setDefaultCommands();
         configureButtonBindings();
+
+        new Trigger(() -> DriverStation.isTeleopEnabled() && DriverStation.getMatchTime() > 0 && DriverStation.getMatchTime() < 30)
+                .onTrue(Commands.startEnd(
+                        () -> driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0.5),
+                        () -> driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0)
+                ).withTimeout(2.0));
+
+        new Trigger(superstructure::isForceable)
+                .onTrue(Commands.startEnd(
+                        () -> driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0.5),
+                        () -> driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0)
+                ).withTimeout(0.5));
     }
 
     private void addAutos() {
@@ -76,12 +80,26 @@ public class RobotContainer extends VirtualSubsystem {
         autoChooser.addOption("None", Commands.none());
         autoChooser.addOption("Leave", drive.runRobotRelative(() -> new ChassisSpeeds(-0.5, 0, 0)).withTimeout(5));
 
-        autoChooser.addOption("Barge Side", BargeSideAuto.get(factory.newRoutine("Barge Side")));
-        autoChooser.addOption("Processor Side", ProcessorSideAuto.get(factory.newRoutine("Processor Side")));
-        autoChooser.addOption("Processor Side Friendly", ProcessorSideFriendlyAuto.get(factory.newRoutine("Processor Side Friendly")));
-        autoChooser.addOption("Center", CenterAuto.get(factory.newRoutine("Center")));
+        autoChooser.addOption("Barge Side - Normal", BargeSideAuto.get(factory.newRoutine("Barge Side - Normal"), BargeSideAuto.Type.Normal));
+        autoChooser.addOption("Barge Side - Avoid Middle Front", BargeSideAuto.get(factory.newRoutine("Barge Side - Avoid Middle Front"), BargeSideAuto.Type.AvoidMiddleFront));
+        autoChooser.addOption("Barge Side - Avoid Middle Front And Adjacent", BargeSideAuto.get(factory.newRoutine("Barge Side - Avoid Middle Front And Adjacent"), BargeSideAuto.Type.AvoidMiddleFrontAndAdjacent));
 
-        autoChooser.addOption("Characterization", Commands.deferredProxy(characterizationChooser::get));
+        autoChooser.addOption("Processor Side - Normal", ProcessorSideAuto.get(factory.newRoutine("Processor Side - Normal"), ProcessorSideAuto.Type.Normal));
+        autoChooser.addOption("Processor Side - Avoid Middle Front", ProcessorSideAuto.get(factory.newRoutine("Processor Side - Avoid Middle Front"), ProcessorSideAuto.Type.AvoidMiddleFront));
+        autoChooser.addOption("Processor Side - Avoid Middle Front And Adjacent", ProcessorSideAuto.get(factory.newRoutine("Processor Side - Avoid Middle Front And Adjacent"), ProcessorSideAuto.Type.AvoidMiddleFrontAndAdjacent));
+
+        autoChooser.addOption("Processor Side - Friendly", ProcessorSideFriendlyAuto.get(factory.newRoutine("Processor Side - Friendly")));
+        autoChooser.addOption("Center", CenterAuto.get(factory.newRoutine("Center"), CenterAuto.Type.Normal));
+        autoChooser.addOption("Center - Descore", CenterAuto.get(factory.newRoutine("Center - Descore"), CenterAuto.Type.Descore));
+
+        autoChooser.addOption(
+                "Characterization",
+                // We need to require the superstructure during characterization so that the default command doesn't get run
+                Commands.deferredProxy(() -> CommandsExt.eagerSequence(
+                        superstructure.cancel(),
+                        characterizationChooser.get()
+                ))
+        );
     }
 
     private void addCharacterizations() {
@@ -95,14 +113,6 @@ public class RobotContainer extends VirtualSubsystem {
         characterizationChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysId.dynamic(SysIdRoutine.Direction.kForward));
         characterizationChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysId.dynamic(SysIdRoutine.Direction.kReverse));
 
-        ////////////////////// ELEVATOR //////////////////////
-
-        characterizationChooser.addOption("Elevator SysId (Quasistatic Forward)", elevator.sysId.quasistatic(SysIdRoutine.Direction.kForward));
-        characterizationChooser.addOption("Elevator SysId (Quasistatic Reverse)", elevator.sysId.quasistatic(SysIdRoutine.Direction.kReverse));
-        characterizationChooser.addOption("Elevator SysId (Dynamic Forward)", elevator.sysId.dynamic(SysIdRoutine.Direction.kForward));
-        characterizationChooser.addOption("Elevator SysId (Dynamic Reverse)", elevator.sysId.dynamic(SysIdRoutine.Direction.kReverse));
-        characterizationChooser.addOption("Elevator Feedforward Characterization", elevator.feedforwardCharacterization());
-
         ////////////////////// END EFFECTOR //////////////////////
 
         characterizationChooser.addOption("End Effector Rollers Feedforward Characterization", endEffector.rollersFeedforwardCharacterization());
@@ -113,35 +123,9 @@ public class RobotContainer extends VirtualSubsystem {
     }
 
     private void setDefaultCommands() {
-        //                            var gamepiece = vision.getClosestGamepiece();
-        //                            return gamepiece.map(gamepieceTranslation -> {
-        //                                var relativeToRobot = gamepieceTranslation.minus(robotState.getTranslation());
-        //                                if (relativeToRobot.getNorm() < Units.feetToMeters(1)) {
-        //                                    // Don't try to face towards it if we are too close
-        //                                    return new Pose2d(gamepieceTranslation, robotState.getRotation());
-        //                                } else {
-        //                                    // Try to face towards the game piece
-        //                                    var toGamepiece = new Rotation2d(relativeToRobot.getX(), relativeToRobot.getY());
-        //                                    return new Pose2d(gamepieceTranslation, toGamepiece);
-        //                                }
-        //                            });
-        drive.setDefaultCommand(
-                drive.driveJoystick(
-                        // https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
-                        // forward on joystick is negative y - we want positive x for forward
-                        () -> -driverController.getLeftY(),
-                        // right on joystick is positive x - we want negative y for right
-                        () -> -driverController.getLeftX(),
-                        // right on joystick is positive x - we want negative x for right (CCW is positive)
-                        () -> -driverController.getRightX(),
-                        Optional::empty
-                )
-        );
+        drive.setDefaultCommand(drive.driveJoystick(Optional::empty));
 
-        superstructure.setDefaultCommand(superstructure.idle().ignoringDisable(true));
-        elevator.setDefaultCommand(superstructure.elevatorIdle().ignoringDisable(true));
-        endEffector.setDefaultCommand(superstructure.endEffectorIdle().ignoringDisable(true));
-        funnel.setDefaultCommand(superstructure.funnelIdle().ignoringDisable(true));
+        superstructure.setDefaultCommand(CommandsExt.eagerSequence(superstructure.ensureNotBusyAndResetGoals(), Commands.idle()).ignoringDisable(true));
     }
 
     /**
@@ -151,11 +135,18 @@ public class RobotContainer extends VirtualSubsystem {
      * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
+        // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
+        // You must do this because if you don't, superstructure's default command will cancel your command
+
         driverController.y().onTrue(robotState.resetRotation());
+
+        driverController.leftBumper().onTrue(superstructure.cancel());
 
         driverController.x().whileTrue(superstructure.eject());
 
-        driverController.rightTrigger().whileTrue(superstructure.funnelIntake(false));
+        driverController.a().onTrue(superstructure.home());
+
+        driverController.rightTrigger().whileTrue(superstructure.funnelIntake(false).asProxy().repeatedly());
 
         var ref = new Object() {
             boolean shouldDescoreAlgae = false;
@@ -164,27 +155,17 @@ public class RobotContainer extends VirtualSubsystem {
                 superstructure.scoreCoralManual(
                         false,
                         driverController.leftTrigger(),
-                        driverController.leftBumper(),
-                        operatorDashboard::getCoralScoringElevatorGoal
+                        operatorDashboard::getSelectedCoralScoringLevel
                 ).asProxy(),
-                superstructure.autoAlignAndScore(
+                CommandsExt.eagerSequence(
+                        superstructure.autoScoreCoral(
                                 false,
                                 operatorDashboard::getSelectedReefZoneSide,
                                 operatorDashboard::getSelectedLocalReefSide,
-                                operatorDashboard::getCoralScoringElevatorGoal,
+                                operatorDashboard::getSelectedCoralScoringLevel,
                                 driverController.leftTrigger(),
-                                driverController.leftBumper(),
-                                CommandsExt.onlyIf(
-                                        () -> ref.shouldDescoreAlgae,
-                                        superstructure.autoAlignDescoreAlgae(
-                                                operatorDashboard::getSelectedReefZoneSide,
-                                                operatorDashboard::getAlgaeDescoringElevatorGoal,
-                                                driverController.rightBumper(),
-                                                driverController.leftBumper()
-                                        )
-                                )
-                        )
-                        .deadlineFor(
+                                false
+                        ).deadlineFor(
                                 Commands.startRun(
                                         () -> ref.shouldDescoreAlgae = false,
                                         () -> {
@@ -193,56 +174,59 @@ public class RobotContainer extends VirtualSubsystem {
                                             }
                                         }
                                 ).until(() -> ref.shouldDescoreAlgae)
+                        ),
+                        CommandsExt.onlyIf(
+                                () -> ref.shouldDescoreAlgae,
+                                superstructure.autoDescoreAlgae(
+                                        operatorDashboard::getSelectedReefZoneSide,
+                                        driverController.rightBumper(),
+                                        false
+                                )
                         )
-                        .asProxy(),
+                ).asProxy(),
                 // Use manual scoring if override enabled or when scoring L1
                 () -> operatorDashboard.manualScoring.get()
                         || operatorDashboard.getSelectedCoralScoringLevel() == OperatorDashboard.CoralScoringLevel.L1
         ));
 
-//        driverController.rightBumper().toggleOnTrue(superstructure.descoreAlgaeManual(operatorDashboard::getAlgaeDescoringElevatorGoal));
         driverController.rightBumper().onTrue(CommandsExt.onlyIf(
                 () -> superstructure.getGoal() == Superstructure.Goal.IDLE,
                 Commands.either(
                         superstructure.descoreAlgaeManual(
-                                operatorDashboard::getAlgaeDescoringElevatorGoal,
-                                driverController.leftBumper()
+                                operatorDashboard::getSelectedReefZoneSide
                         ).asProxy(),
-                        superstructure.autoAlignDescoreAlgae(
+                        superstructure.autoDescoreAlgae(
                                 operatorDashboard::getSelectedReefZoneSide,
-                                operatorDashboard::getAlgaeDescoringElevatorGoal,
                                 driverController.rightBumper(),
-                                driverController.leftBumper()
+                                false
                         ).asProxy(),
                         operatorDashboard.manualScoring::get
                 )
         ));
 
-        if (mode == Constants.Mode.SIM) {
-            driverController.x().onTrue(Commands.runOnce(() ->
-                    SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(
-                            new Pose2d(Units.inchesToMeters(650), Units.inchesToMeters(30), new Rotation2d(Math.random() * 2 * Math.PI))
-                    ))
-            ));
-            driverController.a().onTrue(Commands.runOnce(() ->
-                    SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(
-                            new Pose2d(Units.inchesToMeters(650), Units.inchesToMeters(285), new Rotation2d(Math.random() * 2 * Math.PI))
-                    ))
-            ));
-        }
+        operatorDashboard.operatorKeypad.getOverride4()
+                .or(operatorDashboard.zeroElevator::get)
+                .and(() -> !operatorDashboard.manualElevator.get())
+                .toggleOnTrue(Commands.parallel(
+                        superstructure.zeroElevator(),
+                        // Turn off the toggle instantly so it's like a button
+                        Commands.runOnce(() -> operatorDashboard.zeroElevator.set(false))
+                ).ignoringDisable(true));
+        operatorDashboard.operatorKeypad.getOverride6()
+                .and(() -> !operatorDashboard.manualElevator.get())
+                .onTrue(Commands.runOnce(() -> operatorDashboard.useRealElevatorState.set(true)));
 
-//        // Lock to 0° when A button is held
-//        controller
-//                .a()
-//                .whileTrue(
-//                        DriveCommands.joystickDriveAtAngle(
-//                                drive,
-//                                () -> -controller.getLeftY(),
-//                                () -> -controller.getLeftX(),
-//                                () -> new Rotation2d()));
+        operatorDashboard.operatorKeypad.getOverride4()
+                .or(operatorDashboard.manualElevatorUp::get)
+                .and(operatorDashboard.manualElevator::get)
+                .whileTrue(elevator.setManualVoltage(0.5));
+        operatorDashboard.operatorKeypad.getOverride6()
+                .or(operatorDashboard.manualElevatorDown::get)
+                .and(operatorDashboard.manualElevator::get)
+                .whileTrue(elevator.setManualVoltage(-0.5));
 
-        // Switch to X pattern when X button is pressed
-//        controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+        // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
+        // You must do this because if you don't, superstructure's default command will cancel your command
     }
 
     /**
@@ -254,8 +238,17 @@ public class RobotContainer extends VirtualSubsystem {
         return autoChooser.get();
     }
 
-    @Override
-    public void periodicBeforeCommands() {
+    public void periodicBeforeAll() {
         driverControllerDisconnectedAlert.set(!driverController.isConnected());
+
+        joystickDrive.update(
+                // https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
+                // forward on joystick is negative y - we want positive x for forward
+                -driverController.getLeftY(),
+                // right on joystick is positive x - we want negative y for right
+                -driverController.getLeftX(),
+                // right on joystick is positive x - we want negative x for right (CCW is positive)
+                -driverController.getRightX()
+        );
     }
 }

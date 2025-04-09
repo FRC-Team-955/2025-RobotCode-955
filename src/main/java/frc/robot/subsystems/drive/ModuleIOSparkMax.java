@@ -98,7 +98,7 @@ public class ModuleIOSparkMax extends ModuleIO {
         driveConfig
                 .closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder);
-        moduleConfig.driveGains().applySparkPID(driveConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        moduleConfig.driveGains().applySparkWithoutFeedforward(driveConfig.closedLoop, ClosedLoopSlot.kSlot0);
         driveConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
@@ -133,7 +133,7 @@ public class ModuleIOSparkMax extends ModuleIO {
                 .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
                 .positionWrappingEnabled(true)
                 .positionWrappingInputRange(0.0, 2 * Math.PI);
-        moduleConfig.turnGains().applySparkPID(turnConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        moduleConfig.turnGains().applySparkWithoutFeedforward(turnConfig.closedLoop, ClosedLoopSlot.kSlot0);
         turnConfig
                 .signals
                 .absoluteEncoderPositionAlwaysOn(true)
@@ -205,7 +205,7 @@ public class ModuleIOSparkMax extends ModuleIO {
         System.out.println("Setting drive gains");
         driveFF = newGains.toSimpleFF();
         var newConfig = new SparkMaxConfig();
-        newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        newGains.applySparkWithoutFeedforward(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
         tryUntilOkAsync(5, () -> driveSpark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
@@ -217,7 +217,7 @@ public class ModuleIOSparkMax extends ModuleIO {
     public void setTurnPIDF(PIDF newGains) {
         System.out.println("Setting turn gains");
         var newConfig = new SparkMaxConfig();
-        newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        newGains.applySparkWithoutFeedforward(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
         tryUntilOkAsync(5, () -> turnSpark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
@@ -271,15 +271,5 @@ public class ModuleIOSparkMax extends ModuleIO {
     public void setTurnClosedLoop(double positionRad) {
         double setpoint = MathUtil.inputModulus(positionRad + absoluteEncoderOffsetRad, 0.0, 2 * Math.PI);
         turnController.setReference(setpoint, ControlType.kPosition);
-    }
-
-    @Override
-    public void setDrivePosition(double positionRad) {
-        driveEncoder.setPosition(positionRad);
-    }
-
-    @Override
-    public void setTurnPosition(double positionRad) {
-        System.out.println("Setting turn absolute position");
     }
 }

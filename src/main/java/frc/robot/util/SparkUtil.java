@@ -16,16 +16,14 @@ package frc.robot.util;
 import com.revrobotics.REVLibError;
 import com.revrobotics.spark.SparkBase;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-public class SparkUtil {
-    protected static final Executor asyncExecutor = Executors.newFixedThreadPool(4);
+import static frc.robot.Util.asyncExecutor;
 
+public class SparkUtil {
     /**
      * Stores whether any error was has been detected by other utility methods.
      */

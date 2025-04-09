@@ -8,11 +8,11 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
-import frc.robot.Util;
-import frc.robot.util.characterization.FeedforwardCharacterization;
+import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.superstructure.ReefAlign;
+import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,6 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.*;
 import static frc.robot.RobotMechanism.middleOfRobot;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 import static frc.robot.subsystems.elevator.ElevatorTuning.*;
@@ -36,18 +35,20 @@ public class Elevator extends SubsystemBaseExt {
 
     @RequiredArgsConstructor
     public enum Goal {
-        CHARACTERIZATION(null),
-        ZERO(null),
-        STOW(stowGoalSetpoint::get), // Setpoint for when coral stuck in robot mode is activated is in periodicAfterCommands
-        SCORE_L1(scoreL1GoalSetpoint::get),
-        SCORE_L2(scoreL2GoalSetpoint::get),
-        SCORE_L3(scoreL3GoalSetpoint::get),
-        SCORE_L4(scoreL4GoalSetpoint::get),
-        DESCORE_L2(descoreL2GoalSetpoint::get),
-        DESCORE_L3(descoreL3GoalSetpoint::get);
+        CHARACTERIZATION(null, false),
+        STOW(stowGoalSetpoint::get, false), // Setpoint for when coral stuck in robot mode is activated is in periodicAfterCommands
+        SCORE_L1(scoreL1GoalSetpoint::get, false),
+        SCORE_L2(scoreL2GoalSetpoint::get, true),
+        SCORE_L3(scoreL3GoalSetpoint::get, true),
+        SCORE_L4(scoreL4GoalSetpoint::get, true),
+        DESCORE_L2(descoreL2GoalSetpoint::get, false),
+        DESCORE_L3(descoreL3GoalSetpoint::get, false),
+        ZERO_CORAL(null, false),
+        ZERO_ELEVATOR(null, false);
 
         /** Should be constant for every loop cycle */
         public final DoubleSupplier setpointMeters;
+        private final boolean adjustForScoring;
     }
 
     @Getter
@@ -55,26 +56,27 @@ public class Elevator extends SubsystemBaseExt {
 
     @AutoLogOutput(key = "Elevator/HasZeroed")
     private boolean hasZeroed = false;
+
     private boolean autoStop = false;
     private final Timer autoStopTimer = new Timer();
     private boolean prevEmergencyStopped = false;
 
     /** NOTE: UNITS IN METERS! */
-    private TrapezoidProfile profileFullVelocity = new TrapezoidProfile(
-            new TrapezoidProfile.Constraints(
-                    maxVelocityMetersPerSecond,
-                    maxAccelerationMetersPerSecondSquared
-            )
-    );
-    private TrapezoidProfile profileGentleVelocity = new TrapezoidProfile(
-            new TrapezoidProfile.Constraints(
-                    gentleMaxVelocityMetersPerSecond,
-                    maxAccelerationMetersPerSecondSquared
-            )
-    );
+    private TrapezoidProfile profileFullVelocity = new TrapezoidProfile(new TrapezoidProfile.Constraints(
+            maxVelocityMetersPerSecond,
+            maxAccelerationMetersPerSecondSquared
+    ));
+    private TrapezoidProfile profileGentleVelocity = new TrapezoidProfile(new TrapezoidProfile.Constraints(
+            gentleMaxVelocityMetersPerSecond,
+            maxAccelerationMetersPerSecondSquared
+    ));
     private TrapezoidProfile.State previousStateMeters = null;
 
-    public final SysIdRoutine sysId;
+    @AutoLogOutput(key = "Elevator/DistanceFromScoringPositionMeters")
+    private double distanceFromScoringPositionMeters = 0.0;
+
+    private boolean manualCurrentLimitApplied = false;
+    private double manualVoltage = gains.kG();
 
     private final Alert emergencyStoppedAlert = new Alert("Elevator is emergency stopped.", Alert.AlertType.kError);
     private final Alert notZeroedAlert = new Alert("Elevator is not zeroed! Please zero.", Alert.AlertType.kError);
@@ -82,8 +84,6 @@ public class Elevator extends SubsystemBaseExt {
     private final Alert followerDisconnectedAlert = new Alert("Elevator follower motor is disconnected.", Alert.AlertType.kError);
     private final Alert offsetSetAlert = new Alert("Elevator offset is not zero, bad things may happen.", Alert.AlertType.kWarning);
     private final Alert temperatureAlert = new Alert("Elevator motor temperature is high.", Alert.AlertType.kWarning);
-    private final Alert trustingLeaderAlert = new Alert("Currently trusting elevator leader motor.", Alert.AlertType.kInfo);
-    private final Alert trustingFollowerAlert = new Alert("Currently trusting elevator follower motor.", Alert.AlertType.kInfo);
 
     private static Elevator instance;
 
@@ -97,15 +97,7 @@ public class Elevator extends SubsystemBaseExt {
     }
 
     private Elevator() {
-        sysId = Util.sysIdRoutine(
-                "Elevator",
-                (voltage) -> io.setOpenLoop(voltage.in(Volts)),
-                () -> goal = Goal.CHARACTERIZATION,
-                this,
-                Volts.per(Second).of(0.2),
-                Volts.of(3),
-                Seconds.of(20)
-        );
+        super(10);
     }
 
     @Override
@@ -117,9 +109,6 @@ public class Elevator extends SubsystemBaseExt {
         followerDisconnectedAlert.set(!inputs.followerConnected);
 
         temperatureAlert.set(Math.max(inputs.leaderTemperatureCelsius, inputs.followerTemperatureCelsius) > 60);
-
-        trustingLeaderAlert.set(!trustFollowerMotor());
-        trustingFollowerAlert.set(trustFollowerMotor());
 
         // Check emergency stop and limits for auto stop
         var positionMeters = getPositionMeters();
@@ -158,23 +147,20 @@ public class Elevator extends SubsystemBaseExt {
         robotMechanism.elevator.stage2Root.setPosition(middleOfRobot - Units.inchesToMeters(7) + 0.02, Units.inchesToMeters(3.85) + getPositionMeters() / 3 * 2);
         robotMechanism.elevator.stage3Root.setPosition(middleOfRobot - Units.inchesToMeters(7), Units.inchesToMeters(4.85) + getPositionMeters());
 
-        var endEffectorX = middleOfRobot - Units.inchesToMeters(10);
-        var endEffectorY = Units.inchesToMeters(4.85) + getPositionMeters();
+        var endEffectorX = middleOfRobot - Units.inchesToMeters(11);
+        var endEffectorY = Units.inchesToMeters(7) + getPositionMeters();
         robotMechanism.endEffector.root.setPosition(endEffectorX, endEffectorY);
-        robotMechanism.endEffector.beamBreakRoot.setPosition(endEffectorX - Units.inchesToMeters(1), endEffectorY + Units.inchesToMeters(5.25));
         robotMechanism.endEffector.topRollersRoot.setPosition(endEffectorX - Units.inchesToMeters(3), endEffectorY + Units.inchesToMeters(10));
-    }
 
-    @Override
-    public void periodicAfterCommands() {
-        if (operatorDashboard.coastOverride.hasChanged(hashCode())) {
+        // Apply network inputs
+        if (operatorDashboard.coastOverride.hasChanged()) {
             io.setBrakeMode(!operatorDashboard.coastOverride.get());
         }
 
-        gainsTunable.ifChanged(hashCode(), io::setPIDF);
+        gainsTunable.ifChanged(io::setPIDF);
 
-        if (maxVelocityMetersPerSecondTunable.hasChanged(hashCode())
-                || maxAccelerationMetersPerSecondSquaredTunable.hasChanged(hashCode())
+        if (maxVelocityMetersPerSecondTunable.hasChanged()
+                || maxAccelerationMetersPerSecondSquaredTunable.hasChanged()
         ) {
             profileFullVelocity = new TrapezoidProfile(new TrapezoidProfile.Constraints(
                     maxVelocityMetersPerSecondTunable.get(),
@@ -187,17 +173,42 @@ public class Elevator extends SubsystemBaseExt {
             hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecondTunable.get());
             robotMechanism.elevator.updateHardstopSlowdownPosition();
         }
+    }
 
-        // Goal control
+    @Override
+    public void periodicAfterCommands() {
+        // Update current limit
+        if (operatorDashboard.manualElevator.get() || goal == Goal.ZERO_ELEVATOR) {
+            if (!manualCurrentLimitApplied) {
+                io.setManualCurrentLimit(true);
+                manualCurrentLimitApplied = true;
+            }
+        } else {
+            if (manualCurrentLimitApplied) {
+                io.setManualCurrentLimit(false);
+                manualCurrentLimitApplied = false;
+            }
+        }
+
+        // Handle goal
         Logger.recordOutput("Elevator/Goal", goal);
         if (DriverStation.isDisabled()) {
             Logger.recordOutput("Elevator/ClosedLoop", false);
             io.setOpenLoop(0);
             previousStateMeters = null;
+        } else if (operatorDashboard.manualElevator.get()) {
+            Logger.recordOutput("Elevator/ClosedLoop", false);
+            io.setOpenLoop(manualVoltage);
+            previousStateMeters = null;
         } else if (goal.setpointMeters != null) {
             double positionMeters = getPositionMeters();
             double velocityMetersPerSec = getVelocityMetersPerSec();
-            double setpointMeters = MathUtil.clamp(goal.setpointMeters.getAsDouble(), 0, maxHeightMeters);
+
+            double setpointMeters = goal.setpointMeters.getAsDouble();
+            if (goal.adjustForScoring) {
+                setpointMeters += calculatePositionOffsetForScoring();
+            }
+            setpointMeters = MathUtil.clamp(setpointMeters, 0, maxHeightMeters);
 
             double offsetMeters = operatorDashboard.elevatorOffsetMeters.get();
             if (offsetMeters != 0.0) {
@@ -207,16 +218,19 @@ public class Elevator extends SubsystemBaseExt {
                 offsetSetAlert.set(false);
             }
 
-            if (goal == Goal.STOW && operatorDashboard.coralStuckInRobotMode.get()) {
-                // Override stow setpoint if coral is stuck in the robot
-                setpointMeters = 1.1;
-            }
-
-            boolean usingGentleVelocity = setpointMeters < positionMeters // If we are going down
+            boolean usingGentleVelocity = (velocityMetersPerSec < 0 || setpointMeters + 0.1 < positionMeters) // If we are going down
                     // If we are below the hardstop slowdown zone
                     && positionMeters < hardstopSlowdownMeters;
             // Only actually use the gentle profile if we are close enough to the max velocity to avoid jumping directly to max velocity
             boolean usingGentleProfile = usingGentleVelocity && Math.abs(velocityMetersPerSec) < gentleMaxVelocityMetersPerSecond + 0.4;
+
+            if (goal == Goal.STOW && operatorDashboard.coralStuckInRobotMode.get()) {
+                // Override stow setpoint if coral is stuck in the robot
+                setpointMeters = 1.1;
+                // Use gentle so we don't slam coral into one of the crossbars
+                usingGentleProfile = true;
+            }
+
             var profile = usingGentleProfile
                     ? profileGentleVelocity
                     : profileFullVelocity;
@@ -256,16 +270,7 @@ public class Elevator extends SubsystemBaseExt {
             previousStateMeters = null;
         }
 
-        // Check limit switch and zero if needed
-        var forceZero = operatorDashboard.forceZeroElevator.get();
-        if ((!hasZeroed && inputs.limitSwitchTriggered) || forceZero) {
-            io.setEncoder(0);
-            hasZeroed = true;
-            if (forceZero) {
-                // Turn off the toggle instantly so it's like a button
-                operatorDashboard.forceZeroElevator.set(false);
-            }
-        }
+        // Update zeroed alert - after commands, since that would be when it gets zeroed
         notZeroedAlert.set(!hasZeroed);
     }
 
@@ -289,53 +294,92 @@ public class Elevator extends SubsystemBaseExt {
         return runOnceAndWaitUntil(() -> this.goal = goal.get(), this::atGoal);
     }
 
-    @AutoLogOutput(key = "Elevator/TrustFollowerMotor")
-    private boolean trustFollowerMotor() {
-        return inputs.followerConnected && (operatorDashboard.trustElevatorFollower.get() || !inputs.leaderConnected);
-    }
-
     @AutoLogOutput(key = "Elevator/Measurement/PositionMeters")
     public double getPositionMeters() {
-        return radToMeters(
-                trustFollowerMotor()
-                        ? inputs.followerPositionRad
-                        : inputs.leaderPositionRad
-        );
-//        var avgPositionRad = (inputs.leaderPositionRad + inputs.followerPositionRad) / 2.0;
-//        return radToMeters(avgPositionRad);
+        return radToMeters(inputs.leaderPositionRad);
     }
 
     @AutoLogOutput(key = "Elevator/Measurement/VelocityMetersPerSec")
     public double getVelocityMetersPerSec() {
-        return radToMeters(
-                trustFollowerMotor()
-                        ? inputs.followerVelocityRadPerSec
-                        : inputs.leaderVelocityRadPerSec
+        return radToMeters(inputs.leaderVelocityRadPerSec);
+    }
+
+    public Command setDistanceFromScoringPositionContinuous(DoubleSupplier distanceFromScoringPositionMeters) {
+        // Don't require subsystem - meant to run in background
+        return Commands.runEnd(
+                () -> this.distanceFromScoringPositionMeters = distanceFromScoringPositionMeters.getAsDouble(),
+                () -> this.distanceFromScoringPositionMeters = 0.0
         );
-//        var avgVelocityRadPerSec = (inputs.leaderVelocityRadPerSec + inputs.followerVelocityRadPerSec) / 2.0;
-//        return radToMeters(avgVelocityRadPerSec);
     }
 
-    public Command feedforwardCharacterization() {
-        return setGoal(() -> Goal.CHARACTERIZATION)
-                .andThen(new FeedforwardCharacterization(
-                        io::setOpenLoop,
-                        () -> new double[]{inputs.leaderVelocityRadPerSec},
-                        1,
-                        this
-                ));
+    private double calculatePositionOffsetForScoring() {
+        // Safeguard - this shouldn't happen due to when we set the distance but you never know
+        if (distanceFromScoringPositionMeters > ReefAlign.alignLinearToleranceMeters) {
+            return MathUtil.clamp(distanceFromScoringPositionMeters, 0, 0.5) * positionOffsetPerMeterOfDistance;
+        } else {
+            return 0.0;
+        }
     }
 
-    public Command zero() {
-        return Commands.sequence(
-                setGoal(() -> Goal.ZERO),
-                startEnd(
-                        () -> io.setOpenLoop(-1.5),
-                        () -> io.setOpenLoop(0)
-                ).until(() -> Math.abs(getVelocityMetersPerSec()) < 0.1),
-                Commands.waitSeconds(0.5),
-                waitUntil(() -> Math.abs(getVelocityMetersPerSec()) < 0.01),
-                runOnce(() -> io.setEncoder(0.0))
+    public double getDriveConstraintScalar() {
+        double elevatorSetpoint = goal.setpointMeters != null
+                ? goal.setpointMeters.getAsDouble()
+                : 0;
+        double elevatorPosition = Math.max(getPositionMeters(), elevatorSetpoint);
+        return MathUtil.interpolate(
+                1,
+                DriveConstants.constraintScalarWhenElevatorAtMaxHeightDriver,
+                elevatorPosition / maxHeightMeters
+        );
+    }
+
+    public Command zeroCoral() {
+        return CommandsExt.eagerSequence(
+                setGoal(() -> Goal.ZERO_CORAL),
+                startEndWaitUntil(
+                        () -> io.setOpenLoop(-0.7),
+                        () -> io.setOpenLoop(0),
+                        () -> getPositionMeters() < 0.01
+                ),
+                Commands.idle()
+        );
+    }
+
+    public Command zeroElevator() {
+        var elevatorInitialPosition = new Object() {
+            double val = 0.0;
+        };
+        return Commands.either(
+                CommandsExt.eagerSequence(
+                        setGoal(() -> Goal.ZERO_ELEVATOR),
+                        runOnce(() -> io.setOpenLoop(-0.5)),
+                        Commands.waitSeconds(0.2),
+                        Commands.waitUntil(() -> getVelocityMetersPerSec() < 0.02),
+                        runOnce(() -> {
+                            elevatorInitialPosition.val = getPositionMeters();
+                            io.setOpenLoop(0.0);
+                        }),
+                        Commands.waitSeconds(1),
+                        runOnce(() -> {
+                            if (Math.abs(getPositionMeters() - elevatorInitialPosition.val) < 0.02) {
+                                io.setEncoder(0);
+                                hasZeroed = true;
+                            }
+                        })
+                ).ignoringDisable(false).asProxy(), // Notice the proxy - it is important
+                Commands.runOnce(() -> {
+                    io.setEncoder(0);
+                    hasZeroed = true;
+                }).ignoringDisable(true),
+                DriverStation::isEnabled
+        );
+    }
+
+    public Command setManualVoltage(double addedVoltage) {
+        // Note - doesn't require subsystem to allow other commands that would require elevator to work
+        return Commands.startEnd(
+                () -> manualVoltage = gains.kG() + addedVoltage,
+                () -> manualVoltage = gains.kG()
         );
     }
 }

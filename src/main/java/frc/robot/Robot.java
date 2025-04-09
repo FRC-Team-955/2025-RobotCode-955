@@ -14,15 +14,19 @@
 package frc.robot;
 
 import edu.wpi.first.hal.AllianceStationID;
-import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.subsystems.drive.ModuleIOSim;
-import frc.robot.subsystems.leds.LEDs;
+import frc.robot.util.BackgroundCommandScheduler;
 import frc.robot.util.CANLogger;
+import frc.robot.util.commands.CommandsExt;
 import frc.robot.util.subsystem.SubsystemBaseExt;
 import frc.robot.util.subsystem.VirtualSubsystem;
 import org.ironmaple.simulation.SimulatedArena;
@@ -35,7 +39,10 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import java.lang.reflect.Array;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static frc.robot.Constants.mode;
 
@@ -50,19 +57,26 @@ public class Robot extends LoggedRobot {
     private Command autonomousCommand;
     private double autonomousStart;
 
-    private static final HashSet<SubsystemBaseExt> extendedSubsystems = new HashSet<>();
-    private static final HashSet<VirtualSubsystem> virtualSubsystems = new HashSet<>();
+    private static List<SubsystemBaseExt> extendedSubsystems = new ArrayList<>();
+    private static final List<VirtualSubsystem> virtualSubsystems = new ArrayList<>();
+    private static final List<BackgroundCommandScheduler> backgroundCommandSchedulers = new ArrayList<>();
 
     public static void registerExtendedSubsystem(SubsystemBaseExt subsystem) {
-        if (!extendedSubsystems.add(subsystem)) {
+        if (extendedSubsystems.contains(subsystem)) {
             Util.error("An extended subsystem has been registered more than once: " + subsystem.getName());
         }
+        extendedSubsystems.add(subsystem);
     }
 
-    public static void registerVirtualSubsystem(VirtualSubsystem subsystem) {
-        if (!virtualSubsystems.add(subsystem)) {
-            Util.error("A virtual subsystem has been registered more than once: " + subsystem.getClass().getName());
+    public static void registerVirtualSubsystem(VirtualSubsystem virtualSubsystem) {
+        if (virtualSubsystems.contains(virtualSubsystem)) {
+            Util.error("A virtual subsystem has been registered more than once: " + virtualSubsystem.getClass().getName());
         }
+        virtualSubsystems.add(virtualSubsystem);
+    }
+
+    public static void registerBackgroundCommandScheduler(BackgroundCommandScheduler backgroundCommandScheduler) {
+        backgroundCommandSchedulers.add(backgroundCommandScheduler);
     }
 
 //    private static void onCommandEnd(Command command) {
@@ -76,9 +90,6 @@ public class Robot extends LoggedRobot {
 //    }
 
     public Robot() {
-        @SuppressWarnings("resource")
-        Notifier startupNotifier = LEDs.get().createAndStartStartupNotifier();
-
         AutoLogOutputManager.addPackage("frc");
 
         Logger.recordMetadata("* ProjectName", BuildConstants.MAVEN_NAME);
@@ -148,7 +159,18 @@ public class Robot extends LoggedRobot {
         System.out.println("********** Initializing RobotContainer **********");
         robotContainer = new RobotContainer();
 
-        startupNotifier.stop();
+        extendedSubsystems = extendedSubsystems.stream().sorted(Comparator.comparingInt(o -> o.periodicPriority)).toList();
+        System.out.println("Extended subsystems: " +
+                extendedSubsystems.stream()
+                        .map(s -> s.getName() + " (" + s.periodicPriority + ")")
+                        .collect(Collectors.joining(", "))
+        );
+
+        System.out.println("Virtual subsystems: " +
+                virtualSubsystems.stream()
+                        .map(s -> s.getClass().getSimpleName())
+                        .collect(Collectors.joining(", "))
+        );
 
 //        CommandScheduler.getInstance().onCommandFinish(Robot::onCommandEnd);
 //        CommandScheduler.getInstance().onCommandInterrupt(Robot::onCommandEnd);
@@ -183,15 +205,26 @@ public class Robot extends LoggedRobot {
     @Override
     public void robotPeriodic() {
         // Switch thread to high priority to improve loop timing
-        Threads.setCurrentThreadPriority(true, 99);
+//        Threads.setCurrentThreadPriority(true, 99);
 
-        for (var subsystem : virtualSubsystems) {
-            subsystem.periodicBeforeCommands();
+        robotContainer.periodicBeforeAll();
+
+        for (var extendedSubsystem : extendedSubsystems) {
+//            System.out.println("Extended subsystem periodicBeforeCommands: " + extendedSubsystem.getName());
+            extendedSubsystem.periodicBeforeCommands();
+        }
+
+        for (var virtualSubsystem : virtualSubsystems) {
+//            System.out.println("Virtual subsystem periodicBeforeCommands: " + virtualSubsystem.getClass().getSimpleName());
+            virtualSubsystem.periodicBeforeCommands();
+        }
+
+        for (var backgroundCommandScheduler : backgroundCommandSchedulers) {
+            backgroundCommandScheduler.periodicBeforeCommands();
         }
 
         // Run the command scheduler.
-        // This first runs all subsystem periodic() (AKA periodicBeforeCommands())
-        // and then runs all of the commands.
+        // Extended subsystems periodic have already been run.
         CommandScheduler.getInstance().run();
 
         if (DriverStation.isAutonomousEnabled()) {
@@ -200,23 +233,26 @@ public class Robot extends LoggedRobot {
             if (autonomousCommand != null && !autonomousCommand.isScheduled()) {
                 var autonomousEnd = Timer.getTimestamp();
                 autonomousCommand = null;
-                robotContainer.leds.autonomousRunning = false;
                 System.out.printf("********** Auto finished in %.2f seconds **********%n", autonomousEnd - autonomousStart);
             }
         }
 
-        robotContainer.superstructure.periodicAfterCommandsBeforeSubsystems();
-
-        for (var subsystem : virtualSubsystems) {
-            subsystem.periodicAfterCommands();
+        for (var backgroundCommandScheduler : backgroundCommandSchedulers) {
+            backgroundCommandScheduler.periodicAfterCommands();
         }
 
-        for (var subsystem : extendedSubsystems) {
-            subsystem.periodicAfterCommands();
+        for (var extendedSubsystem : extendedSubsystems) {
+//            System.out.println("Extended subsystem periodicAfterCommands: " + extendedSubsystem.getName());
+            extendedSubsystem.periodicAfterCommands();
+        }
+
+        for (var virtualSubsystem : virtualSubsystems) {
+//            System.out.println("Virtual subsystem periodicAfterCommands: " + virtualSubsystem.getClass().getSimpleName());
+            virtualSubsystem.periodicAfterCommands();
         }
 
         // Return to normal thread priority
-        Threads.setCurrentThreadPriority(false, 10);
+//        Threads.setCurrentThreadPriority(false, 10);
     }
 
     @Override
@@ -234,7 +270,6 @@ public class Robot extends LoggedRobot {
         if (autonomousCommand != null) {
             autonomousCommand.schedule();
             autonomousStart = Timer.getTimestamp();
-            robotContainer.leds.autonomousRunning = true;
             System.out.println("********** Auto started **********");
         }
     }
@@ -250,7 +285,6 @@ public class Robot extends LoggedRobot {
             var autonomousEnd = Timer.getTimestamp();
             autonomousCommand.cancel();
             autonomousCommand = null;
-            robotContainer.leds.autonomousRunning = false;
             System.out.printf("********** Auto cancelled in %.2f seconds **********%n", autonomousEnd - autonomousStart);
         }
     }
@@ -280,8 +314,10 @@ public class Robot extends LoggedRobot {
 
         SimulatedArena.getInstance().resetFieldForAuto();
         RobotModeTriggers.autonomous().onTrue(Commands.runOnce(SimulatedArena.getInstance()::resetFieldForAuto));
-        RobotModeTriggers.autonomous().onTrue(Commands.waitSeconds(0.05)
-                .andThen(Commands.runOnce(() -> ModuleIOSim.driveSimulation.setSimulationWorldPose(RobotState.get().getPose()))));
+        RobotModeTriggers.autonomous().onTrue(CommandsExt.eagerSequence(
+                Commands.waitSeconds(0.05),
+                Commands.runOnce(() -> ModuleIOSim.driveSimulation.setSimulationWorldPose(RobotState.get().getPose()))
+        ));
         RobotState.get().setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
     }
 

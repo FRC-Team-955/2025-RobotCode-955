@@ -45,7 +45,15 @@
 package frc.robot.util.swerve;
 
 public record ModuleLimits(
-        double maxDriveVelocityMetersPerSec,
-        double maxDriveAccelerationMetersPerSecSquared,
-        double maxTurnVelocityRadPerSec
-) {}
+        double maxDriveVelocityMetersPerSec, // Maximum velocity of the drive motor
+        double maxDriveAccelerationMetersPerSecSquared, // Maximum acceleration of the drive motor
+        double maxTurnVelocityRadPerSec // Maximum velocity of the turn motor
+) {
+    public ModuleLimits times(double scalar) {
+        return new ModuleLimits(
+                maxDriveVelocityMetersPerSec * scalar,
+                maxDriveAccelerationMetersPerSecSquared * scalar,
+                maxTurnVelocityRadPerSec * scalar
+        );
+    }
+}

@@ -14,9 +14,9 @@ public class ElevatorTuning {
             new LoggedTunableNumber("Elevator/MaxAccelerationMetersPerSecondSquared", maxAccelerationMetersPerSecondSquared);
 
     public static final LoggedTunableNumber stowGoalSetpoint =
-            new LoggedTunableNumber("Elevator/Goal/Stow", 0);
+            new LoggedTunableNumber("Elevator/Goal/Stow", 0.02);
     public static final LoggedTunableNumber scoreL1GoalSetpoint =
-            new LoggedTunableNumber("Elevator/Goal/ScoreL1", 0.25);
+            new LoggedTunableNumber("Elevator/Goal/ScoreL1", 0.33);
     public static final LoggedTunableNumber scoreL2GoalSetpoint =
             new LoggedTunableNumber("Elevator/Goal/ScoreL2", 0.69);
     public static final LoggedTunableNumber scoreL3GoalSetpoint =
@@ -24,7 +24,7 @@ public class ElevatorTuning {
     public static final LoggedTunableNumber scoreL4GoalSetpoint =
             new LoggedTunableNumber("Elevator/Goal/ScoreL4", maxHeightMeters);
     public static final LoggedTunableNumber descoreL2GoalSetpoint =
-            new LoggedTunableNumber("Elevator/Goal/DescoreL2", 0.6);
+            new LoggedTunableNumber("Elevator/Goal/DescoreL2", 0.48);
     public static final LoggedTunableNumber descoreL3GoalSetpoint =
-            new LoggedTunableNumber("Elevator/Goal/DescoreL3", 1);
+            new LoggedTunableNumber("Elevator/Goal/DescoreL3", 0.88);
 }

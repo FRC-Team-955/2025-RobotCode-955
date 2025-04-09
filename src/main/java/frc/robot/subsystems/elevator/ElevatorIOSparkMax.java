@@ -7,7 +7,6 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.util.PIDF;
 
 import java.util.function.DoubleSupplier;
@@ -17,23 +16,23 @@ import static frc.robot.subsystems.elevator.ElevatorConstants.gearRatio;
 import static frc.robot.util.SparkUtil.*;
 
 public class ElevatorIOSparkMax extends ElevatorIO {
-    // Hardware objects
-    private final SparkMax leadMotor;
-    private final SparkMax followMotor;
-    private final RelativeEncoder leadEncoder;
-    private final RelativeEncoder followEncoder;
-    private final SparkMaxConfig leadConfig;
-    private final SparkMaxConfig followConfig;
+    private static final int currentLimitAmps = 60;
 
-    private final DigitalInput limitSwitch;
+    // Hardware objects
+    private final SparkMax leaderSpark;
+    private final SparkMax followerSpark;
+    private final RelativeEncoder leaderEncoder;
+    private final RelativeEncoder followerEncoder;
+    private final SparkMaxConfig leaderConfig;
+    private final SparkMaxConfig followerConfig;
 
     // Closed loop controllers
-    private final SparkClosedLoopController controller;
+    private final SparkClosedLoopController pid;
     private ElevatorFeedforward ff = gains.toElevatorFF();
 
     // Connection debouncers
-    private final Debouncer leadConnectedDebounce = new Debouncer(0.5);
-    private final Debouncer followConnectedDebounce = new Debouncer(0.5);
+    private final Debouncer leaderConnectedDebounce = new Debouncer(0.5);
+    private final Debouncer followerConnectedDebounce = new Debouncer(0.5);
 
     private boolean emergencyStopped = false;
 
@@ -41,39 +40,37 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     private double lastVelocitySetpointRadPerSec = 0;
 
     public ElevatorIOSparkMax(
-            int leadCanID,
-            int followCanID,
-            int limitSwitchID,
-            boolean leaderInverted
+            int leaderCanID,
+            int followerCanID,
+            boolean leaderInverted,
+            boolean followerInvertedRelativeToLeader
     ) {
-        leadMotor = new SparkMax(leadCanID, SparkLowLevel.MotorType.kBrushless);
-        followMotor = new SparkMax(followCanID, SparkLowLevel.MotorType.kBrushless);
-        leadEncoder = leadMotor.getEncoder();
-        followEncoder = followMotor.getEncoder();
-        controller = leadMotor.getClosedLoopController();
-
-        limitSwitch = new DigitalInput(limitSwitchID);
+        leaderSpark = new SparkMax(leaderCanID, SparkLowLevel.MotorType.kBrushless);
+        followerSpark = new SparkMax(followerCanID, SparkLowLevel.MotorType.kBrushless);
+        leaderEncoder = leaderSpark.getEncoder();
+        followerEncoder = followerSpark.getEncoder();
+        pid = leaderSpark.getClosedLoopController();
 
         // Configure motors
-        leadConfig = new SparkMaxConfig();
-        followConfig = new SparkMaxConfig();
+        leaderConfig = new SparkMaxConfig();
+        followerConfig = new SparkMaxConfig();
 
-        leadConfig
-                .inverted(!leaderInverted)
+        leaderConfig
+                .inverted(leaderInverted)
                 .idleMode(SparkBaseConfig.IdleMode.kBrake)
-                .smartCurrentLimit(60)
+                .smartCurrentLimit(currentLimitAmps)
                 .voltageCompensation(12.0);
-        leadConfig
+        leaderConfig
                 .encoder
                 .positionConversionFactor(2 * Math.PI / gearRatio) // Rotor Rotations -> Drum Radians
                 .velocityConversionFactor((2 * Math.PI) / 60.0 / gearRatio) // Rotor RPM -> Drum Rad/Sec
                 .uvwMeasurementPeriod(10)
                 .uvwAverageDepth(2);
-        leadConfig
+        leaderConfig
                 .closedLoop
                 .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kPrimaryEncoder);
-        gains.applySparkPID(leadConfig.closedLoop, ClosedLoopSlot.kSlot0);
-        leadConfig
+        gains.applySparkWithoutFeedforward(leaderConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        leaderConfig
                 .signals
                 .primaryEncoderPositionAlwaysOn(true)
                 .primaryEncoderPositionPeriodMs(20)
@@ -83,51 +80,49 @@ public class ElevatorIOSparkMax extends ElevatorIO {
                 .busVoltagePeriodMs(20)
                 .outputCurrentPeriodMs(20);
 
-        followConfig.apply(leadConfig).follow(leadMotor, true);
+        followerConfig.apply(leaderConfig).follow(leaderSpark, followerInvertedRelativeToLeader);
 
-        tryUntilOk(5, () -> leadMotor.configure(
-                leadConfig,
+        tryUntilOk(5, () -> leaderSpark.configure(
+                leaderConfig,
                 SparkBase.ResetMode.kResetSafeParameters,
                 SparkBase.PersistMode.kPersistParameters
         ));
-        tryUntilOk(5, () -> followMotor.configure(
-                followConfig,
+        tryUntilOk(5, () -> followerSpark.configure(
+                followerConfig,
                 SparkBase.ResetMode.kResetSafeParameters,
                 SparkBase.PersistMode.kPersistParameters
         ));
-        tryUntilOk(5, () -> leadEncoder.setPosition(0.0));
-        tryUntilOk(5, () -> followEncoder.setPosition(0.0));
+        tryUntilOk(5, () -> leaderEncoder.setPosition(0.0));
+        tryUntilOk(5, () -> followerEncoder.setPosition(0.0));
     }
 
     @Override
     public void updateInputs(ElevatorIOInputs inputs) {
-        // Update lead inputs
-        sparkStickyFault = hasFault(leadMotor);
-        ifOk(leadMotor, leadEncoder::getPosition, (value) -> inputs.leaderPositionRad = value);
-        ifOk(leadMotor, leadEncoder::getVelocity, (value) -> inputs.leaderVelocityRadPerSec = value);
+        // Update leader inputs
+        sparkStickyFault = hasFault(leaderSpark);
+        ifOk(leaderSpark, leaderEncoder::getPosition, (value) -> inputs.leaderPositionRad = value);
+        ifOk(leaderSpark, leaderEncoder::getVelocity, (value) -> inputs.leaderVelocityRadPerSec = value);
         ifOk(
-                leadMotor,
-                new DoubleSupplier[]{leadMotor::getAppliedOutput, leadMotor::getBusVoltage},
+                leaderSpark,
+                new DoubleSupplier[]{leaderSpark::getAppliedOutput, leaderSpark::getBusVoltage},
                 (values) -> inputs.leaderAppliedVolts = values[0] * values[1]
         );
-        ifOk(leadMotor, leadMotor::getOutputCurrent, (value) -> inputs.leaderCurrentAmps = value);
-        ifOk(leadMotor, leadMotor::getMotorTemperature, (value) -> inputs.leaderTemperatureCelsius = value);
-        inputs.leaderConnected = leadConnectedDebounce.calculate(!sparkStickyFault);
+        ifOk(leaderSpark, leaderSpark::getOutputCurrent, (value) -> inputs.leaderCurrentAmps = value);
+        ifOk(leaderSpark, leaderSpark::getMotorTemperature, (value) -> inputs.leaderTemperatureCelsius = value);
+        inputs.leaderConnected = leaderConnectedDebounce.calculate(!sparkStickyFault);
 
-        // Update follow inputs
-        sparkStickyFault = hasFault(followMotor);
-        ifOk(followMotor, followEncoder::getPosition, (value) -> inputs.followerPositionRad = value);
-        ifOk(followMotor, followEncoder::getVelocity, (value) -> inputs.followerVelocityRadPerSec = value);
+        // Update follower inputs
+        sparkStickyFault = hasFault(followerSpark);
+        ifOk(followerSpark, followerEncoder::getPosition, (value) -> inputs.followerPositionRad = value);
+        ifOk(followerSpark, followerEncoder::getVelocity, (value) -> inputs.followerVelocityRadPerSec = value);
         ifOk(
-                followMotor,
-                new DoubleSupplier[]{followMotor::getAppliedOutput, followMotor::getBusVoltage},
+                followerSpark,
+                new DoubleSupplier[]{followerSpark::getAppliedOutput, followerSpark::getBusVoltage},
                 (values) -> inputs.followerAppliedVolts = values[0] * values[1]
         );
-        ifOk(followMotor, followMotor::getOutputCurrent, (value) -> inputs.followerCurrentAmps = value);
-        ifOk(followMotor, followMotor::getMotorTemperature, (value) -> inputs.followerTemperatureCelsius = value);
-        inputs.followerConnected = followConnectedDebounce.calculate(!sparkStickyFault);
-
-        inputs.limitSwitchTriggered = !limitSwitch.get();
+        ifOk(followerSpark, followerSpark::getOutputCurrent, (value) -> inputs.followerCurrentAmps = value);
+        ifOk(followerSpark, followerSpark::getMotorTemperature, (value) -> inputs.followerTemperatureCelsius = value);
+        inputs.followerConnected = followerConnectedDebounce.calculate(!sparkStickyFault);
     }
 
     @Override
@@ -135,13 +130,13 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         System.out.println("Setting elevator gains");
         ff = newGains.toElevatorFF();
         var newConfig = new SparkMaxConfig();
-        newGains.applySparkPID(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
-        tryUntilOkAsync(5, () -> leadMotor.configure(
+        newGains.applySparkWithoutFeedforward(newConfig.closedLoop, ClosedLoopSlot.kSlot0);
+        tryUntilOkAsync(5, () -> leaderSpark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
                 SparkBase.PersistMode.kPersistParameters
         ));
-        tryUntilOkAsync(5, () -> followMotor.configure(
+        tryUntilOkAsync(5, () -> followerSpark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
                 SparkBase.PersistMode.kPersistParameters
@@ -151,12 +146,12 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     @Override
     public void setBrakeMode(boolean enable) {
         var newConfig = new SparkMaxConfig().idleMode(enable ? SparkBaseConfig.IdleMode.kBrake : SparkBaseConfig.IdleMode.kCoast);
-        tryUntilOkAsync(5, () -> leadMotor.configure(
+        tryUntilOkAsync(5, () -> leaderSpark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
                 SparkBase.PersistMode.kPersistParameters
         ));
-        tryUntilOkAsync(5, () -> followMotor.configure(
+        tryUntilOkAsync(5, () -> followerSpark.configure(
                 newConfig,
                 SparkBase.ResetMode.kNoResetSafeParameters,
                 SparkBase.PersistMode.kPersistParameters
@@ -168,7 +163,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         this.emergencyStopped = emergencyStopped;
         if (emergencyStopped) {
             lastVelocitySetpointRadPerSec = 0;
-            leadMotor.setVoltage(0);
+            leaderSpark.setVoltage(0);
         }
     }
 
@@ -176,7 +171,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     public void setOpenLoop(double output) {
         if (!emergencyStopped) {
             lastVelocitySetpointRadPerSec = 0;
-            leadMotor.setVoltage(output);
+            leaderSpark.setVoltage(output);
         }
     }
 
@@ -185,7 +180,8 @@ public class ElevatorIOSparkMax extends ElevatorIO {
         if (!emergencyStopped) {
             var ffVolts = ff.calculateWithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
             lastVelocitySetpointRadPerSec = velocityRadPerSec;
-            controller.setReference(
+
+            pid.setReference(
                     positionRad,
                     SparkBase.ControlType.kPosition,
                     ClosedLoopSlot.kSlot0,
@@ -197,7 +193,22 @@ public class ElevatorIOSparkMax extends ElevatorIO {
 
     @Override
     public void setEncoder(double positionRad) {
-        tryUntilOkAsync(5, () -> leadEncoder.setPosition(positionRad));
-        tryUntilOkAsync(5, () -> followEncoder.setPosition(positionRad));
+        tryUntilOkAsync(5, () -> leaderEncoder.setPosition(positionRad));
+        tryUntilOkAsync(5, () -> followerEncoder.setPosition(positionRad));
+    }
+
+    @Override
+    public void setManualCurrentLimit(boolean manualCurrentLimit) {
+        var newConfig = new SparkMaxConfig().smartCurrentLimit(manualCurrentLimit ? 30 : currentLimitAmps);
+        tryUntilOkAsync(5, () -> leaderSpark.configure(
+                newConfig,
+                SparkBase.ResetMode.kNoResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters
+        ));
+        tryUntilOkAsync(5, () -> followerSpark.configure(
+                newConfig,
+                SparkBase.ResetMode.kNoResetSafeParameters,
+                SparkBase.PersistMode.kPersistParameters
+        ));
     }
 }

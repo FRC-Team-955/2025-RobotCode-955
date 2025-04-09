@@ -7,26 +7,28 @@ import frc.robot.util.PIDF;
 public class ElevatorConstants {
     /** Gains in radians */
     public static final PIDF gains = switch (Constants.identity) {
-        case COMPBOT -> PIDF.ofPDSVAG(0.05, 0, 0.1, 0.1, 0.005, 0.83);
-        case SIMBOT -> PIDF.ofPDVAG(0, 0, 0.102, 0.005, 1.5015);
+        case COMPBOT -> PIDF.ofPDSVAG(0.1, 0, 0.15, 0.093, 0.005, 0.41);
+        case SIMBOT -> PIDF.ofPDVAG(0, 0, 0.11, 0.005, 1.5015);
         case ALPHABOT -> PIDF.ofP(0);
     };
 
     public static final double maxVelocityMetersPerSecond = 3;
-    public static final double maxAccelerationMetersPerSecondSquared = 12;
+    public static final double maxAccelerationMetersPerSecondSquared = 10;
 
     public static final double gearRatio = 5;
     protected static final double sprocketRadiusMeters = Units.inchesToMeters((1.0 + (9.0 / 32.0)) / 2);
     public static final double drumRadiusMeters = sprocketRadiusMeters * 3; // 3 stages
 
     public static final double setpointPositionToleranceMeters = Units.inchesToMeters(2);
-    public static final double setpointVelocityToleranceMetersPerSec = Units.inchesToMeters(0.02);
+    public static final double setpointVelocityToleranceMetersPerSec = Units.inchesToMeters(2);
 
-    public static final double maxHeightMeters = 1.72;
+    public static final double maxHeightMeters = 1.745;
     public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 3);
     public static final ElevatorLimit lowerLimit = new ElevatorLimit(0.25, -1.75);
 
-    public static final double hardstopMeters = Units.inchesToMeters(20);
+    public static final double positionOffsetPerMeterOfDistance = 0.9;
+
+    public static final double hardstopMeters = Units.inchesToMeters(13);
     public static final double gentleMaxVelocityMetersPerSecond = 0.4;
     /**
      * While we could calculate this based on the current velocity, it caused the gentle profile to be used
@@ -73,7 +75,7 @@ public class ElevatorConstants {
             return new ElevatorIO();
         }
         return switch (Constants.identity) {
-            case COMPBOT -> new ElevatorIOSparkMax(5, 6, 9, true);
+            case COMPBOT -> new ElevatorIOTalonFX(10, 11, false, false);
             case SIMBOT -> new ElevatorIOSim();
             case ALPHABOT -> new ElevatorIO();
         };

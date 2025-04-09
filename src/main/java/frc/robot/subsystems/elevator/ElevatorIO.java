@@ -19,8 +19,6 @@ public class ElevatorIO {
         public double followerAppliedVolts = 0.0;
         public double followerCurrentAmps = 0.0;
         public double followerTemperatureCelsius = 0.0;
-
-        public boolean limitSwitchTriggered = false;
     }
 
     public void updateInputs(ElevatorIOInputs inputs) {
@@ -61,5 +59,9 @@ public class ElevatorIO {
 
     /** Set the encoder of the elevator to the specified position. Used for zeroing */
     public void setEncoder(double positionRad) {
+    }
+
+    /** Sets the current limit for manual control if true, or returns the current limit to the default if false. */
+    public void setManualCurrentLimit(boolean manualCurrentLimit) {
     }
 }

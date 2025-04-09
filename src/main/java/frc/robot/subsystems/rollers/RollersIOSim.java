@@ -92,14 +92,14 @@ public class RollersIOSim extends RollersIO {
     }
 
     @Override
-    public void setPosition(double positionRad) {
+    public void setClosedLoopPosition(double positionRad) {
         closedLoop = true;
         positionControl = true;
         positionPid.setSetpoint(positionRad);
     }
 
     @Override
-    public void setVelocity(double velocityRadPerSec) {
+    public void setClosedLoopVelocity(double velocityRadPerSec) {
         closedLoop = true;
         positionControl = false;
         ffVolts = velocityFeedforward.calculate(velocityRadPerSec);

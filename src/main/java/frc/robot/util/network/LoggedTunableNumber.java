@@ -16,9 +16,9 @@ public class LoggedTunableNumber {
     }
 
     @SuppressWarnings("DataFlowIssue") // inner is guaranteed not to be null if tuning mode is true
-    public boolean hasChanged(int hashCode) {
+    public boolean hasChanged() {
         if (Constants.tuningMode) {
-            return inner.hasChanged(hashCode);
+            return inner.hasChanged();
         } else {
             return false;
         }
