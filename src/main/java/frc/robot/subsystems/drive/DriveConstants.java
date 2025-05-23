@@ -7,7 +7,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
-import frc.robot.Util;
 import frc.robot.util.PIDF;
 import frc.robot.util.swerve.ModuleLimits;
 
@@ -63,7 +62,7 @@ public class DriveConstants {
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
                 new ModuleLimits(
-                        2,
+                        1,
                         15,
                         20
                 )
@@ -134,23 +133,6 @@ public class DriveConstants {
                 120,
                 60
         );
-        case ALPHABOT -> new ModuleConfig(
-                PIDF.ofPDSVA(
-                        0.0, 0.0,
-                        // FL + FR + BL + BR
-                        Util.average(0.024319, 0.094701 /* , [erroneous], [erroneous] */),
-                        Util.average(0.13551, 0.13733, 0.13543, 0.14087),
-                        Util.average(0.0065694, 0.0054738, /* [erroneous], */ 0.0091241)
-                ),
-                PIDF.ofPD(0.5, 0.0),
-                Mk4iGearRatios.L2,
-                Mk4iGearRatios.TURN,
-                true,
-                false,
-                false,
-                60,
-                60
-        );
     };
 
     public static ModuleIO[] createModuleIO() {
@@ -168,13 +150,6 @@ public class DriveConstants {
                     new ModuleIOTalonFXSparkMaxCANcoder(3, 3, 7, 3.105),
                     new ModuleIOTalonFXSparkMaxCANcoder(4, 4, 8, -2.817),
             };
-            case ALPHABOT -> new ModuleIO[]{
-                    // FL, FR, BL, BR
-                    new ModuleIOSparkMaxCANcoder(4, 5, 6, -2.115),
-                    new ModuleIOSparkMaxCANcoder(2, 3, 1, -2.161),
-                    new ModuleIOSparkMaxCANcoder(9, 10, 8, 0.255),
-                    new ModuleIOSparkMaxCANcoder(12, 13, 11, 0.852),
-            };
             case SIMBOT -> new ModuleIO[]{
                     new ModuleIOSim(0),
                     new ModuleIOSim(1),
@@ -190,7 +165,6 @@ public class DriveConstants {
         }
         return switch (Constants.identity) {
             case COMPBOT -> new GyroIOPigeon2(9);
-            case ALPHABOT -> new GyroIOPigeon2(7);
             case SIMBOT -> new GyroIOSim();
         };
     }
