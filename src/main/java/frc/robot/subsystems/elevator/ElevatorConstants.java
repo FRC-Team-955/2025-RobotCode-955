@@ -13,7 +13,7 @@ public class ElevatorConstants {
     };
 
     public static final double maxVelocityMetersPerSecond = 3;
-    public static final double maxAccelerationMetersPerSecondSquared = 10;
+    public static final double maxAccelerationMetersPerSecondSquared = 5;
 
     public static final double gearRatio = 5;
     protected static final double sprocketRadiusMeters = Units.inchesToMeters((1.0 + (9.0 / 32.0)) / 2);
