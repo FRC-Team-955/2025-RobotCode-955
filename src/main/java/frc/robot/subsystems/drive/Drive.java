@@ -11,7 +11,6 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -22,6 +21,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.OperatorDashboard;
@@ -535,7 +535,8 @@ public class Drive extends SubsystemBaseExt {
     }
 
     public Command moveTo(Supplier<Pose2d> poseSupplier, BooleanSupplier mergeJoystickDrive) {
-        return startRun(
+        return Commands.idle(this);
+        /*return startRun(
                 () -> {
                     goal = mergeJoystickDrive.getAsBoolean() ? Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED : Goal.MOVE_TO;
 
@@ -683,7 +684,7 @@ public class Drive extends SubsystemBaseExt {
                         closedLoopSetpoint = moveToSpeeds;
                     }
                 }
-        );
+        );*/
     }
 
     private void runDriveAssisted(Pose2d assistPose) {
