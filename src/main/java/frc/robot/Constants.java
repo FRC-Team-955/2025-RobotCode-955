@@ -80,7 +80,7 @@ public final class Constants {
         public static final String busName = "*"; // the canivore is called electrical_problem, but using * is better because it will select any canivore it sees
         public static final boolean isCANFD = switch (Constants.identity) {
             case COMPBOT -> new CANBus(busName).isNetworkFD();
-            case ALPHABOT, SIMBOT -> false;
+            case SIMBOT -> false;
         };
     }
 }

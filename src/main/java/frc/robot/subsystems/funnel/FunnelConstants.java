@@ -17,12 +17,10 @@ public class FunnelConstants {
             switch (Constants.identity) {
                 case COMPBOT -> PIDF.ofP(0.2);
                 case SIMBOT -> PIDF.ofP(1.5);
-                case ALPHABOT -> PIDF.ofP(0);
             },
             switch (Constants.identity) {
                 case COMPBOT -> PIDF.ofPSV(0.01, 0.21416, 0.10077);
                 case SIMBOT -> PIDF.ofSV(0.00995, 0.17859);
-                case ALPHABOT -> PIDF.ofP(0);
             }
     );
 
@@ -37,7 +35,6 @@ public class FunnelConstants {
                     0.01,
                     DCMotor.getNEO(1)
             );
-            case ALPHABOT -> new RollersIO();
         };
     }
 }
