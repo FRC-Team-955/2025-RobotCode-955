@@ -53,7 +53,6 @@ public class AprilTagVisionConstants {
                 (cam) -> switch (Constants.identity) {
                     case COMPBOT -> new AprilTagVisionIOPhotonVision("StationCam");
                     case SIMBOT -> new AprilTagVisionIOPhotonVisionSim("StationCam", cam.robotToCamera);
-                    case ALPHABOT -> new AprilTagVisionIO();
                 },
                 // Relatively stable, even at long distance
                 2.0,
@@ -72,7 +71,6 @@ public class AprilTagVisionConstants {
                 (cam) -> switch (Constants.identity) {
                     case COMPBOT -> new AprilTagVisionIOPhotonVision("ReefCam");
                     case SIMBOT -> new AprilTagVisionIOPhotonVisionSim("ReefCam", cam.robotToCamera);
-                    case ALPHABOT -> new AprilTagVisionIO();
                 },
                 // Trust more at close distance, less at long distance
                 2.5,

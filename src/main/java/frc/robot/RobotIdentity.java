@@ -7,7 +7,6 @@ import org.littletonrobotics.junction.Logger;
 
 public enum RobotIdentity {
     COMPBOT("0329F35E"),
-    ALPHABOT(""),
     SIMBOT(null);
 
     public final String serialNumber;
@@ -26,9 +25,6 @@ public enum RobotIdentity {
 
             if (serialNumber.equals(COMPBOT.serialNumber))
                 return COMPBOT;
-
-            if (serialNumber.equals(ALPHABOT.serialNumber))
-                return ALPHABOT;
 
             String msg = "Serial number " + serialNumber + " did not match any robot identities. Assuming COMPBOT.";
             unmatchedSerialNumberAlert.setText(msg);

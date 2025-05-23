@@ -82,20 +82,6 @@ public class DriveConstants {
                         20
                 )
         );
-        case ALPHABOT -> new DriveConfig(
-                Units.inchesToMeters(2),
-                Units.inchesToMeters(20.75),
-                Units.inchesToMeters(20.75),
-                Units.inchesToMeters(30),
-                Units.inchesToMeters(30),
-                PIDF.ofPD(1.5, 0),
-                PIDF.ofPD(1.5, 0),
-                new ModuleLimits(
-                        4.637,
-                        20,
-                        20
-                )
-        );
     };
 
     public static final ModuleLimits moveToModuleLimits = new ModuleLimits(

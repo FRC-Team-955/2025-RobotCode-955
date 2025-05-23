@@ -10,7 +10,6 @@ public class GamePieceVisionConstants {
 
         return switch (Constants.identity) {
             case COMPBOT -> new GamePieceVisionIOLimelight("limelight");
-            case ALPHABOT -> new GamePieceVisionIO();
             case SIMBOT -> new GamePieceVisionIOSim();
         };
     }

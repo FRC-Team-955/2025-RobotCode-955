@@ -38,7 +38,6 @@ import java.util.function.DoubleSupplier;
 public class HighFrequencySamplingThread extends Thread {
     public static final double frequencyHz = switch (Constants.identity) {
         case COMPBOT, SIMBOT -> 250.0;
-        case ALPHABOT -> 100.0;
     };
 
     public static final Lock highFrequencyLock = new ReentrantLock();
