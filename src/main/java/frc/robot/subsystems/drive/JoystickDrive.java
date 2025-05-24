@@ -68,9 +68,9 @@ public class JoystickDrive {
         Logger.recordOutput("JoystickDrive/LinearVelocity", linearVelocity);
         Logger.recordOutput("JoystickDrive/OmegaMagnitude", omegaMagnitude);
 
-        if (Util.shouldFlip()) {
-            linearVelocity = linearVelocity.rotateBy(Rotation2d.k180deg);
-        }
+//        if (Util.shouldFlip()) {
+        linearVelocity = linearVelocity.rotateBy(Rotation2d.k180deg);
+//        }
         setpointFieldRelative = new ChassisSpeeds(
                 linearVelocity.getX() * driveConfig.moduleLimits().maxDriveVelocityMetersPerSec(),
                 linearVelocity.getY() * driveConfig.moduleLimits().maxDriveVelocityMetersPerSec(),
