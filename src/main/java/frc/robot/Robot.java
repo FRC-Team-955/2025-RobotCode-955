@@ -92,12 +92,12 @@ public class Robot extends LoggedRobot {
     public Robot() {
         AutoLogOutputManager.addPackage("frc");
 
-        Logger.recordMetadata("* ProjectName", BuildConstants.MAVEN_NAME);
-        Logger.recordMetadata("* BuildDate", BuildConstants.BUILD_DATE);
-        Logger.recordMetadata("* GitSHA", BuildConstants.GIT_SHA);
-        Logger.recordMetadata("* GitDate", BuildConstants.GIT_DATE);
-        Logger.recordMetadata("* GitBranch", BuildConstants.GIT_BRANCH);
-        switch (BuildConstants.DIRTY) {
+        Logger.recordMetadata("* ProjectName", BuildInfo.MAVEN_NAME);
+        Logger.recordMetadata("* BuildDate", BuildInfo.BUILD_DATE);
+        Logger.recordMetadata("* GitSHA", BuildInfo.GIT_SHA);
+        Logger.recordMetadata("* GitDate", BuildInfo.GIT_DATE);
+        Logger.recordMetadata("* GitBranch", BuildInfo.GIT_BRANCH);
+        switch (BuildInfo.DIRTY) {
             case 0:
                 Logger.recordMetadata("* GitDirty", "All changes committed");
                 break;
