@@ -15,7 +15,6 @@ package frc.robot;
 
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
@@ -146,7 +145,7 @@ public class Robot extends LoggedRobot {
         // Disable controller disconnection alerts since we have our own alert
         DriverStation.silenceJoystickConnectionWarning(true);
 
-        if (RobotBase.isSimulation()) {
+        if (BuildConstants.mode == BuildConstants.Mode.SIM) {
             DriverStationSim.setAllianceStationId(AllianceStationID.Blue1);
             DriverStationSim.notifyNewData();
         }

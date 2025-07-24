@@ -11,7 +11,6 @@ import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -104,7 +103,7 @@ public class Util {
     }
 
     public static void error(String msg) {
-        if (RobotBase.isSimulation()) {
+        if (BuildConstants.mode == BuildConstants.Mode.SIM) {
             throw new RuntimeException(msg);
         } else {
             DriverStation.reportError(msg, false);

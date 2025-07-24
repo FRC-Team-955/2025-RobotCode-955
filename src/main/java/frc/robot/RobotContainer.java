@@ -1,7 +1,10 @@
 package frc.robot;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -32,7 +35,7 @@ import java.util.Optional;
  */
 public class RobotContainer {
     // Controller
-    private final CommandXboxController driverController = RobotBase.isSimulation()
+    private final CommandXboxController driverController = BuildConstants.mode == BuildConstants.Mode.SIM
             ? Constants.Simulation.simController.apply(0)
             : new CommandXboxController(0);
     private final Alert driverControllerDisconnectedAlert = new Alert("Driver controller is not connected!", Alert.AlertType.kError);
