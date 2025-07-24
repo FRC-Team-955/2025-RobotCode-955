@@ -1,16 +1,13 @@
 package frc.robot.subsystems.gamepiecevision;
 
-import frc.robot.Constants;
+import frc.robot.BuildConstants;
 
 public class GamePieceVisionConstants {
     public static GamePieceVisionIO createIO() {
-        if (Constants.isReplay) {
-            return new GamePieceVisionIO();
-        }
-
-        return switch (Constants.identity) {
-            case COMPBOT -> new GamePieceVisionIOLimelight("limelight");
-            case SIMBOT -> new GamePieceVisionIOSim();
+        return switch (BuildConstants.mode) {
+            case REAL -> new GamePieceVisionIOLimelight("limelight");
+            case SIM -> new GamePieceVisionIOSim();
+            case REPLAY -> new GamePieceVisionIO();
         };
     }
 }

@@ -141,7 +141,52 @@ gversion {
     className = "BuildInfo"
     dateFormat = "yyyy-MM-dd HH:mm:ss z"
     timeZone = "America/Los_Angeles"
-    indent = "  "
+    indent = "    "
+}
+
+["REAL", "SIM", "REPLAY"].collect { mode ->
+    var modeDisplay = mode.toLowerCase().capitalize()
+    tasks.register("generateBuildConstants$modeDisplay") {
+        doLast {
+            new File("src/main/java/frc/robot", "BuildConstants.java").withWriter { writer ->
+                writer << "package frc.robot;\n"
+                writer << "\n"
+                writer << "/** Constants generated for mode $mode by build.gradle's generateBuildConstants task at ${new Date().toString()} */\n"
+                writer << "public final class BuildConstants {\n"
+                writer << "    public static final Mode mode = Mode.$mode;\n"
+                writer << "\n"
+                writer << "    public enum Mode {\n"
+                writer << "        /**\n"
+                writer << "         * Real robot\n"
+                writer << "         */\n"
+                writer << "        REAL,\n"
+                writer << "        /**\n"
+                writer << "         * Simulation\n"
+                writer << "         */\n"
+                writer << "        SIM,\n"
+                writer << "        /**\n"
+                writer << "         * Log replay\n"
+                writer << "         */\n"
+                writer << "        REPLAY\n"
+                writer << "    }\n"
+                writer << "}\n"
+
+                writer.flush()
+            }
+        }
+    }
+    tasks.register("build$modeDisplay") {
+        dependsOn tasks.named("generateBuildConstants$modeDisplay")
+        finalizedBy tasks.named("build")
+    }
+    tasks.register("run$modeDisplay") {
+        dependsOn tasks.named("generateBuildConstants$modeDisplay")
+        if (mode.toLowerCase() != "real") {
+            finalizedBy tasks.named("simulateJava")
+        } else {
+            finalizedBy tasks.named("deploy")
+        }
+    }
 }
 
 tasks.register("deployEvent", Exec) {

@@ -44,8 +44,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static frc.robot.Constants.mode;
-
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
  * each mode, as described in the TimedRobot documentation. If you change the name of this class or
@@ -110,7 +108,7 @@ public class Robot extends LoggedRobot {
         }
         logConstantClass(Constants.class, null);
 
-        switch (Constants.mode) {
+        switch (BuildConstants.mode) {
             case REAL -> {
                 Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
                 Logger.addDataReceiver(new NT4Publisher()); // Log to NetworkTables
@@ -310,7 +308,7 @@ public class Robot extends LoggedRobot {
     @Override
     public void simulationInit() {
         // In case of replay, don't do sim
-        if (mode != Constants.Mode.SIM) return;
+        if (BuildConstants.mode == BuildConstants.Mode.REPLAY) return;
 
         SimulatedArena.getInstance().resetFieldForAuto();
         RobotModeTriggers.autonomous().onTrue(Commands.runOnce(SimulatedArena.getInstance()::resetFieldForAuto));
@@ -324,7 +322,7 @@ public class Robot extends LoggedRobot {
     @Override
     public void simulationPeriodic() {
         // In case of replay, don't do sim
-        if (mode != Constants.Mode.SIM) return;
+        if (BuildConstants.mode == BuildConstants.Mode.REPLAY) return;
 
         SimulatedArena.getInstance().simulationPeriodic();
 

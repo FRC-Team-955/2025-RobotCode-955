@@ -18,7 +18,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Constants;
+import frc.robot.BuildConstants;
 import lombok.RequiredArgsConstructor;
 
 import java.util.function.Function;
@@ -50,9 +50,10 @@ public class AprilTagVisionConstants {
                         new Rotation3d(0.0, Units.degreesToRadians(-15), 0.0)
                                 .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-30)))
                 ),
-                (cam) -> switch (Constants.identity) {
-                    case COMPBOT -> new AprilTagVisionIOPhotonVision("StationCam");
-                    case SIMBOT -> new AprilTagVisionIOPhotonVisionSim("StationCam", cam.robotToCamera);
+                (cam) -> switch (BuildConstants.mode) {
+                    case REAL -> new AprilTagVisionIOPhotonVision("StationCam");
+                    case SIM -> new AprilTagVisionIOPhotonVisionSim("StationCam", cam.robotToCamera);
+                    case REPLAY -> new AprilTagVisionIO();
                 },
                 // Relatively stable, even at long distance
                 2.0,
@@ -68,9 +69,10 @@ public class AprilTagVisionConstants {
                                 .rotateBy(new Rotation3d(0.0, Units.degreesToRadians(30), 0.0))
                                 .rotateBy(new Rotation3d(0.0, 0.0, Units.degreesToRadians(-153.5)))
                 ),
-                (cam) -> switch (Constants.identity) {
-                    case COMPBOT -> new AprilTagVisionIOPhotonVision("ReefCam");
-                    case SIMBOT -> new AprilTagVisionIOPhotonVisionSim("ReefCam", cam.robotToCamera);
+                (cam) -> switch (BuildConstants.mode) {
+                    case REAL -> new AprilTagVisionIOPhotonVision("ReefCam");
+                    case SIM -> new AprilTagVisionIOPhotonVisionSim("ReefCam", cam.robotToCamera);
+                    case REPLAY -> new AprilTagVisionIO();
                 },
                 // Trust more at close distance, less at long distance
                 2.5,
@@ -84,10 +86,6 @@ public class AprilTagVisionConstants {
         public final double stddevMultiplier;
 
         public AprilTagVisionIO createIO() {
-            if (Constants.isReplay) {
-                return new AprilTagVisionIO();
-            }
-
             return createIO.apply(this);
         }
     }

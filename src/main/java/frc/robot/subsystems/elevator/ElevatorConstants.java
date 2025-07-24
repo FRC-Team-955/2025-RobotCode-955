@@ -1,14 +1,14 @@
 package frc.robot.subsystems.elevator;
 
 import edu.wpi.first.math.util.Units;
-import frc.robot.Constants;
+import frc.robot.BuildConstants;
 import frc.robot.util.PIDF;
 
 public class ElevatorConstants {
     /** Gains in radians */
-    public static final PIDF gains = switch (Constants.identity) {
-        case COMPBOT -> PIDF.ofPDSVAG(0.1, 0, 0.15, 0.093, 0.005, 0.41);
-        case SIMBOT -> PIDF.ofPDVAG(0, 0, 0.11, 0.005, 1.5015);
+    public static final PIDF gains = switch (BuildConstants.mode) {
+        case REAL, REPLAY -> PIDF.ofPDSVAG(0.1, 0, 0.15, 0.093, 0.005, 0.41);
+        case SIM -> PIDF.ofPDVAG(0, 0, 0.11, 0.005, 1.5015);
     };
 
     public static final double maxVelocityMetersPerSecond = 3;
@@ -70,12 +70,10 @@ public class ElevatorConstants {
     }
 
     protected static ElevatorIO createIO() {
-        if (Constants.isReplay) {
-            return new ElevatorIO();
-        }
-        return switch (Constants.identity) {
-            case COMPBOT -> new ElevatorIOTalonFX(10, 11, false, false);
-            case SIMBOT -> new ElevatorIOSim();
+        return switch (BuildConstants.mode) {
+            case REAL -> new ElevatorIOTalonFX(10, 11, false, false);
+            case SIM -> new ElevatorIOSim();
+            case REPLAY -> new ElevatorIO();
         };
     }
 

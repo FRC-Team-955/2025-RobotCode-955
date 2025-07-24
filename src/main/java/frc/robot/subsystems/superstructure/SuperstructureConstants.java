@@ -3,7 +3,7 @@ package frc.robot.subsystems.superstructure;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Constants;
+import frc.robot.BuildConstants;
 
 class SuperstructureConstants {
     public static final double scoreCoralSettleSeconds = 0.25;
@@ -35,12 +35,10 @@ class SuperstructureConstants {
     }
 
     protected static SuperstructureIO createIO() {
-        if (Constants.isReplay) {
-            return new SuperstructureIO();
-        }
-        return switch (Constants.identity) {
-            case COMPBOT -> new SuperstructureIOReal();
-            case SIMBOT -> new SuperstructureIOSim();
+        return switch (BuildConstants.mode) {
+            case REAL -> new SuperstructureIOReal();
+            case SIM -> new SuperstructureIOSim();
+            case REPLAY -> new SuperstructureIO();
         };
     }
 }

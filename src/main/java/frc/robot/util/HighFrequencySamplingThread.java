@@ -36,9 +36,7 @@ import java.util.function.DoubleSupplier;
  * When using a CANivore, the thread uses the "waitForAll" blocking method to enable more consistent sampling. This also allows Phoenix Pro users to benefit from lower latency between devices using CANivore time synchronization.
  */
 public class HighFrequencySamplingThread extends Thread {
-    public static final double frequencyHz = switch (Constants.identity) {
-        case COMPBOT, SIMBOT -> 250.0;
-    };
+    public static final double frequencyHz = 250.0;
 
     public static final Lock highFrequencyLock = new ReentrantLock();
     private final Lock signalsLock = new ReentrantLock(); // Prevents conflicts when registering signals

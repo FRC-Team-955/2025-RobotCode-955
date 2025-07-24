@@ -2,7 +2,7 @@ package frc.robot.subsystems.endeffector;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Constants;
+import frc.robot.BuildConstants;
 import frc.robot.subsystems.rollers.RollersConfig;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOSim;
@@ -29,27 +29,25 @@ public class EndEffectorConstants {
             true,
             40,
             9,
-            switch (Constants.identity) {
-                case COMPBOT -> PIDF.ofP(0.5);
-                case SIMBOT -> PIDF.ofP(3);
+            switch (BuildConstants.mode) {
+                case REAL, REPLAY -> PIDF.ofP(0.5);
+                case SIM -> PIDF.ofP(3);
             },
-            switch (Constants.identity) {
-                case COMPBOT -> PIDF.ofPSV(0.01, 0.42461, 0.18272);
-                case SIMBOT -> PIDF.ofSV(0.00995, 0.17859);
+            switch (BuildConstants.mode) {
+                case REAL, REPLAY -> PIDF.ofPSV(0.01, 0.42461, 0.18272);
+                case SIM -> PIDF.ofSV(0.00995, 0.17859);
             }
     );
 
     protected static RollersIO createRollersIO() {
-        if (Constants.isReplay) {
-            return new RollersIO();
-        }
-        return switch (Constants.identity) {
-            case COMPBOT -> new RollersIOSparkMax(6, rollersConfig);
-            case SIMBOT -> new RollersIOSim(
+        return switch (BuildConstants.mode) {
+            case REAL -> new RollersIOSparkMax(6, rollersConfig);
+            case SIM -> new RollersIOSim(
                     rollersConfig,
                     0.01,
                     DCMotor.getNEO(1)
             );
+            case REPLAY -> new RollersIO();
         };
     }
 }

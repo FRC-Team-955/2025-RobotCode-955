@@ -6,8 +6,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Constants;
-import frc.robot.Util;
+import frc.robot.BuildConstants;
 import frc.robot.util.PIDF;
 import frc.robot.util.swerve.ModuleLimits;
 
@@ -53,8 +52,8 @@ public class DriveConstants {
     // Slow to 30% speed during driver control
     public static final double constraintScalarWhenElevatorAtMaxHeightDriver = 0.3;
 
-    public static final DriveConfig driveConfig = switch (Constants.identity) {
-        case COMPBOT -> new DriveConfig(
+    public static final DriveConfig driveConfig = switch (BuildConstants.mode) {
+        case REAL, REPLAY -> new DriveConfig(
                 Units.inchesToMeters(1.935948620917915),
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(22.75),
@@ -68,7 +67,7 @@ public class DriveConstants {
                         20
                 )
         );
-        case SIMBOT -> new DriveConfig(
+        case SIM -> new DriveConfig(
                 Units.inchesToMeters(2),
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(22.75),
@@ -108,8 +107,8 @@ public class DriveConstants {
     public static final double joystickMaxAngularSpeedRadPerSec = Math.min(Units.degreesToRadians(315), maxAngularVelocityRadPerSec);
     public static final double joystickDriveDeadband = 0.1;
 
-    public static final ModuleConfig moduleConfig = switch (Constants.identity) {
-        case COMPBOT -> new ModuleConfig(
+    public static final ModuleConfig moduleConfig = switch (BuildConstants.mode) {
+        case REAL, REPLAY -> new ModuleConfig(
                 PIDF.ofPDSVA(
                         0.0, 0.0,
                         0.19, 0.125, 0.005
@@ -123,7 +122,7 @@ public class DriveConstants {
                 120,
                 60
         );
-        case SIMBOT -> new ModuleConfig(
+        case SIM -> new ModuleConfig(
                 PIDF.ofPDSV(0.05, 0.0, 0.04075, 0.14117),
                 PIDF.ofPD(10.0, 0.07),
                 Mk4iGearRatios.L2,
@@ -134,64 +133,35 @@ public class DriveConstants {
                 120,
                 60
         );
-        case ALPHABOT -> new ModuleConfig(
-                PIDF.ofPDSVA(
-                        0.0, 0.0,
-                        // FL + FR + BL + BR
-                        Util.average(0.024319, 0.094701 /* , [erroneous], [erroneous] */),
-                        Util.average(0.13551, 0.13733, 0.13543, 0.14087),
-                        Util.average(0.0065694, 0.0054738, /* [erroneous], */ 0.0091241)
-                ),
-                PIDF.ofPD(0.5, 0.0),
-                Mk4iGearRatios.L2,
-                Mk4iGearRatios.TURN,
-                true,
-                false,
-                false,
-                60,
-                60
-        );
     };
 
     public static ModuleIO[] createModuleIO() {
-        if (Constants.isReplay) {
-            return new ModuleIO[]{new ModuleIO(), new ModuleIO(), new ModuleIO(), new ModuleIO()};
-        }
-        return switch (Constants.identity) {
+        return switch (BuildConstants.mode) {
             // To calibrate the absolute encoder offsets, point the modules straight (such that forward
             // motion on the drive motor will propel the robot forward) and copy the reported values from the
             // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
-            case COMPBOT -> new ModuleIO[]{
+            case REAL -> new ModuleIO[]{
                     // FL, FR, BL, BR
                     new ModuleIOTalonFXSparkMaxCANcoder(1, 1, 5, 1.577),
                     new ModuleIOTalonFXSparkMaxCANcoder(2, 2, 6, 1.770),
                     new ModuleIOTalonFXSparkMaxCANcoder(3, 3, 7, 3.105),
                     new ModuleIOTalonFXSparkMaxCANcoder(4, 4, 8, -2.817),
             };
-            case ALPHABOT -> new ModuleIO[]{
-                    // FL, FR, BL, BR
-                    new ModuleIOSparkMaxCANcoder(4, 5, 6, -2.115),
-                    new ModuleIOSparkMaxCANcoder(2, 3, 1, -2.161),
-                    new ModuleIOSparkMaxCANcoder(9, 10, 8, 0.255),
-                    new ModuleIOSparkMaxCANcoder(12, 13, 11, 0.852),
-            };
-            case SIMBOT -> new ModuleIO[]{
+            case SIM -> new ModuleIO[]{
                     new ModuleIOSim(0),
                     new ModuleIOSim(1),
                     new ModuleIOSim(2),
                     new ModuleIOSim(3)
             };
+            case REPLAY -> new ModuleIO[]{new ModuleIO(), new ModuleIO(), new ModuleIO(), new ModuleIO()};
         };
     }
 
     public static GyroIO createGyroIO() {
-        if (Constants.isReplay) {
-            return new GyroIO();
-        }
-        return switch (Constants.identity) {
-            case COMPBOT -> new GyroIOPigeon2(9);
-            case ALPHABOT -> new GyroIOPigeon2(7);
-            case SIMBOT -> new GyroIOSim();
+        return switch (BuildConstants.mode) {
+            case REAL -> new GyroIOPigeon2(9);
+            case SIM -> new GyroIOSim();
+            case REPLAY -> new GyroIO();
         };
     }
 
