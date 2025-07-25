@@ -23,11 +23,8 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.subsystems.drive.ModuleIOSim;
-import frc.robot.util.BackgroundCommandScheduler;
-import frc.robot.util.CANLogger;
 import frc.robot.util.commands.CommandsExt;
-import frc.robot.util.subsystem.SubsystemBaseExt;
-import frc.robot.util.subsystem.VirtualSubsystem;
+import frc.robot.util.subsystem.Periodic;
 import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -38,10 +35,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -54,37 +48,7 @@ public class Robot extends LoggedRobot {
     private Command autonomousCommand;
     private double autonomousStart;
 
-    private static List<SubsystemBaseExt> extendedSubsystems = new ArrayList<>();
-    private static final List<VirtualSubsystem> virtualSubsystems = new ArrayList<>();
-    private static final List<BackgroundCommandScheduler> backgroundCommandSchedulers = new ArrayList<>();
-
-    public static void registerExtendedSubsystem(SubsystemBaseExt subsystem) {
-        if (extendedSubsystems.contains(subsystem)) {
-            Util.error("An extended subsystem has been registered more than once: " + subsystem.getName());
-        }
-        extendedSubsystems.add(subsystem);
-    }
-
-    public static void registerVirtualSubsystem(VirtualSubsystem virtualSubsystem) {
-        if (virtualSubsystems.contains(virtualSubsystem)) {
-            Util.error("A virtual subsystem has been registered more than once: " + virtualSubsystem.getClass().getName());
-        }
-        virtualSubsystems.add(virtualSubsystem);
-    }
-
-    public static void registerBackgroundCommandScheduler(BackgroundCommandScheduler backgroundCommandScheduler) {
-        backgroundCommandSchedulers.add(backgroundCommandScheduler);
-    }
-
-//    private static void onCommandEnd(Command command) {
-//        for (var subsystem : command.getRequirements()) {
-//            if (subsystem instanceof SubsystemBaseExt) {
-//                ((SubsystemBaseExt) subsystem).onCommandEnd();
-//            } else {
-//                Util.error("Subsystem " + subsystem.getName() + " is not an extended subsystem");
-//            }
-//        }
-//    }
+    private static List<Periodic> periodics;
 
     public Robot() {
         AutoLogOutputManager.addPackage("frc");
@@ -106,6 +70,7 @@ public class Robot extends LoggedRobot {
                 break;
         }
         logConstantClass(Constants.class, null);
+        logConstantClass(BuildConstants.class, null);
 
         switch (BuildConstants.mode) {
             case REAL -> {
@@ -150,27 +115,31 @@ public class Robot extends LoggedRobot {
             DriverStationSim.notifyNewData();
         }
 
-        CANLogger.ensureInitialized();
-
         // No references to RobotContainer/RobotState/any subsystem should be made before this point!
         System.out.println("********** Initializing RobotContainer **********");
         robotContainer = new RobotContainer();
 
-        extendedSubsystems = extendedSubsystems.stream().sorted(Comparator.comparingInt(o -> o.periodicPriority)).toList();
-        System.out.println("Extended subsystems: " +
-                extendedSubsystems.stream()
-                        .map(s -> s.getName() + " (" + s.periodicPriority + ")")
-                        .collect(Collectors.joining(", "))
-        );
+        periodics = List.of(
+                // Order matters! Execution order is ascending (that is, the first one listed will execute first)
 
-        System.out.println("Virtual subsystems: " +
-                virtualSubsystems.stream()
-                        .map(s -> s.getClass().getSimpleName())
-                        .collect(Collectors.joining(", "))
-        );
+                // Vision depends on drive
+                robotContainer.drive,
+                // The rest of the subsystems require vision
+                robotContainer.aprilTagVision,
+                robotContainer.gamePieceVision,
+                // Superstructure depends on operator dashboard
+                robotContainer.operatorDashboard,
+                // Subsystems depend on goals issued by superstructure
+                robotContainer.superstructure,
 
-//        CommandScheduler.getInstance().onCommandFinish(Robot::onCommandEnd);
-//        CommandScheduler.getInstance().onCommandInterrupt(Robot::onCommandEnd);
+                // Subsystems - the order of these doesn't matter
+                robotContainer.elevator,
+                robotContainer.endEffector,
+                robotContainer.funnel,
+
+                // Misc
+                robotContainer.canLogger
+        );
     }
 
     private void logConstantClass(Class<?> clazz, String parentName) {
@@ -206,18 +175,9 @@ public class Robot extends LoggedRobot {
 
         robotContainer.periodicBeforeAll();
 
-        for (var extendedSubsystem : extendedSubsystems) {
-//            System.out.println("Extended subsystem periodicBeforeCommands: " + extendedSubsystem.getName());
-            extendedSubsystem.periodicBeforeCommands();
-        }
-
-        for (var virtualSubsystem : virtualSubsystems) {
-//            System.out.println("Virtual subsystem periodicBeforeCommands: " + virtualSubsystem.getClass().getSimpleName());
-            virtualSubsystem.periodicBeforeCommands();
-        }
-
-        for (var backgroundCommandScheduler : backgroundCommandSchedulers) {
-            backgroundCommandScheduler.periodicBeforeCommands();
+        for (var periodic : periodics) {
+//            System.out.println("periodicBeforeCommands: " + periodic.getClass().getSimpleName());
+            periodic.periodicBeforeCommands();
         }
 
         // Run the command scheduler.
@@ -234,18 +194,9 @@ public class Robot extends LoggedRobot {
             }
         }
 
-        for (var backgroundCommandScheduler : backgroundCommandSchedulers) {
-            backgroundCommandScheduler.periodicAfterCommands();
-        }
-
-        for (var extendedSubsystem : extendedSubsystems) {
-//            System.out.println("Extended subsystem periodicAfterCommands: " + extendedSubsystem.getName());
-            extendedSubsystem.periodicAfterCommands();
-        }
-
-        for (var virtualSubsystem : virtualSubsystems) {
-//            System.out.println("Virtual subsystem periodicAfterCommands: " + virtualSubsystem.getClass().getSimpleName());
-            virtualSubsystem.periodicAfterCommands();
+        for (var periodic : periodics) {
+//            System.out.println("periodicAfterCommands: " + periodic.getClass().getSimpleName());
+            periodic.periodicBeforeCommands();
         }
 
         // Return to normal thread priority
@@ -313,9 +264,9 @@ public class Robot extends LoggedRobot {
         RobotModeTriggers.autonomous().onTrue(Commands.runOnce(SimulatedArena.getInstance()::resetFieldForAuto));
         RobotModeTriggers.autonomous().onTrue(CommandsExt.eagerSequence(
                 Commands.waitSeconds(0.05),
-                Commands.runOnce(() -> ModuleIOSim.driveSimulation.setSimulationWorldPose(RobotState.get().getPose()))
+                Commands.runOnce(() -> ModuleIOSim.driveSimulation.setSimulationWorldPose(robotContainer.robotState.getPose()))
         ));
-        RobotState.get().setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
+        robotContainer.robotState.setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
     }
 
     @Override

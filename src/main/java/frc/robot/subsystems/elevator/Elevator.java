@@ -13,7 +13,7 @@ import frc.robot.RobotMechanism;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.superstructure.ReefAlign;
 import frc.robot.util.commands.CommandsExt;
-import frc.robot.util.subsystem.SubsystemBaseExt;
+import frc.robot.util.subsystem.Periodic;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -26,7 +26,7 @@ import static frc.robot.RobotMechanism.middleOfRobot;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 import static frc.robot.subsystems.elevator.ElevatorTuning.*;
 
-public class Elevator extends SubsystemBaseExt {
+public class Elevator implements Periodic {
     private final RobotMechanism robotMechanism = RobotMechanism.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
 

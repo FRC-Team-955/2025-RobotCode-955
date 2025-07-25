@@ -12,7 +12,7 @@ import frc.robot.subsystems.superstructure.ReefAlign.LocalReefSide;
 import frc.robot.subsystems.superstructure.ReefAlign.ReefZoneSide;
 import frc.robot.util.network.LoggedNetworkBooleanExt;
 import frc.robot.util.network.LoggedNetworkNumberExt;
-import frc.robot.util.subsystem.VirtualSubsystem;
+import frc.robot.util.subsystem.Periodic;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.function.Consumer;
 
-public class OperatorDashboard extends VirtualSubsystem {
+public class OperatorDashboard implements Periodic {
     private final RobotState robotState = RobotState.get();
     private final JoystickDrive joystickDrive = JoystickDrive.get();
 

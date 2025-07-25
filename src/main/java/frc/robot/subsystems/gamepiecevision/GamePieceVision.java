@@ -5,13 +5,13 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.OperatorDashboard;
 import frc.robot.util.commands.CommandsExt;
-import frc.robot.util.subsystem.SubsystemBaseExt;
+import frc.robot.util.subsystem.Periodic;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import static frc.robot.subsystems.gamepiecevision.GamePieceVisionConstants.createIO;
 
-public class GamePieceVision extends SubsystemBaseExt {
+public class GamePieceVision implements Periodic {
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
 
     private final GamePieceVisionIO io = createIO();

@@ -10,7 +10,7 @@ import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
 import frc.robot.util.characterization.FeedforwardCharacterization;
 import frc.robot.util.commands.CommandsExt;
-import frc.robot.util.subsystem.SubsystemBaseExt;
+import frc.robot.util.subsystem.Periodic;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;
@@ -20,7 +20,7 @@ import java.util.function.DoubleSupplier;
 import static frc.robot.subsystems.funnel.FunnelConstants.createBeltIO;
 import static frc.robot.subsystems.funnel.FunnelTuning.*;
 
-public class Funnel extends SubsystemBaseExt {
+public class Funnel implements Periodic {
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final RobotMechanism robotMechanism = RobotMechanism.get();
 

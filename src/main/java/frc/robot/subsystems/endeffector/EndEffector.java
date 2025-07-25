@@ -13,7 +13,7 @@ import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
 import frc.robot.util.characterization.FeedforwardCharacterization;
 import frc.robot.util.commands.CommandsExt;
-import frc.robot.util.subsystem.SubsystemBaseExt;
+import frc.robot.util.subsystem.Periodic;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -24,7 +24,7 @@ import java.util.function.DoubleSupplier;
 import static frc.robot.subsystems.endeffector.EndEffectorConstants.*;
 import static frc.robot.subsystems.endeffector.EndEffectorTuning.*;
 
-public class EndEffector extends SubsystemBaseExt {
+public class EndEffector implements Periodic {
     private final RobotMechanism robotMechanism = RobotMechanism.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final Elevator elevator = Elevator.get();

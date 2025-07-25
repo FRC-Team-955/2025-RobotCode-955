@@ -30,7 +30,7 @@ import frc.robot.Util;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.util.characterization.FeedforwardCharacterization;
 import frc.robot.util.commands.CommandsExt;
-import frc.robot.util.subsystem.SubsystemBaseExt;
+import frc.robot.util.subsystem.CommandBasedSubsystem;
 import frc.robot.util.swerve.ModuleLimits;
 import frc.robot.util.swerve.SwerveSetpoint;
 import frc.robot.util.swerve.SwerveSetpointGenerator;
@@ -49,7 +49,7 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 import static frc.robot.subsystems.drive.DriveTuning.*;
 import static frc.robot.util.HighFrequencySamplingThread.highFrequencyLock;
 
-public class Drive extends SubsystemBaseExt {
+public class Drive extends CommandBasedSubsystem {
     private final RobotState robotState = RobotState.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final Elevator elevator = Elevator.get();

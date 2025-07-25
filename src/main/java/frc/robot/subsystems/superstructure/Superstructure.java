@@ -23,7 +23,7 @@ import frc.robot.subsystems.superstructure.ReefAlign.ReefZoneSide;
 import frc.robot.subsystems.superstructure.StationAlign.Station;
 import frc.robot.util.BackgroundCommandScheduler;
 import frc.robot.util.commands.CommandsExt;
-import frc.robot.util.subsystem.SubsystemBaseExt;
+import frc.robot.util.subsystem.CommandBasedSubsystem;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -37,7 +37,7 @@ import static frc.robot.subsystems.superstructure.SuperstructureConstants.*;
 import static frc.robot.subsystems.superstructure.SuperstructureTuning.homeFinalMeters;
 import static frc.robot.subsystems.superstructure.SuperstructureTuning.homeInitialMeters;
 
-public class Superstructure extends SubsystemBaseExt {
+public class Superstructure extends CommandBasedSubsystem {
     private final RobotState robotState = RobotState.get();
     private final RobotMechanism robotMechanism = RobotMechanism.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();

@@ -22,6 +22,7 @@ import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.gamepiecevision.GamePieceVision;
 import frc.robot.subsystems.superstructure.Superstructure;
+import frc.robot.util.CANLogger;
 import frc.robot.util.commands.CommandsExt;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -47,6 +48,7 @@ public class RobotContainer {
     public final RobotState robotState = RobotState.get();
     public final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     public final JoystickDrive joystickDrive = JoystickDrive.get();
+    public final CANLogger canLogger = CANLogger.get();
 
     /* Subsystems */
     // Note: order does matter

@@ -6,10 +6,10 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.BuildConstants;
 import frc.robot.Constants;
-import frc.robot.util.subsystem.VirtualSubsystem;
+import frc.robot.util.subsystem.Periodic;
 import org.littletonrobotics.junction.Logger;
 
-public class CANLogger extends VirtualSubsystem {
+public class CANLogger implements Periodic {
     private final Timer roboRIOCANErrorTimer = new Timer();
     private final Timer canivoreErrorTimer = new Timer();
     private final CANBus canivore = new CANBus(Constants.CANivore.busName);
@@ -19,11 +19,13 @@ public class CANLogger extends VirtualSubsystem {
 
     private static CANLogger instance;
 
-    public static void ensureInitialized() {
+    public static CANLogger get() {
         if (instance == null)
             synchronized (CANLogger.class) {
                 instance = new CANLogger();
             }
+
+        return instance;
     }
 
     private CANLogger() {
