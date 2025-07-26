@@ -88,7 +88,7 @@ public class ElevatorIOSim extends ElevatorIO {
     }
 
     @Override
-    public void setOpenLoop(double output) {
+    public void setVoltage(double output) {
         if (!emergencyStopped) {
             closedLoop = false;
             appliedVolts = output;
@@ -96,7 +96,7 @@ public class ElevatorIOSim extends ElevatorIO {
     }
 
     @Override
-    public void setClosedLoop(double positionRad, double velocityRadPerSec) {
+    public void setMotionProfile(double positionRad, double velocityRadPerSec) {
         if (!emergencyStopped) {
             closedLoop = true;
             setpointPositionRad = positionRad;

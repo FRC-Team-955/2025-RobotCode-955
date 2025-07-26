@@ -177,7 +177,7 @@ public class ElevatorIOTalonFX extends ElevatorIO {
     }
 
     @Override
-    public void setOpenLoop(double output) {
+    public void setVoltage(double output) {
         if (!emergencyStopped) {
             lastVelocitySetpointRadPerSec = 0;
             leaderTalon.setControl(voltageRequest.withOutput(output));
@@ -185,7 +185,7 @@ public class ElevatorIOTalonFX extends ElevatorIO {
     }
 
     @Override
-    public void setClosedLoop(double positionRad, double velocityRadPerSec) {
+    public void setMotionProfile(double positionRad, double velocityRadPerSec) {
         if (!emergencyStopped) {
             var ffVolts = ff.calculateWithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
             lastVelocitySetpointRadPerSec = velocityRadPerSec;

@@ -47,7 +47,6 @@ public class AprilTagVision implements Periodic {
     }
 
     private AprilTagVision() {
-        super(1);
     }
 
     @Override

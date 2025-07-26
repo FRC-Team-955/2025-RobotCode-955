@@ -46,16 +46,18 @@ public class AutoBuilder {
                         last.scoreCommand(superstructure),
                         // scheduling the trajectory wastes a cycle; instead, reset the superstructure and run the trajectory at the same time
                         Commands.parallel(
-                                superstructure.ensureNotBusyAndResetGoals(),
+                                // TODO dont need this or wait?
+                                superstructure.cancel(),
                                 next.stationTraj.cmd()
                         )
                 ));
 
                 next.stationTraj.atTime("intake").onTrue(CommandsExt.eagerSequence(
-                        superstructure.autoFunnelIntake(true, next.station),
+                        superstructure.autoFunnelIntake(next.station), // TODO precondition !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()
                         // scheduling the trajectory wastes a cycle; instead, reset the superstructure and run the trajectory at the same time
                         Commands.parallel(
-                                superstructure.ensureNotBusyAndResetGoals(),
+                                // TODO dont need this or wait?
+                                superstructure.cancel(),
                                 next.scoreTraj.cmd()
                         )
                 ));
@@ -93,7 +95,6 @@ public class AutoBuilder {
     ) {
         private Command scoreCommand(Superstructure superstructure) {
             return superstructure.autoScoreCoral(
-                    true,
                     () -> reefZoneSide,
                     () -> localReefSide,
                     () -> coralScoringLevel,

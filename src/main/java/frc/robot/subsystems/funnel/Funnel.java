@@ -3,44 +3,48 @@ package frc.robot.subsystems.funnel;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj2.command.Command;
-import frc.lib.characterization.FeedforwardCharacterization;
-import frc.lib.commands.CommandsExt;
+import frc.lib.motor.MotorIO;
+import frc.lib.motor.MotorIOInputsAutoLogged;
+import frc.lib.motor.RequestType;
 import frc.lib.subsystem.Periodic;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
-import frc.robot.subsystems.rollers.RollersIO;
-import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
 
-import static frc.robot.subsystems.funnel.FunnelConstants.createBeltIO;
-import static frc.robot.subsystems.funnel.FunnelTuning.*;
+import static frc.robot.subsystems.funnel.FunnelTuning.velocityGainsTunable;
 
 public class Funnel implements Periodic {
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final RobotMechanism robotMechanism = RobotMechanism.get();
 
-    private final RollersIO beltIO = createBeltIO();
-    private final RollersIOInputsAutoLogged beltInputs = new RollersIOInputsAutoLogged();
+    private final MotorIO io = FunnelConstants.createIO();
+    private final MotorIOInputsAutoLogged inputs = new MotorIOInputsAutoLogged();
 
     @RequiredArgsConstructor
     public enum Goal {
-        CHARACTERIZATION(null),
-        IDLE(() -> 0),
-        INTAKE_FORWARDS(intakeGoalSetpoint::get),
-        INTAKE_BACKWARDS(() -> -intakeGoalSetpoint.get()),
-        INTAKE_MANUAL(intakeManualGoalSetpoint::get),
-        EJECT_FORWARDS(ejectGoalSetpoint::get),
-        EJECT_BACKWARDS(() -> -ejectGoalSetpoint.get());
+        IDLE(() -> 0, RequestType.VoltageVolts),
+        INTAKE_ALTERNATE(() -> {
+            throw new RuntimeException("TODO alternate, manual intaking");
+//            return intakeGoalSetpoint.get();
+        }, RequestType.VelocityRadPerSec),
+        EJECT_ALTERNATE(() -> {
+            throw new RuntimeException("TODO alternate");
+//            return ejectGoalSetpoint.get();
+        }, RequestType.VelocityRadPerSec),
+        ;
 
-        private final DoubleSupplier setpointRadPerSec;
+        /** Should be constant for every loop cycle */
+        private final DoubleSupplier value;
+        private final RequestType type;
     }
 
     @Getter
+    @Setter
     private Goal goal = Goal.IDLE;
 
     private final Alert beltDisconnectedAlert = new Alert("Funnel belt motor is disconnected.", Alert.AlertType.kError);
@@ -57,60 +61,34 @@ public class Funnel implements Periodic {
     }
 
     private Funnel() {
-        super(10);
     }
 
     @Override
     public void periodicBeforeCommands() {
-        beltIO.updateInputs(beltInputs);
-        Logger.processInputs("Inputs/Funnel/Belt", beltInputs);
+        io.updateInputs(inputs);
+        Logger.processInputs("Inputs/Funnel/Belt", inputs);
 
-        beltDisconnectedAlert.set(!beltInputs.connected);
+        beltDisconnectedAlert.set(!inputs.connected);
 
-        robotMechanism.funnel.beltLigament.setAngle(Units.radiansToDegrees(-beltInputs.positionRad));
+        robotMechanism.funnel.beltLigament.setAngle(Units.radiansToDegrees(-inputs.positionRad));
 
-        velocityGainsTunable.ifChanged(beltIO::setVelocityPIDF);
+        velocityGainsTunable.ifChanged(io::setVelocityPIDF);
     }
 
     @Override
     public void periodicAfterCommands() {
         if (operatorDashboard.coastOverride.hasChanged()) {
-            beltIO.setBrakeMode(!operatorDashboard.coastOverride.get());
+            io.setBrakeMode(!operatorDashboard.coastOverride.get());
         }
 
         Logger.recordOutput("Funnel/Goal", goal);
-        ////////////// BELT //////////////
         if (DriverStation.isDisabled()) {
-            Logger.recordOutput("Funnel/Belt/ClosedLoop", false);
-            beltIO.setOpenLoop(0);
-        } else if (goal.setpointRadPerSec != null) {
-            // Velocity control
-            var beltVelocitySetpointRadPerSec = goal.setpointRadPerSec.getAsDouble();
-            beltIO.setClosedLoopVelocity(beltVelocitySetpointRadPerSec);
-            Logger.recordOutput("Funnel/Belt/ClosedLoop", true);
-            Logger.recordOutput("Funnel/Belt/SetpointRadPerSec", beltVelocitySetpointRadPerSec);
+            io.setRequest(RequestType.VoltageVolts, 0);
         } else {
-            Logger.recordOutput("Funnel/Belt/ClosedLoop", false);
+            Logger.recordOutput("Funnel/RequestType", goal.type);
+            double value = goal.value.getAsDouble();
+            Logger.recordOutput("Funnel/RequestValue", value);
+            io.setRequest(goal.type, value);
         }
-    }
-
-    public Command setGoal(Goal goal) {
-        return runOnce(() -> this.goal = goal);
-    }
-
-    public void setGoalInstantaneous(Goal goal) {
-        this.goal = goal;
-    }
-
-    public Command beltFeedforwardCharacterization() {
-        return CommandsExt.eagerSequence(
-                setGoal(Goal.CHARACTERIZATION),
-                new FeedforwardCharacterization(
-                        beltIO::setOpenLoop,
-                        () -> new double[]{beltInputs.velocityRadPerSec},
-                        1,
-                        this
-                )
-        );
     }
 }

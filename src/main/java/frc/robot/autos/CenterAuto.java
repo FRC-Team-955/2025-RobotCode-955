@@ -22,7 +22,7 @@ public class CenterAuto {
         return switch (type) {
             case Descore -> CommandsExt.eagerSequence(
                     auto,
-                    Superstructure.get().autoDescoreAlgae(() -> ReefZoneSide.MiddleBack, () -> true, true).asProxy()
+                    Superstructure.get().autoDescoreAlgae(() -> ReefZoneSide.MiddleBack, () -> true).asProxy()
             );
             case Normal -> auto;
         };

@@ -40,9 +40,10 @@ public class OperatorDashboard implements Periodic {
     public final LoggedNetworkBooleanExt useRealElevatorState = new LoggedNetworkBooleanExt(prefix + "UseRealElevatorState", false);
     public final LoggedNetworkBooleanExt zeroElevator = new LoggedNetworkBooleanExt(prefix + "ZeroElevator", false);
     public final LoggedNetworkNumberExt elevatorOffsetMeters = new LoggedNetworkNumberExt(prefix + "ElevatorOffsetMeters", 0);
-    public final LoggedNetworkBooleanExt manualElevator = new LoggedNetworkBooleanExt(prefix + "ManualElevator", false);
-    public final LoggedNetworkBooleanExt manualElevatorUp = new LoggedNetworkBooleanExt(prefix + "ManualElevatorUp", false);
-    public final LoggedNetworkBooleanExt manualElevatorDown = new LoggedNetworkBooleanExt(prefix + "ManualElevatorDown", false);
+    // TODO
+//    public final LoggedNetworkBooleanExt manualElevator = new LoggedNetworkBooleanExt(prefix + "ManualElevator", false);
+//    public final LoggedNetworkBooleanExt manualElevatorUp = new LoggedNetworkBooleanExt(prefix + "ManualElevatorUp", false);
+//    public final LoggedNetworkBooleanExt manualElevatorDown = new LoggedNetworkBooleanExt(prefix + "ManualElevatorDown", false);
 
     private final EnumMap<ReefZoneSide, LoggedNetworkBooleanExt> reefZoneSides = generateTogglesForEnum("ReefZoneSides", ReefZoneSide.values(), ReefZoneSide.class);
     private final EnumMap<LocalReefSide, LoggedNetworkBooleanExt> localReefSides = generateTogglesForEnum("LocalReefSides", Arrays.stream(LocalReefSide.values()).filter(side -> side != LocalReefSide.Middle).toArray(LocalReefSide[]::new), LocalReefSide.class);

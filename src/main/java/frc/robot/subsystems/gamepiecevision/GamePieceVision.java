@@ -33,7 +33,6 @@ public class GamePieceVision implements Periodic {
     }
 
     private GamePieceVision() {
-        super(2);
     }
 
     @Override

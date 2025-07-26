@@ -6,16 +6,16 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.lib.characterization.FeedforwardCharacterization;
-import frc.lib.commands.CommandsExt;
+import frc.lib.motor.MotorIO;
+import frc.lib.motor.MotorIOInputsAutoLogged;
+import frc.lib.motor.RequestType;
 import frc.lib.subsystem.Periodic;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
 import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.rollers.RollersIO;
-import frc.robot.subsystems.rollers.RollersIOInputsAutoLogged;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -29,30 +29,39 @@ public class EndEffector implements Periodic {
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final Elevator elevator = Elevator.get();
 
-    private final RollersIO rollersIO = createRollersIO();
-    private final RollersIOInputsAutoLogged rollersInputs = new RollersIOInputsAutoLogged();
+    private final MotorIO io = EndEffectorConstants.createRollersIO();
+    private final MotorIOInputsAutoLogged inputs = new MotorIOInputsAutoLogged();
 
     @RequiredArgsConstructor
     public enum Goal {
-        CHARACTERIZATION(null),
-        IDLE(() -> 0),
-        HANDOFF(() -> 0),
-        FUNNEL_INTAKE(funnelIntakeGoalSetpoint::get),
-        FUNNEL_INTAKE_MANUAL(funnelIntakeManualGoalSetpoint::get),
-        SCORE_CORAL(scoreCoralGoalSetpoint::get),
-        SCORE_CORAL_L1(scoreCoralL1GoalSetpoint::get),
-        DESCORE_ALGAE(descoreAlgaeGoalSetpoint::get),
-        EJECT_FORWARDS(ejectGoalSetpoint::get),
-        EJECT_BACKWARDS(() -> -ejectGoalSetpoint.get()),
-        ZERO_CORAL(zeroCoralGoalSetpoint::get),
-        GO_TO_POSITION(null); // Handled specially in periodic and with positionSetpointRad
+        IDLE(() -> 0, RequestType.VoltageVolts),
+        HANDOFF(() -> 0, RequestType.VoltageVolts),
+        FUNNEL_INTAKE(funnelIntakeGoalSetpoint::get, RequestType.VelocityRadPerSec),
+        FUNNEL_INTAKE_MANUAL(funnelIntakeManualGoalSetpoint::get, RequestType.VelocityRadPerSec),
+        SCORE_CORAL(scoreCoralGoalSetpoint::get, RequestType.VelocityRadPerSec),
+        SCORE_CORAL_L1(scoreCoralL1GoalSetpoint::get, RequestType.VelocityRadPerSec),
+        DESCORE_ALGAE(descoreAlgaeGoalSetpoint::get, RequestType.VelocityRadPerSec),
+        EJECT_ALTERNATE(() -> {
+            throw new RuntimeException("TODO alternate");
+//            return ejectGoalSetpoint.get();
+        }, RequestType.VelocityRadPerSec),
+        ZERO_CORAL(zeroCoralGoalSetpoint::get, RequestType.VelocityRadPerSec),
+        HOME_INITIAL(() -> {
+            throw new RuntimeException("TODO have a relative positive request type");
+        }, RequestType.PositionRad),
+        HOME_FINAL(() -> {
+            throw new RuntimeException("TODO have a relative positive request type");
+        }, RequestType.PositionRad),
+        ;
 
-        private final DoubleSupplier setpointRadPerSec;
+        /** Should be constant for every loop cycle */
+        private final DoubleSupplier value;
+        private final RequestType type;
     }
 
     @Getter
+    @Setter
     private Goal goal = Goal.IDLE;
-    private Double positionSetpointRad = null;
 
     private final Alert rollersDisconnectedAlert = new Alert("End effector rollers motor is disconnected.", Alert.AlertType.kError);
 
@@ -68,87 +77,65 @@ public class EndEffector implements Periodic {
     }
 
     private EndEffector() {
-        super(10);
     }
 
     @Override
     public void periodicBeforeCommands() {
-        rollersIO.updateInputs(rollersInputs);
-        Logger.processInputs("Inputs/EndEffector/Rollers", rollersInputs);
+        io.updateInputs(inputs);
+        Logger.processInputs("Inputs/EndEffector/Rollers", inputs);
 
-        rollersDisconnectedAlert.set(!rollersInputs.connected);
+        rollersDisconnectedAlert.set(!inputs.connected);
 
         // Update mechanism
         robotMechanism.endEffector.ligament.setAngle(180 - Units.radiansToDegrees(getAngleRad()));
         // top rollers are reversed relative to motor
-        robotMechanism.endEffector.topRollersLigament.setAngle(Units.radiansToDegrees(-rollersInputs.positionRad));
+        robotMechanism.endEffector.topRollersLigament.setAngle(Units.radiansToDegrees(-inputs.positionRad));
 
         // Apply network inputs
         if (operatorDashboard.coastOverride.hasChanged()) {
-            rollersIO.setBrakeMode(!operatorDashboard.coastOverride.get());
+            io.setBrakeMode(!operatorDashboard.coastOverride.get());
         }
 
-        positionGainsTunable.ifChanged(rollersIO::setPositionPIDF);
-        velocityGainsTunable.ifChanged(rollersIO::setVelocityPIDF);
+        positionGainsTunable.ifChanged(io::setPositionPIDF);
+        velocityGainsTunable.ifChanged(io::setVelocityPIDF);
     }
 
     @Override
     public void periodicAfterCommands() {
-        ////////////// ROLLERS //////////////
-        Logger.recordOutput("EndEffector/Rollers/Goal", goal);
+        Logger.recordOutput("EndEffector/Goal", goal);
         if (DriverStation.isDisabled()) {
-            Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", false);
-            Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", false);
-            rollersIO.setOpenLoop(0);
-        } else if (goal.setpointRadPerSec != null) {
-            // Velocity control
-            var rollersVelocitySetpointRadPerSec = goal.setpointRadPerSec.getAsDouble();
-            rollersIO.setClosedLoopVelocity(rollersVelocitySetpointRadPerSec);
-            Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", false);
-            Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", true);
-            Logger.recordOutput("EndEffector/Rollers/Velocity/SetpointRadPerSec", rollersVelocitySetpointRadPerSec);
-        } else if (goal == Goal.GO_TO_POSITION && positionSetpointRad != null) {
-            // Position control
-            rollersIO.setClosedLoopPosition(positionSetpointRad);
-            Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", true);
-            Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", false);
-            Logger.recordOutput("EndEffector/Rollers/Position/SetpointRad", positionSetpointRad);
+            io.setRequest(RequestType.VoltageVolts, 0);
         } else {
-            Logger.recordOutput("EndEffector/Rollers/Position/ClosedLoop", false);
-            Logger.recordOutput("EndEffector/Rollers/Velocity/ClosedLoop", false);
+            Logger.recordOutput("EndEffector/RequestType", goal.type);
+            double value = goal.value.getAsDouble();
+            Logger.recordOutput("EndEffector/RequestValue", value);
+            io.setRequest(goal.type, value);
         }
     }
 
     @AutoLogOutput(key = "EndEffector/DescoreAlgaeAmperageTriggered")
     private boolean descoreAlgaeAmperageTriggered() {
-        return Math.abs(rollersInputs.currentAmps) > descoreAlgaeTriggerAmps;
+        return Math.abs(inputs.currentAmps) > descoreAlgaeTriggerAmps;
     }
 
     public Command waitUntilDescoreAlgaeAmperageTriggered() {
         return Commands.waitUntil(this::descoreAlgaeAmperageTriggered);
     }
 
-    public Command setGoal(Goal goal) {
-        return runOnce(() -> this.goal = goal);
-    }
-
-    public void setGoalInstantaneous(Goal goal) {
-        this.goal = goal;
-    }
-
     /** Goes positionDeltaMeters forward (or backwards) from current position */
     public Command moveByAndWaitUntilDone(DoubleSupplier positionDeltaMeters) {
-        return startEndWaitUntil(
-                () -> {
-                    this.goal = Goal.GO_TO_POSITION;
-                    positionSetpointRad = rollersInputs.positionRad + rollersRadiansForMeters(positionDeltaMeters.getAsDouble());
-                },
-                () -> {
-                    this.goal = Goal.IDLE;
-                    positionSetpointRad = null;
-                },
-                () -> Math.abs(rollersInputs.positionRad - positionSetpointRad) <= rollersPositionToleranceRad
-        );
+        throw new RuntimeException("TODO");
+//        return startEndWaitUntil(
+//                () -> {
+//                    this.goal = Goal.GO_TO_POSITION;
+//                    positionSetpointRad = inputs.positionRad + rollersRadiansForMeters(positionDeltaMeters.getAsDouble());
+//                },
+//                () -> {
+//                    this.goal = Goal.IDLE;
+//                    positionSetpointRad = null;
+//                },
+//                () -> Math.abs(inputs.positionRad - positionSetpointRad) <= rollersPositionToleranceRad
+//        );
     }
 
     @AutoLogOutput(key = "EndEffector/AngleRad")
@@ -157,18 +144,6 @@ public class EndEffector implements Periodic {
                 angleWhenRetractedRad,
                 angleWhenExtendedRad,
                 (elevator.getPositionMeters() - extendStartMeters) / extendDistanceMeters
-        );
-    }
-
-    public Command rollersFeedforwardCharacterization() {
-        return CommandsExt.eagerSequence(
-                setGoal(Goal.CHARACTERIZATION),
-                new FeedforwardCharacterization(
-                        rollersIO::setOpenLoop,
-                        () -> new double[]{rollersInputs.velocityRadPerSec},
-                        1,
-                        this
-                )
         );
     }
 }

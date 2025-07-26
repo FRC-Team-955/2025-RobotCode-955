@@ -1,13 +1,10 @@
 package frc.robot.subsystems.endeffector;
 
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import frc.lib.PIDF;
+import frc.lib.motor.MotorIO;
 import frc.robot.BuildConstants;
 import frc.robot.subsystems.rollers.RollersConfig;
-import frc.robot.subsystems.rollers.RollersIO;
-import frc.robot.subsystems.rollers.RollersIOSim;
-import frc.robot.subsystems.rollers.RollersIOSparkMax;
 
 public class EndEffectorConstants {
     public static final double rollersPositionToleranceRad = Units.degreesToRadians(15);
@@ -39,15 +36,16 @@ public class EndEffectorConstants {
             }
     );
 
-    protected static RollersIO createRollersIO() {
-        return switch (BuildConstants.mode) {
-            case REAL -> new RollersIOSparkMax(6, rollersConfig);
-            case SIM -> new RollersIOSim(
-                    rollersConfig,
-                    0.01,
-                    DCMotor.getNEO(1)
-            );
-            case REPLAY -> new RollersIO();
-        };
+    protected static MotorIO createRollersIO() {
+        throw new RuntimeException("TODO");
+//        return switch (BuildConstants.mode) {
+//            case REAL -> new RollersIOSparkMax(6, rollersConfig);
+//            case SIM -> new RollersIOSim(
+//                    rollersConfig,
+//                    0.01,
+//                    DCMotor.getNEO(1)
+//            );
+//            case REPLAY -> new RollersIO();
+//        };
     }
 }

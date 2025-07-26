@@ -47,14 +47,14 @@ public class ElevatorIO {
     /**
      * Run the motor at the specified open loop value.
      */
-    public void setOpenLoop(double output) {
+    public void setVoltage(double output) {
     }
 
     /**
      * Run the motor to the specified position.
      * Should use feedback to go to the specified position and use feedforward to go to the specified velocity
      */
-    public void setClosedLoop(double positionRad, double velocityRadPerSec) {
+    public void setMotionProfile(double positionRad, double velocityRadPerSec) {
     }
 
     /** Set the encoder of the elevator to the specified position. Used for zeroing */

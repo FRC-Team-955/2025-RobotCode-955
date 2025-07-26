@@ -1,12 +1,9 @@
 package frc.robot.subsystems.funnel;
 
-import edu.wpi.first.math.system.plant.DCMotor;
 import frc.lib.PIDF;
+import frc.lib.motor.MotorIO;
 import frc.robot.BuildConstants;
 import frc.robot.subsystems.rollers.RollersConfig;
-import frc.robot.subsystems.rollers.RollersIO;
-import frc.robot.subsystems.rollers.RollersIOSim;
-import frc.robot.subsystems.rollers.RollersIOSparkMax;
 
 public class FunnelConstants {
     public static final RollersConfig beltConfig = new RollersConfig(
@@ -24,15 +21,16 @@ public class FunnelConstants {
             }
     );
 
-    protected static RollersIO createBeltIO() {
-        return switch (BuildConstants.mode) {
-            case REAL -> new RollersIOSparkMax(5, beltConfig);
-            case SIM -> new RollersIOSim(
-                    beltConfig,
-                    0.01,
-                    DCMotor.getNEO(1)
-            );
-            case REPLAY -> new RollersIO();
-        };
+    protected static MotorIO createIO() {
+        throw new RuntimeException("TODO");
+//        return switch (BuildConstants.mode) {
+//            case REAL -> new RollersIOSparkMax(5, beltConfig);
+//            case SIM -> new RollersIOSim(
+//                    beltConfig,
+//                    0.01,
+//                    DCMotor.getNEO(1)
+//            );
+//            case REPLAY -> new RollersIO();
+//        };
     }
 }

@@ -117,20 +117,12 @@ public class RobotContainer {
         characterizationChooser.addOption("Drive SysId (Quasistatic Reverse)", drive.sysId.quasistatic(SysIdRoutine.Direction.kReverse));
         characterizationChooser.addOption("Drive SysId (Dynamic Forward)", drive.sysId.dynamic(SysIdRoutine.Direction.kForward));
         characterizationChooser.addOption("Drive SysId (Dynamic Reverse)", drive.sysId.dynamic(SysIdRoutine.Direction.kReverse));
-
-        ////////////////////// END EFFECTOR //////////////////////
-
-        characterizationChooser.addOption("End Effector Rollers Feedforward Characterization", endEffector.rollersFeedforwardCharacterization());
-
-        ////////////////////// FUNNEL //////////////////////
-
-        characterizationChooser.addOption("Funnel Belt Feedforward Characterization", funnel.beltFeedforwardCharacterization());
     }
 
     private void setDefaultCommands() {
         drive.setDefaultCommand(drive.driveJoystick(Optional::empty));
 
-        superstructure.setDefaultCommand(CommandsExt.eagerSequence(superstructure.ensureNotBusyAndResetGoals(), Commands.idle()).ignoringDisable(true));
+        superstructure.setDefaultCommand(CommandsExt.eagerSequence(superstructure.cancel(), Commands.idle()).ignoringDisable(true));
     }
 
     /**
@@ -151,20 +143,19 @@ public class RobotContainer {
 
         driverController.a().onTrue(superstructure.home());
 
-        driverController.rightTrigger().whileTrue(superstructure.funnelIntake(false).asProxy().repeatedly());
+        // TODO precondition !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()
+        driverController.rightTrigger().whileTrue(superstructure.funnelIntake().asProxy().repeatedly());
 
         var ref = new Object() {
             boolean shouldDescoreAlgae = false;
         };
         driverController.leftTrigger().onTrue(Commands.either(
-                superstructure.scoreCoralManual(
-                        false,
+                superstructure.scoreCoralManual( // TODO precondition: endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()
                         driverController.leftTrigger(),
                         operatorDashboard::getSelectedCoralScoringLevel
                 ).asProxy(),
                 CommandsExt.eagerSequence(
-                        superstructure.autoScoreCoral(
-                                false,
+                        superstructure.autoScoreCoral( // TODO precondtion Only run if you have coral and are in front of your reef side () -> (endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()) && ReefAlign.isAlignable(robotState.getPose(), reefSideSupplier.get()),
                                 operatorDashboard::getSelectedReefZoneSide,
                                 operatorDashboard::getSelectedLocalReefSide,
                                 operatorDashboard::getSelectedCoralScoringLevel,
@@ -182,10 +173,9 @@ public class RobotContainer {
                         ),
                         CommandsExt.onlyIf(
                                 () -> ref.shouldDescoreAlgae,
-                                superstructure.autoDescoreAlgae(
+                                superstructure.autoDescoreAlgae( // TODO precondition (!endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()) && ReefAlign.isAlignable(robotState.getPose(), reefSideSupplier.get())
                                         operatorDashboard::getSelectedReefZoneSide,
-                                        driverController.rightBumper(),
-                                        false
+                                        driverController.rightBumper()
                                 )
                         )
                 ).asProxy(),
@@ -197,38 +187,38 @@ public class RobotContainer {
         driverController.rightBumper().onTrue(CommandsExt.onlyIf(
                 () -> superstructure.getGoal() == Superstructure.Goal.IDLE,
                 Commands.either(
-                        superstructure.descoreAlgaeManual(
+                        superstructure.descoreAlgaeManual( // TODO precondition !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()
                                 operatorDashboard::getSelectedReefZoneSide
                         ).asProxy(),
-                        superstructure.autoDescoreAlgae(
+                        superstructure.autoDescoreAlgae( // TODO precondition (same as auto descore after score) (!endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()) && ReefAlign.isAlignable(robotState.getPose(), reefSideSupplier.get())
                                 operatorDashboard::getSelectedReefZoneSide,
-                                driverController.rightBumper(),
-                                false
+                                driverController.rightBumper()
                         ).asProxy(),
                         operatorDashboard.manualScoring::get
                 )
         ));
 
-        operatorDashboard.operatorKeypad.getOverride4()
-                .or(operatorDashboard.zeroElevator::get)
-                .and(() -> !operatorDashboard.manualElevator.get())
-                .toggleOnTrue(Commands.parallel(
-                        superstructure.zeroElevator(),
-                        // Turn off the toggle instantly so it's like a button
-                        Commands.runOnce(() -> operatorDashboard.zeroElevator.set(false))
-                ).ignoringDisable(true));
-        operatorDashboard.operatorKeypad.getOverride6()
-                .and(() -> !operatorDashboard.manualElevator.get())
-                .onTrue(Commands.runOnce(() -> operatorDashboard.useRealElevatorState.set(true)));
-
-        operatorDashboard.operatorKeypad.getOverride4()
-                .or(operatorDashboard.manualElevatorUp::get)
-                .and(operatorDashboard.manualElevator::get)
-                .whileTrue(elevator.setManualVoltage(0.5));
-        operatorDashboard.operatorKeypad.getOverride6()
-                .or(operatorDashboard.manualElevatorDown::get)
-                .and(operatorDashboard.manualElevator::get)
-                .whileTrue(elevator.setManualVoltage(-0.5));
+        // TODO manual elevator see elevator and superstructure and stuff
+//        operatorDashboard.operatorKeypad.getOverride4()
+//                .or(operatorDashboard.zeroElevator::get)
+//                .and(() -> !operatorDashboard.manualElevator.get())
+//                .toggleOnTrue(Commands.parallel(
+//                        superstructure.zeroElevator(),
+//                        // Turn off the toggle instantly so it's like a button
+//                        Commands.runOnce(() -> operatorDashboard.zeroElevator.set(false))
+//                ).ignoringDisable(true));
+//        operatorDashboard.operatorKeypad.getOverride6()
+//                .and(() -> !operatorDashboard.manualElevator.get())
+//                .onTrue(Commands.runOnce(() -> operatorDashboard.useRealElevatorState.set(true)));
+//
+//        operatorDashboard.operatorKeypad.getOverride4()
+//                .or(operatorDashboard.manualElevatorUp::get)
+//                .and(operatorDashboard.manualElevator::get)
+//                .whileTrue(elevator.setManualVoltage(0.5));
+//        operatorDashboard.operatorKeypad.getOverride6()
+//                .or(operatorDashboard.manualElevatorDown::get)
+//                .and(operatorDashboard.manualElevator::get)
+//                .whileTrue(elevator.setManualVoltage(-0.5));
 
         // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
         // You must do this because if you don't, superstructure's default command will cancel your command

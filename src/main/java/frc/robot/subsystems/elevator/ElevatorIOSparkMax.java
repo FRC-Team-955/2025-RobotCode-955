@@ -168,7 +168,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     }
 
     @Override
-    public void setOpenLoop(double output) {
+    public void setVoltage(double output) {
         if (!emergencyStopped) {
             lastVelocitySetpointRadPerSec = 0;
             leaderSpark.setVoltage(output);
@@ -176,7 +176,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
     }
 
     @Override
-    public void setClosedLoop(double positionRad, double velocityRadPerSec) {
+    public void setMotionProfile(double positionRad, double velocityRadPerSec) {
         if (!emergencyStopped) {
             var ffVolts = ff.calculateWithVelocities(lastVelocitySetpointRadPerSec, velocityRadPerSec);
             lastVelocitySetpointRadPerSec = velocityRadPerSec;
