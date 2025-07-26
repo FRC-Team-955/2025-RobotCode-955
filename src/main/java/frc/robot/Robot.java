@@ -122,6 +122,8 @@ public class Robot extends LoggedRobot {
         periodics = List.of(
                 // Order matters! Execution order is ascending (that is, the first one listed will execute first)
 
+                // Lots of things depend on controller
+                robotContainer.controller,
                 // Vision depends on drive
                 robotContainer.drive,
                 // The rest of the subsystems require vision
@@ -172,8 +174,6 @@ public class Robot extends LoggedRobot {
     public void robotPeriodic() {
         // Switch thread to high priority to improve loop timing
 //        Threads.setCurrentThreadPriority(true, 99);
-
-        robotContainer.periodicBeforeAll();
 
         for (var periodic : periodics) {
 //            System.out.println("periodicBeforeCommands: " + periodic.getClass().getSimpleName());

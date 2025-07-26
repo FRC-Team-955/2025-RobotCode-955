@@ -1,13 +1,11 @@
 package frc.robot;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.commands.CommandsExt;
@@ -17,7 +15,6 @@ import frc.robot.autos.ProcessorSideAuto;
 import frc.robot.autos.ProcessorSideFriendlyAuto;
 import frc.robot.subsystems.apriltagvision.AprilTagVision;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.JoystickDrive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
@@ -35,19 +32,13 @@ import java.util.Optional;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-    // Controller
-    private final CommandXboxController driverController = BuildConstants.mode == BuildConstants.Mode.SIM
-            ? Constants.Simulation.simController.apply(0)
-            : new CommandXboxController(0);
-    private final Alert driverControllerDisconnectedAlert = new Alert("Driver controller is not connected!", Alert.AlertType.kError);
-
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Choices");
     private final LoggedDashboardChooser<Command> characterizationChooser = new LoggedDashboardChooser<>("Characterization Choices");
 
     public final RobotState robotState = RobotState.get();
     public final OperatorDashboard operatorDashboard = OperatorDashboard.get();
-    public final JoystickDrive joystickDrive = JoystickDrive.get();
+    public final Controller controller = Controller.get();
     public final CANLogger canLogger = CANLogger.get();
 
     /* Subsystems */
@@ -67,16 +58,10 @@ public class RobotContainer {
         configureButtonBindings();
 
         new Trigger(() -> DriverStation.isTeleopEnabled() && DriverStation.getMatchTime() > 0 && DriverStation.getMatchTime() < 30)
-                .onTrue(Commands.startEnd(
-                        () -> driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0.5),
-                        () -> driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0)
-                ).withTimeout(2.0));
+                .onTrue(controller.rumble(0.5, 2.0));
 
         new Trigger(superstructure::isForceable)
-                .onTrue(Commands.startEnd(
-                        () -> driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0.5),
-                        () -> driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0)
-                ).withTimeout(0.5));
+                .onTrue(controller.rumble(0.5, 0.5));
     }
 
     private void addAutos() {
@@ -231,19 +216,5 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         return autoChooser.get();
-    }
-
-    public void periodicBeforeAll() {
-        driverControllerDisconnectedAlert.set(!driverController.isConnected());
-
-        joystickDrive.update(
-                // https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
-                // forward on joystick is negative y - we want positive x for forward
-                -driverController.getLeftY(),
-                // right on joystick is positive x - we want negative y for right
-                -driverController.getLeftX(),
-                // right on joystick is positive x - we want negative x for right (CCW is positive)
-                -driverController.getRightX()
-        );
     }
 }

@@ -8,7 +8,6 @@ import frc.lib.network.LoggedNetworkBooleanExt;
 import frc.lib.network.LoggedNetworkNumberExt;
 import frc.lib.subsystem.Periodic;
 import frc.robot.subsystems.drive.DriveConstants;
-import frc.robot.subsystems.drive.JoystickDrive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.superstructure.ReefAlign;
 import frc.robot.subsystems.superstructure.ReefAlign.LocalReefSide;
@@ -23,7 +22,7 @@ import java.util.function.Consumer;
 
 public class OperatorDashboard implements Periodic {
     private final RobotState robotState = RobotState.get();
-    private final JoystickDrive joystickDrive = JoystickDrive.get();
+    private final Controller controller = Controller.get();
 
     private static final String prefix = "/OperatorDashboard/";
 
@@ -102,7 +101,7 @@ public class OperatorDashboard implements Periodic {
                 // We only want to do closest side if the timeout is done (so if we can use overrides)
                 manualReefSide.set(false);
                 if (!ignoreClosestReefSideChanges) {
-                    selectedReefZoneSide = ReefAlign.determineClosestReefSide(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
+                    selectedReefZoneSide = ReefAlign.determineClosestReefSide(robotState.getPose(), controller.getSetpointFieldRelative());
                 }
             }
             updateToggles(reefZoneSides, selectedReefZoneSide);
@@ -129,7 +128,7 @@ public class OperatorDashboard implements Periodic {
                 handleEnumToggles(reefZoneSides, selectedReefZoneSide, selectNew -> selectedReefZoneSide = selectNew);
             } else {
                 if (!ignoreClosestReefSideChanges) {
-                    selectedReefZoneSide = ReefAlign.determineClosestReefSide(robotState.getPose(), joystickDrive.getSetpointFieldRelative());
+                    selectedReefZoneSide = ReefAlign.determineClosestReefSide(robotState.getPose(), controller.getSetpointFieldRelative());
                 }
                 updateToggles(reefZoneSides, selectedReefZoneSide);
             }

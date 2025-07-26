@@ -7,11 +7,9 @@ import edu.wpi.first.hal.FRCNetComm;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -22,17 +20,20 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.WrapperCommand;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.lib.characterization.FeedforwardCharacterization;
 import frc.lib.commands.CommandsExt;
-import frc.lib.subsystem.CommandBasedSubsystem;
+import frc.lib.subsystem.Periodic;
 import frc.lib.swerve.ModuleLimits;
 import frc.lib.swerve.SwerveSetpoint;
 import frc.lib.swerve.SwerveSetpointGenerator;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotState;
 import frc.robot.Util;
+import frc.robot.subsystems.drive.goals.DriveJoystickGoal;
+import frc.robot.subsystems.drive.goals.MoveToGoal;
+import frc.robot.subsystems.drive.goals.VelocityRobotRelativeGoal;
 import frc.robot.subsystems.elevator.Elevator;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -49,11 +50,10 @@ import static frc.lib.HighFrequencySamplingThread.highFrequencyLock;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 import static frc.robot.subsystems.drive.DriveTuning.*;
 
-public class Drive extends CommandBasedSubsystem {
+public class Drive implements Periodic {
     private final RobotState robotState = RobotState.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final Elevator elevator = Elevator.get();
-    private final JoystickDrive joystickDrive = JoystickDrive.get();
 
     private final GyroIO gyroIO = createGyroIO();
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
@@ -86,17 +86,6 @@ public class Drive extends CommandBasedSubsystem {
 
     @Getter
     private Goal goal = Goal.IDLE;
-    private ChassisSpeeds closedLoopSetpoint;
-
-    private Command withGoal(Goal goal, Command command) {
-        return new WrapperCommand(command) {
-            @Override
-            public void initialize() {
-                Drive.this.goal = goal;
-                super.initialize();
-            }
-        };
-    }
 
     /**
      * FL, FR, BL, BR
@@ -122,32 +111,6 @@ public class Drive extends CommandBasedSubsystem {
     private final PIDController choreoFeedbackX = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
     private final PIDController choreoFeedbackOmega = driveConfig.choreoFeedbackOmega().toPIDWrapRadians();
-
-    private final PIDController moveToPureLinearX = moveToConfig.pureLinear().toPID(
-            moveToConfig.linearPositionToleranceMeters(),
-            moveToConfig.linearVelocityToleranceMetersPerSec()
-    );
-    private final PIDController moveToPureLinearY = moveToConfig.pureLinear().toPID(
-            moveToConfig.linearPositionToleranceMeters(),
-            moveToConfig.linearVelocityToleranceMetersPerSec()
-    );
-    private final PIDController moveToPureAngular = moveToConfig.pureAngular().toPIDWrapRadians(
-            moveToConfig.angularPositionToleranceRad(),
-            moveToConfig.angularVelocityToleranceRadPerSec()
-    );
-
-    private final ProfiledPIDController moveToProfiledLinearX = moveToConfig.profiledLinear().toPID(
-            moveToConfig.linearPositionToleranceMeters(),
-            moveToConfig.linearVelocityToleranceMetersPerSec()
-    );
-    private final ProfiledPIDController moveToProfiledLinearY = moveToConfig.profiledLinear().toPID(
-            moveToConfig.linearPositionToleranceMeters(),
-            moveToConfig.linearVelocityToleranceMetersPerSec()
-    );
-    private final ProfiledPIDController moveToProfiledAngular = moveToConfig.profiledAngular().toPIDWrapRadians(
-            moveToConfig.angularPositionToleranceRad(),
-            moveToConfig.angularVelocityToleranceRadPerSec()
-    );
 
     private static Drive instance;
 
@@ -324,34 +287,43 @@ public class Drive extends CommandBasedSubsystem {
                 module.setTurnPIDF(gains);
             }
         });
-
-        moveToPureLinearTunable.ifChanged(gains -> {
-            gains.applyPID(moveToPureLinearX);
-            gains.applyPID(moveToPureLinearY);
-        });
-        moveToPureAngularTunable.ifChanged(gains -> gains.applyPID(moveToPureAngular));
-
-        moveToProfiledLinearTunable.ifChanged(
-                gains -> {
-                    gains.applyPID(moveToProfiledLinearX);
-                    gains.applyPID(moveToProfiledLinearY);
-                },
-                // Constraints will be calculated and applied in move to
-                constraints -> {}
-        );
-        moveToProfiledAngularTunable.ifChanged(
-                gains -> gains.applyPID(moveToProfiledAngular),
-                moveToProfiledAngular::setConstraints
-        );
     }
 
     @Override
     public void periodicAfterCommands() {
+        ChassisSpeeds closedLoopSetpoint = null;
+        switch (goal) {
+            case CHARACTERIZATION -> {
+                closedLoopSetpoint = null;
+            }
+            case WHEEL_RADIUS_CHARACTERIZATION -> {
+                closedLoopSetpoint = null;
+            }
+            case IDLE -> closedLoopSetpoint = null;
+            case DRIVE_JOYSTICK, DRIVE_JOYSTICK_ASSISTED -> {
+                var output = DriveJoystickGoal.get();
+                closedLoopSetpoint = output.getFirst();
+                goal = output.getSecond();
+            }
+            case MOVE_TO, MOVE_TO_DRIVE_JOYSTICK_MERGED -> {
+                var output = MoveToGoal.get();
+                closedLoopSetpoint = output.getFirst();
+                goal = output.getSecond();
+            }
+            case FOLLOW_TRAJECTORY -> {
+                closedLoopSetpoint = null;
+            }
+            case VELOCITY_ROBOT_RELATIVE -> {
+                closedLoopSetpoint = null;
+            }
+        }
+
+        // Goal processing might change the goal
         Logger.recordOutput("Drive/Goal", goal);
+        Logger.recordOutput("Drive/ControlMode", goal.controlMode);
 
         // Stop moving when idle or disabled
         if (goal.controlMode == ControlMode.STOP || DriverStation.isDisabled()) {
-            Logger.recordOutput("Drive/ClosedLoop", false);
             prevSetpoint = null;
 
             for (var module : modules) {
@@ -364,7 +336,6 @@ public class Drive extends CommandBasedSubsystem {
         )
                 && closedLoopSetpoint != null
         ) {
-            Logger.recordOutput("Drive/ClosedLoop", true);
             Logger.recordOutput("Drive/ChassisSpeeds/Setpoint", closedLoopSetpoint);
 
             if (useSetpointGenerator && !disableDriving && goal.controlMode == ControlMode.CLOSED_LOOP_OPTIMIZED) {
@@ -426,7 +397,6 @@ public class Drive extends CommandBasedSubsystem {
                 Logger.recordOutput("Drive/ChassisSpeeds/SetpointOptimized", robotState.getKinematics().toChassisSpeeds(setpointStates));
             }
         } else {
-            Logger.recordOutput("Drive/ClosedLoop", false);
             prevSetpoint = null;
         }
 
@@ -441,13 +411,14 @@ public class Drive extends CommandBasedSubsystem {
      * return to their normal orientations the next time a nonzero velocity is requested.
      */
     private void stopWithX() {
-        Rotation2d[] headings = new Rotation2d[modules.length];
-        for (int i = 0; i < modules.length; i++) {
-            headings[i] = moduleTranslations[i].getAngle();
-        }
-        // Why does this work? See SwerveDriveKinematics.toModuleStates
-        robotState.getKinematics().resetHeadings(headings);
-        closedLoopSetpoint = new ChassisSpeeds();
+        // TODO goal or something
+//        Rotation2d[] headings = new Rotation2d[modules.length];
+//        for (int i = 0; i < modules.length; i++) {
+//            headings[i] = moduleTranslations[i].getAngle();
+//        }
+//        // Why does this work? See SwerveDriveKinematics.toModuleStates
+//        robotState.getKinematics().resetHeadings(headings);
+//        closedLoopSetpoint = new ChassisSpeeds();
     }
 
     @AutoLogOutput(key = "Drive/ChassisSpeeds/Measured")
@@ -533,228 +504,25 @@ public class Drive extends CommandBasedSubsystem {
     }
 
     public Command moveTo(Supplier<Pose2d> poseSupplier, BooleanSupplier mergeJoystickDrive) {
-        return startRun(
-                () -> {
-                    goal = mergeJoystickDrive.getAsBoolean() ? Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED : Goal.MOVE_TO;
-
-                    if (operatorDashboard.profiledMoveTo.get()) {
-                        Pose2d currentPose = robotState.getPose();
-                        ChassisSpeeds currentVelocities = getMeasuredChassisSpeedsFieldRelative();
-                        moveToProfiledLinearX.reset(
-                                currentPose.getX(),
-                                currentVelocities.vxMetersPerSecond
-                        );
-                        moveToProfiledLinearY.reset(
-                                currentPose.getY(),
-                                currentVelocities.vyMetersPerSecond
-                        );
-                        moveToProfiledAngular.reset(
-                                MathUtil.angleModulus(currentPose.getRotation().getRadians()),
-                                currentVelocities.omegaRadiansPerSecond
-                        );
-                    } else {
-                        moveToPureLinearX.reset();
-                        moveToPureLinearY.reset();
-                        moveToPureAngular.reset();
-                    }
-                },
-                () -> {
-                    Pose2d currentPose = robotState.getPose();
-
-                    Pose2d goalPose = poseSupplier.get();
-                    Logger.recordOutput("Drive/MoveTo/Goal", goalPose);
-
-                    double linearXVelocityMetersPerSec;
-                    boolean linearXAtSetpoint;
-                    double linearYVelocityMetersPerSec;
-                    boolean linearYAtSetpoint;
-                    double angularVelocityRadPerSec;
-                    boolean angularAtSetpoint;
-                    if (operatorDashboard.profiledMoveTo.get()) {
-                        ChassisSpeeds currentVelocities = getMeasuredChassisSpeedsFieldRelative();
-
-                        if (operatorDashboard.profiledMoveTo.hasChanged()) {
-                            moveToProfiledLinearX.reset(
-                                    currentPose.getX(),
-                                    currentVelocities.vxMetersPerSecond
-                            );
-                            moveToProfiledLinearY.reset(
-                                    currentPose.getY(),
-                                    currentVelocities.vyMetersPerSecond
-                            );
-                            moveToProfiledAngular.reset(
-                                    MathUtil.angleModulus(currentPose.getRotation().getRadians()),
-                                    currentVelocities.omegaRadiansPerSecond
-                            );
-                        }
-
-                        // Update profile constraints
-                        Translation2d currentToGoal = goalPose.getTranslation().minus(currentPose.getTranslation());
-                        if (currentToGoal.getX() != 0 || currentToGoal.getY() != 0) {
-                            Rotation2d directionOfTravel = currentToGoal.getAngle();
-                            calculateMoveToProfiledLinearConstraints(moveToProfiledLinearTunable.getConstraints(), directionOfTravel, (x, y) -> {
-                                moveToProfiledLinearX.setConstraints(x);
-                                moveToProfiledLinearY.setConstraints(y);
-                            });
-                        }
-
-                        linearXVelocityMetersPerSec = moveToProfiledLinearX.calculate(
-                                currentPose.getX(),
-                                goalPose.getX()
-                        ) + moveToProfiledLinearX.getSetpoint().velocity;
-                        linearXAtSetpoint = moveToProfiledLinearX.atSetpoint();
-
-                        linearYVelocityMetersPerSec = moveToProfiledLinearY.calculate(
-                                currentPose.getY(),
-                                goalPose.getY()
-                        ) + moveToProfiledLinearY.getSetpoint().velocity;
-                        linearYAtSetpoint = moveToProfiledLinearY.atSetpoint();
-
-                        angularVelocityRadPerSec = moveToProfiledAngular.calculate(
-                                MathUtil.angleModulus(currentPose.getRotation().getRadians()),
-                                MathUtil.angleModulus(goalPose.getRotation().getRadians())
-                        ) + moveToProfiledAngular.getSetpoint().velocity;
-                        angularAtSetpoint = moveToProfiledAngular.atSetpoint();
-
-                        Logger.recordOutput("Drive/MoveTo/Setpoint", new Pose2d(
-                                moveToProfiledLinearX.getSetpoint().position,
-                                moveToProfiledLinearY.getSetpoint().position,
-                                new Rotation2d(moveToProfiledAngular.getSetpoint().position)
-                        ));
-                    } else {
-                        if (operatorDashboard.profiledMoveTo.hasChanged()) {
-                            moveToPureLinearX.reset();
-                            moveToPureLinearY.reset();
-                            moveToPureAngular.reset();
-                        }
-
-                        linearXVelocityMetersPerSec = moveToPureLinearX.calculate(
-                                currentPose.getX(),
-                                goalPose.getX()
-                        );
-                        linearXAtSetpoint = moveToPureLinearX.atSetpoint();
-
-                        linearYVelocityMetersPerSec = moveToPureLinearY.calculate(
-                                currentPose.getY(),
-                                goalPose.getY()
-                        );
-                        linearYAtSetpoint = moveToPureLinearY.atSetpoint();
-
-                        angularVelocityRadPerSec = moveToPureAngular.calculate(
-                                MathUtil.angleModulus(currentPose.getRotation().getRadians()),
-                                MathUtil.angleModulus(goalPose.getRotation().getRadians())
-                        );
-                        angularAtSetpoint = moveToPureAngular.atSetpoint();
-                    }
-
-                    Logger.recordOutput("Drive/MoveTo/LinearXAtSetpoint", linearXAtSetpoint);
-                    if (linearXAtSetpoint) {
-                        linearXVelocityMetersPerSec = 0.0;
-                    }
-
-                    Logger.recordOutput("Drive/MoveTo/LinearYAtSetpoint", linearYAtSetpoint);
-                    if (linearYAtSetpoint) {
-                        linearYVelocityMetersPerSec = 0.0;
-                    }
-
-                    Logger.recordOutput("Drive/MoveTo/AngularAtSetpoint", angularAtSetpoint);
-                    if (angularAtSetpoint) {
-                        angularVelocityRadPerSec = 0.0;
-                    }
-
-                    // Scale linear speed by angular speed so that angular change is prioritized
-                    // When going max angular speed, reduce linear to 75%
-                    double linearScalar = MathUtil.clamp(1 - angularVelocityRadPerSec / maxAngularVelocityRadPerSec, 0.75, 1);
-
-                    ChassisSpeeds moveToSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                            linearXVelocityMetersPerSec * linearScalar,
-                            linearYVelocityMetersPerSec * linearScalar,
-                            angularVelocityRadPerSec,
-                            currentPose.getRotation() // Move to is absolute, don't flip
-                    );
-                    if (mergeJoystickDrive.getAsBoolean()) {
-                        goal = Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED;
-                        ChassisSpeeds joystickDriveSpeeds = joystickDrive.getSetpointRobotRelative(robotState.getRotation());
-                        closedLoopSetpoint = moveToSpeeds.plus(joystickDriveSpeeds.times(0.3));
-                    } else {
-                        goal = Goal.MOVE_TO;
-                        closedLoopSetpoint = moveToSpeeds;
-                    }
-                }
-        );
-    }
-
-    private void runDriveAssisted(Pose2d assistPose) {
-        var currentPose = robotState.getPose();
-
-        double assistX = 0;
-        double assistY = 0;
-        double assistOmega = 0;
-        // TODO: need to reset the PIDs when assist starts
-        // TODO: log setpoint
-//        double assistX = moveToLinearX.calculate(
-//                currentPose.getX(),
-//                assistPose.getX()
-//        ) + moveToLinearX.getSetpoint().velocity;
-//        assistX *= linearMagnitude; // Limit to the driver's overall linear speed
-//
-//        double assistY = moveToLinearY.calculate(
-//                currentPose.getY(),
-//                assistPose.getY()
-//        ) + moveToLinearY.getSetpoint().velocity;
-//        assistY *= linearMagnitude; // Limit to the driver's overall linear speed
-//
-//        double assistOmega = moveToAngular.calculate(
-//                currentPose.getRotation().getRadians(),
-//                assistPose.getRotation().getRadians()
-//        ) + moveToAngular.getSetpoint().velocity;
-//        // If we are driving fast and not rotating, need fast rotation assist, so limit to driver's overall linear speed
-//        // Otherwise, limit to driver omega speed
-//        assistOmega *= Math.max(omegaMagnitude, linearMagnitude);
-
-        closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
-                        assistX,
-                        assistY,
-                        assistOmega,
-                        currentPose.getRotation() // Move to is absolute, don't flip
-                )
-                .times(0.75)
-                .plus(joystickDrive.getSetpointRobotRelative(currentPose.getRotation()).times(0.25));
+        return Commands.runOnce(() -> {
+            MoveToGoal.setPoseSupplier(poseSupplier);
+            MoveToGoal.setMergeJoystickDrive(mergeJoystickDrive);
+            goal = Goal.MOVE_TO;
+        });
     }
 
     public Command driveJoystick(Supplier<Optional<Pose2d>> assistPoseSupplier) {
-        return run(() -> {
-            // Reset goal from assisted every loop
+        return Commands.runOnce(() -> {
+            DriveJoystickGoal.setAssistPoseSupplier(assistPoseSupplier);
             goal = Goal.DRIVE_JOYSTICK;
-
-            var optionalAssistPose = assistPoseSupplier.get();
-            if (optionalAssistPose.isPresent()) {
-                // Mark assist pose as present
-                Logger.recordOutput("Drive/Assist/Present", true);
-                Pose2d assistPose = optionalAssistPose.get();
-
-                if (joystickDrive.shouldAssist(robotState.getPose(), assistPose)) {
-                    goal = Goal.DRIVE_JOYSTICK_ASSISTED;
-                    runDriveAssisted(assistPose);
-                } else {
-                    closedLoopSetpoint = joystickDrive.getSetpointRobotRelative(robotState.getRotation());
-                }
-            } else {
-                Logger.recordOutput("Drive/Assist/Present", false);
-                closedLoopSetpoint = joystickDrive.getSetpointRobotRelative(robotState.getRotation());
-            }
         });
     }
 
     public Command runRobotRelative(Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
-        return withGoal(
-                Goal.VELOCITY_ROBOT_RELATIVE,
-                run(() -> closedLoopSetpoint = chassisSpeedsSupplier.get())
-        );
-    }
-
-    public Command stop() {
-        return runOnce(() -> goal = Goal.IDLE);
+        return Commands.runOnce(() -> {
+            VelocityRobotRelativeGoal.setChassisSpeedsSupplier(chassisSpeedsSupplier);
+            goal = Goal.VELOCITY_ROBOT_RELATIVE;
+        });
     }
 
     public Command feedforwardCharacterization() {
