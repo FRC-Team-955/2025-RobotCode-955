@@ -19,14 +19,14 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.RobotState;
 import frc.robot.Util;
-import frc.robot.util.subsystem.CommandBasedSubsystem;
+import frc.robot.util.subsystem.Periodic;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.*;
 
 import static frc.robot.subsystems.apriltagvision.AprilTagVisionConstants.*;
 
-public class AprilTagVision extends CommandBasedSubsystem {
+public class AprilTagVision implements Periodic {
     private final RobotState robotState = RobotState.get();
 
     private final EnumMap<Camera, CameraData> cameras = Util.createEnumMap(Camera.class, Camera.values(), (cam) -> new CameraData(
