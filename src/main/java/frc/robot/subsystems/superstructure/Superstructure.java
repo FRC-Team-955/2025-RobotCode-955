@@ -53,7 +53,7 @@ public class Superstructure extends CommandBasedSubsystem {
 
     @RequiredArgsConstructor
     public enum Goal {
-        IDLE((s) -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.IDLE, Funnel.Goal.IDLE)),
+        IDLE(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.IDLE, Funnel.Goal.IDLE)),
 
         MANUAL_SCORE_CORAL_WAIT_FOR_ELEVATOR(s -> new Goals(s.level.get().coralScoringElevatorGoal, EndEffector.Goal.IDLE, Funnel.Goal.IDLE)),
         MANUAL_SCORE_CORAL_WAIT_FOR_CONFIRM(MANUAL_SCORE_CORAL_WAIT_FOR_ELEVATOR.goals),
