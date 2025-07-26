@@ -1,7 +1,7 @@
 package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.math.util.Units;
-import frc.robot.util.network.LoggedTunableNumber;
+import frc.lib.network.LoggedTunableNumber;
 
 public class SuperstructureTuning {
     public static final LoggedTunableNumber homeInitialMeters =

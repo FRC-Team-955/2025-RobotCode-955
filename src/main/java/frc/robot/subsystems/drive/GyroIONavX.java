@@ -16,7 +16,7 @@ package frc.robot.subsystems.drive;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 import edu.wpi.first.math.util.Units;
-import frc.robot.util.HighFrequencySamplingThread;
+import frc.lib.HighFrequencySamplingThread;
 
 import java.util.Queue;
 

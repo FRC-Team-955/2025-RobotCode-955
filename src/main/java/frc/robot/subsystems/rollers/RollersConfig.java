@@ -1,6 +1,6 @@
 package frc.robot.subsystems.rollers;
 
-import frc.robot.util.PIDF;
+import frc.lib.PIDF;
 
 public record RollersConfig(
         boolean inverted,

@@ -7,7 +7,7 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
-import frc.robot.util.PIDF;
+import frc.lib.PIDF;
 
 import java.util.function.DoubleSupplier;
 

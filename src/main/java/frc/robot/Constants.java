@@ -15,7 +15,7 @@ package frc.robot;
 
 import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.util.controller.CommandSteamInputController;
+import frc.lib.controller.CommandSteamInputController;
 
 import java.util.function.Function;
 

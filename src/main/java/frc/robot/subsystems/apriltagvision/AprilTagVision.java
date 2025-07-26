@@ -17,9 +17,9 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import frc.lib.subsystem.Periodic;
 import frc.robot.RobotState;
 import frc.robot.Util;
-import frc.robot.util.subsystem.Periodic;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.*;

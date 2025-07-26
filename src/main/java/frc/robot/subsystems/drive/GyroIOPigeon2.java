@@ -21,8 +21,8 @@ import com.ctre.phoenix6.hardware.Pigeon2;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import frc.lib.HighFrequencySamplingThread;
 import frc.robot.Constants;
-import frc.robot.util.HighFrequencySamplingThread;
 
 import java.util.Queue;
 

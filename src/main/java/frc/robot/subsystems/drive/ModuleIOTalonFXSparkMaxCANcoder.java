@@ -38,9 +38,9 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
+import frc.lib.HighFrequencySamplingThread;
+import frc.lib.PIDF;
 import frc.robot.Constants;
-import frc.robot.util.HighFrequencySamplingThread;
-import frc.robot.util.PIDF;
 import frc.robot.util.PhoenixUtil;
 import frc.robot.util.SparkUtil;
 

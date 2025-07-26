@@ -4,9 +4,9 @@ import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
+import frc.lib.subsystem.Periodic;
 import frc.robot.BuildConstants;
 import frc.robot.Constants;
-import frc.robot.util.subsystem.Periodic;
 import org.littletonrobotics.junction.Logger;
 
 public class CANLogger implements Periodic {

@@ -1,12 +1,12 @@
 package frc.robot.subsystems.funnel;
 
 import edu.wpi.first.math.system.plant.DCMotor;
+import frc.lib.PIDF;
 import frc.robot.BuildConstants;
 import frc.robot.subsystems.rollers.RollersConfig;
 import frc.robot.subsystems.rollers.RollersIO;
 import frc.robot.subsystems.rollers.RollersIOSim;
 import frc.robot.subsystems.rollers.RollersIOSparkMax;
-import frc.robot.util.PIDF;
 
 public class FunnelConstants {
     public static final RollersConfig beltConfig = new RollersConfig(

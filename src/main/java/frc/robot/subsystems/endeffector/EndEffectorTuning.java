@@ -1,8 +1,8 @@
 package frc.robot.subsystems.endeffector;
 
 import edu.wpi.first.math.util.Units;
-import frc.robot.util.PIDF;
-import frc.robot.util.network.LoggedTunableNumber;
+import frc.lib.PIDF;
+import frc.lib.network.LoggedTunableNumber;
 
 import static frc.robot.subsystems.endeffector.EndEffectorConstants.rollersConfig;
 

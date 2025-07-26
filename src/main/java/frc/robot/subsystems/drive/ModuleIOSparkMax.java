@@ -30,8 +30,8 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
-import frc.robot.util.HighFrequencySamplingThread;
-import frc.robot.util.PIDF;
+import frc.lib.HighFrequencySamplingThread;
+import frc.lib.PIDF;
 
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
