@@ -6,7 +6,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Controller;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
-import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.Optional;
@@ -16,8 +15,7 @@ public class DriveJoystickGoal {
     private static final RobotState robotState = RobotState.get();
     private static final Controller controller = Controller.get();
 
-    @Setter
-    private static Supplier<Optional<Pose2d>> assistPoseSupplier = Optional::empty;
+    private static final Supplier<Optional<Pose2d>> assistPoseSupplier = Optional::empty;
 
     public static Pair<ChassisSpeeds, Drive.Goal> get() {
         var optionalAssistPose = assistPoseSupplier.get();

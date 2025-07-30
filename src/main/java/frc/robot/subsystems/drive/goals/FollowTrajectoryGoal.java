@@ -7,7 +7,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.RobotState;
 import frc.robot.Util;
-import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
@@ -16,16 +15,20 @@ import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
 public class FollowTrajectoryGoal {
     private static final RobotState robotState = RobotState.get();
 
-    @Setter
     private static Trajectory<SwerveSample> trajectory = null;
-    private static Timer timer = new Timer();
 
+    private static final Timer timer = new Timer();
     private static final PIDController choreoFeedbackX = driveConfig.choreoFeedbackXY().toPID();
     private static final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
     private static final PIDController choreoFeedbackOmega = driveConfig.choreoFeedbackOmega().toPIDWrapRadians();
 
-    public static void reset() {
+    public static void initialize(Trajectory<SwerveSample> newTrajectory) {
+        trajectory = newTrajectory;
+
         timer.stop();
+        choreoFeedbackX.reset();
+        choreoFeedbackY.reset();
+        choreoFeedbackOmega.reset();
     }
 
     public static ChassisSpeeds get() {
@@ -37,6 +40,8 @@ public class FollowTrajectoryGoal {
         if (!timer.isRunning()) {
             timer.restart();
         }
+
+        Logger.recordOutput("Drive/Trajectory", trajectory.getPoses());
 
         var sampleOpt = trajectory.sampleAt(timer.get(), Util.shouldFlip());
 

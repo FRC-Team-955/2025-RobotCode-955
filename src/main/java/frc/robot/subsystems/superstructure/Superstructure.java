@@ -85,7 +85,7 @@ public class Superstructure extends CommandBasedSubsystem {
         HOME_STEP_1(s -> new Goals(Elevator.Goal.ZERO_CORAL, EndEffector.Goal.HOME_INITIAL, Funnel.Goal.IDLE)),
         HOME_STEP_2(s -> new Goals(Elevator.Goal.ZERO_CORAL, EndEffector.Goal.ZERO_CORAL, Funnel.Goal.IDLE)),
         HOME_STEP_3(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.IDLE, Funnel.Goal.IDLE)),
-        HOME_STEP_4(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.fHOME_FINAL, Funnel.Goal.IDLE)),
+        HOME_STEP_4(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.HOME_FINAL, Funnel.Goal.IDLE)),
 
         FUNNEL_INTAKE_WAITING(HANDOFF.goals),
 
@@ -251,7 +251,10 @@ public class Superstructure extends CommandBasedSubsystem {
     }
 
     public Command cancel() {
-        return setGoal(Goal.IDLE);
+        return CommandsExt.eagerSequence(
+                setGoal(Goal.IDLE),
+                drive.driveJoystick()
+        );
     }
 
     private Command handoff() {

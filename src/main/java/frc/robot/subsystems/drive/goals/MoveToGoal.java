@@ -12,7 +12,6 @@ import frc.robot.Controller;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
-import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.BooleanSupplier;
@@ -27,9 +26,7 @@ public class MoveToGoal {
     private static final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private static final Drive drive = Drive.get();
 
-    @Setter
     private static BooleanSupplier mergeJoystickDrive = () -> false;
-    @Setter
     private static Supplier<Pose2d> poseSupplier = robotState::getPose;
 
     private static final PIDController moveToPureLinearX = moveToConfig.pureLinear().toPID(
@@ -58,7 +55,10 @@ public class MoveToGoal {
             moveToConfig.angularVelocityToleranceRadPerSec()
     );
 
-    public static void reset() {
+    public static void initialize(Supplier<Pose2d> newPoseSupplier, BooleanSupplier newMergeJoystickDrive) {
+        poseSupplier = newPoseSupplier;
+        mergeJoystickDrive = newMergeJoystickDrive;
+
         if (operatorDashboard.profiledMoveTo.get()) {
             Pose2d currentPose = robotState.getPose();
             ChassisSpeeds currentVelocities = drive.getMeasuredChassisSpeedsFieldRelative();
@@ -94,7 +94,8 @@ public class MoveToGoal {
                     gains.applyPID(moveToProfiledLinearY);
                 },
                 // Constraints will be calculated and applied in move to
-                constraints -> {}
+                constraints -> {
+                }
         );
         moveToProfiledAngularTunable.ifChanged(
                 gains -> gains.applyPID(moveToProfiledAngular),

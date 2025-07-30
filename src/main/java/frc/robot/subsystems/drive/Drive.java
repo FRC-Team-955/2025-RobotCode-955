@@ -1,13 +1,9 @@
 package frc.robot.subsystems.drive;
 
-import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import edu.wpi.first.hal.FRCNetComm;
 import edu.wpi.first.hal.HAL;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Twist2d;
@@ -15,23 +11,19 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.lib.characterization.FeedforwardCharacterization;
-import frc.lib.commands.CommandsExt;
 import frc.lib.subsystem.Periodic;
 import frc.lib.swerve.ModuleLimits;
 import frc.lib.swerve.SwerveSetpoint;
 import frc.lib.swerve.SwerveSetpointGenerator;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotState;
-import frc.robot.Util;
 import frc.robot.subsystems.drive.goals.DriveJoystickGoal;
+import frc.robot.subsystems.drive.goals.FollowTrajectoryGoal;
 import frc.robot.subsystems.drive.goals.MoveToGoal;
 import frc.robot.subsystems.drive.goals.VelocityRobotRelativeGoal;
 import frc.robot.subsystems.elevator.Elevator;
@@ -40,15 +32,13 @@ import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-import java.util.Arrays;
-import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.Volts;
 import static frc.lib.HighFrequencySamplingThread.highFrequencyLock;
 import static frc.robot.subsystems.drive.DriveConstants.*;
-import static frc.robot.subsystems.drive.DriveTuning.*;
+import static frc.robot.subsystems.drive.DriveTuning.moduleDriveGainsTunable;
+import static frc.robot.subsystems.drive.DriveTuning.moduleTurnGainsTunable;
 
 public class Drive implements Periodic {
     private final RobotState robotState = RobotState.get();
@@ -104,13 +94,7 @@ public class Drive implements Periodic {
     /** If null, it will be set to the measured ChassisSpeeds and module states when the setpoint generator starts to be used */
     private SwerveSetpoint prevSetpoint = null;
 
-    public final SysIdRoutine sysId;
-
     private final Alert gyroDisconnectedAlert = new Alert("Disconnected gyro, using kinematics as fallback.", Alert.AlertType.kError);
-
-    private final PIDController choreoFeedbackX = driveConfig.choreoFeedbackXY().toPID();
-    private final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
-    private final PIDController choreoFeedbackOmega = driveConfig.choreoFeedbackOmega().toPIDWrapRadians();
 
     private static Drive instance;
 
@@ -132,17 +116,6 @@ public class Drive implements Periodic {
 
         // Usage reporting for swerve template
         HAL.report(FRCNetComm.tResourceType.kResourceType_RobotDrive, FRCNetComm.tInstances.kRobotDriveSwerve_AdvantageKit);
-
-        sysId = Util.sysIdRoutine(
-                "Drive",
-                (voltage) -> {
-                    for (var module : modules) {
-                        module.runCharacterization(voltage.in(Volts));
-                    }
-                },
-                () -> goal = Goal.CHARACTERIZATION,
-                this
-        );
     }
 
     @Override
@@ -310,12 +283,8 @@ public class Drive implements Periodic {
                 closedLoopSetpoint = output.getFirst();
                 goal = output.getSecond();
             }
-            case FOLLOW_TRAJECTORY -> {
-                closedLoopSetpoint = null;
-            }
-            case VELOCITY_ROBOT_RELATIVE -> {
-                closedLoopSetpoint = null;
-            }
+            case FOLLOW_TRAJECTORY -> closedLoopSetpoint = FollowTrajectoryGoal.get();
+            case VELOCITY_ROBOT_RELATIVE -> closedLoopSetpoint = VelocityRobotRelativeGoal.get();
         }
 
         // Goal processing might change the goal
@@ -468,178 +437,148 @@ public class Drive implements Periodic {
         return driveConfig.moduleLimits().times(elevator.getDriveConstraintScalar());
     }
 
-    public AutoFactory createAutoFactory() {
-        return new AutoFactory(
-                robotState::getPose,
-                robotState::setPose,
-                this::choreoController,
-                true,
-                this,
-                this::choreoTrajectoryLogger
-        );
-    }
-
-    private void choreoController(SwerveSample sample) {
-        var currentPose = robotState.getPose();
-
-        Logger.recordOutput("Drive/TrajectorySetpoint", sample.getPose());
-        closedLoopSetpoint = ChassisSpeeds.fromFieldRelativeSpeeds(
-                sample.vx + choreoFeedbackX.calculate(currentPose.getX(), sample.x),
-                sample.vy + choreoFeedbackY.calculate(currentPose.getY(), sample.y),
-                sample.omega + choreoFeedbackOmega.calculate(currentPose.getRotation().getRadians(), sample.heading),
-                currentPose.getRotation() // Trajectories are absolute, don't flip
-        );
-    }
-
-    private void choreoTrajectoryLogger(Trajectory<SwerveSample> trajectory, boolean running) {
-        // This will run on initialize and end of the trajectory
-        // follow command, so it's basically the same as wrapping
-        // the trajectory command
-        if (running) {
+    public Command followTrajectory(Trajectory<SwerveSample> trajectory) {
+        return Commands.runOnce(() -> {
+            FollowTrajectoryGoal.initialize(trajectory);
             goal = Goal.FOLLOW_TRAJECTORY;
-            Logger.recordOutput("Drive/Trajectory", trajectory.getPoses());
-        } else {
-            goal = Goal.IDLE;
-        }
+        });
     }
 
     public Command moveTo(Supplier<Pose2d> poseSupplier, BooleanSupplier mergeJoystickDrive) {
         return Commands.runOnce(() -> {
-            MoveToGoal.setPoseSupplier(poseSupplier);
-            MoveToGoal.setMergeJoystickDrive(mergeJoystickDrive);
+            MoveToGoal.initialize(poseSupplier, mergeJoystickDrive);
             goal = Goal.MOVE_TO;
         });
     }
 
-    public Command driveJoystick(Supplier<Optional<Pose2d>> assistPoseSupplier) {
+    public Command driveJoystick() {
         return Commands.runOnce(() -> {
-            DriveJoystickGoal.setAssistPoseSupplier(assistPoseSupplier);
             goal = Goal.DRIVE_JOYSTICK;
         });
     }
 
     public Command runRobotRelative(Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
         return Commands.runOnce(() -> {
-            VelocityRobotRelativeGoal.setChassisSpeedsSupplier(chassisSpeedsSupplier);
+            VelocityRobotRelativeGoal.initialize(chassisSpeedsSupplier);
             goal = Goal.VELOCITY_ROBOT_RELATIVE;
         });
     }
 
-    public Command feedforwardCharacterization() {
-        return withGoal(Goal.CHARACTERIZATION, new FeedforwardCharacterization(
-                volts -> {
-                    for (var module : modules) {
-                        module.runCharacterization(volts);
-                    }
-                },
-                () -> Arrays.stream(modules)
-                        .mapToDouble(Module::getDriveVelocityRadPerSec)
-                        .toArray(),
-                modules.length,
-                this
-        ));
-    }
-
-    public Command fullSpeedCharacterization() {
-        return withGoal(Goal.CHARACTERIZATION, CommandsExt.eagerSequence(
-                startIdle(
-                        () -> {
-                            for (var module : modules) {
-                                module.runCharacterization(2.0);
-                            }
-                        }
-                ).withTimeout(2),
-                startEnd(
-                        () -> {
-                            for (var module : modules) {
-                                module.runCharacterization(12.0);
-                            }
-                        },
-                        () -> {
-                            for (var module : modules) {
-                                module.runCharacterization(0.0);
-                            }
-                        }
-                )
-        ));
-    }
-
-    public Command wheelRadiusCharacterization(WheelRadiusCharacterization.Direction direction) {
-        return withGoal(Goal.WHEEL_RADIUS_CHARACTERIZATION, new WheelRadiusCharacterization(direction));
-    }
-
-    public class WheelRadiusCharacterization extends Command {
-        @RequiredArgsConstructor
-        public enum Direction {
-            CLOCKWISE(-1),
-            COUNTER_CLOCKWISE(1);
-
-            private final int value;
-        }
-
-        private final Direction omegaDirection;
-        private final SlewRateLimiter omegaLimiter = new SlewRateLimiter(1.0);
-
-        private double lastGyroYawRads = 0.0;
-        private double accumGyroYawRads = 0.0;
-
-        private double[] startWheelPositions;
-
-        private double currentEffectiveWheelRadius = 0.0;
-
-        private WheelRadiusCharacterization(Direction omegaDirection) {
-            this.omegaDirection = omegaDirection;
-            addRequirements(Drive.this);
-        }
-
-        private double[] getWheelRadiusCharacterizationPositions() {
-            return Arrays.stream(modules).mapToDouble(Module::getDrivePositionRad).toArray();
-        }
-
-        @Override
-        public void initialize() {
-            // Reset
-            lastGyroYawRads = rawGyroRotation.getRadians();
-            accumGyroYawRads = 0.0;
-
-            startWheelPositions = getWheelRadiusCharacterizationPositions();
-
-            omegaLimiter.reset(0);
-        }
-
-        @Override
-        public void execute() {
-            // Run drive at velocity
-            var omega = omegaLimiter.calculate(omegaDirection.value * characterizationSpeedRadPerSec.get());
-            closedLoopSetpoint = new ChassisSpeeds(0, 0, omega);
-
-            // Get yaw and wheel positions
-            accumGyroYawRads += MathUtil.angleModulus(rawGyroRotation.getRadians() - lastGyroYawRads);
-            lastGyroYawRads = rawGyroRotation.getRadians();
-            double averageWheelPosition = 0.0;
-            double[] wheelPositions = getWheelRadiusCharacterizationPositions();
-            for (int i = 0; i < modules.length; i++) {
-                averageWheelPosition += Math.abs(wheelPositions[i] - startWheelPositions[i]);
-            }
-            averageWheelPosition /= modules.length;
-
-            currentEffectiveWheelRadius = (accumGyroYawRads * drivebaseRadiusMeters) / averageWheelPosition;
-            Logger.recordOutput("Drive/WheelRadiusCharacterization/DrivePosition", averageWheelPosition);
-            Logger.recordOutput("Drive/WheelRadiusCharacterization/AccumGyroYawRads", accumGyroYawRads);
-            Logger.recordOutput(
-                    "Drive/WheelRadiusCharacterization/CurrentWheelRadiusInches",
-                    Units.metersToInches(currentEffectiveWheelRadius)
-            );
-        }
-
-        @Override
-        public void end(boolean interrupted) {
-            if (Math.abs(accumGyroYawRads) <= Math.PI * 2.0) {
-                System.out.println("Not enough data for characterization");
-            } else {
-                System.out.println("Effective Wheel Radius: " + Units.metersToInches(currentEffectiveWheelRadius) + " inches");
-            }
-        }
-    }
-
+    // TODO
+//    public Command feedforwardCharacterization() {
+//        return withGoal(Goal.CHARACTERIZATION, new FeedforwardCharacterization(
+//                volts -> {
+//                    for (var module : modules) {
+//                        module.runCharacterization(volts);
+//                    }
+//                },
+//                () -> Arrays.stream(modules)
+//                        .mapToDouble(Module::getDriveVelocityRadPerSec)
+//                        .toArray(),
+//                modules.length,
+//                this
+//        ));
+//    }
+//
+//    public Command fullSpeedCharacterization() {
+//        return withGoal(Goal.CHARACTERIZATION, CommandsExt.eagerSequence(
+//                startIdle(
+//                        () -> {
+//                            for (var module : modules) {
+//                                module.runCharacterization(2.0);
+//                            }
+//                        }
+//                ).withTimeout(2),
+//                startEnd(
+//                        () -> {
+//                            for (var module : modules) {
+//                                module.runCharacterization(12.0);
+//                            }
+//                        },
+//                        () -> {
+//                            for (var module : modules) {
+//                                module.runCharacterization(0.0);
+//                            }
+//                        }
+//                )
+//        ));
+//    }
+//
+//    public Command wheelRadiusCharacterization(WheelRadiusCharacterization.Direction direction) {
+//        return withGoal(Goal.WHEEL_RADIUS_CHARACTERIZATION, new WheelRadiusCharacterization(direction));
+//    }
+//
+//    public class WheelRadiusCharacterization extends Command {
+//        @RequiredArgsConstructor
+//        public enum Direction {
+//            CLOCKWISE(-1),
+//            COUNTER_CLOCKWISE(1);
+//
+//            private final int value;
+//        }
+//
+//        private final Direction omegaDirection;
+//        private final SlewRateLimiter omegaLimiter = new SlewRateLimiter(1.0);
+//
+//        private double lastGyroYawRads = 0.0;
+//        private double accumGyroYawRads = 0.0;
+//
+//        private double[] startWheelPositions;
+//
+//        private double currentEffectiveWheelRadius = 0.0;
+//
+//        private WheelRadiusCharacterization(Direction omegaDirection) {
+//            this.omegaDirection = omegaDirection;
+//            addRequirements(Drive.this);
+//        }
+//
+//        private double[] getWheelRadiusCharacterizationPositions() {
+//            return Arrays.stream(modules).mapToDouble(Module::getDrivePositionRad).toArray();
+//        }
+//
+//        @Override
+//        public void initialize() {
+//            // Reset
+//            lastGyroYawRads = rawGyroRotation.getRadians();
+//            accumGyroYawRads = 0.0;
+//
+//            startWheelPositions = getWheelRadiusCharacterizationPositions();
+//
+//            omegaLimiter.reset(0);
+//        }
+//
+//        @Override
+//        public void execute() {
+//            // Run drive at velocity
+//            var omega = omegaLimiter.calculate(omegaDirection.value * characterizationSpeedRadPerSec.get());
+//            closedLoopSetpoint = new ChassisSpeeds(0, 0, omega);
+//
+//            // Get yaw and wheel positions
+//            accumGyroYawRads += MathUtil.angleModulus(rawGyroRotation.getRadians() - lastGyroYawRads);
+//            lastGyroYawRads = rawGyroRotation.getRadians();
+//            double averageWheelPosition = 0.0;
+//            double[] wheelPositions = getWheelRadiusCharacterizationPositions();
+//            for (int i = 0; i < modules.length; i++) {
+//                averageWheelPosition += Math.abs(wheelPositions[i] - startWheelPositions[i]);
+//            }
+//            averageWheelPosition /= modules.length;
+//
+//            currentEffectiveWheelRadius = (accumGyroYawRads * drivebaseRadiusMeters) / averageWheelPosition;
+//            Logger.recordOutput("Drive/WheelRadiusCharacterization/DrivePosition", averageWheelPosition);
+//            Logger.recordOutput("Drive/WheelRadiusCharacterization/AccumGyroYawRads", accumGyroYawRads);
+//            Logger.recordOutput(
+//                    "Drive/WheelRadiusCharacterization/CurrentWheelRadiusInches",
+//                    Units.metersToInches(currentEffectiveWheelRadius)
+//            );
+//        }
+//
+//        @Override
+//        public void end(boolean interrupted) {
+//            if (Math.abs(accumGyroYawRads) <= Math.PI * 2.0) {
+//                System.out.println("Not enough data for characterization");
+//            } else {
+//                System.out.println("Effective Wheel Radius: " + Units.metersToInches(currentEffectiveWheelRadius) + " inches");
+//            }
+//        }
+//    }
 }
