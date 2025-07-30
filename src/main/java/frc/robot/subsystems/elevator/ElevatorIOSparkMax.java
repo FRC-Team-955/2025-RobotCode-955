@@ -16,7 +16,7 @@ import static frc.robot.subsystems.elevator.ElevatorConstants.gearRatio;
 import static frc.robot.util.SparkUtil.*;
 
 public class ElevatorIOSparkMax extends ElevatorIO {
-    private static final int currentLimitAmps = 60;
+    private static final int currentLimitAmps = 30;
 
     // Hardware objects
     private final SparkMax leaderSpark;

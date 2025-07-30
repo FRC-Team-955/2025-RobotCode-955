@@ -12,7 +12,7 @@ public class FunnelConstants {
     public static final RollersConfig beltConfig = new RollersConfig(
             true,
             true,
-            40,
+            20,
             5,
             switch (Constants.identity) {
                 case COMPBOT -> PIDF.ofP(0.2);

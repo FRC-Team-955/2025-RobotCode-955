@@ -62,8 +62,8 @@ public class DriveConstants {
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
                 new ModuleLimits(
-                        4.58,
-                        20,
+                        3,
+                        15,
                         20
                 )
         );
@@ -119,8 +119,8 @@ public class DriveConstants {
                 true,
                 false,
                 false,
-                120,
-                60
+                60,
+                30
         );
         case SIMBOT -> new ModuleConfig(
                 PIDF.ofPDSV(0.05, 0.0, 0.04075, 0.14117),

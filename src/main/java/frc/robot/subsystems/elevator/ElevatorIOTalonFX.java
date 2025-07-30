@@ -24,7 +24,7 @@ import static frc.robot.util.PhoenixUtil.tryUntilOk;
 import static frc.robot.util.PhoenixUtil.tryUntilOkAsync;
 
 public class ElevatorIOTalonFX extends ElevatorIO {
-    private static final double currentLimitAmps = 120;
+    private static final double currentLimitAmps = 60;
 
     // Hardware objects
     private final TalonFX leaderTalon;
