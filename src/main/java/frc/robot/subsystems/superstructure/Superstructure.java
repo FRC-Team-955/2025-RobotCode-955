@@ -438,10 +438,14 @@ public class Superstructure extends SubsystemBaseExt {
         ));
     }
 
-    public Command funnelIntake(boolean duringAuto) {
+    public Command funnelIntake(boolean duringAuto, BooleanSupplier waitCondition) {
         Command intake = Commands.race(
-                waitUntilEndEffectorTriggered(Commands.idle()),
-                waitUntilFunnelTriggered()
+                waitUntilEndEffectorTriggered(Commands.waitUntil(waitCondition)),
+                Commands.either(
+                        waitUntilFunnelTriggered(),
+                        Commands.idle(),
+                        () -> !operatorDashboard.ignoreEndEffectorBeamBreak.get()
+                )
         ).deadlineFor(
                 setGoal(Goal.FUNNEL_INTAKE_WAITING),
                 Commands.either(
@@ -471,10 +475,13 @@ public class Superstructure extends SubsystemBaseExt {
                     () -> !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                     CommandsExt.eagerSequence(
                             intake,
-                            backgroundCommandScheduler.scheduleInBackground(CommandsExt.eagerSequence(
-                                    handoff(),
-                                    homeInternal()
-                            ))
+                            CommandsExt.onlyIf(
+                                    () -> !operatorDashboard.ignoreEndEffectorBeamBreak.get(),
+                                    backgroundCommandScheduler.scheduleInBackground(CommandsExt.eagerSequence(
+                                            handoff(),
+                                            homeInternal()
+                                    ))
+                            )
                     )
             ));
         }
