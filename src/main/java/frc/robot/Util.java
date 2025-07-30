@@ -8,7 +8,6 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -33,10 +32,6 @@ public class Util {
         return shouldFlip()
                 ? ChoreoAllianceFlipUtil.flip(pose2d)
                 : pose2d;
-    }
-
-    public static double average(double... inputs) {
-        return Arrays.stream(inputs).sum() / inputs.length;
     }
 
     public static void error(String msg) {
@@ -64,15 +59,6 @@ public class Util {
     public static int positiveModulus(int input, int modulus) {
         // Ensures returned value is positive
         return ((input % modulus) + modulus) % modulus;
-    }
-
-    public static double positiveModulus(double input, double modulus) {
-        // Ensures returned value is positive
-        return ((input % modulus) + modulus) % modulus;
-    }
-
-    public static double positiveAngleModulus(double angleRad) {
-        return positiveModulus(angleRad, 2 * Math.PI);
     }
 
     public static <E extends Enum<E>, V> EnumMap<E, V> createEnumMap(Class<E> clazz, E[] values, Function<E, V> valueSupplier) {
