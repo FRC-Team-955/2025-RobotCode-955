@@ -6,21 +6,12 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.units.VoltageUnit;
-import edu.wpi.first.units.measure.Time;
-import edu.wpi.first.units.measure.Velocity;
-import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
-import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import org.littletonrobotics.junction.Logger;
 
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class Util {
@@ -42,60 +33,6 @@ public class Util {
         return shouldFlip()
                 ? ChoreoAllianceFlipUtil.flip(pose2d)
                 : pose2d;
-    }
-
-    /**
-     * start and end should be used to set the goal to characterization
-     */
-    public static SysIdRoutine sysIdRoutine(
-            String name,
-            Consumer<Voltage> voltageConsumer,
-            Runnable start,
-//            Runnable end,
-            Subsystem subsystem
-    ) {
-        return sysIdRoutine(name, voltageConsumer, start, subsystem, null, null, null);
-    }
-
-    /**
-     * start and end should be used to set the goal to characterization
-     */
-    public static SysIdRoutine sysIdRoutine(
-            String name,
-            Consumer<Voltage> voltageConsumer,
-            Runnable start,
-//            Runnable end,
-            Subsystem subsystem,
-            Velocity<VoltageUnit> rampRate,
-            Voltage stepVoltage,
-            Time timeout
-    ) {
-        // Java forces us to do this if we want to use the variable in the lambda
-        var ref = new Object() {
-            boolean hasStarted = false;
-        };
-        return new SysIdRoutine(
-                new SysIdRoutine.Config(
-                        rampRate,
-                        stepVoltage,
-                        timeout,
-                        (state) -> {
-                            Logger.recordOutput(name + "/SysIdState", state.toString());
-                            if (!ref.hasStarted && state != SysIdRoutineLog.State.kNone) {
-                                start.run();
-                                ref.hasStarted = true;
-                            } else if (ref.hasStarted && state == SysIdRoutineLog.State.kNone) {
-//                                end.run();
-                                ref.hasStarted = false;
-                            }
-                        }
-                ),
-                new SysIdRoutine.Mechanism(
-                        voltageConsumer,
-                        null,
-                        subsystem
-                )
-        );
     }
 
     public static double average(double... inputs) {
