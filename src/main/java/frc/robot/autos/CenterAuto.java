@@ -1,6 +1,5 @@
 package frc.robot.autos;
 
-import choreo.auto.AutoRoutine;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.commands.CommandsExt;
 import frc.robot.OperatorDashboard.CoralScoringLevel;
@@ -12,10 +11,10 @@ import frc.robot.subsystems.superstructure.Superstructure;
 import java.util.List;
 
 public class CenterAuto {
-    public static Command get(AutoRoutine routine, Type type) {
-        final var firstScoreTraj = routine.trajectory("Center");
+    public static Command get(Type type) {
+        final var firstScoreTraj = AutoHelper.trajectory("Center");
 
-        Command auto = AutoBuilder.createScoring(routine, List.of(
+        Command auto = AutoBuilder.createScoring(List.of(
                 new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.MiddleBack, LocalReefSide.Left, CoralScoringLevel.L4, true)
         ));
 

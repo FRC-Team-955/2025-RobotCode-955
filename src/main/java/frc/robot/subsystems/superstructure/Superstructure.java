@@ -254,7 +254,7 @@ public class Superstructure extends CommandBasedSubsystem {
         return CommandsExt.eagerSequence(
                 setGoal(Goal.IDLE),
                 drive.driveJoystick()
-        );
+        ).ignoringDisable(true);
     }
 
     private Command handoff() {

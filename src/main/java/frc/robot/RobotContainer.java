@@ -1,5 +1,6 @@
 package frc.robot;
 
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -7,6 +8,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.commands.CommandsExt;
+import frc.robot.autos.BargeSideAuto;
+import frc.robot.autos.CenterAuto;
+import frc.robot.autos.ProcessorSideAuto;
+import frc.robot.autos.ProcessorSideFriendlyAuto;
 import frc.robot.subsystems.apriltagvision.AprilTagVision;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
@@ -57,32 +62,30 @@ public class RobotContainer {
     }
 
     private void addAutos() {
-        // TODO
-//        final var factory = drive.createAutoFactory();
-//
-//        autoChooser.addOption("None", Commands.none());
-//        autoChooser.addOption("Leave", drive.runRobotRelative(() -> new ChassisSpeeds(-0.5, 0, 0)).withTimeout(5));
-//
-//        autoChooser.addOption("Barge Side - Normal", BargeSideAuto.get(factory.newRoutine("Barge Side - Normal"), BargeSideAuto.Type.Normal));
-//        autoChooser.addOption("Barge Side - Avoid Middle Front", BargeSideAuto.get(factory.newRoutine("Barge Side - Avoid Middle Front"), BargeSideAuto.Type.AvoidMiddleFront));
-//        autoChooser.addOption("Barge Side - Avoid Middle Front And Adjacent", BargeSideAuto.get(factory.newRoutine("Barge Side - Avoid Middle Front And Adjacent"), BargeSideAuto.Type.AvoidMiddleFrontAndAdjacent));
-//
-//        autoChooser.addOption("Processor Side - Normal", ProcessorSideAuto.get(factory.newRoutine("Processor Side - Normal"), ProcessorSideAuto.Type.Normal));
-//        autoChooser.addOption("Processor Side - Avoid Middle Front", ProcessorSideAuto.get(factory.newRoutine("Processor Side - Avoid Middle Front"), ProcessorSideAuto.Type.AvoidMiddleFront));
-//        autoChooser.addOption("Processor Side - Avoid Middle Front And Adjacent", ProcessorSideAuto.get(factory.newRoutine("Processor Side - Avoid Middle Front And Adjacent"), ProcessorSideAuto.Type.AvoidMiddleFrontAndAdjacent));
-//
-//        autoChooser.addOption("Processor Side - Friendly", ProcessorSideFriendlyAuto.get(factory.newRoutine("Processor Side - Friendly")));
-//        autoChooser.addOption("Center", CenterAuto.get(factory.newRoutine("Center"), CenterAuto.Type.Normal));
-//        autoChooser.addOption("Center - Descore", CenterAuto.get(factory.newRoutine("Center - Descore"), CenterAuto.Type.Descore));
-//
-//        autoChooser.addOption(
-//                "Characterization",
-//                // We need to require the superstructure during characterization so that the default command doesn't get run
-//                Commands.deferredProxy(() -> CommandsExt.eagerSequence(
-//                        superstructure.cancel(),
-//                        characterizationChooser.get()
-//                ))
-//        );
+        autoChooser.addOption("None", Commands.none());
+        // TODO this auto won't work because drive isn't a subsystem and won't be required
+        autoChooser.addOption("Leave", drive.runRobotRelative(() -> new ChassisSpeeds(-0.5, 0, 0)).withTimeout(5));
+
+        autoChooser.addOption("Barge Side - Normal", BargeSideAuto.get(BargeSideAuto.Type.Normal));
+        autoChooser.addOption("Barge Side - Avoid Middle Front", BargeSideAuto.get(BargeSideAuto.Type.AvoidMiddleFront));
+        autoChooser.addOption("Barge Side - Avoid Middle Front And Adjacent", BargeSideAuto.get(BargeSideAuto.Type.AvoidMiddleFrontAndAdjacent));
+
+        autoChooser.addOption("Processor Side - Normal", ProcessorSideAuto.get(ProcessorSideAuto.Type.Normal));
+        autoChooser.addOption("Processor Side - Avoid Middle Front", ProcessorSideAuto.get(ProcessorSideAuto.Type.AvoidMiddleFront));
+        autoChooser.addOption("Processor Side - Avoid Middle Front And Adjacent", ProcessorSideAuto.get(ProcessorSideAuto.Type.AvoidMiddleFrontAndAdjacent));
+
+        autoChooser.addOption("Processor Side - Friendly", ProcessorSideFriendlyAuto.get());
+        autoChooser.addOption("Center", CenterAuto.get(CenterAuto.Type.Normal));
+        autoChooser.addOption("Center - Descore", CenterAuto.get(CenterAuto.Type.Descore));
+
+        autoChooser.addOption(
+                "Characterization",
+                // We need to require the superstructure during characterization so that the default command doesn't get run
+                Commands.deferredProxy(() -> CommandsExt.eagerSequence(
+                        superstructure.cancel(),
+                        characterizationChooser.get()
+                ))
+        );
     }
 
     private void addCharacterizations() {
@@ -95,7 +98,7 @@ public class RobotContainer {
     }
 
     private void setDefaultCommands() {
-        superstructure.setDefaultCommand(CommandsExt.eagerSequence(superstructure.cancel(), Commands.idle()).ignoringDisable(true));
+        superstructure.setDefaultCommand(superstructure.cancel());
     }
 
     /**

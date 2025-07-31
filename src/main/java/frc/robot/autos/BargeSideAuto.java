@@ -1,6 +1,5 @@
 package frc.robot.autos;
 
-import choreo.auto.AutoRoutine;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.OperatorDashboard.CoralScoringLevel;
 import frc.robot.autos.AutoBuilder.IntakeScorePair;
@@ -11,21 +10,21 @@ import frc.robot.subsystems.superstructure.StationAlign.Station;
 import java.util.List;
 
 public class BargeSideAuto {
-    public static Command get(AutoRoutine routine, Type type) {
-        return AutoBuilder.createScoring(routine, List.of(
+    public static Command get(Type type) {
+        return AutoBuilder.createScoring(List.of(
                 new IntakeScorePair(
                         null,
                         null,
-                        routine.trajectory("Barge Side", 0),
+                        AutoHelper.trajectory("Barge Side", 0),
                         ReefZoneSide.LeftBack,
                         LocalReefSide.Right,
                         CoralScoringLevel.L4,
                         false
                 ),
                 new IntakeScorePair(
-                        routine.trajectory("Barge Side", 1),
+                        AutoHelper.trajectory("Barge Side", 1),
                         Station.BargeSide,
-                        routine.trajectory("Barge Side", 2),
+                        AutoHelper.trajectory("Barge Side", 2),
                         ReefZoneSide.LeftFront,
                         LocalReefSide.Left,
                         CoralScoringLevel.L4,
@@ -34,18 +33,18 @@ public class BargeSideAuto {
 
                 switch (type) {
                     case Normal, AvoidMiddleFront -> new IntakeScorePair(
-                            routine.trajectory("Barge Side", 3),
+                            AutoHelper.trajectory("Barge Side", 3),
                             Station.BargeSide,
-                            routine.trajectory("Barge Side", 4),
+                            AutoHelper.trajectory("Barge Side", 4),
                             ReefZoneSide.LeftFront,
                             LocalReefSide.Right,
                             CoralScoringLevel.L4,
                             false
                     );
                     case AvoidMiddleFrontAndAdjacent -> new IntakeScorePair(
-                            routine.trajectory("Barge Side", 3),
+                            AutoHelper.trajectory("Barge Side", 3),
                             Station.BargeSide,
-                            routine.trajectory("Barge Side - Alternate Left"),
+                            AutoHelper.trajectory("Barge Side - Alternate Left"),
                             ReefZoneSide.LeftBack,
                             LocalReefSide.Left,
                             CoralScoringLevel.L4,
@@ -54,27 +53,27 @@ public class BargeSideAuto {
                 },
                 switch (type) {
                     case Normal -> new IntakeScorePair(
-                            routine.trajectory("Barge Side", 5),
+                            AutoHelper.trajectory("Barge Side", 5),
                             Station.BargeSide,
-                            routine.trajectory("Barge Side", 6),
+                            AutoHelper.trajectory("Barge Side", 6),
                             ReefZoneSide.MiddleFront,
                             LocalReefSide.Left,
                             CoralScoringLevel.L2,
                             false
                     );
                     case AvoidMiddleFront -> new IntakeScorePair(
-                            routine.trajectory("Barge Side", 5),
+                            AutoHelper.trajectory("Barge Side", 5),
                             Station.BargeSide,
-                            routine.trajectory("Barge Side - Alternate Right"),
+                            AutoHelper.trajectory("Barge Side - Alternate Right"),
                             ReefZoneSide.LeftBack,
                             LocalReefSide.Right,
                             CoralScoringLevel.L2,
                             false
                     );
                     case AvoidMiddleFrontAndAdjacent -> new IntakeScorePair(
-                            routine.trajectory("Barge Side", 1),
+                            AutoHelper.trajectory("Barge Side", 1),
                             Station.BargeSide,
-                            routine.trajectory("Barge Side - Alternate Right"),
+                            AutoHelper.trajectory("Barge Side - Alternate Right"),
                             ReefZoneSide.LeftBack,
                             LocalReefSide.Right,
                             CoralScoringLevel.L2,

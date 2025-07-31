@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 
 import java.util.EnumMap;
@@ -34,10 +35,14 @@ public class Util {
                 : pose2d;
     }
 
+
     public static void error(String msg) {
         if (BuildConstants.mode == BuildConstants.Mode.SIM) {
             throw new RuntimeException(msg);
         } else {
+            Alert alert = new Alert("Error: " + msg, Alert.AlertType.kError);
+            alert.set(true);
+
             DriverStation.reportError(msg, false);
         }
     }

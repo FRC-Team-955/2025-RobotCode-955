@@ -1,12 +1,12 @@
 package frc.robot.autos;
 
-import choreo.auto.AutoRoutine;
-import choreo.auto.AutoTrajectory;
+import choreo.trajectory.SwerveSample;
+import choreo.trajectory.Trajectory;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import frc.lib.commands.CommandsExt;
 import frc.robot.OperatorDashboard;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.superstructure.ReefAlign;
 import frc.robot.subsystems.superstructure.StationAlign;
 import frc.robot.subsystems.superstructure.Superstructure;
@@ -14,11 +14,9 @@ import frc.robot.subsystems.superstructure.Superstructure;
 import java.util.List;
 
 public class AutoBuilder {
-    public static Command createScoring(
-            AutoRoutine routine,
-            List<IntakeScorePair> trajectories
-    ) {
+    public static Command createScoring(List<IntakeScorePair> trajectories) {
         final Superstructure superstructure = Superstructure.get();
+        final Drive drive = Drive.get();
 
         var ref = new Object() {
             boolean isFinished = false;
@@ -31,8 +29,8 @@ public class AutoBuilder {
         IntakeScorePair first = trajectories.get(0);
 
         Command startCmd = CommandsExt.eagerSequence(
-                first.scoreTraj.resetOdometry(),
-                first.scoreTraj.cmd()
+                AutoHelper.resetOdometry(first.scoreTraj),
+                drive.followTrajectory(first.scoreTraj)
         );
 
         IntakeScorePair last = first;
@@ -42,52 +40,42 @@ public class AutoBuilder {
                 // Skip first trajectory
                 if (next == first || next.station == null || next.stationTraj == null) continue;
 
-                last.scoreTraj.atTime("score").onTrue(CommandsExt.eagerSequence(
-                        last.scoreCommand(superstructure),
-                        // scheduling the trajectory wastes a cycle; instead, reset the superstructure and run the trajectory at the same time
-                        Commands.parallel(
-                                // TODO dont need this or wait?
-                                superstructure.cancel(),
-                                next.stationTraj.cmd()
-                        )
-                ));
+//                last.scoreTraj.atTime("score").onTrue(CommandsExt.eagerSequence(
+//                        last.scoreCommand(superstructure),
+//                        // scheduling the trajectory wastes a cycle; instead, reset the superstructure and run the trajectory at the same time
+//                        Commands.parallel(
+//                                // TODO dont need this or wait?
+//                                superstructure.cancel(),
+//                                drive.followTrajectory(next.stationTraj)
+//                        )
+//                ));
 
-                next.stationTraj.atTime("intake").onTrue(CommandsExt.eagerSequence(
-                        superstructure.autoFunnelIntake(next.station), // TODO precondition !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()
-                        // scheduling the trajectory wastes a cycle; instead, reset the superstructure and run the trajectory at the same time
-                        Commands.parallel(
-                                // TODO dont need this or wait?
-                                superstructure.cancel(),
-                                next.scoreTraj.cmd()
-                        )
-                ));
+//                next.stationTraj.atTime("intake").onTrue(CommandsExt.eagerSequence(
+//                        superstructure.autoFunnelIntake(next.station), // TODO precondition !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()
+//                        // scheduling the trajectory wastes a cycle; instead, reset the superstructure and run the trajectory at the same time
+//                        Commands.parallel(
+//                                // TODO dont need this or wait?
+//                                superstructure.cancel(),
+//                                drive.followTrajectory(next.scoreTraj)
+//                        )
+//                ));
 
                 last = next;
             }
         }
 
-        last.scoreTraj.atTime("score").onTrue(CommandsExt.eagerSequence(
-                last.scoreCommand(superstructure),
-                Commands.runOnce(() -> ref.isFinished = true)
-        ));
+//        last.scoreTraj.atTime("score").onTrue(CommandsExt.eagerSequence(
+//                last.scoreCommand(superstructure),
+//                Commands.runOnce(() -> ref.isFinished = true)
+//        ));
 
-        return new WrapperCommand(
-                routine.cmd(() -> ref.isFinished)
-                        // routine.active() wastes a cycle. We can just start it now as a parallel command
-                        .alongWith(startCmd.asProxy())
-        ) {
-            @Override
-            public void initialize() {
-                ref.isFinished = false;
-                super.initialize();
-            }
-        };
+        return startCmd;
     }
 
     public record IntakeScorePair(
-            AutoTrajectory stationTraj,
+            Trajectory<SwerveSample> stationTraj,
             StationAlign.Station station,
-            AutoTrajectory scoreTraj,
+            Trajectory<SwerveSample> scoreTraj,
             ReefAlign.ReefZoneSide reefZoneSide,
             ReefAlign.LocalReefSide localReefSide,
             OperatorDashboard.CoralScoringLevel coralScoringLevel,
