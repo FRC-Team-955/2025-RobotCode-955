@@ -272,17 +272,11 @@ public class Drive implements Periodic {
             case WHEEL_RADIUS_CHARACTERIZATION -> {
                 closedLoopSetpoint = null;
             }
-            case IDLE -> closedLoopSetpoint = null;
-            case DRIVE_JOYSTICK, DRIVE_JOYSTICK_ASSISTED -> {
-                var output = DriveJoystickGoal.get();
-                closedLoopSetpoint = output.getFirst();
-                goal = output.getSecond();
+            case IDLE -> {
+                // ControlMode.STOP is handled later
             }
-            case MOVE_TO, MOVE_TO_DRIVE_JOYSTICK_MERGED -> {
-                var output = MoveToGoal.get();
-                closedLoopSetpoint = output.getFirst();
-                goal = output.getSecond();
-            }
+            case DRIVE_JOYSTICK, DRIVE_JOYSTICK_ASSISTED -> closedLoopSetpoint = DriveJoystickGoal.get(g -> goal = g);
+            case MOVE_TO, MOVE_TO_DRIVE_JOYSTICK_MERGED -> closedLoopSetpoint = MoveToGoal.get(g -> goal = g);
             case FOLLOW_TRAJECTORY -> closedLoopSetpoint = FollowTrajectoryGoal.get();
             case VELOCITY_ROBOT_RELATIVE -> closedLoopSetpoint = VelocityRobotRelativeGoal.get();
         }

@@ -1,7 +1,6 @@
 package frc.robot.subsystems.drive.goals;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -15,6 +14,7 @@ import frc.robot.subsystems.drive.Drive;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static frc.robot.subsystems.drive.DriveConstants.*;
@@ -81,7 +81,7 @@ public class MoveToGoal {
         }
     }
 
-    public static Pair<ChassisSpeeds, Drive.Goal> get() {
+    public static ChassisSpeeds get(Consumer<Drive.Goal> setGoal) {
         moveToPureLinearTunable.ifChanged(gains -> {
             gains.applyPID(moveToPureLinearX);
             gains.applyPID(moveToPureLinearY);
@@ -116,10 +116,10 @@ public class MoveToGoal {
         double angularVelocityRadPerSec;
         boolean angularAtSetpoint;
         if (operatorDashboard.profiledMoveTo.get()) {
-            ChassisSpeeds currentVelocities = drive.getMeasuredChassisSpeedsFieldRelative();
-
             // Reset if it just changed
             if (operatorDashboard.profiledMoveTo.hasChanged()) {
+                ChassisSpeeds currentVelocities = drive.getMeasuredChassisSpeedsFieldRelative();
+
                 moveToProfiledLinearX.reset(
                         currentPose.getX(),
                         currentVelocities.vxMetersPerSecond
@@ -221,15 +221,11 @@ public class MoveToGoal {
         );
         if (mergeJoystickDrive.getAsBoolean()) {
             ChassisSpeeds joystickDriveSpeeds = controller.getDriveSetpointRobotRelative(robotState.getRotation());
-            return new Pair<>(
-                    moveToSpeeds.plus(joystickDriveSpeeds.times(0.3)),
-                    Drive.Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED
-            );
+            setGoal.accept(Drive.Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED);
+            return moveToSpeeds.plus(joystickDriveSpeeds.times(0.3));
         } else {
-            return new Pair<>(
-                    moveToSpeeds,
-                    Drive.Goal.MOVE_TO
-            );
+            setGoal.accept(Drive.Goal.MOVE_TO);
+            return moveToSpeeds;
         }
     }
 }

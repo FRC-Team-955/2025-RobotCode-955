@@ -44,7 +44,6 @@ public class FollowTrajectoryGoal {
         Logger.recordOutput("Drive/Trajectory", trajectory.getPoses());
 
         var sampleOpt = trajectory.sampleAt(timer.get(), Util.shouldFlip());
-
         if (sampleOpt.isPresent()) {
             SwerveSample sample = sampleOpt.get();
 
