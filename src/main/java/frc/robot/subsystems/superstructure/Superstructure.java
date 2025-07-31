@@ -440,7 +440,7 @@ public class Superstructure extends SubsystemBaseExt {
 
     public Command funnelIntake(boolean duringAuto, BooleanSupplier waitCondition) {
         Command intake = Commands.race(
-                waitUntilEndEffectorTriggered(Commands.waitUntil(waitCondition)),
+                waitUntilEndEffectorTriggered(Commands.waitUntil(() -> !waitCondition.getAsBoolean())),
                 Commands.either(
                         waitUntilFunnelTriggered(),
                         Commands.idle(),
