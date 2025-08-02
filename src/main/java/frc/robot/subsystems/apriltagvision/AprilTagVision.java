@@ -17,9 +17,9 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import frc.lib.Util;
 import frc.lib.subsystem.Periodic;
 import frc.robot.RobotState;
-import frc.lib.Util;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.*;
@@ -83,7 +83,7 @@ public class AprilTagVision implements Periodic {
                 if (tagPose.isPresent()) {
                     tagPoses.add(tagPose.get());
                 } else {
-                    System.out.println("Couldn't find tag with ID " + observation.id());
+                    Util.error("Couldn't find tag with ID " + observation.id());
                 }
             }
 
@@ -95,14 +95,30 @@ public class AprilTagVision implements Periodic {
 
                 Optional<Pose3d> tagPoseOptional = aprilTagLayout.getTagPose(observation.tagID());
                 if (tagPoseOptional.isEmpty()) {
-                    System.out.println("Couldn't find tag with ID " + observation.tagID());
+                    Util.error("Couldn't find tag with ID " + observation.tagID());
                     continue;
                 }
                 Pose3d tagPose = tagPoseOptional.get();
 
                 double tagDistance = observation.cameraToTarget().getTranslation().getNorm();
 
-                if (false && tagDistance < distanceFromTagForTrigMeters && headingSampleOptional.isPresent()) {
+                //////////////////////////////// 3d solve ////////////////////////////////
+                Transform3d fieldToTarget = new Transform3d(tagPose.getTranslation(), tagPose.getRotation());
+                Transform3d fieldToCamera = fieldToTarget.plus(observation.cameraToTarget().inverse());
+                Transform3d fieldToRobot = fieldToCamera.plus(metadata.robotToCamera.inverse());
+                Pose3d poseEstimate3dSolve = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
+                GenericPoseObservation observation3dSolve = new GenericPoseObservation(
+                        observation.timestamp(),
+                        observation.ambiguity(),
+                        1,
+                        tagDistance,
+                        poseEstimate3dSolve,
+                        linearStdDevBaseline3dSolveMeters,
+                        angularStdDevBaseline3dSolveRad
+                );
+
+                if (headingSampleOptional.isPresent()) {
+                    //////////////////////////////// Trig ////////////////////////////////
                     // https://github.com/PhotonVision/photonvision/blob/0ef7c803f91a387a1a95377bf64338509218a240/photon-lib/src/main/java/org/photonvision/PhotonPoseEstimator.java#L496
                     Rotation2d headingSample = headingSampleOptional.get();
 
@@ -129,32 +145,29 @@ public class AprilTagVision implements Periodic {
                             .unaryMinus()
                             .rotateBy(headingSample);
 
-                    Pose2d poseEstimate = new Pose2d(fieldToCameraTranslation.plus(camToRobotTranslation), headingSample);
-
-                    genericPoseObservations.add(new GenericPoseObservation(
+                    Pose2d poseEstimateTrig = new Pose2d(fieldToCameraTranslation.plus(camToRobotTranslation), headingSample);
+                    GenericPoseObservation observationTrig = new GenericPoseObservation(
                             observation.timestamp(),
                             observation.ambiguity(),
                             1,
                             tagDistance,
-                            new Pose3d(poseEstimate),
+                            new Pose3d(poseEstimateTrig),
                             linearStdDevBaselineTrigMeters,
                             angularStdDevBaselineTrigRad
-                    ));
-                } else {
-                    Transform3d fieldToTarget = new Transform3d(tagPose.getTranslation(), tagPose.getRotation());
-                    Transform3d fieldToCamera = fieldToTarget.plus(observation.cameraToTarget().inverse());
-                    Transform3d fieldToRobot = fieldToCamera.plus(metadata.robotToCamera.inverse());
-                    Pose3d poseEstimate = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
+                    );
 
-                    genericPoseObservations.add(new GenericPoseObservation(
-                            observation.timestamp(),
-                            observation.ambiguity(),
-                            1,
-                            tagDistance,
-                            poseEstimate,
-                            linearStdDevBaseline3dSolveMeters,
-                            angularStdDevBaseline3dSolveRad
-                    ));
+                    Pose2d poseEstimate3dSolve2d = poseEstimate3dSolve.toPose2d();
+                    Logger.recordOutput("Vision/" + observation.tagID() + "Dist", poseEstimate3dSolve2d.getTranslation().getDistance(poseEstimateTrig.getTranslation()));
+                    Logger.recordOutput("Vision/" + observation.tagID() + "Rot", Math.abs(poseEstimate3dSolve2d.getRotation().minus(poseEstimateTrig.getRotation()).getRadians()));
+                    if (tagDistance < distanceFromTagForTrigMeters &&
+                            poseEstimate3dSolve2d.getTranslation().getDistance(poseEstimateTrig.getTranslation()) < trig3dSolveMaxDiffMeters &&
+                            Math.abs(poseEstimate3dSolve2d.getRotation().minus(poseEstimateTrig.getRotation()).getRadians()) < trig3dSolveMaxDiffRad) {
+                        genericPoseObservations.add(observationTrig);
+                    } else {
+                        genericPoseObservations.add(observation3dSolve);
+                    }
+                } else {
+                    genericPoseObservations.add(observation3dSolve);
                 }
             }
 

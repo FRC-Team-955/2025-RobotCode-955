@@ -40,6 +40,9 @@ public class AprilTagVisionConstants {
 
     // Distance from a tag for trig estimation to be used
     public static final double distanceFromTagForTrigMeters = 1;
+    // Max difference between 3d solve and trig for trig to be used
+    public static final double trig3dSolveMaxDiffMeters = 0.4;
+    public static final double trig3dSolveMaxDiffRad = Units.degreesToRadians(7);
 
     @RequiredArgsConstructor
     public enum Camera {
