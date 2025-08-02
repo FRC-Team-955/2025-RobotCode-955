@@ -18,10 +18,6 @@ public class AutoBuilder {
         final Superstructure superstructure = Superstructure.get();
         final Drive drive = Drive.get();
 
-        var ref = new Object() {
-            boolean isFinished = false;
-        };
-
         if (trajectories.isEmpty()) {
             return Commands.none();
         }

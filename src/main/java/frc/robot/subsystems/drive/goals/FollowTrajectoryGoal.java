@@ -7,36 +7,26 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.RobotState;
 import frc.robot.Util;
+import frc.robot.subsystems.drive.DriveGoal;
+import frc.robot.subsystems.drive.DriveRequest;
+import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;
 
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
 
-
-public class FollowTrajectoryGoal {
+@RequiredArgsConstructor
+public class FollowTrajectoryGoal extends DriveGoal {
     private static final RobotState robotState = RobotState.get();
 
-    private static Trajectory<SwerveSample> trajectory = null;
+    private final Trajectory<SwerveSample> trajectory;
 
-    private static final Timer timer = new Timer();
-    private static final PIDController choreoFeedbackX = driveConfig.choreoFeedbackXY().toPID();
-    private static final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
-    private static final PIDController choreoFeedbackOmega = driveConfig.choreoFeedbackOmega().toPIDWrapRadians();
+    private final Timer timer = new Timer();
+    private final PIDController choreoFeedbackX = driveConfig.choreoFeedbackXY().toPID();
+    private final PIDController choreoFeedbackY = driveConfig.choreoFeedbackXY().toPID();
+    private final PIDController choreoFeedbackOmega = driveConfig.choreoFeedbackOmega().toPIDWrapRadians();
 
-    public static void initialize(Trajectory<SwerveSample> newTrajectory) {
-        trajectory = newTrajectory;
-
-        timer.stop();
-        choreoFeedbackX.reset();
-        choreoFeedbackY.reset();
-        choreoFeedbackOmega.reset();
-    }
-
-    public static ChassisSpeeds get() {
-        if (trajectory == null) {
-            Util.error("Trajectory is null");
-            return new ChassisSpeeds();
-        }
-
+    @Override
+    public DriveRequest getRequest() {
         if (!timer.isRunning()) {
             timer.restart();
         }
@@ -50,14 +40,15 @@ public class FollowTrajectoryGoal {
             var currentPose = robotState.getPose();
 
             Logger.recordOutput("Drive/TrajectorySetpoint", sample.getPose());
-            return ChassisSpeeds.fromFieldRelativeSpeeds(
+            return DriveRequest.chassisSpeedsDirect(ChassisSpeeds.fromFieldRelativeSpeeds(
                     sample.vx + choreoFeedbackX.calculate(currentPose.getX(), sample.x),
                     sample.vy + choreoFeedbackY.calculate(currentPose.getY(), sample.y),
                     sample.omega + choreoFeedbackOmega.calculate(currentPose.getRotation().getRadians(), sample.heading),
                     currentPose.getRotation() // Trajectories are absolute, don't flip
-            );
+            ));
         } else {
-            return new ChassisSpeeds();
+            Util.error("No sample at " + timer.get() + " for trajectory " + trajectory.name());
+            return DriveRequest.stop();
         }
     }
 }

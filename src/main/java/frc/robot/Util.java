@@ -40,10 +40,12 @@ public class Util {
         if (BuildConstants.mode == BuildConstants.Mode.SIM) {
             throw new RuntimeException(msg);
         } else {
+            @SuppressWarnings("resource")
             Alert alert = new Alert("Error: " + msg, Alert.AlertType.kError);
             alert.set(true);
 
             DriverStation.reportError(msg, false);
+            System.out.println("Error: " + msg);
         }
     }
 
@@ -83,5 +85,31 @@ public class Util {
     public static boolean isWithinVelocityTolerance(ChassisSpeeds measuredChassisSpeeds, double linearToleranceMetersPerSec, double angularToleranceRadPerSec) {
         return Math.hypot(measuredChassisSpeeds.vxMetersPerSecond, measuredChassisSpeeds.vyMetersPerSecond) < linearToleranceMetersPerSec
                 && Math.abs(measuredChassisSpeeds.omegaRadiansPerSecond) < angularToleranceRadPerSec;
+    }
+
+    public static String camelCaseToSnakeCase(String input) {
+        if (input.length() < 2) {
+            return input.toUpperCase();
+        }
+
+        StringBuilder output = new StringBuilder();
+
+        // https://docs.rs/heck/
+        // Note: we don't implement multiple consecutive uppercase letters for simplicity (it's unnecessary for our use case)
+        char last = input.charAt(0);
+        output.append(Character.toUpperCase(last));
+        for (int i = 1; i < input.length(); i++) {
+            char current = input.charAt(i);
+
+            if (Character.isLowerCase(last) && Character.isUpperCase(current)) {
+                // New word
+                output.append('_');
+            }
+            output.append(Character.toUpperCase(current));
+
+            last = current;
+        }
+
+        return output.toString();
     }
 }

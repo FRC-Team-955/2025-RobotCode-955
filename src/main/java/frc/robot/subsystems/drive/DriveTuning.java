@@ -7,7 +7,7 @@ import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
 import static frc.robot.subsystems.drive.DriveConstants.moveToConfig;
 
 public class DriveTuning {
-    public static final LoggedTunableNumber characterizationSpeedRadPerSec = new LoggedTunableNumber("Drive/WheelRadiusCharacterizationSpeedRadPerSecond", 1.0);
+    public static final LoggedTunableNumber wheelRadiusCharacterizationSpeedRadPerSec = new LoggedTunableNumber("Drive/WheelRadiusCharacterizationSpeedRadPerSecond", 1.0);
 
     public static final PIDF.Tunable moduleDriveGainsTunable = moduleConfig.driveGains().tunable("Drive/ModuleDrive");
     public static final PIDF.Tunable moduleTurnGainsTunable = moduleConfig.turnGains().tunable("Drive/ModuleTurn");

@@ -15,23 +15,18 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import frc.lib.subsystem.Periodic;
-import frc.lib.swerve.ModuleLimits;
+import frc.lib.subsystem.CommandBasedSubsystem;
 import frc.lib.swerve.SwerveSetpoint;
 import frc.lib.swerve.SwerveSetpointGenerator;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotState;
-import frc.robot.subsystems.drive.goals.DriveJoystickGoal;
-import frc.robot.subsystems.drive.goals.FollowTrajectoryGoal;
-import frc.robot.subsystems.drive.goals.MoveToGoal;
-import frc.robot.subsystems.drive.goals.VelocityRobotRelativeGoal;
-import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.Util;
+import frc.robot.subsystems.drive.goals.*;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.Arrays;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
@@ -40,42 +35,15 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 import static frc.robot.subsystems.drive.DriveTuning.moduleDriveGainsTunable;
 import static frc.robot.subsystems.drive.DriveTuning.moduleTurnGainsTunable;
 
-public class Drive implements Periodic {
+public class Drive extends CommandBasedSubsystem {
     private final RobotState robotState = RobotState.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
-    private final Elevator elevator = Elevator.get();
 
     private final GyroIO gyroIO = createGyroIO();
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
 
-    @RequiredArgsConstructor
-    public enum Goal {
-        CHARACTERIZATION(ControlMode.OPEN_LOOP),
-        WHEEL_RADIUS_CHARACTERIZATION(ControlMode.CLOSED_LOOP_DIRECT),
-        IDLE(ControlMode.STOP),
-        DRIVE_JOYSTICK(ControlMode.CLOSED_LOOP_OPTIMIZED),
-        DRIVE_JOYSTICK_ASSISTED(ControlMode.CLOSED_LOOP_OPTIMIZED),
-        MOVE_TO(ControlMode.CLOSED_LOOP_OPTIMIZED),
-        MOVE_TO_DRIVE_JOYSTICK_MERGED(ControlMode.CLOSED_LOOP_OPTIMIZED),
-        FOLLOW_TRAJECTORY(ControlMode.CLOSED_LOOP_DIRECT),
-        VELOCITY_ROBOT_RELATIVE(ControlMode.CLOSED_LOOP_OPTIMIZED);
-
-        public final ControlMode controlMode;
-    }
-
-    public enum ControlMode {
-        /** Open loop; no closed loop control will happen */
-        OPEN_LOOP,
-        /** ChassisSpeeds will be optimized with the setpoint generator (unless disabled) before being fed to modules */
-        CLOSED_LOOP_OPTIMIZED,
-        /** ChassisSpeeds will be directly fed to modules */
-        CLOSED_LOOP_DIRECT,
-        /** All modules will stop */
-        STOP
-    }
-
     @Getter
-    private Goal goal = Goal.IDLE;
+    private DriveGoal goal = new IdleGoal();
 
     /**
      * FL, FR, BL, BR
@@ -264,29 +232,13 @@ public class Drive implements Periodic {
 
     @Override
     public void periodicAfterCommands() {
-        ChassisSpeeds closedLoopSetpoint = null;
-        switch (goal) {
-            case CHARACTERIZATION -> {
-                closedLoopSetpoint = null;
-            }
-            case WHEEL_RADIUS_CHARACTERIZATION -> {
-                closedLoopSetpoint = null;
-            }
-            case IDLE -> {
-                // ControlMode.STOP is handled later
-            }
-            case DRIVE_JOYSTICK, DRIVE_JOYSTICK_ASSISTED -> closedLoopSetpoint = DriveJoystickGoal.get(g -> goal = g);
-            case MOVE_TO, MOVE_TO_DRIVE_JOYSTICK_MERGED -> closedLoopSetpoint = MoveToGoal.get(g -> goal = g);
-            case FOLLOW_TRAJECTORY -> closedLoopSetpoint = FollowTrajectoryGoal.get();
-            case VELOCITY_ROBOT_RELATIVE -> closedLoopSetpoint = VelocityRobotRelativeGoal.get();
-        }
-
-        // Goal processing might change the goal
-        Logger.recordOutput("Drive/Goal", goal);
-        Logger.recordOutput("Drive/ControlMode", goal.controlMode);
+        Logger.recordOutput("Drive/Goal", goal.loggableName);
+        DriveRequest request = goal.getRequest();
+        Logger.recordOutput("Drive/RequestType", request.type());
+        Logger.recordOutput("Drive/RequestValue", request.value());
 
         // Stop moving when idle or disabled
-        if (goal.controlMode == ControlMode.STOP || DriverStation.isDisabled()) {
+        if (request.type() == DriveRequest.Type.STOP || DriverStation.isDisabled()) {
             prevSetpoint = null;
 
             for (var module : modules) {
@@ -294,23 +246,15 @@ public class Drive implements Periodic {
             }
         }
         // Closed loop control
-        else if ((goal.controlMode == ControlMode.CLOSED_LOOP_DIRECT
-                || goal.controlMode == ControlMode.CLOSED_LOOP_OPTIMIZED
-        )
-                && closedLoopSetpoint != null
-        ) {
-            Logger.recordOutput("Drive/ChassisSpeeds/Setpoint", closedLoopSetpoint);
-
-            if (useSetpointGenerator && !disableDriving && goal.controlMode == ControlMode.CLOSED_LOOP_OPTIMIZED) {
+        else if (request.type() == DriveRequest.Type.CHASSIS_SPEEDS_DIRECT || request.type() == DriveRequest.Type.CHASSIS_SPEEDS_OPTIMIZED) {
+            if (useSetpointGenerator && !disableDriving && request.type() == DriveRequest.Type.CHASSIS_SPEEDS_OPTIMIZED) {
                 Logger.recordOutput("Drive/SetpointGenerator", true);
 
                 Logger.recordOutput(
                         "Drive/ModuleStates/Setpoints",
                         // DON'T DO ANYTHING WITH THIS. SETPOINT GENERATOR SHOULD NOT GET A DISCRETIZED SETPOINT
                         // Only for logging
-                        robotState.getKinematics().toSwerveModuleStates(
-                                ChassisSpeeds.discretize(closedLoopSetpoint, 0.02)
-                        )
+                        robotState.getKinematics().toSwerveModuleStates(ChassisSpeeds.discretize(request.value(), 0.02))
                 );
 
                 if (prevSetpoint == null) {
@@ -322,9 +266,9 @@ public class Drive implements Periodic {
                 }
 
                 prevSetpoint = setpointGenerator.generateSetpoint(
-                        getModuleLimits(),
+                        goal.getModuleLimits(),
                         prevSetpoint,
-                        closedLoopSetpoint, // THIS SHOULD NOT BE DISCRETIZED
+                        request.value(), // THIS SHOULD NOT BE DISCRETIZED
                         0.02
                 );
                 var setpointStates = prevSetpoint.moduleStates();
@@ -334,6 +278,7 @@ public class Drive implements Periodic {
                     // Optimize velocity setpoint
                     var currentAngle = modules[i].getTurnAngle();
                     setpointStates[i].cosineScale(currentAngle);
+                    // Setpoint generator already optimizes the setpoints
                     modules[i].runSetpoint(setpointStates[i]);
                 }
 
@@ -345,7 +290,7 @@ public class Drive implements Periodic {
                 prevSetpoint = null;
 
                 // Calculate module setpoints
-                ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(closedLoopSetpoint, 0.02);
+                ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(request.value(), 0.02);
                 SwerveModuleState[] setpointStates = robotState.getKinematics().toSwerveModuleStates(discreteSpeeds);
                 SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, driveConfig.moduleLimits().maxDriveVelocityMetersPerSec());
 
@@ -364,8 +309,14 @@ public class Drive implements Periodic {
                 Logger.recordOutput("Drive/ModuleStates/SetpointsOptimized", setpointStates);
                 Logger.recordOutput("Drive/ChassisSpeeds/SetpointOptimized", robotState.getKinematics().toChassisSpeeds(setpointStates));
             }
-        } else {
+        } else if (request.type() == DriveRequest.Type.CHARACTERIZATION) {
             prevSetpoint = null;
+
+            for (var module : modules) {
+                module.runCharacterization(request.value().vxMetersPerSecond);
+            }
+        } else {
+            Util.error("Unknown request type: " + request.type());
         }
 
         // Run module closed loop control
@@ -424,160 +375,31 @@ public class Drive implements Periodic {
         return states;
     }
 
-    public ModuleLimits getModuleLimits() {
-        if (goal == Goal.MOVE_TO || goal == Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED) {
-            return moveToModuleLimits;
-        }
-
-        if (operatorDashboard.coralStuckInRobotMode.get()) {
-            return driveConfig.moduleLimits();
-        }
-
-        return driveConfig.moduleLimits().times(elevator.getDriveConstraintScalar());
+    public double[] getWheelRadiusCharacterizationPositions() {
+        return Arrays.stream(modules).mapToDouble(Module::getDrivePositionRad).toArray();
     }
 
     public Command followTrajectory(Trajectory<SwerveSample> trajectory) {
-        return Commands.runOnce(() -> {
-            FollowTrajectoryGoal.initialize(trajectory);
-            goal = Goal.FOLLOW_TRAJECTORY;
-        });
+        return startIdle(() -> goal = new FollowTrajectoryGoal(trajectory));
     }
 
     public Command moveTo(Supplier<Pose2d> poseSupplier, BooleanSupplier mergeJoystickDrive) {
-        return Commands.runOnce(() -> {
-            MoveToGoal.initialize(poseSupplier, mergeJoystickDrive);
-            goal = Goal.MOVE_TO;
-        });
+        return startIdle(() -> goal = new MoveToGoal(poseSupplier, mergeJoystickDrive));
     }
 
     public Command driveJoystick() {
-        return Commands.runOnce(() -> {
-            goal = Goal.DRIVE_JOYSTICK;
-        });
+        return startIdle(() -> goal = new DriveJoystickGoal());
     }
 
     public Command runRobotRelative(Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
-        return Commands.runOnce(() -> {
-            VelocityRobotRelativeGoal.initialize(chassisSpeedsSupplier);
-            goal = Goal.VELOCITY_ROBOT_RELATIVE;
-        });
+        return startIdle(() -> goal = new VelocityRobotRelativeGoal(chassisSpeedsSupplier));
     }
 
-    // TODO
-//    public Command feedforwardCharacterization() {
-//        return withGoal(Goal.CHARACTERIZATION, new FeedforwardCharacterization(
-//                volts -> {
-//                    for (var module : modules) {
-//                        module.runCharacterization(volts);
-//                    }
-//                },
-//                () -> Arrays.stream(modules)
-//                        .mapToDouble(Module::getDriveVelocityRadPerSec)
-//                        .toArray(),
-//                modules.length,
-//                this
-//        ));
-//    }
-//
-//    public Command fullSpeedCharacterization() {
-//        return withGoal(Goal.CHARACTERIZATION, CommandsExt.eagerSequence(
-//                startIdle(
-//                        () -> {
-//                            for (var module : modules) {
-//                                module.runCharacterization(2.0);
-//                            }
-//                        }
-//                ).withTimeout(2),
-//                startEnd(
-//                        () -> {
-//                            for (var module : modules) {
-//                                module.runCharacterization(12.0);
-//                            }
-//                        },
-//                        () -> {
-//                            for (var module : modules) {
-//                                module.runCharacterization(0.0);
-//                            }
-//                        }
-//                )
-//        ));
-//    }
-//
-//    public Command wheelRadiusCharacterization(WheelRadiusCharacterization.Direction direction) {
-//        return withGoal(Goal.WHEEL_RADIUS_CHARACTERIZATION, new WheelRadiusCharacterization(direction));
-//    }
-//
-//    public class WheelRadiusCharacterization extends Command {
-//        @RequiredArgsConstructor
-//        public enum Direction {
-//            CLOCKWISE(-1),
-//            COUNTER_CLOCKWISE(1);
-//
-//            private final int value;
-//        }
-//
-//        private final Direction omegaDirection;
-//        private final SlewRateLimiter omegaLimiter = new SlewRateLimiter(1.0);
-//
-//        private double lastGyroYawRads = 0.0;
-//        private double accumGyroYawRads = 0.0;
-//
-//        private double[] startWheelPositions;
-//
-//        private double currentEffectiveWheelRadius = 0.0;
-//
-//        private WheelRadiusCharacterization(Direction omegaDirection) {
-//            this.omegaDirection = omegaDirection;
-//            addRequirements(Drive.this);
-//        }
-//
-//        private double[] getWheelRadiusCharacterizationPositions() {
-//            return Arrays.stream(modules).mapToDouble(Module::getDrivePositionRad).toArray();
-//        }
-//
-//        @Override
-//        public void initialize() {
-//            // Reset
-//            lastGyroYawRads = rawGyroRotation.getRadians();
-//            accumGyroYawRads = 0.0;
-//
-//            startWheelPositions = getWheelRadiusCharacterizationPositions();
-//
-//            omegaLimiter.reset(0);
-//        }
-//
-//        @Override
-//        public void execute() {
-//            // Run drive at velocity
-//            var omega = omegaLimiter.calculate(omegaDirection.value * characterizationSpeedRadPerSec.get());
-//            closedLoopSetpoint = new ChassisSpeeds(0, 0, omega);
-//
-//            // Get yaw and wheel positions
-//            accumGyroYawRads += MathUtil.angleModulus(rawGyroRotation.getRadians() - lastGyroYawRads);
-//            lastGyroYawRads = rawGyroRotation.getRadians();
-//            double averageWheelPosition = 0.0;
-//            double[] wheelPositions = getWheelRadiusCharacterizationPositions();
-//            for (int i = 0; i < modules.length; i++) {
-//                averageWheelPosition += Math.abs(wheelPositions[i] - startWheelPositions[i]);
-//            }
-//            averageWheelPosition /= modules.length;
-//
-//            currentEffectiveWheelRadius = (accumGyroYawRads * drivebaseRadiusMeters) / averageWheelPosition;
-//            Logger.recordOutput("Drive/WheelRadiusCharacterization/DrivePosition", averageWheelPosition);
-//            Logger.recordOutput("Drive/WheelRadiusCharacterization/AccumGyroYawRads", accumGyroYawRads);
-//            Logger.recordOutput(
-//                    "Drive/WheelRadiusCharacterization/CurrentWheelRadiusInches",
-//                    Units.metersToInches(currentEffectiveWheelRadius)
-//            );
-//        }
-//
-//        @Override
-//        public void end(boolean interrupted) {
-//            if (Math.abs(accumGyroYawRads) <= Math.PI * 2.0) {
-//                System.out.println("Not enough data for characterization");
-//            } else {
-//                System.out.println("Effective Wheel Radius: " + Units.metersToInches(currentEffectiveWheelRadius) + " inches");
-//            }
-//        }
-//    }
+    public Command fullSpeedCharacterization() {
+        return startIdle(() -> goal = new FullSpeedCharacterizationGoal());
+    }
+
+    public Command wheelRadiusCharacterization(WheelRadiusCharacterizationGoal.Direction direction) {
+        return startIdle(() -> goal = new WheelRadiusCharacterizationGoal(direction));
+    }
 }

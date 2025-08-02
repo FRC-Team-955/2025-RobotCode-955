@@ -14,6 +14,7 @@ import frc.robot.autos.ProcessorSideAuto;
 import frc.robot.autos.ProcessorSideFriendlyAuto;
 import frc.robot.subsystems.apriltagvision.AprilTagVision;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.goals.WheelRadiusCharacterizationGoal;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
@@ -92,12 +93,16 @@ public class RobotContainer {
         ////////////////////// DRIVE //////////////////////
 
         // TODO
-//        characterizationChooser.addOption("Drive Feedforward Characterization", drive.feedforwardCharacterization());
-//        characterizationChooser.addOption("Drive Full Speed Characterization", drive.fullSpeedCharacterization());
-//        characterizationChooser.addOption("Drive Wheel Radius Characterization", drive.wheelRadiusCharacterization(Drive.WheelRadiusCharacterization.Direction.CLOCKWISE));
+        characterizationChooser.addOption("Drive 1 m/s Characterization", drive.runRobotRelative(() -> new ChassisSpeeds(1.0, 0.0, 0.0)));
+        characterizationChooser.addOption("Drive 2 m/s Characterization", drive.runRobotRelative(() -> new ChassisSpeeds(2.0, 0.0, 0.0)));
+        characterizationChooser.addOption("Drive 3 m/s Characterization", drive.runRobotRelative(() -> new ChassisSpeeds(3.0, 0.0, 0.0)));
+        characterizationChooser.addOption("Drive 4 m/s Characterization", drive.runRobotRelative(() -> new ChassisSpeeds(4.0, 0.0, 0.0)));
+        characterizationChooser.addOption("Drive Full Speed Characterization", drive.fullSpeedCharacterization());
+        characterizationChooser.addOption("Drive Wheel Radius Characterization", drive.wheelRadiusCharacterization(WheelRadiusCharacterizationGoal.Direction.CLOCKWISE));
     }
 
     private void setDefaultCommands() {
+        drive.setDefaultCommand(drive.driveJoystick());
         superstructure.setDefaultCommand(superstructure.cancel());
     }
 

@@ -4,20 +4,23 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.Controller;
 import frc.robot.RobotState;
-import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveGoal;
+import frc.robot.subsystems.drive.DriveRequest;
+import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class DriveJoystickGoal {
+@RequiredArgsConstructor
+public class DriveJoystickGoal extends DriveGoal {
     private static final RobotState robotState = RobotState.get();
     private static final Controller controller = Controller.get();
 
-    private static final Supplier<Optional<Pose2d>> assistPoseSupplier = Optional::empty;
+    private final Supplier<Optional<Pose2d>> assistPoseSupplier = Optional::empty;
 
-    public static ChassisSpeeds get(Consumer<Drive.Goal> setGoal) {
+    @Override
+    public DriveRequest getRequest() {
         var optionalAssistPose = assistPoseSupplier.get();
         if (optionalAssistPose.isPresent()) {
             // Mark assist pose as present
@@ -25,14 +28,14 @@ public class DriveJoystickGoal {
             Pose2d assistPose = optionalAssistPose.get();
 
             if (controller.shouldAssist(robotState.getPose(), assistPose)) {
-                setGoal.accept(Drive.Goal.DRIVE_JOYSTICK_ASSISTED);
-                return getAssisted(assistPose);
+                Logger.recordOutput("Drive/Assist/Running", true);
+                return DriveRequest.chassisSpeedsOptimized(getAssisted(assistPose));
             }
         }
 
         Logger.recordOutput("Drive/Assist/Present", false);
-        setGoal.accept(Drive.Goal.DRIVE_JOYSTICK);
-        return controller.getDriveSetpointRobotRelative(robotState.getRotation());
+        Logger.recordOutput("Drive/Assist/Running", false);
+        return DriveRequest.chassisSpeedsOptimized(controller.getDriveSetpointRobotRelative(robotState.getRotation()));
     }
 
     private static ChassisSpeeds getAssisted(Pose2d assistPose) {

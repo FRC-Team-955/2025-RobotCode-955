@@ -7,81 +7,60 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import frc.lib.swerve.ModuleLimits;
 import frc.robot.Controller;
-import frc.robot.OperatorDashboard;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveGoal;
+import frc.robot.subsystems.drive.DriveRequest;
+import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static frc.robot.subsystems.drive.DriveConstants.*;
 import static frc.robot.subsystems.drive.DriveTuning.*;
 
-public class MoveToGoal {
+@RequiredArgsConstructor
+public class MoveToGoal extends DriveGoal {
     private static final RobotState robotState = RobotState.get();
     private static final Controller controller = Controller.get();
-    private static final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private static final Drive drive = Drive.get();
 
-    private static BooleanSupplier mergeJoystickDrive = () -> false;
-    private static Supplier<Pose2d> poseSupplier = robotState::getPose;
+    private final Supplier<Pose2d> poseSupplier;
+    private final BooleanSupplier mergeJoystickDrive;
 
-    private static final PIDController moveToPureLinearX = moveToConfig.pureLinear().toPID(
+    private final PIDController moveToPureLinearX = moveToConfig.pureLinear().toPID(
             moveToConfig.linearPositionToleranceMeters(),
             moveToConfig.linearVelocityToleranceMetersPerSec()
     );
-    private static final PIDController moveToPureLinearY = moveToConfig.pureLinear().toPID(
+    private final PIDController moveToPureLinearY = moveToConfig.pureLinear().toPID(
             moveToConfig.linearPositionToleranceMeters(),
             moveToConfig.linearVelocityToleranceMetersPerSec()
     );
-    private static final PIDController moveToPureAngular = moveToConfig.pureAngular().toPIDWrapRadians(
+    private final PIDController moveToPureAngular = moveToConfig.pureAngular().toPIDWrapRadians(
             moveToConfig.angularPositionToleranceRad(),
             moveToConfig.angularVelocityToleranceRadPerSec()
     );
 
-    private static final ProfiledPIDController moveToProfiledLinearX = moveToConfig.profiledLinear().toPID(
+    private final ProfiledPIDController moveToProfiledLinearX = moveToConfig.profiledLinear().toPID(
             moveToConfig.linearPositionToleranceMeters(),
             moveToConfig.linearVelocityToleranceMetersPerSec()
     );
-    private static final ProfiledPIDController moveToProfiledLinearY = moveToConfig.profiledLinear().toPID(
+    private final ProfiledPIDController moveToProfiledLinearY = moveToConfig.profiledLinear().toPID(
             moveToConfig.linearPositionToleranceMeters(),
             moveToConfig.linearVelocityToleranceMetersPerSec()
     );
-    private static final ProfiledPIDController moveToProfiledAngular = moveToConfig.profiledAngular().toPIDWrapRadians(
+    private final ProfiledPIDController moveToProfiledAngular = moveToConfig.profiledAngular().toPIDWrapRadians(
             moveToConfig.angularPositionToleranceRad(),
             moveToConfig.angularVelocityToleranceRadPerSec()
     );
 
-    public static void initialize(Supplier<Pose2d> newPoseSupplier, BooleanSupplier newMergeJoystickDrive) {
-        poseSupplier = newPoseSupplier;
-        mergeJoystickDrive = newMergeJoystickDrive;
+    private boolean profiledNeedsReset = true;
 
-        if (operatorDashboard.profiledMoveTo.get()) {
-            Pose2d currentPose = robotState.getPose();
-            ChassisSpeeds currentVelocities = drive.getMeasuredChassisSpeedsFieldRelative();
-            moveToProfiledLinearX.reset(
-                    currentPose.getX(),
-                    currentVelocities.vxMetersPerSecond
-            );
-            moveToProfiledLinearY.reset(
-                    currentPose.getY(),
-                    currentVelocities.vyMetersPerSecond
-            );
-            moveToProfiledAngular.reset(
-                    MathUtil.angleModulus(currentPose.getRotation().getRadians()),
-                    currentVelocities.omegaRadiansPerSecond
-            );
-        } else {
-            moveToPureLinearX.reset();
-            moveToPureLinearY.reset();
-            moveToPureAngular.reset();
-        }
-    }
-
-    public static ChassisSpeeds get(Consumer<Drive.Goal> setGoal) {
+    @Override
+    public DriveRequest getRequest() {
         moveToPureLinearTunable.ifChanged(gains -> {
             gains.applyPID(moveToPureLinearX);
             gains.applyPID(moveToPureLinearY);
@@ -115,9 +94,11 @@ public class MoveToGoal {
         boolean linearYAtSetpoint;
         double angularVelocityRadPerSec;
         boolean angularAtSetpoint;
-        if (operatorDashboard.profiledMoveTo.get()) {
-            // Reset if it just changed
-            if (operatorDashboard.profiledMoveTo.hasChanged()) {
+        if (useProfiledMoveTo) {
+            // Reset if we just started
+            if (profiledNeedsReset) {
+                profiledNeedsReset = false;
+
                 ChassisSpeeds currentVelocities = drive.getMeasuredChassisSpeedsFieldRelative();
 
                 moveToProfiledLinearX.reset(
@@ -168,13 +149,6 @@ public class MoveToGoal {
                     new Rotation2d(moveToProfiledAngular.getSetpoint().position)
             ));
         } else {
-            // Reset if it just changed
-            if (operatorDashboard.profiledMoveTo.hasChanged()) {
-                moveToPureLinearX.reset();
-                moveToPureLinearY.reset();
-                moveToPureAngular.reset();
-            }
-
             linearXVelocityMetersPerSec = moveToPureLinearX.calculate(
                     currentPose.getX(),
                     goalPose.getX()
@@ -219,13 +193,18 @@ public class MoveToGoal {
                 angularVelocityRadPerSec,
                 currentPose.getRotation() // Move to is absolute, don't flip
         );
-        if (mergeJoystickDrive.getAsBoolean()) {
+        boolean shouldMergeJoystickDrive = mergeJoystickDrive.getAsBoolean();
+        Logger.recordOutput("Drive/MoveTo/MergeJoystickDrive", shouldMergeJoystickDrive);
+        if (shouldMergeJoystickDrive) {
             ChassisSpeeds joystickDriveSpeeds = controller.getDriveSetpointRobotRelative(robotState.getRotation());
-            setGoal.accept(Drive.Goal.MOVE_TO_DRIVE_JOYSTICK_MERGED);
-            return moveToSpeeds.plus(joystickDriveSpeeds.times(0.3));
+            return DriveRequest.chassisSpeedsOptimized(moveToSpeeds.plus(joystickDriveSpeeds.times(0.3)));
         } else {
-            setGoal.accept(Drive.Goal.MOVE_TO);
-            return moveToSpeeds;
+            return DriveRequest.chassisSpeedsOptimized(moveToSpeeds);
         }
+    }
+
+    @Override
+    public ModuleLimits getModuleLimits() {
+        return moveToModuleLimits;
     }
 }
