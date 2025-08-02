@@ -157,8 +157,6 @@ public class AprilTagVision implements Periodic {
                     );
 
                     Pose2d poseEstimate3dSolve2d = poseEstimate3dSolve.toPose2d();
-                    Logger.recordOutput("Vision/" + observation.tagID() + "Dist", poseEstimate3dSolve2d.getTranslation().getDistance(poseEstimateTrig.getTranslation()));
-                    Logger.recordOutput("Vision/" + observation.tagID() + "Rot", Math.abs(poseEstimate3dSolve2d.getRotation().minus(poseEstimateTrig.getRotation()).getRadians()));
                     if (tagDistance < distanceFromTagForTrigMeters &&
                             poseEstimate3dSolve2d.getTranslation().getDistance(poseEstimateTrig.getTranslation()) < trig3dSolveMaxDiffMeters &&
                             Math.abs(poseEstimate3dSolve2d.getRotation().minus(poseEstimateTrig.getRotation()).getRadians()) < trig3dSolveMaxDiffRad) {
