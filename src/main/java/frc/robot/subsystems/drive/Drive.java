@@ -331,8 +331,10 @@ public class Drive implements Periodic {
 
                 // Send setpoints to modules
                 for (int i = 0; i < modules.length; i++) {
-                    // The module sets setpointStates[i] to the cosine scaled setpoint, useful for logging
-                    modules[i].runSetpoint(setpointStates[i], false);
+                    // Optimize velocity setpoint
+                    var currentAngle = modules[i].getTurnAngle();
+                    setpointStates[i].cosineScale(currentAngle);
+                    modules[i].runSetpoint(setpointStates[i]);
                 }
 
                 // Log setpoint states
@@ -351,8 +353,11 @@ public class Drive implements Periodic {
 
                 // Send setpoints to modules
                 for (int i = 0; i < modules.length; i++) {
-                    // The module sets setpointStates[i] to the optimized setpoint, useful for logging
-                    modules[i].runSetpoint(setpointStates[i], true);
+                    // Optimize velocity setpoint
+                    var currentAngle = modules[i].getTurnAngle();
+                    setpointStates[i].cosineScale(currentAngle);
+                    setpointStates[i].optimize(currentAngle);
+                    modules[i].runSetpoint(setpointStates[i]);
                 }
 
                 // Log setpoint states
