@@ -314,7 +314,7 @@ public class Superstructure extends CommandBasedSubsystem {
 //
 //        Command driveWhileScoringL1 = CommandsExt.onlyIf(
 //                () -> coralScoringLevelSupplier.get() == CoralScoringLevel.L1,
-//                drive.runRobotRelative(() -> new ChassisSpeeds(0, -1.0, 0)).asProxy()
+//                drive.runRobotRelative(() -> new ChassisSpeeds(0, -1.0, 0))
 //        );
 //
 //        Command score = Commands.parallel(
