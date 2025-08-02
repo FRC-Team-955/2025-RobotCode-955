@@ -21,7 +21,7 @@ import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.gamepiecevision.GamePieceVision;
 import frc.robot.subsystems.superstructure.ReefAlign;
 import frc.robot.subsystems.superstructure.Superstructure;
-import frc.robot.util.CANLogger;
+import frc.lib.CANLogger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**

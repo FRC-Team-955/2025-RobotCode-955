@@ -6,7 +6,7 @@ import choreo.trajectory.Trajectory;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
-import frc.robot.Util;
+import frc.lib.Util;
 
 import java.util.List;
 import java.util.Optional;

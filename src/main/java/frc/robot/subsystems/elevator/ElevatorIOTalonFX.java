@@ -20,8 +20,8 @@ import frc.robot.Constants;
 
 import static frc.robot.subsystems.elevator.ElevatorConstants.gains;
 import static frc.robot.subsystems.elevator.ElevatorConstants.gearRatio;
-import static frc.robot.util.PhoenixUtil.tryUntilOk;
-import static frc.robot.util.PhoenixUtil.tryUntilOkAsync;
+import static frc.lib.PhoenixUtil.tryUntilOk;
+import static frc.lib.PhoenixUtil.tryUntilOkAsync;
 
 public class ElevatorIOTalonFX extends ElevatorIO {
     private static final double currentLimitAmps = 120;

@@ -11,8 +11,6 @@ import frc.lib.PIDF;
 
 import java.util.function.DoubleSupplier;
 
-import static frc.robot.util.SparkUtil.*;
-
 public class RollersIOSparkMax extends RollersIO {
     // Hardware objects
     private final SparkMax spark;

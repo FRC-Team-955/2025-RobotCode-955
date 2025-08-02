@@ -26,7 +26,7 @@ import frc.robot.Constants;
 
 import java.util.Queue;
 
-import static frc.robot.util.PhoenixUtil.tryUntilOk;
+import static frc.lib.PhoenixUtil.tryUntilOk;
 
 /**
  * IO implementation for Pigeon 2.

@@ -13,7 +13,6 @@ import java.util.function.DoubleSupplier;
 
 import static frc.robot.subsystems.elevator.ElevatorConstants.gains;
 import static frc.robot.subsystems.elevator.ElevatorConstants.gearRatio;
-import static frc.robot.util.SparkUtil.*;
 
 public class ElevatorIOSparkMax extends ElevatorIO {
     private static final int currentLimitAmps = 60;

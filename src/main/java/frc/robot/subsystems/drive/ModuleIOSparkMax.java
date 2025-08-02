@@ -37,7 +37,6 @@ import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
 import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
-import static frc.robot.util.SparkUtil.*;
 
 /**
  * Module IO implementation for Spark Max drive motor controller, Spark Max turn motor controller,

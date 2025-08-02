@@ -39,8 +39,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static frc.robot.Util.epsilonEquals;
-import static frc.robot.Util.greaterThanEpsilon;
+import static frc.lib.Util.epsilonEquals;
+import static frc.lib.Util.greaterThanEpsilon;
 
 /**
  * Swerve setpoint generator based on a version created by FRC team 254.

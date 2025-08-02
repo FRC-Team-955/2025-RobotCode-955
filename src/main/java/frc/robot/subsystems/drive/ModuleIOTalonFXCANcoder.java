@@ -34,8 +34,8 @@ import frc.robot.Constants;
 import java.util.Queue;
 
 import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
-import static frc.robot.util.PhoenixUtil.tryUntilOk;
-import static frc.robot.util.PhoenixUtil.tryUntilOkAsync;
+import static frc.lib.PhoenixUtil.tryUntilOk;
+import static frc.lib.PhoenixUtil.tryUntilOkAsync;
 
 /**
  * Module IO implementation for Talon FX drive motor controller, Talon FX turn motor controller, and

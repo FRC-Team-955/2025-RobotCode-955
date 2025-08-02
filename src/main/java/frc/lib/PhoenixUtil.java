@@ -11,13 +11,13 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.util;
+package frc.lib;
 
 import com.ctre.phoenix6.StatusCode;
 
 import java.util.function.Supplier;
 
-import static frc.robot.Util.asyncExecutor;
+import static frc.lib.Util.asyncExecutor;
 
 public class PhoenixUtil {
     /**

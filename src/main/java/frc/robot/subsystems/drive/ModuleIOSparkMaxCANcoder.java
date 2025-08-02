@@ -40,8 +40,8 @@ import edu.wpi.first.units.measure.Angle;
 import frc.lib.HighFrequencySamplingThread;
 import frc.lib.PIDF;
 import frc.robot.Constants;
-import frc.robot.util.PhoenixUtil;
-import frc.robot.util.SparkUtil;
+import frc.lib.PhoenixUtil;
+import frc.lib.SparkUtil;
 
 import java.util.Queue;
 import java.util.function.DoubleSupplier;

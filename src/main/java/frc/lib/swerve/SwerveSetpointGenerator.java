@@ -72,14 +72,14 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import frc.robot.Util;
+import frc.lib.Util;
 import lombok.experimental.ExtensionMethod;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static frc.robot.Util.epsilonEquals;
+import static frc.lib.Util.epsilonEquals;
 
 /**
  * Originally written by Team 254, this version is based on 6328's port. Some aspects of

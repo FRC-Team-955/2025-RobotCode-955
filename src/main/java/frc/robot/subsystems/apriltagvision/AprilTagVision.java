@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.lib.subsystem.Periodic;
 import frc.robot.RobotState;
-import frc.robot.Util;
+import frc.lib.Util;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.*;

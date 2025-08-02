@@ -6,7 +6,7 @@ import com.revrobotics.RelativeEncoder;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Alert;
-import frc.robot.util.SparkUtil;
+import frc.lib.SparkUtil;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.ArrayList;

@@ -20,7 +20,7 @@ import frc.lib.swerve.SwerveSetpoint;
 import frc.lib.swerve.SwerveSetpointGenerator;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotState;
-import frc.robot.Util;
+import frc.lib.Util;
 import frc.robot.subsystems.drive.goals.*;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;

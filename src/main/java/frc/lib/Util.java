@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.lib;
 
 import choreo.util.ChoreoAllianceFlipUtil;
 import edu.wpi.first.math.MathUtil;
@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
+import frc.robot.BuildConstants;
 
 import java.util.EnumMap;
 import java.util.concurrent.Executor;
