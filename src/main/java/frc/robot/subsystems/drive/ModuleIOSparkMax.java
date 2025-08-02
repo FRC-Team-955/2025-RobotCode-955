@@ -36,6 +36,7 @@ import frc.lib.PIDF;
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
 
+import static frc.lib.SparkUtil.*;
 import static frc.robot.subsystems.drive.DriveConstants.moduleConfig;
 
 /**

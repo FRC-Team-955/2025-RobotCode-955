@@ -11,6 +11,7 @@ import frc.lib.PIDF;
 
 import java.util.function.DoubleSupplier;
 
+import static frc.lib.SparkUtil.*;
 import static frc.robot.subsystems.elevator.ElevatorConstants.gains;
 import static frc.robot.subsystems.elevator.ElevatorConstants.gearRatio;
 
