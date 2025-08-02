@@ -1,7 +1,7 @@
 package frc.robot.subsystems.superstructure;
 
-import frc.robot.OperatorDashboard;
 import frc.lib.Util;
+import frc.robot.OperatorDashboard;
 
 import java.util.function.Supplier;
 

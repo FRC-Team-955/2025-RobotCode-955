@@ -18,10 +18,10 @@ import edu.wpi.first.units.measure.*;
 import frc.lib.PIDF;
 import frc.robot.Constants;
 
-import static frc.robot.subsystems.elevator.ElevatorConstants.gains;
-import static frc.robot.subsystems.elevator.ElevatorConstants.gearRatio;
 import static frc.lib.PhoenixUtil.tryUntilOk;
 import static frc.lib.PhoenixUtil.tryUntilOkAsync;
+import static frc.robot.subsystems.elevator.ElevatorConstants.gains;
+import static frc.robot.subsystems.elevator.ElevatorConstants.gearRatio;
 
 public class ElevatorIOTalonFX extends ElevatorIO {
     private static final double currentLimitAmps = 120;

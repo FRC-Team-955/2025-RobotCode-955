@@ -5,8 +5,8 @@ import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.RobotState;
 import frc.lib.Util;
+import frc.robot.RobotState;
 
 import java.util.List;
 import java.util.Optional;

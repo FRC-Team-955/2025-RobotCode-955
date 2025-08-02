@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.lib.CANLogger;
 import frc.lib.commands.CommandsExt;
 import frc.robot.autos.BargeSideAuto;
 import frc.robot.autos.CenterAuto;
@@ -21,7 +22,6 @@ import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.gamepiecevision.GamePieceVision;
 import frc.robot.subsystems.superstructure.ReefAlign;
 import frc.robot.subsystems.superstructure.Superstructure;
-import frc.lib.CANLogger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**

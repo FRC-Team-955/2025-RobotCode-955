@@ -36,7 +36,6 @@ public class Util {
                 : pose2d;
     }
 
-
     public static void error(String msg) {
         if (BuildConstants.mode == BuildConstants.Mode.SIM) {
             throw new RuntimeException(msg);

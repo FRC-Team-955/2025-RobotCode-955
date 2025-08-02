@@ -40,9 +40,9 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import frc.lib.HighFrequencySamplingThread;
 import frc.lib.PIDF;
-import frc.robot.Constants;
 import frc.lib.PhoenixUtil;
 import frc.lib.SparkUtil;
+import frc.robot.Constants;
 
 import java.util.Queue;
 import java.util.function.DoubleSupplier;
