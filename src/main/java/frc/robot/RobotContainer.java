@@ -19,6 +19,7 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.gamepiecevision.GamePieceVision;
+import frc.robot.subsystems.superstructure.ReefAlign;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.util.CANLogger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -61,7 +62,6 @@ public class RobotContainer {
 
     private void addAutos() {
         autoChooser.addOption("None", Commands.none());
-        // TODO this auto won't work because drive isn't a subsystem and won't be required
         autoChooser.addOption("Leave", drive.runRobotRelative(() -> new ChassisSpeeds(-0.5, 0, 0)).withTimeout(5));
 
         autoChooser.addOption("Barge Side - Normal", BargeSideAuto.get(BargeSideAuto.Type.Normal));
@@ -121,59 +121,50 @@ public class RobotContainer {
 
         controller.a().onTrue(superstructure.home());
 
-        // TODO precondition !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()
-        controller.rightTrigger().whileTrue(superstructure.funnelIntake().asProxy().repeatedly());
+        Trigger canFunnelIntake = new Trigger(superstructure::isEndEffectorTriggered)
+                .negate()
+                .or(operatorDashboard.ignoreEndEffectorBeamBreak::get);
+        controller.rightTrigger()
+                .and(canFunnelIntake)
+                .whileTrue(superstructure.funnelIntake());
 
-        var ref = new Object() {
-            boolean shouldDescoreAlgae = false;
-        };
-        controller.leftTrigger().onTrue(Commands.either(
-                superstructure.scoreCoralManual( // TODO precondition: endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()
+        // Use manual scoring if override enabled or when scoring L1
+        Trigger manualScoring = new Trigger(() -> operatorDashboard.manualScoring.get() || operatorDashboard.getSelectedCoralScoringLevel() == OperatorDashboard.CoralScoringLevel.L1);
+        Trigger canScore = new Trigger(superstructure::isEndEffectorTriggered)
+                .or(operatorDashboard.ignoreEndEffectorBeamBreak::get);
+        Trigger canAutoScore = new Trigger(() -> ReefAlign.isAlignable(robotState.getPose(), operatorDashboard.getSelectedReefZoneSide()));
+        controller.leftTrigger()
+                .and(manualScoring.negate())
+                .and(canScore)
+                .and(canAutoScore)
+                .onTrue(superstructure.autoScoreCoral(
+                        operatorDashboard::getSelectedReefZoneSide,
+                        operatorDashboard::getSelectedLocalReefSide,
+                        operatorDashboard::getSelectedCoralScoringLevel,
+                        controller.leftTrigger()
+                ));
+        controller.leftTrigger()
+                .and(manualScoring)
+                .and(canScore)
+                .onTrue(superstructure.scoreCoralManual(
                         controller.leftTrigger(),
                         operatorDashboard::getSelectedCoralScoringLevel
-                ).asProxy(),
-                CommandsExt.eagerSequence(
-                        superstructure.autoScoreCoral( // TODO precondtion Only run if you have coral and are in front of your reef side () -> (endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()) && ReefAlign.isAlignable(robotState.getPose(), reefSideSupplier.get()),
-                                operatorDashboard::getSelectedReefZoneSide,
-                                operatorDashboard::getSelectedLocalReefSide,
-                                operatorDashboard::getSelectedCoralScoringLevel,
-                                controller.leftTrigger()
-                        ).deadlineFor(
-                                Commands.startRun(
-                                        () -> ref.shouldDescoreAlgae = false,
-                                        () -> {
-                                            if (controller.rightBumper().getAsBoolean()) {
-                                                ref.shouldDescoreAlgae = true;
-                                            }
-                                        }
-                                ).until(() -> ref.shouldDescoreAlgae)
-                        ),
-                        CommandsExt.onlyIf(
-                                () -> ref.shouldDescoreAlgae,
-                                superstructure.autoDescoreAlgae( // TODO precondition (!endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()) && ReefAlign.isAlignable(robotState.getPose(), reefSideSupplier.get())
-                                        operatorDashboard::getSelectedReefZoneSide,
-                                        controller.rightBumper()
-                                )
-                        )
-                ).asProxy(),
-                // Use manual scoring if override enabled or when scoring L1
-                () -> operatorDashboard.manualScoring.get()
-                        || operatorDashboard.getSelectedCoralScoringLevel() == OperatorDashboard.CoralScoringLevel.L1
-        ));
+                ));
 
-        controller.rightBumper().onTrue(CommandsExt.onlyIf(
-                () -> superstructure.getGoal() == Superstructure.Goal.IDLE,
-                Commands.either(
-                        superstructure.descoreAlgaeManual( // TODO precondition !endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()
-                                operatorDashboard::getSelectedReefZoneSide
-                        ).asProxy(),
-                        superstructure.autoDescoreAlgae( // TODO precondition (same as auto descore after score) (!endEffectorTriggeredLong() || operatorDashboard.ignoreEndEffectorBeamBreak.get()) && ReefAlign.isAlignable(robotState.getPose(), reefSideSupplier.get())
-                                operatorDashboard::getSelectedReefZoneSide,
-                                controller.rightBumper()
-                        ).asProxy(),
-                        operatorDashboard.manualScoring::get
-                )
-        ));
+        Trigger manualDescoring = new Trigger(operatorDashboard.manualScoring::get);
+        Trigger canDescore = new Trigger(superstructure::isEndEffectorTriggered)
+                .negate()
+                .or(operatorDashboard.ignoreEndEffectorBeamBreak::get);
+        Trigger canAutoDescore = new Trigger(() -> ReefAlign.isAlignable(robotState.getPose(), operatorDashboard.getSelectedReefZoneSide()));
+        controller.rightBumper()
+                .and(manualDescoring.negate())
+                .and(canDescore)
+                .and(canAutoDescore)
+                .onTrue(superstructure.autoDescoreAlgae(operatorDashboard::getSelectedReefZoneSide, controller.rightBumper()));
+        controller.rightBumper()
+                .and(manualDescoring)
+                .and(canDescore)
+                .onTrue(superstructure.descoreAlgaeManual(operatorDashboard::getSelectedReefZoneSide));
 
         // TODO manual elevator see elevator and superstructure and stuff
 //        operatorDashboard.operatorKeypad.getOverride4()
