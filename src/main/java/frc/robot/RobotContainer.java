@@ -57,9 +57,6 @@ public class RobotContainer {
 
         new Trigger(() -> DriverStation.isTeleopEnabled() && DriverStation.getMatchTime() > 0 && DriverStation.getMatchTime() < 30)
                 .onTrue(controller.rumble(0.5, 2.0));
-
-        new Trigger(superstructure::isForceable)
-                .onTrue(controller.rumble(0.5, 0.5));
     }
 
     private void addAutos() {
@@ -140,8 +137,7 @@ public class RobotContainer {
                                 operatorDashboard::getSelectedReefZoneSide,
                                 operatorDashboard::getSelectedLocalReefSide,
                                 operatorDashboard::getSelectedCoralScoringLevel,
-                                controller.leftTrigger(),
-                                false
+                                controller.leftTrigger()
                         ).deadlineFor(
                                 Commands.startRun(
                                         () -> ref.shouldDescoreAlgae = false,

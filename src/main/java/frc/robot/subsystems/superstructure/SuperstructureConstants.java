@@ -5,10 +5,9 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.BuildConstants;
 
-class SuperstructureConstants {
-    public static final double scoreCoralSettleSeconds = 0.25;
+public class SuperstructureConstants {
+    public static final double scoreCoralSettleSeconds = 0.5;
     public static final double scoreCoralL1SettleSeconds = 0.5;
-    public static final double scoreCoralForceSettleSeconds = 1;
 
     public static final Transform3d coralAboveFunnel = new Transform3d(
             Units.inchesToMeters(5),

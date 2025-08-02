@@ -27,7 +27,6 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.Arrays;
-import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import static frc.lib.HighFrequencySamplingThread.highFrequencyLock;
@@ -383,7 +382,7 @@ public class Drive extends CommandBasedSubsystem {
         return startIdle(() -> goal = new FollowTrajectoryGoal(trajectory));
     }
 
-    public Command moveTo(Supplier<Pose2d> poseSupplier, BooleanSupplier mergeJoystickDrive) {
+    public Command moveTo(Supplier<Pose2d> poseSupplier, boolean mergeJoystickDrive) {
         return startIdle(() -> goal = new MoveToGoal(poseSupplier, mergeJoystickDrive));
     }
 

@@ -20,10 +20,10 @@ public class ProcessorSideFriendlyAuto {
         final var fourthScoreTraj = AutoHelper.trajectory("Processor Side Friendly", 6);
 
         return AutoBuilder.createScoring(List.of(
-                new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, CoralScoringLevel.L4, false),
-                new IntakeScorePair(secondStationTraj, Station.ProcessorSideFriendly, secondScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Left, CoralScoringLevel.L4, false),
-                new IntakeScorePair(thirdStationTraj, Station.ProcessorSideFriendly, thirdScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, CoralScoringLevel.L2, false),
-                new IntakeScorePair(fourthStationTraj, Station.ProcessorSideFriendly, fourthScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Left, CoralScoringLevel.L2, false)
+                new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, CoralScoringLevel.L4),
+                new IntakeScorePair(secondStationTraj, Station.ProcessorSideFriendly, secondScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Left, CoralScoringLevel.L4),
+                new IntakeScorePair(thirdStationTraj, Station.ProcessorSideFriendly, thirdScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Right, CoralScoringLevel.L2),
+                new IntakeScorePair(fourthStationTraj, Station.ProcessorSideFriendly, fourthScoreTraj, ReefZoneSide.MiddleFront, LocalReefSide.Left, CoralScoringLevel.L2)
         ));
     }
 }

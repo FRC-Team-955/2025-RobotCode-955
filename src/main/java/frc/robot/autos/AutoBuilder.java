@@ -74,16 +74,14 @@ public class AutoBuilder {
             Trajectory<SwerveSample> scoreTraj,
             ReefAlign.ReefZoneSide reefZoneSide,
             ReefAlign.LocalReefSide localReefSide,
-            OperatorDashboard.CoralScoringLevel coralScoringLevel,
-            boolean safe
+            OperatorDashboard.CoralScoringLevel coralScoringLevel
     ) {
         private Command scoreCommand(Superstructure superstructure) {
             return superstructure.autoScoreCoral(
                     () -> reefZoneSide,
                     () -> localReefSide,
                     () -> coralScoringLevel,
-                    () -> true,
-                    safe
+                    () -> true
             );
         }
     }

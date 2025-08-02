@@ -15,7 +15,7 @@ public class CenterAuto {
         final var firstScoreTraj = AutoHelper.trajectory("Center");
 
         Command auto = AutoBuilder.createScoring(List.of(
-                new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.MiddleBack, LocalReefSide.Left, CoralScoringLevel.L4, true)
+                new IntakeScorePair(null, null, firstScoreTraj, ReefZoneSide.MiddleBack, LocalReefSide.Left, CoralScoringLevel.L4)
         ));
 
         return switch (type) {

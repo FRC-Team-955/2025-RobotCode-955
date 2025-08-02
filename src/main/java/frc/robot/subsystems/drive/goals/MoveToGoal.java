@@ -16,7 +16,6 @@ import frc.robot.subsystems.drive.DriveRequest;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;
 
-import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import static frc.robot.subsystems.drive.DriveConstants.*;
@@ -29,7 +28,7 @@ public class MoveToGoal extends DriveGoal {
     private static final Drive drive = Drive.get();
 
     private final Supplier<Pose2d> poseSupplier;
-    private final BooleanSupplier mergeJoystickDrive;
+    private final boolean mergeJoystickDrive;
 
     private final PIDController moveToPureLinearX = moveToConfig.pureLinear().toPID(
             moveToConfig.linearPositionToleranceMeters(),
@@ -193,9 +192,9 @@ public class MoveToGoal extends DriveGoal {
                 angularVelocityRadPerSec,
                 currentPose.getRotation() // Move to is absolute, don't flip
         );
-        boolean shouldMergeJoystickDrive = mergeJoystickDrive.getAsBoolean();
-        Logger.recordOutput("Drive/MoveTo/MergeJoystickDrive", shouldMergeJoystickDrive);
-        if (shouldMergeJoystickDrive) {
+
+        Logger.recordOutput("Drive/MoveTo/MergeJoystickDrive", mergeJoystickDrive);
+        if (mergeJoystickDrive) {
             ChassisSpeeds joystickDriveSpeeds = controller.getDriveSetpointRobotRelative(robotState.getRotation());
             return DriveRequest.chassisSpeedsOptimized(moveToSpeeds.plus(joystickDriveSpeeds.times(0.3)));
         } else {
