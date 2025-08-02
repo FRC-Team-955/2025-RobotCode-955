@@ -47,7 +47,7 @@ public class CommandsExt {
         return Commands.either(onTrue, Commands.none(), condition);
     }
 
-    public static Command eagerSequence(Command... commands) {
+    public static CommandComposition eagerSequence(Command... commands) {
         return new EagerSequentialCommandGroup(commands);
     }
 }

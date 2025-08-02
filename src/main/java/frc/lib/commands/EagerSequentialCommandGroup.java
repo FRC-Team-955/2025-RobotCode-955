@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** SequentialCommandGroup but commands that finish instantly don't take up a whole loop cycle */
-/* package-private */ class EagerSequentialCommandGroup extends Command {
+/* package-private */ class EagerSequentialCommandGroup extends CommandComposition {
     private final List<Command> commands = new ArrayList<>();
     private int currentCommandIndex = -1;
     private boolean runWhenDisabled = true;
@@ -30,7 +30,8 @@ import java.util.List;
      *
      * @param commands Commands to add, in order of execution.
      */
-    public final void addCommands(Command... commands) {
+    @Override
+    public void addCommands(Command... commands) {
         if (currentCommandIndex != -1) {
             throw new IllegalStateException("Commands cannot be added to a composition while it's running");
         }
