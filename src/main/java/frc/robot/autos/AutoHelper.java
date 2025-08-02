@@ -24,7 +24,8 @@ public class AutoHelper {
             return (Trajectory<SwerveSample>) optTrajectory.get();
         } else {
             Util.error("Trajectory " + name + " is not present");
-            return new Trajectory<>(name, List.of(), List.of(), List.of());
+            //noinspection Convert2Diamond
+            return new Trajectory<SwerveSample>(name, List.of(), List.of(), List.of());
         }
     }
 
@@ -36,7 +37,8 @@ public class AutoHelper {
             return (Trajectory<SwerveSample>) optTrajectory.get();
         } else {
             Util.error("Trajectory " + name + " is not present");
-            return new Trajectory<>(name, List.of(), List.of(), List.of());
+            //noinspection Convert2Diamond
+            return new Trajectory<SwerveSample>(name, List.of(), List.of(), List.of());
         }
     }
 
