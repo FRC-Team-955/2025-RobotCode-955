@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.BuildConstants;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -36,16 +37,22 @@ public class Util {
                 : pose2d;
     }
 
+    private static final ArrayList<String> loggedErrors = new ArrayList<>();
+
     public static void error(String msg) {
         if (BuildConstants.mode == BuildConstants.Mode.SIM) {
             throw new RuntimeException(msg);
         } else {
-            @SuppressWarnings("resource")
-            Alert alert = new Alert("Error: " + msg, Alert.AlertType.kError);
-            alert.set(true);
+            if (!loggedErrors.contains(msg)) {
+                loggedErrors.add(msg);
 
-            DriverStation.reportError(msg, false);
-            System.out.println("Error: " + msg);
+                @SuppressWarnings("resource")
+                Alert alert = new Alert("Error: " + msg, Alert.AlertType.kError);
+                alert.set(true);
+
+                DriverStation.reportError(msg, false);
+                System.out.println("Error: " + msg);
+            }
         }
     }
 
