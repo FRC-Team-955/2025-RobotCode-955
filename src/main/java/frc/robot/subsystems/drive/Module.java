@@ -58,16 +58,13 @@ public class Module {
     public void periodicAfterCommands() {
     }
 
-    /**
-     * Runs the module with the specified setpoint state. Mutates the state to optimize it.
-     */
     public void runSetpoint(SwerveModuleState state) {
-        // Apply setpoints
         if (disableDriving) {
             io.setDriveOpenLoop(0.0);
         } else {
             io.setDriveClosedLoop(state.speedMetersPerSecond / driveConfig.wheelRadiusMeters());
         }
+
         // Anti-jitter
         if (Math.abs(state.speedMetersPerSecond) < 1e-4 && Math.abs(getTurnAngle().minus(state.angle).getRadians()) < 0.1) {
             io.setTurnOpenLoop(0.0);
