@@ -104,12 +104,12 @@ public class EndEffector implements Periodic {
     public void periodicAfterCommands() {
         Logger.recordOutput("EndEffector/Goal", goal);
         if (DriverStation.isDisabled()) {
-            io.setRequest(RequestType.VoltageVolts, 0);
+            io.setRequest(goal.hashCode(), RequestType.VoltageVolts, 0);
         } else {
             Logger.recordOutput("EndEffector/RequestType", goal.type);
             double value = goal.value.getAsDouble();
             Logger.recordOutput("EndEffector/RequestValue", value);
-            io.setRequest(goal.type, value);
+            io.setRequest(goal.hashCode(), goal.type, value);
         }
     }
 

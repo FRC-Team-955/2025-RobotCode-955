@@ -83,12 +83,12 @@ public class Funnel implements Periodic {
 
         Logger.recordOutput("Funnel/Goal", goal);
         if (DriverStation.isDisabled()) {
-            io.setRequest(RequestType.VoltageVolts, 0);
+            io.setRequest(goal.hashCode(), RequestType.VoltageVolts, 0);
         } else {
             Logger.recordOutput("Funnel/RequestType", goal.type);
             double value = goal.value.getAsDouble();
             Logger.recordOutput("Funnel/RequestValue", value);
-            io.setRequest(goal.type, value);
+            io.setRequest(goal.hashCode(), goal.type, value);
         }
     }
 }
