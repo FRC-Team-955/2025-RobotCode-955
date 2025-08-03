@@ -17,7 +17,6 @@ import static frc.robot.subsystems.funnel.FunnelTuning.*;
 public class Funnel extends MotorSubsystem<Funnel.Goal> {
     private final RobotMechanism robotMechanism = RobotMechanism.get();
 
-
     @RequiredArgsConstructor
     @Getter
     public enum Goal implements GoalInterface {

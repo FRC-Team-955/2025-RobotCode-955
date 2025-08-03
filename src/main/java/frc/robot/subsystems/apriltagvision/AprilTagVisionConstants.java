@@ -28,24 +28,24 @@ public class AprilTagVisionConstants {
     public static final AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
     // Basic filtering thresholds
-    public static final double maxAmbiguity = 0.3;
-    public static final double maxZError = 0.2;
+    static final double maxAmbiguity = 0.3;
+    static final double maxZError = 0.2;
 
     // Standard deviation baselines, for 1 meter distance and 1 tag
     // (Adjusted automatically based on distance and # of tags)
-    public static final double linearStdDevBaselineTrigMeters = 0.1;
-    public static final double angularStdDevBaselineTrigRad = Units.degreesToRadians(30);
-    public static final double linearStdDevBaseline3dSolveMeters = 0.3;
-    public static final double angularStdDevBaseline3dSolveRad = Units.degreesToRadians(60);
+    static final double linearStdDevBaselineTrigMeters = 0.1;
+    static final double angularStdDevBaselineTrigRad = Units.degreesToRadians(30);
+    static final double linearStdDevBaseline3dSolveMeters = 0.3;
+    static final double angularStdDevBaseline3dSolveRad = Units.degreesToRadians(60);
 
     // Distance from a tag for trig estimation to be used
-    public static final double distanceFromTagForTrigMeters = 1;
+    static final double distanceFromTagForTrigMeters = 1;
     // Max difference between 3d solve and trig for trig to be used
-    public static final double trig3dSolveMaxDiffMeters = 0.4;
-    public static final double trig3dSolveMaxDiffRad = Units.degreesToRadians(7);
+    static final double trig3dSolveMaxDiffMeters = 0.4;
+    static final double trig3dSolveMaxDiffRad = Units.degreesToRadians(7);
 
     @RequiredArgsConstructor
-    public enum Camera {
+    enum Camera {
         StationCam(
                 new Transform3d(
                         Units.inchesToMeters(-6.625), Units.inchesToMeters(-9.125), Units.inchesToMeters(27.25),
@@ -83,12 +83,12 @@ public class AprilTagVisionConstants {
         ),
         ;
 
-        public final Transform3d robotToCamera;
+        final Transform3d robotToCamera;
         private final Function<Camera, AprilTagVisionIO> createIO;
-        public final double distancePower;
-        public final double stddevMultiplier;
+        final double distancePower;
+        final double stddevMultiplier;
 
-        public AprilTagVisionIO createIO() {
+        AprilTagVisionIO createIO() {
             return createIO.apply(this);
         }
     }

@@ -4,10 +4,10 @@ import edu.wpi.first.math.util.Units;
 import frc.lib.PIDF;
 import frc.lib.network.LoggedTunableNumber;
 
-import static frc.robot.subsystems.funnel.FunnelConstants.beltConfig;
+import static frc.robot.subsystems.funnel.FunnelConstants.velocityGains;
 
 public class FunnelTuning {
-    public static final PIDF.Tunable velocityGainsTunable = beltConfig.velocityGains().tunable("Funnel/Belt/Velocity");
+    public static final PIDF.Tunable velocityGainsTunable = velocityGains.tunable("Funnel/Belt/Velocity");
 
     public static final LoggedTunableNumber intakeGoalSetpoint =
             new LoggedTunableNumber("Funnel/Belt/Goal/Intake", Units.rotationsPerMinuteToRadiansPerSecond(900));

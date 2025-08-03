@@ -42,13 +42,13 @@ public class DriveConstants {
         );
     }
 
-    public static final boolean useSetpointGenerator = true;
+    static final boolean useSetpointGenerator = true;
     public static final boolean disableDriving = false;
     public static final boolean disableGyro = false;
-    public static final boolean useHighFrequencyOdometry = true;
+    static final boolean useHighFrequencyOdometry = true;
     public static final boolean useProfiledMoveTo = false;
 
-    public static final double odometryPositionDeltaDiscardMeters = Units.inchesToMeters(8);
+    static final double odometryPositionDeltaDiscardMeters = Units.inchesToMeters(8);
 
     // Slow to 30% speed during driver control
     public static final double constraintScalarWhenElevatorAtMaxHeightDriver = 0.3;
@@ -108,7 +108,7 @@ public class DriveConstants {
     public static final double joystickMaxAngularSpeedRadPerSec = Math.min(Units.degreesToRadians(315), maxAngularVelocityRadPerSec);
     public static final double joystickDriveDeadband = 0.1;
 
-    public static final ModuleConfig moduleConfig = switch (BuildConstants.mode) {
+    static final ModuleConfig moduleConfig = switch (BuildConstants.mode) {
         case REAL, REPLAY -> new ModuleConfig(
                 PIDF.ofPDSVA(
                         0.0, 0.0,
@@ -136,7 +136,7 @@ public class DriveConstants {
         );
     };
 
-    public static ModuleIO[] createModuleIO() {
+    static ModuleIO[] createModuleIO() {
         return switch (BuildConstants.mode) {
             // To calibrate the absolute encoder offsets, point the modules straight (such that forward
             // motion on the drive motor will propel the robot forward) and copy the reported values from the
@@ -158,7 +158,7 @@ public class DriveConstants {
         };
     }
 
-    public static GyroIO createGyroIO() {
+    static GyroIO createGyroIO() {
         return switch (BuildConstants.mode) {
             case REAL -> new GyroIOPigeon2(9);
             case SIM -> new GyroIOSim();
@@ -190,7 +190,7 @@ public class DriveConstants {
     ) {
     }
 
-    public record ModuleConfig(
+    record ModuleConfig(
             PIDF driveGains,
             PIDF turnGains,
             double driveGearRatio,

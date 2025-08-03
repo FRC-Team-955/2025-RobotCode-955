@@ -6,36 +6,36 @@ import frc.robot.BuildConstants;
 
 public class ElevatorConstants {
     /** Gains in radians */
-    public static final PIDF gains = switch (BuildConstants.mode) {
+    static final PIDF gains = switch (BuildConstants.mode) {
         case REAL, REPLAY -> PIDF.ofPDSVAG(0.1, 0, 0.15, 0.093, 0.005, 0.41);
         case SIM -> PIDF.ofPDVAG(0, 0, 0.11, 0.005, 1.5015);
     };
 
-    public static final double maxVelocityMetersPerSecond = 3;
-    public static final double maxAccelerationMetersPerSecondSquared = 10;
+    static final double maxVelocityMetersPerSecond = 3;
+    static final double maxAccelerationMetersPerSecondSquared = 10;
 
-    public static final double gearRatio = 5;
+    static final double gearRatio = 5;
     protected static final double sprocketRadiusMeters = Units.inchesToMeters((1.0 + (9.0 / 32.0)) / 2);
-    public static final double drumRadiusMeters = sprocketRadiusMeters * 3; // 3 stages
+    static final double drumRadiusMeters = sprocketRadiusMeters * 3; // 3 stages
 
-    public static final double setpointPositionToleranceMeters = Units.inchesToMeters(2);
-    public static final double setpointVelocityToleranceMetersPerSec = Units.inchesToMeters(2);
+    static final double setpointPositionToleranceMeters = Units.inchesToMeters(2);
+    static final double setpointVelocityToleranceMetersPerSec = Units.inchesToMeters(2);
 
-    public static final double maxHeightMeters = 1.745;
-    public static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 3);
-    public static final ElevatorLimit lowerLimit = new ElevatorLimit(0.25, -1.75);
+    static final double maxHeightMeters = 1.745;
+    static final ElevatorLimit upperLimit = new ElevatorLimit(maxHeightMeters - 0.15, 3);
+    static final ElevatorLimit lowerLimit = new ElevatorLimit(0.25, -1.75);
 
-    public static final double positionOffsetPerMeterOfDistance = 0.9;
+    static final double positionOffsetPerMeterOfDistance = 0.9;
 
     public static final double hardstopMeters = Units.inchesToMeters(13);
-    public static final double gentleMaxVelocityMetersPerSecond = 0.4;
+    static final double gentleMaxVelocityMetersPerSecond = 0.4;
     /**
      * While we could calculate this based on the current velocity, it caused the gentle profile to be used
      * for only half of the loop cycles. This could probably be solved but I don't think it's worth the effort
      */
     public static double hardstopSlowdownMeters = calculateHardstopSlowdownMeters(maxVelocityMetersPerSecond);
 
-    public static double calculateHardstopSlowdownMeters(double currentVelocityMetersPerSec) {
+    static double calculateHardstopSlowdownMeters(double currentVelocityMetersPerSec) {
         // In reality, max acceleration is a lot higher, especially with an aggressive kG
         double assumedMaxAccelerationMetersPerSecondSquared = maxAccelerationMetersPerSecondSquared * 0.9;
 
@@ -61,15 +61,15 @@ public class ElevatorConstants {
         return hardstopMeters + -x;
     }
 
-    public static double metersToRad(double meters) {
+    static double metersToRad(double meters) {
         return meters / drumRadiusMeters;
     }
 
-    public static double radToMeters(double rad) {
+    static double radToMeters(double rad) {
         return rad * drumRadiusMeters;
     }
 
-    protected static ElevatorIO createIO() {
+    static ElevatorIO createIO() {
         return switch (BuildConstants.mode) {
             case REAL -> new ElevatorIOTalonFX(10, 11, false, false);
             case SIM -> new ElevatorIOSim();
@@ -77,7 +77,7 @@ public class ElevatorConstants {
         };
     }
 
-    public record ElevatorLimit(
+    record ElevatorLimit(
             double positionMeters,
             double velocityMetersPerSec
     ) {

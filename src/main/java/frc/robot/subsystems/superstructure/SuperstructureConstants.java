@@ -9,20 +9,20 @@ public class SuperstructureConstants {
     public static final double scoreCoralSettleSeconds = 0.5;
     public static final double scoreCoralL1SettleSeconds = 0.5;
 
-    public static final Transform3d coralAboveFunnel = new Transform3d(
+    static final Transform3d coralAboveFunnel = new Transform3d(
             Units.inchesToMeters(5),
             0,
             Units.inchesToMeters(18),
             new Rotation3d(0, -Units.degreesToRadians(45), 0)
     );
-    public static final Transform3d coralInFunnel = new Transform3d(
+    static final Transform3d coralInFunnel = new Transform3d(
             Units.inchesToMeters(2),
             0,
             Units.inchesToMeters(12),
             new Rotation3d()
     );
 
-    public static Transform3d coralInEndEffector(double elevatorPositionMeters, double endEffectorAngleRad) {
+    static Transform3d coralInEndEffector(double elevatorPositionMeters, double endEffectorAngleRad) {
         endEffectorAngleRad += Math.PI / 2.0;
         double tan = Math.tan(endEffectorAngleRad);
         return new Transform3d(
@@ -33,7 +33,7 @@ public class SuperstructureConstants {
         );
     }
 
-    protected static SuperstructureIO createIO() {
+    static SuperstructureIO createIO() {
         return switch (BuildConstants.mode) {
             case REAL -> new SuperstructureIOReal();
             case SIM -> new SuperstructureIOSim();

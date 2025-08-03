@@ -60,7 +60,7 @@ public class EndEffector extends MotorSubsystem<EndEffector.Goal> {
         super(
                 "EndEffector",
                 RequestTolerances.position(rollersPositionToleranceRad),
-                createRollersIO(),
+                createIO(),
                 Goal.IDLE
         );
     }
