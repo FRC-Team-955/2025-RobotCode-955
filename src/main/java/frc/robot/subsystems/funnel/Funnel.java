@@ -69,7 +69,7 @@ public class Funnel implements Periodic {
     @Override
     public void periodicBeforeCommands() {
         io.updateInputs(inputs);
-        Logger.processInputs("Inputs/Funnel/Belt", inputs);
+        Logger.processInputs("Inputs/Funnel", inputs);
 
         beltDisconnectedAlert.set(!inputs.connected);
 

@@ -85,7 +85,7 @@ public class EndEffector implements Periodic {
     @Override
     public void periodicBeforeCommands() {
         io.updateInputs(inputs);
-        Logger.processInputs("Inputs/EndEffector/Rollers", inputs);
+        Logger.processInputs("Inputs/EndEffector", inputs);
 
         rollersDisconnectedAlert.set(!inputs.connected);
 
