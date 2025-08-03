@@ -196,7 +196,7 @@ public class Robot extends LoggedRobot {
 
         for (var periodic : periodics) {
 //            System.out.println("periodicAfterCommands: " + periodic.getClass().getSimpleName());
-            periodic.periodicBeforeCommands();
+            periodic.periodicAfterCommands();
         }
 
         // Return to normal thread priority
