@@ -9,7 +9,6 @@ import frc.lib.subsystem.CommandBasedSubsystem;
 import frc.robot.OperatorDashboard;
 import frc.robot.OperatorDashboard.CoralScoringLevel;
 import frc.robot.RobotState;
-import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
@@ -33,7 +32,6 @@ public class Superstructure extends CommandBasedSubsystem {
     private final RobotState robotState = RobotState.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
 
-    private final Drive drive = Drive.get();
     private final Elevator elevator = Elevator.get();
     private final EndEffector endEffector = EndEffector.get();
     private final Funnel funnel = Funnel.get();
@@ -90,18 +88,15 @@ public class Superstructure extends CommandBasedSubsystem {
         ZERO_ELEVATOR(s -> {throw new RuntimeException("TODO SEE ELEVATOR JOYSTICK CONTROL");}),
         ;
 
-        public final Function<Superstructure, Goals> goals;
+        private final Function<Superstructure, Goals> goals;
     }
 
-    @Getter
     private Goal goal = Goal.IDLE;
 
     public Command setGoal(Goal goal) {
         return runOnce(() -> {
             this.goal = goal;
 
-            // Immediately apply goals so that we don't get false positives
-            // when checking if a certain subsystem is at a certain goal
             Goals goals = goal.goals.apply(this);
             elevator.setGoal(goals.elevatorGoal);
             endEffector.setGoal(goals.endEffectorGoal);
@@ -128,7 +123,6 @@ public class Superstructure extends CommandBasedSubsystem {
 
     private Superstructure() {
     }
-
 
     private final Debouncer endEffectorBeamBreakDebouncer = new Debouncer(3 * 0.02);
     @AutoLogOutput(key = "Superstructure/EndEffectorTriggered")
@@ -206,10 +200,7 @@ public class Superstructure extends CommandBasedSubsystem {
     }
 
     public Command cancel() {
-        return CommandsExt.eagerSequence(
-                setGoal(Goal.IDLE),
-                drive.driveJoystick()
-        ).ignoringDisable(true);
+        return setGoal(Goal.IDLE).ignoringDisable(true);
     }
 
     public Command home() {

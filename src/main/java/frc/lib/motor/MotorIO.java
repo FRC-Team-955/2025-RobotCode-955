@@ -37,12 +37,6 @@ public class MotorIO {
     public void setBrakeMode(boolean enable) {
     }
 
-    public enum RequestType {
-        VoltageVolts,
-        PositionRad,
-        VelocityRadPerSec,
-    }
-
     public void setRequest(RequestType type, double value) {
     }
 }
