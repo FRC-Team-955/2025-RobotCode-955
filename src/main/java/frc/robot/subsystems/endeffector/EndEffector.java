@@ -18,7 +18,7 @@ import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-import java.util.function.DoubleUnaryOperator;
+import java.util.function.DoubleSupplier;
 
 import static frc.robot.subsystems.endeffector.EndEffectorConstants.*;
 import static frc.robot.subsystems.endeffector.EndEffectorTuning.*;
@@ -33,19 +33,19 @@ public class EndEffector implements Periodic {
 
     @RequiredArgsConstructor
     public enum Goal {
-        IDLE(t -> 0, RequestType.VoltageVolts),
-        FUNNEL_INTAKE(t -> funnelIntakeGoalSetpoint.get(), RequestType.VelocityRadPerSec),
-        SCORE_CORAL(t -> scoreCoralGoalSetpoint.get(), RequestType.VelocityRadPerSec),
-        SCORE_CORAL_L1(t -> scoreCoralL1GoalSetpoint.get(), RequestType.VelocityRadPerSec),
-        DESCORE_ALGAE(t -> descoreAlgaeGoalSetpoint.get(), RequestType.VelocityRadPerSec),
-        EJECT_ALTERNATE(t -> t % 1.0 < 0.86 ? ejectGoalSetpoint.get() : -ejectGoalSetpoint.get(), RequestType.VelocityRadPerSec),
-        ZERO_CORAL(t -> zeroCoralGoalSetpoint.get(), RequestType.VelocityRadPerSec),
-        HOME_INITIAL(t -> rollersRadiansForMeters(homeInitialMeters.get()), RequestType.RelativePositionRad),
-        HOME_FINAL(t -> rollersRadiansForMeters(homeFinalMeters.get()), RequestType.RelativePositionRad),
+        IDLE(() -> 0, RequestType.VoltageVolts),
+        FUNNEL_INTAKE(funnelIntakeGoalSetpoint::get, RequestType.VelocityRadPerSec),
+        SCORE_CORAL(scoreCoralGoalSetpoint::get, RequestType.VelocityRadPerSec),
+        SCORE_CORAL_L1(scoreCoralL1GoalSetpoint::get, RequestType.VelocityRadPerSec),
+        DESCORE_ALGAE(descoreAlgaeGoalSetpoint::get, RequestType.VelocityRadPerSec),
+        EJECT_ALTERNATE(() -> Timer.getTimestamp() % 1.0 < 0.86 ? ejectGoalSetpoint.get() : -ejectGoalSetpoint.get(), RequestType.VelocityRadPerSec),
+        ZERO_CORAL(zeroCoralGoalSetpoint::get, RequestType.VelocityRadPerSec),
+        HOME_INITIAL(() -> rollersRadiansForMeters(homeInitialMeters.get()), RequestType.RelativePositionRad),
+        HOME_FINAL(() -> rollersRadiansForMeters(homeFinalMeters.get()), RequestType.RelativePositionRad),
         ;
 
         /** Should be constant for every loop cycle */
-        private final DoubleUnaryOperator value;
+        private final DoubleSupplier value;
         private final RequestType type;
     }
 
@@ -53,12 +53,7 @@ public class EndEffector implements Periodic {
     @Setter
     private Goal goal = Goal.IDLE;
 
-    private Goal lastGoal = goal;
-    private final Timer goalTimer = new Timer();
-
     private final RequestHelper requestHelper = new RequestHelper(inputs, RequestTolerances.position(rollersPositionToleranceRad));
-    private Double lastGoalValue = null;
-    private boolean atLastGoal = false;
 
     private final Alert rollersDisconnectedAlert = new Alert("End effector rollers motor is disconnected.", Alert.AlertType.kError);
 
@@ -83,10 +78,7 @@ public class EndEffector implements Periodic {
 
         rollersDisconnectedAlert.set(!inputs.connected);
 
-        if (lastGoalValue != null) {
-            atLastGoal = requestHelper.atRequest(lastGoal.type, lastGoalValue);
-            Logger.recordOutput("EndEffector/AtLastGoal", atLastGoal);
-        }
+        Logger.recordOutput("EndEffector/AtLastGoal", requestHelper.processAtLastGoal());
 
         // Update mechanism
         robotMechanism.endEffector.ligament.setAngle(180 - Units.radiansToDegrees(getAngleRad()));
@@ -108,18 +100,13 @@ public class EndEffector implements Periodic {
         if (DriverStation.isDisabled()) {
             io.setRequest(MotorIO.RequestType.VoltageVolts, 0);
         } else {
-            if (goal != lastGoal) {
-                lastGoal = goal;
-                goalTimer.restart();
-            }
-
             Logger.recordOutput("EndEffector/RequestType", goal.type);
-            lastGoalValue = goal.value.applyAsDouble(goalTimer.get());
-            Logger.recordOutput("EndEffector/RequestValue", lastGoalValue);
+            double value = goal.value.getAsDouble();
+            Logger.recordOutput("EndEffector/RequestValue", value);
             requestHelper.convertAndApplyRequest(
                     goal.hashCode(),
                     goal.type,
-                    lastGoalValue,
+                    value,
                     (newType, newValue) -> {
                         Logger.recordOutput("EndEffector/RequestTypeConverted", newType);
                         Logger.recordOutput("EndEffector/RequestValueConverted", newValue);
@@ -130,8 +117,7 @@ public class EndEffector implements Periodic {
     }
 
     public Command waitUntilAtLastGoal() {
-        // We don't want a false positive by looking at the previous goal
-        return Commands.waitUntil(() -> goal == lastGoal && atLastGoal);
+        return Commands.waitUntil(() -> requestHelper.isAtLastGoal(goal.hashCode()));
     }
 
     @AutoLogOutput(key = "EndEffector/DescoreAlgaeAmperageTriggered")

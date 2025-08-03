@@ -11,54 +11,20 @@ public class RequestHelper {
     private final MotorIOInputs inputs;
     private final RequestTolerances tolerances;
 
-    public void convertAndApplyRequest(
-            int goalHash,
-            RequestType type,
-            double value,
-            BiConsumer<MotorIO.RequestType, Double> setAndLogRequest
-    ) {
-        setAndLogRequest.accept(
-                switch (type) {
-                    case VoltageVolts -> MotorIO.RequestType.VoltageVolts;
-                    case PositionRad, RelativePositionRad -> MotorIO.RequestType.PositionRad;
-                    case VelocityRadPerSec -> MotorIO.RequestType.VelocityRadPerSec;
-                },
-                handleRelativePositionRequest(goalHash, type, value)
-        );
-    }
+    private Integer lastGoalHash = null;
+    private RequestType lastType = null;
+    private Double lastValue = null;
 
-    private int relativePositionLastGoalHash = 0;
-    private double relativePositionLastGoalValue = 0.0;
-    private double relativePositionAbsoluteSetpoint = 0.0;
+    private boolean atLastGoal = false;
 
-    private double handleRelativePositionRequest(
-            int goalHash,
-            RequestType type,
-            double value
-    ) {
-        if (type == RequestType.RelativePositionRad) {
-            // Reset if new goal or new relative setpoint
-            if (goalHash != relativePositionLastGoalHash || value != relativePositionLastGoalValue) {
-                relativePositionLastGoalHash = goalHash;
-                relativePositionLastGoalValue = value;
-
-                relativePositionAbsoluteSetpoint = inputs.positionRad + value;
-            }
-
-            return relativePositionAbsoluteSetpoint;
-        } else {
-            // Invalid current setpoint and ensure that a new setpoint is generated if the type goes back to relative position
-            // hashCode of null is 0 - if the goal hash is 0, something already went horribly wrong
-            relativePositionLastGoalHash = 0;
-            relativePositionLastGoalValue = 0;
-
-            return value;
+    /** Should be called in periodicBeforeCommands */
+    public boolean processAtLastGoal() {
+        if (lastGoalHash == null || lastType == null || lastValue == null) {
+            return false;
         }
-    }
 
-    public boolean atRequest(RequestType type, double value) {
-        return switch (type) {
-            case PositionRad -> Math.abs(inputs.positionRad - value) <= tolerances.positionToleranceRad();
+        atLastGoal = switch (lastType) {
+            case PositionRad -> Math.abs(inputs.positionRad - lastValue) <= tolerances.positionToleranceRad();
 
             case RelativePositionRad -> {
                 if (relativePositionLastGoalHash == 0) {
@@ -70,9 +36,67 @@ public class RequestHelper {
             }
 
             case VelocityRadPerSec ->
-                    Math.abs(inputs.velocityRadPerSec - value) <= tolerances.velocityToleranceRadPerSec();
+                    Math.abs(inputs.velocityRadPerSec - lastValue) <= tolerances.velocityToleranceRadPerSec();
 
-            case VoltageVolts -> Math.abs(inputs.appliedVolts - value) <= tolerances.voltageToleranceVolts();
+            case VoltageVolts -> Math.abs(inputs.appliedVolts - lastValue) <= tolerances.voltageToleranceVolts();
         };
+        return atLastGoal;
+    }
+
+    /** Should be called by commands */
+    public boolean isAtLastGoal(int goalHash) {
+        if (lastGoalHash == null || goalHash != lastGoalHash) {
+            // Wait for processAtLastGoal to be called
+            // We don't want a false positive by looking at the previous goal
+            return false;
+        }
+
+        return atLastGoal;
+    }
+
+    /** Should be called in periodicAfterCommands */
+    public void convertAndApplyRequest(
+            int goalHash,
+            RequestType type,
+            double value,
+            BiConsumer<MotorIO.RequestType, Double> setAndLogRequest
+    ) {
+        lastGoalHash = goalHash;
+        lastType = type;
+        lastValue = value;
+
+        setAndLogRequest.accept(
+                switch (type) {
+                    case VoltageVolts -> MotorIO.RequestType.VoltageVolts;
+                    case PositionRad, RelativePositionRad -> MotorIO.RequestType.PositionRad;
+                    case VelocityRadPerSec -> MotorIO.RequestType.VelocityRadPerSec;
+                },
+                handleRelativePositionRequest()
+        );
+    }
+
+    private int relativePositionLastGoalHash = 0;
+    private double relativePositionLastValue = 0.0;
+    private double relativePositionAbsoluteSetpoint = 0.0;
+
+    private double handleRelativePositionRequest() {
+        if (lastType == RequestType.RelativePositionRad) {
+            // Reset if new goal or new relative setpoint
+            if (lastGoalHash != relativePositionLastGoalHash || lastValue != relativePositionLastValue) {
+                relativePositionLastGoalHash = lastGoalHash;
+                relativePositionLastValue = lastValue;
+
+                relativePositionAbsoluteSetpoint = inputs.positionRad + lastValue;
+            }
+
+            return relativePositionAbsoluteSetpoint;
+        } else {
+            // Invalid current setpoint and ensure that a new setpoint is generated if the type goes back to relative position
+            // hashCode of null is 0 - if the goal hash is 0, something already went horribly wrong
+            relativePositionLastGoalHash = 0;
+            relativePositionLastValue = 0;
+
+            return lastValue;
+        }
     }
 }
