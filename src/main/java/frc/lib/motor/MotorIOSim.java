@@ -18,8 +18,6 @@ public class MotorIOSim extends MotorIO {
     private boolean positionControl = false;
     private double ffVolts;
 
-    private RelativePositionRequestHelper relativePositionRequestHelper = new RelativePositionRequestHelper();
-
     // If using SysID values, kA and kV are the gains returned from SysID, in volts/(rad/sec) or volts/(rad/sec^2)
     public MotorIOSim(DCMotor motor, double kV, double kA, PIDF positionGains, PIDF velocityGains) {
         motorSim = new DCMotorSim(
@@ -66,8 +64,6 @@ public class MotorIOSim extends MotorIO {
         inputs.velocityRadPerSec = motorSim.getAngularVelocityRadPerSec();
         inputs.appliedVolts = appliedVolts;
         inputs.currentAmps = Math.abs(motorSim.getCurrentDrawAmps());
-
-        relativePositionRequestHelper.setPositionRad(inputs.positionRad);
     }
 
     @Override
@@ -89,7 +85,7 @@ public class MotorIOSim extends MotorIO {
     }
 
     @Override
-    public void setRequest(int goalHash, RequestType type, double value) {
+    public void setRequest(RequestType type, double value) {
         switch (type) {
             case VoltageVolts -> {
                 appliedVolts = value;
@@ -99,11 +95,6 @@ public class MotorIOSim extends MotorIO {
                 closedLoop = true;
                 positionControl = true;
                 positionPid.setSetpoint(value);
-            }
-            case RelativePositionRad -> {
-                closedLoop = true;
-                positionControl = true;
-                positionPid.setSetpoint(relativePositionRequestHelper.getAbsoluteSetpointRad(goalHash, value));
             }
             case VelocityRadPerSec -> {
                 closedLoop = true;

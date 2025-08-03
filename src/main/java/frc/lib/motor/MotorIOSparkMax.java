@@ -27,8 +27,6 @@ public class MotorIOSparkMax extends MotorIO {
 
     private SimpleMotorFeedforward velocityFeedforward;
 
-    private RelativePositionRequestHelper relativePositionRequestHelper = new RelativePositionRequestHelper();
-
     public MotorIOSparkMax(
             int canID,
             boolean inverted,
@@ -91,8 +89,6 @@ public class MotorIOSparkMax extends MotorIO {
         ifOk(spark, spark::getOutputCurrent, (value) -> inputs.currentAmps = value);
         ifOk(spark, spark::getMotorTemperature, (value) -> inputs.temperatureCelsius = value);
         inputs.connected = connectedDebounce.calculate(!sparkStickyFault);
-
-        relativePositionRequestHelper.setPositionRad(inputs.positionRad);
     }
 
     @Override
@@ -131,16 +127,11 @@ public class MotorIOSparkMax extends MotorIO {
     }
 
     @Override
-    public void setRequest(int goalHash, RequestType type, double value) {
+    public void setRequest(RequestType type, double value) {
         switch (type) {
             case VoltageVolts -> spark.setVoltage(value);
             case PositionRad -> controller.setReference(
                     value,
-                    SparkBase.ControlType.kPosition,
-                    ClosedLoopSlot.kSlot0 // position = slot0
-            );
-            case RelativePositionRad -> controller.setReference(
-                    relativePositionRequestHelper.getAbsoluteSetpointRad(goalHash, value),
                     SparkBase.ControlType.kPosition,
                     ClosedLoopSlot.kSlot0 // position = slot0
             );

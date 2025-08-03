@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.lib.motor.MotorIO;
 import frc.lib.motor.MotorIOInputsAutoLogged;
+import frc.lib.motor.RequestConverter;
 import frc.lib.motor.RequestType;
 import frc.lib.subsystem.Periodic;
 import frc.robot.OperatorDashboard;
@@ -47,6 +48,8 @@ public class Funnel implements Periodic {
     @Setter
     private Goal goal = Goal.IDLE;
 
+    private final RequestConverter requestConverter = new RequestConverter(inputs);
+
     private final Alert beltDisconnectedAlert = new Alert("Funnel belt motor is disconnected.", Alert.AlertType.kError);
 
     private static Funnel instance;
@@ -83,12 +86,21 @@ public class Funnel implements Periodic {
 
         Logger.recordOutput("Funnel/Goal", goal);
         if (DriverStation.isDisabled()) {
-            io.setRequest(goal.hashCode(), RequestType.VoltageVolts, 0);
+            io.setRequest(MotorIO.RequestType.VoltageVolts, 0);
         } else {
             Logger.recordOutput("Funnel/RequestType", goal.type);
             double value = goal.value.getAsDouble();
             Logger.recordOutput("Funnel/RequestValue", value);
-            io.setRequest(goal.hashCode(), goal.type, value);
+            requestConverter.convertAndApplyRequest(
+                    goal.hashCode(),
+                    goal.type,
+                    value,
+                    (newType, newValue) -> {
+                        Logger.recordOutput("Funnel/RequestTypeConverted", newType);
+                        Logger.recordOutput("Funnel/RequestValueConverted", newValue);
+                        io.setRequest(newType, newValue);
+                    }
+            );
         }
     }
 }
