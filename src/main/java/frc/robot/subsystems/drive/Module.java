@@ -55,9 +55,6 @@ public class Module {
         turnEncoderDisconnectedAlert.set(!inputs.turnAbsoluteEncoderConnected);
     }
 
-    public void periodicAfterCommands() {
-    }
-
     public void runSetpoint(SwerveModuleState state) {
         if (disableDriving) {
             io.setDriveOpenLoop(0.0);

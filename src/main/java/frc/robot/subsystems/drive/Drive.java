@@ -93,6 +93,7 @@ public class Drive extends CommandBasedSubsystem {
         Logger.processInputs("Inputs/Drive/Gyro", gyroInputs);
 
         for (var module : modules) {
+            // We have a separate function from periodicBeforeCommands to minimize time spent in lock
             module.updateAndProcessInputs();
         }
 
@@ -316,11 +317,6 @@ public class Drive extends CommandBasedSubsystem {
             }
         } else {
             Util.error("Unknown request type: " + request.type());
-        }
-
-        // Run module closed loop control
-        for (var module : modules) {
-            module.periodicAfterCommands();
         }
     }
 
