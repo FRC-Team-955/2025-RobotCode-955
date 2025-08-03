@@ -9,6 +9,19 @@ public record SuperstructureContext(
         Supplier<OperatorDashboard.CoralScoringLevel> levelSupplier,
         Supplier<ReefAlign.ReefZoneSide> reefSideSupplier
 ) {
+    public static SuperstructureContext none() {
+        return new SuperstructureContext(
+                () -> {
+                    Util.error("Level supplier used when neither was provided");
+                    return OperatorDashboard.CoralScoringLevel.L1;
+                },
+                () -> {
+                    Util.error("Reef side supplier used when neither was provided");
+                    return ReefAlign.ReefZoneSide.MiddleFront;
+                }
+        );
+    }
+
     public static SuperstructureContext levelOnly(Supplier<OperatorDashboard.CoralScoringLevel> levelSupplier) {
         return new SuperstructureContext(
                 levelSupplier,

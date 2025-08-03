@@ -74,11 +74,7 @@ public class Superstructure extends CommandBasedSubsystem {
         AUTO_DESCORE_ALGAE_WAIT_FOR_AMPERAGE(AUTO_DESCORE_ALGAE_WAIT_FOR_ALIGN.goals),
         AUTO_DESCORE_ALGAE_MOVE_BACK(AUTO_DESCORE_ALGAE_WAIT_FOR_AMPERAGE.goals),
 
-        HANDOFF(s ->
-                s.operatorDashboard.ignoreEndEffectorBeamBreak.get()
-                        ? new Goals(Elevator.Goal.STOW, EndEffector.Goal.FUNNEL_INTAKE_MANUAL, Funnel.Goal.INTAKE_ALTERNATE)
-                        : new Goals(Elevator.Goal.STOW, EndEffector.Goal.FUNNEL_INTAKE, Funnel.Goal.INTAKE_ALTERNATE)
-        ),
+        HANDOFF(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.FUNNEL_INTAKE, Funnel.Goal.INTAKE_ALTERNATE)),
         HOME_STEP_1(s -> new Goals(Elevator.Goal.ZERO_CORAL, EndEffector.Goal.HOME_INITIAL, Funnel.Goal.IDLE)),
         HOME_STEP_2(s -> new Goals(Elevator.Goal.ZERO_CORAL, EndEffector.Goal.ZERO_CORAL, Funnel.Goal.IDLE)),
         HOME_STEP_3(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.IDLE, Funnel.Goal.IDLE)),
@@ -101,10 +97,19 @@ public class Superstructure extends CommandBasedSubsystem {
     private Goal goal = Goal.IDLE;
 
     public Command setGoal(Goal goal) {
-        return runOnce(() -> this.goal = goal);
+        return runOnce(() -> {
+            this.goal = goal;
+
+            // Immediately apply goals so that we don't get false positives
+            // when checking if a certain subsystem is at a certain goal
+            Goals goals = goal.goals.apply(this);
+            elevator.setGoal(goals.elevatorGoal);
+            endEffector.setGoal(goals.endEffectorGoal);
+            funnel.setGoal(goals.funnelGoal);
+        });
     }
 
-    private SuperstructureContext ctx;
+    private SuperstructureContext ctx = SuperstructureContext.none();
 
     public Command initCtx(SuperstructureContext ctx) {
         return runOnce(() -> this.ctx = ctx);
@@ -173,10 +178,6 @@ public class Superstructure extends CommandBasedSubsystem {
     @Override
     public void periodicAfterCommands() {
         Logger.recordOutput("Superstructure/Goal", goal);
-        Goals goals = goal.goals.apply(this);
-        elevator.setGoal(goals.elevatorGoal);
-        endEffector.setGoal(goals.endEffectorGoal);
-        funnel.setGoal(goals.funnelGoal);
 
         Pose3d robotPose = new Pose3d(robotState.getPose());
 
@@ -217,7 +218,7 @@ public class Superstructure extends CommandBasedSubsystem {
                         () -> !endEffectorTriggered || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                         CommandsExt.eagerSequence(
                                 setGoal(Goal.HOME_STEP_1),
-                                endEffector.moveByAndWaitUntilDone(() -> 0) // WAIT UNTIL AT SETPOINT
+                                endEffector.waitUntilAtLastGoal()
                         )
                 ),
 
@@ -228,7 +229,7 @@ public class Superstructure extends CommandBasedSubsystem {
                 Commands.waitSeconds(0.05),
 
                 setGoal(Goal.HOME_STEP_4),
-                endEffector.moveByAndWaitUntilDone(() -> 0) // WAIT UNTIL AT SETPOINT
+                endEffector.waitUntilAtLastGoal()
         );
     }
 

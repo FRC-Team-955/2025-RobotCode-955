@@ -3,10 +3,10 @@ package frc.robot.subsystems.funnel;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
-import frc.lib.motor.MotorIO;
-import frc.lib.motor.MotorIOInputsAutoLogged;
-import frc.lib.motor.RequestConverter;
-import frc.lib.motor.RequestType;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import frc.lib.motor.*;
 import frc.lib.subsystem.Periodic;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
@@ -15,9 +15,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 
-import java.util.function.DoubleSupplier;
+import java.util.function.DoubleUnaryOperator;
 
-import static frc.robot.subsystems.funnel.FunnelTuning.velocityGainsTunable;
+import static frc.robot.subsystems.funnel.FunnelTuning.*;
 
 public class Funnel implements Periodic {
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
@@ -28,19 +28,13 @@ public class Funnel implements Periodic {
 
     @RequiredArgsConstructor
     public enum Goal {
-        IDLE(() -> 0, RequestType.VoltageVolts),
-        INTAKE_ALTERNATE(() -> {
-            throw new RuntimeException("TODO alternate, manual intaking");
-//            return intakeGoalSetpoint.get();
-        }, RequestType.VelocityRadPerSec),
-        EJECT_ALTERNATE(() -> {
-            throw new RuntimeException("TODO alternate");
-//            return ejectGoalSetpoint.get();
-        }, RequestType.VelocityRadPerSec),
+        IDLE(t -> 0, RequestType.VoltageVolts),
+        INTAKE_ALTERNATE(t -> t % 1.0 < 0.92 ? intakeGoalSetpoint.get() : -intakeGoalSetpoint.get(), RequestType.VelocityRadPerSec),
+        EJECT_ALTERNATE(t -> t % 1.0 < 0.86 ? ejectGoalSetpoint.get() : -ejectGoalSetpoint.get(), RequestType.VelocityRadPerSec),
         ;
 
         /** Should be constant for every loop cycle */
-        private final DoubleSupplier value;
+        private final DoubleUnaryOperator value;
         private final RequestType type;
     }
 
@@ -48,7 +42,12 @@ public class Funnel implements Periodic {
     @Setter
     private Goal goal = Goal.IDLE;
 
-    private final RequestConverter requestConverter = new RequestConverter(inputs);
+    private Goal lastGoal = goal;
+    private final Timer goalTimer = new Timer();
+
+    private final RequestHelper requestHelper = new RequestHelper(inputs, RequestTolerances.defaults());
+    private Double lastGoalValue = null;
+    private boolean atLastGoal = false;
 
     private final Alert beltDisconnectedAlert = new Alert("Funnel belt motor is disconnected.", Alert.AlertType.kError);
 
@@ -73,6 +72,11 @@ public class Funnel implements Periodic {
 
         beltDisconnectedAlert.set(!inputs.connected);
 
+        if (lastGoalValue != null) {
+            atLastGoal = requestHelper.atRequest(lastGoal.type, lastGoalValue);
+            Logger.recordOutput("Funnel/AtLastGoal", atLastGoal);
+        }
+
         robotMechanism.funnel.beltLigament.setAngle(Units.radiansToDegrees(-inputs.positionRad));
 
         velocityGainsTunable.ifChanged(io::setVelocityPIDF);
@@ -88,13 +92,18 @@ public class Funnel implements Periodic {
         if (DriverStation.isDisabled()) {
             io.setRequest(MotorIO.RequestType.VoltageVolts, 0);
         } else {
+            if (goal != lastGoal) {
+                lastGoal = goal;
+                goalTimer.restart();
+            }
+
             Logger.recordOutput("Funnel/RequestType", goal.type);
-            double value = goal.value.getAsDouble();
-            Logger.recordOutput("Funnel/RequestValue", value);
-            requestConverter.convertAndApplyRequest(
+            lastGoalValue = goal.value.applyAsDouble(goalTimer.get());
+            Logger.recordOutput("Funnel/RequestValue", lastGoalValue);
+            requestHelper.convertAndApplyRequest(
                     goal.hashCode(),
                     goal.type,
-                    value,
+                    lastGoalValue,
                     (newType, newValue) -> {
                         Logger.recordOutput("Funnel/RequestTypeConverted", newType);
                         Logger.recordOutput("Funnel/RequestValueConverted", newValue);
@@ -102,5 +111,10 @@ public class Funnel implements Periodic {
                     }
             );
         }
+    }
+
+    public Command waitUntilAtLastGoal() {
+        // We don't want a false positive by looking at the previous goal
+        return Commands.waitUntil(() -> goal == lastGoal && atLastGoal);
     }
 }
