@@ -108,6 +108,7 @@ public class AprilTagVision implements Periodic {
                 Transform3d fieldToRobot = fieldToCamera.plus(metadata.robotToCamera.inverse());
                 Pose3d poseEstimate3dSolve = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
                 GenericPoseObservation observation3dSolve = new GenericPoseObservation(
+                        PoseEsimationMethod.SOLVE_3D,
                         observation.timestamp(),
                         observation.ambiguity(),
                         1,
@@ -147,6 +148,7 @@ public class AprilTagVision implements Periodic {
 
                     Pose2d poseEstimateTrig = new Pose2d(fieldToCameraTranslation.plus(camToRobotTranslation), headingSample);
                     GenericPoseObservation observationTrig = new GenericPoseObservation(
+                            PoseEsimationMethod.TRIG,
                             observation.timestamp(),
                             observation.ambiguity(),
                             1,
@@ -174,6 +176,7 @@ public class AprilTagVision implements Periodic {
                 Pose3d robotPose = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
 
                 genericPoseObservations.add(new GenericPoseObservation(
+                        PoseEsimationMethod.MULTITAG,
                         observation.timestamp(),
                         observation.ambiguity(),
                         observation.tagCount(),
@@ -257,7 +260,14 @@ public class AprilTagVision implements Periodic {
         );
     }
 
+    private enum PoseEsimationMethod {
+        MULTITAG,
+        SOLVE_3D,
+        TRIG,
+    }
+
     private record GenericPoseObservation(
+            PoseEsimationMethod method,
             double timestamp,
             double ambiguity,
             int tagCount,
