@@ -39,10 +39,10 @@ public class AprilTagVisionConstants {
     static final double angularStdDevBaseline3dSolveRad = Units.degreesToRadians(60);
 
     // Distance from a tag for trig estimation to be used
-    static final double distanceFromTagForTrigMeters = 1;
+    static final double distanceFromTagForTrigMeters = 1.5;
     // Max difference between 3d solve and trig for trig to be used
-    static final double trig3dSolveMaxDiffMeters = 0.4;
-    static final double trig3dSolveMaxDiffRad = Units.degreesToRadians(7);
+    static final double trig3dSolveMaxDiffMeters = 0.2;
+    static final double trig3dSolveMaxDiffRad = 0.15;
 
     @RequiredArgsConstructor
     enum Camera {
