@@ -191,7 +191,8 @@ public class AprilTagVision implements Periodic {
                 if (observation.poseEstimateTrigPresent() &&
                         observation.tagDistance() < distanceFromTagForTrigMeters &&
                         poseEstimate3dSolve2d.getTranslation().getDistance(observation.poseEstimateTrig().getTranslation()) < trig3dSolveMaxDiffMeters &&
-                        Math.abs(poseEstimate3dSolve2d.getRotation().minus(observation.poseEstimateTrig().getRotation()).getRadians()) < trig3dSolveMaxDiffRad) {
+                        Math.abs(poseEstimate3dSolve2d.getRotation().minus(observation.poseEstimateTrig().getRotation()).getRadians()) < trig3dSolveMaxDiffRad
+                ) {
                     genericPoseObservations.add(new GenericPoseObservation(
                             observation.timestamp(),
                             observation.ambiguity(),
