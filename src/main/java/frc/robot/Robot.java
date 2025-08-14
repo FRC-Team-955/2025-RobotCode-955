@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.lib.LoggedTracer;
 import frc.lib.commands.CommandsExt;
 import frc.lib.subsystem.Periodic;
 import frc.robot.subsystems.drive.ModuleIOSim;
@@ -172,17 +173,18 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void robotPeriodic() {
-        // Switch thread to high priority to improve loop timing
-//        Threads.setCurrentThreadPriority(true, 99);
+        LoggedTracer.reset();
 
         for (var periodic : periodics) {
 //            System.out.println("periodicBeforeCommands: " + periodic.getClass().getSimpleName());
             periodic.periodicBeforeCommands();
+            LoggedTracer.record(periodic.getClass().getSimpleName() + "PeriodicBeforeCommands");
         }
 
         // Run the command scheduler.
         // Extended subsystems periodic have already been run.
         CommandScheduler.getInstance().run();
+        LoggedTracer.record("CommandScheduler");
 
         if (DriverStation.isAutonomousEnabled()) {
             // We want this to run after the command scheduler,
@@ -193,14 +195,13 @@ public class Robot extends LoggedRobot {
                 System.out.printf("********** Auto finished in %.2f seconds **********%n", autonomousEnd - autonomousStart);
             }
         }
+        LoggedTracer.record("AutoTimer");
 
         for (var periodic : periodics) {
 //            System.out.println("periodicAfterCommands: " + periodic.getClass().getSimpleName());
             periodic.periodicAfterCommands();
+            LoggedTracer.record(periodic.getClass().getSimpleName() + "PeriodicAfterCommands");
         }
-
-        // Return to normal thread priority
-//        Threads.setCurrentThreadPriority(false, 10);
     }
 
     @Override

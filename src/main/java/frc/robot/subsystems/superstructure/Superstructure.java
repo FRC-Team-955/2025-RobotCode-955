@@ -151,7 +151,7 @@ public class Superstructure extends CommandBasedSubsystem {
         hasCoral = hasCoralDebouncer.calculate(endEffectorTriggered || funnelTriggered || gamePieceVision.visibleDebounced());
 
         // OperatorDashboard periodicBeforeCommands runs after superstructure
-        throw new RuntimeException("TODO just get the closest side at the start of the command");
+//        throw new RuntimeException("TODO just get the closest side at the start of the command");
 //        operatorDashboard.setIgnoreClosestReefSideChanges(switch (goal) {
 //            case AUTO_SCORE_CORAL_WAIT_ALIGN, AUTO_SCORE_CORAL_WAIT_ELEVATOR, AUTO_SCORE_CORAL_SCORING,
 //                 AUTO_DESCORE_ALGAE_WAIT_FOR_ALIGN, AUTO_DESCORE_ALGAE_WAIT_FOR_AMPERAGE,

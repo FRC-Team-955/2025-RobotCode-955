@@ -59,6 +59,7 @@ public class Elevator implements Periodic {
     @Setter
     private Goal goal = Goal.STOW;
 
+    @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"}) // TODO: remove when zeroing added
     @AutoLogOutput(key = "Elevator/HasZeroed")
     private boolean hasZeroed = false;
 
@@ -186,7 +187,7 @@ public class Elevator implements Periodic {
                 io.setManualCurrentLimit(true);
                 manualCurrentLimitApplied = true;
             }
-            throw new RuntimeException("TODO");
+//            throw new RuntimeException("TODO");
         } else {
             if (manualCurrentLimitApplied) {
                 io.setManualCurrentLimit(false);
