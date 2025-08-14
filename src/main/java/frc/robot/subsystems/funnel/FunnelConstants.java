@@ -5,9 +5,12 @@ import frc.lib.PIDF;
 import frc.lib.motor.MotorIO;
 import frc.lib.motor.MotorIOSim;
 import frc.lib.motor.MotorIOSparkMax;
+import frc.lib.motor.RequestTolerances;
 import frc.robot.BuildConstants;
 
 public class FunnelConstants {
+    static final RequestTolerances tolerances = RequestTolerances.defaults();
+
     static final double gearRatio = 5;
     static final PIDF velocityGains = switch (BuildConstants.mode) {
         case REAL, REPLAY -> PIDF.ofPSV(0.01, 0.21416, 0.10077);

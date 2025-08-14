@@ -6,10 +6,11 @@ import frc.lib.PIDF;
 import frc.lib.motor.MotorIO;
 import frc.lib.motor.MotorIOSim;
 import frc.lib.motor.MotorIOSparkMax;
+import frc.lib.motor.RequestTolerances;
 import frc.robot.BuildConstants;
 
 public class EndEffectorConstants {
-    static final double rollersPositionToleranceRad = Units.degreesToRadians(15);
+    static final RequestTolerances tolerances = RequestTolerances.position(Units.degreesToRadians(15));
     static final double rollersRadiusMeters = Units.inchesToMeters(2.25 / 2.0);
 
     static final double descoreAlgaeTriggerAmps = 27;
