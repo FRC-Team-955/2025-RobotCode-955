@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Controller;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotState;
+import frc.robot.subsystems.apriltagvision.AprilTagVision;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
@@ -19,6 +20,7 @@ public abstract class SuperstructureCommand {
     protected final Controller controller = Controller.get();
 
     protected final Superstructure superstructure = Superstructure.get();
+    protected final AprilTagVision aprilTagVision = AprilTagVision.get();
     protected final Drive drive = Drive.get();
     protected final Elevator elevator = Elevator.get();
     protected final EndEffector endEffector = EndEffector.get();

@@ -62,6 +62,7 @@ public class AutoDescoreAlgae extends SuperstructureCommand {
 
         return CommandsExt.eagerSequence(
                 superstructure.initCtx(SuperstructureContext.reefSideOnly(reefZoneSideSupplier)),
+                aprilTagVision.setTagIdFilter(ReefAlign.reefTagIds),
                 Commands.race(
                         CommandsExt.eagerSequence(
                                 driveTo,

@@ -117,12 +117,30 @@ public class ReefAlign {
         return initial.interpolate(finalAlign, elevatorPercentage);
     }
 
-    public static AllianceBasedPose2d getAdjustedReefAprilTagPose(int aprilTagOffset) {
+    public static final int[] reefTagIds = {
+            // Blue
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+
+            // Red
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+    };
+
+    private static AllianceBasedPose2d getAdjustedReefAprilTagPose(int aprilTagOffset) {
         return new AllianceBasedPose2d(
-                // blue
+                // Blue
                 AlignHelpers.getAprilTagPose(22 - ((aprilTagOffset + 3) % 6)).plus(AlignHelpers.bumperOffset),
 
-                // red
+                // Red
                 AlignHelpers.getAprilTagPose(aprilTagOffset + 6).plus(AlignHelpers.bumperOffset)
         );
     }

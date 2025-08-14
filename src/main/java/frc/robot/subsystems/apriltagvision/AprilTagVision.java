@@ -17,6 +17,8 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.Util;
 import frc.lib.subsystem.Periodic;
 import frc.robot.RobotState;
@@ -34,6 +36,12 @@ public class AprilTagVision implements Periodic {
             cam.createIO(),
             new Alert("AprilTag vision camera " + cam.name() + " is disconnected.", AlertType.kError)
     ));
+
+    private int[] tagIdFilter = {};
+
+    public Command setTagIdFilter(int[] tagIds) {
+        return Commands.runOnce(() -> tagIdFilter = tagIds);
+    }
 
     private static AprilTagVision instance;
 
@@ -59,6 +67,8 @@ public class AprilTagVision implements Periodic {
             // Update disconnected alert
             data.disconnectedAlert.set(!data.inputs.connected);
         }
+
+        Logger.recordOutput("AprilTagVision/TagIdFilter", tagIdFilter);
 
         // Initialize logging values
         List<Pose3d> allTagPoses = new LinkedList<>();
@@ -87,12 +97,8 @@ public class AprilTagVision implements Periodic {
                 }
             }
 
-            // Congregate best target and multi tag observations
-            List<GenericPoseObservation> genericPoseObservations = new LinkedList<>();
-
+            List<SingleTagPoseObservation> singleTagPoseObservations = new LinkedList<>();
             for (var observation : data.inputs.bestTargetObservations) {
-                Optional<Rotation2d> headingSampleOptional = robotState.getPoseAtTimestamp(observation.timestamp()).map(Pose2d::getRotation);
-
                 Optional<Pose3d> tagPoseOptional = aprilTagLayout.getTagPose(observation.tagID());
                 if (tagPoseOptional.isEmpty()) {
                     Util.error("Couldn't find tag with ID " + observation.tagID());
@@ -107,19 +113,12 @@ public class AprilTagVision implements Periodic {
                 Transform3d fieldToCamera = fieldToTarget.plus(observation.cameraToTarget().inverse());
                 Transform3d fieldToRobot = fieldToCamera.plus(metadata.robotToCamera.inverse());
                 Pose3d poseEstimate3dSolve = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
-                GenericPoseObservation observation3dSolve = new GenericPoseObservation(
-                        PoseEsimationMethod.SOLVE_3D,
-                        observation.timestamp(),
-                        observation.ambiguity(),
-                        1,
-                        tagDistance,
-                        poseEstimate3dSolve,
-                        linearStdDevBaseline3dSolveMeters,
-                        angularStdDevBaseline3dSolveRad
-                );
 
+                //////////////////////////////// Trig ////////////////////////////////
+                boolean poseEstimateTrigPresent = false;
+                Pose2d poseEstimateTrig = new Pose2d();
+                Optional<Rotation2d> headingSampleOptional = robotState.getPoseAtTimestamp(observation.timestamp()).map(Pose2d::getRotation);
                 if (headingSampleOptional.isPresent()) {
-                    //////////////////////////////// Trig ////////////////////////////////
                     // https://github.com/PhotonVision/photonvision/blob/0ef7c803f91a387a1a95377bf64338509218a240/photon-lib/src/main/java/org/photonvision/PhotonPoseEstimator.java#L496
                     Rotation2d headingSample = headingSampleOptional.get();
 
@@ -146,45 +145,89 @@ public class AprilTagVision implements Periodic {
                             .unaryMinus()
                             .rotateBy(headingSample);
 
-                    Pose2d poseEstimateTrig = new Pose2d(fieldToCameraTranslation.plus(camToRobotTranslation), headingSample);
-                    GenericPoseObservation observationTrig = new GenericPoseObservation(
-                            PoseEsimationMethod.TRIG,
-                            observation.timestamp(),
-                            observation.ambiguity(),
-                            1,
-                            tagDistance,
-                            new Pose3d(poseEstimateTrig),
-                            linearStdDevBaselineTrigMeters,
-                            angularStdDevBaselineTrigRad
-                    );
-
-                    Pose2d poseEstimate3dSolve2d = poseEstimate3dSolve.toPose2d();
-                    if (tagDistance < distanceFromTagForTrigMeters &&
-                            poseEstimate3dSolve2d.getTranslation().getDistance(poseEstimateTrig.getTranslation()) < trig3dSolveMaxDiffMeters &&
-                            Math.abs(poseEstimate3dSolve2d.getRotation().minus(poseEstimateTrig.getRotation()).getRadians()) < trig3dSolveMaxDiffRad) {
-                        genericPoseObservations.add(observationTrig);
-                    } else {
-                        genericPoseObservations.add(observation3dSolve);
-                    }
-                } else {
-                    genericPoseObservations.add(observation3dSolve);
+                    poseEstimateTrigPresent = true;
+                    poseEstimateTrig = new Pose2d(fieldToCameraTranslation.plus(camToRobotTranslation), headingSample);
                 }
+
+                singleTagPoseObservations.add(new SingleTagPoseObservation(
+                        observation.timestamp(),
+                        observation.ambiguity(),
+                        observation.tagID(),
+                        tagDistance,
+                        poseEstimate3dSolve,
+                        poseEstimateTrigPresent,
+                        poseEstimateTrig
+                ));
             }
 
+            List<MultiTagPoseObservation> multiTagPoseObservations = new LinkedList<>();
             for (var observation : data.inputs.multiTagObservations) {
                 Transform3d fieldToRobot = observation.fieldToCamera().plus(metadata.robotToCamera.inverse());
                 Pose3d robotPose = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
 
-                genericPoseObservations.add(new GenericPoseObservation(
-                        PoseEsimationMethod.MULTITAG,
+                multiTagPoseObservations.add(new MultiTagPoseObservation(
                         observation.timestamp(),
                         observation.ambiguity(),
                         observation.tagCount(),
                         observation.averageTagDistance(),
-                        robotPose,
-                        linearStdDevBaseline3dSolveMeters,
-                        angularStdDevBaseline3dSolveRad
+                        robotPose
                 ));
+            }
+
+            // Congregate single and multi tag observations
+            // and apply trig and tag ID filtering
+            List<GenericPoseObservation> genericPoseObservations = new LinkedList<>();
+            for (var observation : singleTagPoseObservations) {
+                if (tagIdFilter.length > 0) {
+                    // If the ID isn't in the filter, skip
+                    if (Arrays.stream(tagIdFilter).noneMatch(id -> observation.tagID() == id)) {
+                        continue;
+                    }
+                }
+
+                Pose2d poseEstimate3dSolve2d = observation.poseEstimate3dSolve().toPose2d();
+                // If trig is present, distance to tag is small enough, and isn't too different from
+                // 3d solve, use trig
+                if (observation.poseEstimateTrigPresent() &&
+                        observation.tagDistance() < distanceFromTagForTrigMeters &&
+                        poseEstimate3dSolve2d.getTranslation().getDistance(observation.poseEstimateTrig().getTranslation()) < trig3dSolveMaxDiffMeters &&
+                        Math.abs(poseEstimate3dSolve2d.getRotation().minus(observation.poseEstimateTrig().getRotation()).getRadians()) < trig3dSolveMaxDiffRad) {
+                    genericPoseObservations.add(new GenericPoseObservation(
+                            observation.timestamp(),
+                            observation.ambiguity(),
+                            1,
+                            observation.tagDistance(),
+                            new Pose3d(observation.poseEstimateTrig()),
+                            linearStdDevBaselineTrigMeters,
+                            angularStdDevBaselineTrigRad
+                    ));
+                } else {
+                    genericPoseObservations.add(new GenericPoseObservation(
+                            observation.timestamp(),
+                            observation.ambiguity(),
+                            1,
+                            observation.tagDistance(),
+                            observation.poseEstimate3dSolve(),
+                            linearStdDevBaseline3dSolveMeters,
+                            angularStdDevBaseline3dSolveRad
+                    ));
+                }
+            }
+            // Due to AdvantageKit constraints, we can't easily log the IDs
+            // of tags included in a multitag observation, so only use multitag
+            // observations if there is no filter set
+            if (tagIdFilter.length == 0) {
+                for (var observation : multiTagPoseObservations) {
+                    genericPoseObservations.add(new GenericPoseObservation(
+                            observation.timestamp(),
+                            observation.ambiguity(),
+                            observation.tagCount(),
+                            observation.averageTagDistance(),
+                            observation.poseEstimate(),
+                            linearStdDevBaseline3dSolveMeters,
+                            angularStdDevBaseline3dSolveRad
+                    ));
+                }
             }
 
             // Now that we have congregated best target and multitag observations,
@@ -193,8 +236,7 @@ public class AprilTagVision implements Periodic {
                 // Check whether to reject pose
                 boolean rejectPose =
                         observation.tagCount() == 0 // Must have at least one tag
-                                || (observation.tagCount() == 1
-                                && observation.ambiguity() > maxAmbiguity) // Cannot be high ambiguity if only one tap
+                                || (observation.tagCount() == 1 && observation.ambiguity() > maxAmbiguity) // Cannot be high ambiguity if only one tag
                                 || Math.abs(observation.poseEstimate().getZ()) > maxZError // Must have realistic Z coordinate
                                 // Must be within the field boundaries
                                 || observation.poseEstimate().getX() < 0.0
@@ -231,6 +273,8 @@ public class AprilTagVision implements Periodic {
             // Log camera data
             String prefix = "AprilTagVision/" + metadata.name() + "/";
             Logger.recordOutput(prefix + "TagPoses", tagPoses.toArray(Pose3d[]::new));
+            Logger.recordOutput(prefix + "SingleTagPoseObservations", singleTagPoseObservations.toArray(SingleTagPoseObservation[]::new));
+            Logger.recordOutput(prefix + "MultiTagPoseObservations", multiTagPoseObservations.toArray(MultiTagPoseObservation[]::new));
             Logger.recordOutput(prefix + "GenericPoseObservations", genericPoseObservations.toArray(GenericPoseObservation[]::new));
             Logger.recordOutput(prefix + "RobotPoses", robotPoses.toArray(Pose3d[]::new));
             Logger.recordOutput(prefix + "RobotPosesAccepted", robotPosesAccepted.toArray(Pose3d[]::new));
@@ -260,14 +304,27 @@ public class AprilTagVision implements Periodic {
         );
     }
 
-    private enum PoseEsimationMethod {
-        MULTITAG,
-        SOLVE_3D,
-        TRIG,
+    private record SingleTagPoseObservation(
+            double timestamp,
+            double ambiguity,
+            int tagID,
+            double tagDistance,
+            Pose3d poseEstimate3dSolve,
+            boolean poseEstimateTrigPresent,
+            Pose2d poseEstimateTrig
+    ) {
+    }
+
+    private record MultiTagPoseObservation(
+            double timestamp,
+            double ambiguity,
+            int tagCount,
+            double averageTagDistance,
+            Pose3d poseEstimate
+    ) {
     }
 
     private record GenericPoseObservation(
-            PoseEsimationMethod method,
             double timestamp,
             double ambiguity,
             int tagCount,

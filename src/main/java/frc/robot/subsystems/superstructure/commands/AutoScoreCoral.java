@@ -78,6 +78,7 @@ public class AutoScoreCoral extends SuperstructureCommand {
 
         return CommandsExt.eagerSequence(
                 superstructure.initCtx(new SuperstructureContext(coralScoringLevelSupplier, reefSideSupplier)),
+                aprilTagVision.setTagIdFilter(ReefAlign.reefTagIds),
                 initial,
                 Commands.race(
                         waitFinalAndElevator,

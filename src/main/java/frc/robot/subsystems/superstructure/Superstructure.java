@@ -9,6 +9,7 @@ import frc.lib.subsystem.CommandBasedSubsystem;
 import frc.robot.OperatorDashboard;
 import frc.robot.OperatorDashboard.CoralScoringLevel;
 import frc.robot.RobotState;
+import frc.robot.subsystems.apriltagvision.AprilTagVision;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
@@ -32,6 +33,7 @@ public class Superstructure extends CommandBasedSubsystem {
     private final RobotState robotState = RobotState.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
 
+    private final AprilTagVision aprilTagVision = AprilTagVision.get();
     private final Elevator elevator = Elevator.get();
     private final EndEffector endEffector = EndEffector.get();
     private final Funnel funnel = Funnel.get();
@@ -149,7 +151,7 @@ public class Superstructure extends CommandBasedSubsystem {
         hasCoral = hasCoralDebouncer.calculate(endEffectorTriggered || funnelTriggered || gamePieceVision.visibleDebounced());
 
         // OperatorDashboard periodicBeforeCommands runs after superstructure
-        throw new RuntimeException("TODO update");
+        throw new RuntimeException("TODO just get the closest side at the start of the command");
 //        operatorDashboard.setIgnoreClosestReefSideChanges(switch (goal) {
 //            case AUTO_SCORE_CORAL_WAIT_ALIGN, AUTO_SCORE_CORAL_WAIT_ELEVATOR, AUTO_SCORE_CORAL_SCORING,
 //                 AUTO_DESCORE_ALGAE_WAIT_FOR_ALIGN, AUTO_DESCORE_ALGAE_WAIT_FOR_AMPERAGE,
@@ -200,7 +202,10 @@ public class Superstructure extends CommandBasedSubsystem {
     }
 
     public Command cancel() {
-        return setGoal(Goal.IDLE).ignoringDisable(true);
+        return CommandsExt.eagerSequence(
+                setGoal(Goal.IDLE),
+                aprilTagVision.setTagIdFilter(new int[0])
+        ).ignoringDisable(true);
     }
 
     public Command home() {
