@@ -105,7 +105,7 @@ public class Funnel implements Periodic {
         };
     }
 
-    public Command waitUntilAtLastGoal() {
+    public Command waitUntilAtGoal() {
         return Commands.waitUntil(this::atGoal);
     }
 }

@@ -209,7 +209,7 @@ public class Superstructure extends CommandBasedSubsystem {
                         () -> !endEffectorTriggered || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                         CommandsExt.eagerSequence(
                                 setGoal(Goal.HOME_STEP_1),
-                                endEffector.waitUntilAtLastGoal()
+                                endEffector.waitUntilAtGoal()
                         )
                 ),
 
@@ -220,7 +220,7 @@ public class Superstructure extends CommandBasedSubsystem {
                 Commands.waitSeconds(0.05),
 
                 setGoal(Goal.HOME_STEP_4),
-                endEffector.waitUntilAtLastGoal()
+                endEffector.waitUntilAtGoal()
         );
     }
 

@@ -131,7 +131,7 @@ public class EndEffector implements Periodic {
         };
     }
 
-    public Command waitUntilAtLastGoal() {
+    public Command waitUntilAtGoal() {
         return Commands.waitUntil(this::atGoal);
     }
 
