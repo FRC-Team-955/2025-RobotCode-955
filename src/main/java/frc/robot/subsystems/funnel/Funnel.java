@@ -25,8 +25,8 @@ import static frc.robot.subsystems.funnel.FunnelConstants.tolerances;
 import static frc.robot.subsystems.funnel.FunnelTuning.*;
 
 public class Funnel implements Periodic {
-    private final RobotMechanism robotMechanism = RobotMechanism.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
+    private final RobotMechanism robotMechanism = RobotMechanism.get();
 
     private final MotorIO io = createIO();
     private final MotorIOInputsAutoLogged inputs = new MotorIOInputsAutoLogged();
