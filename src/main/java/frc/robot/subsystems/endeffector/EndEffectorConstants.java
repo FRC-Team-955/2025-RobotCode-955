@@ -27,7 +27,7 @@ public class EndEffectorConstants {
     public static final RollersConfig rollersConfig = new RollersConfig(
             false,
             true,
-            20,
+            30,
             9,
             switch (Constants.identity) {
                 case COMPBOT -> PIDF.ofP(0.5);
