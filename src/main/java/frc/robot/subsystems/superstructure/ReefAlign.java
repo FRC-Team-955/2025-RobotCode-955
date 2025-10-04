@@ -26,7 +26,7 @@ public class ReefAlign {
     private static final double initialAlignDistXForFullAngle = 0.5;
 
     private static final double finalAlignAngularDiffForInitialRad = Units.degreesToRadians(30);
-    private static final double finalAlignElevatorPercentageMultiplier = 1.25;
+    private static final double finalAlignElevatorPercentageMultiplier = 1.1;
 
     // Distance at which to start raising the elevator
     public static final double elevatorRaiseDistanceMeters = 1.5;
