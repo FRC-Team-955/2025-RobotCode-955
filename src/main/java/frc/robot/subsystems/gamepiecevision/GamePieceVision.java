@@ -41,7 +41,7 @@ public class GamePieceVision extends SubsystemBaseExt {
         io.updateInputs(inputs);
         Logger.processInputs("Inputs/GamePieceVision", inputs);
         // Update disconnected alert
-        disconnectedAlert.set(!inputs.connected);
+        //disconnectedAlert.set(!inputs.connected);
 
         if (operatorDashboard.forceGamePieceLEDs.hasChanged()) {
             io.setLEDs(operatorDashboard.forceGamePieceLEDs.get());
