@@ -32,6 +32,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     public final LoggedNetworkBooleanExt manualScoring = new LoggedNetworkBooleanExt(prefix + "ManualScoring", false);
     public final LoggedNetworkBooleanExt ignoreEndEffectorBeamBreak = new LoggedNetworkBooleanExt(prefix + "IgnoreEndEffectorBeamBreak", false);
     public final LoggedNetworkBooleanExt autoChosen = new LoggedNetworkBooleanExt(prefix + "AutoChosen", false);
+    public final LoggedNetworkBooleanExt recordingStarted = new LoggedNetworkBooleanExt(prefix + "RecordingStarted", false);
     public final LoggedNetworkBooleanExt manualReefSide = new LoggedNetworkBooleanExt(prefix + "ManualReefSide", false);
     public final LoggedNetworkBooleanExt forceGamePieceLEDs = new LoggedNetworkBooleanExt(prefix + "ForceGamePieceLEDs", false);
     public final LoggedNetworkBooleanExt profiledMoveTo = new LoggedNetworkBooleanExt(prefix + "ProfiledMoveTo", false);
@@ -60,6 +61,7 @@ public class OperatorDashboard extends VirtualSubsystem {
     private final Alert manualScoringAlert = new Alert("Manual scoring is enabled.", Alert.AlertType.kWarning);
     private final Alert ignoreEndEffectorBeamBreakAlert = new Alert("Ignore end effector beam break is enabled.", Alert.AlertType.kWarning);
     private final Alert autoNotChosenAlert = new Alert("Auto is not chosen!", Alert.AlertType.kError);
+    private final Alert recordingNotStartedAlert = new Alert("OBS recording is not started!", Alert.AlertType.kError);
     @SuppressWarnings("FieldCanBeLocal")
     private final Alert constantSetAlert = new Alert("Constants are set.", Alert.AlertType.kInfo);
     private final Alert manualReefSideAlert = new Alert("Manual reef side choosing is enabled.", Alert.AlertType.kWarning);
@@ -143,6 +145,7 @@ public class OperatorDashboard extends VirtualSubsystem {
         manualScoringAlert.set(manualScoring.get());
         ignoreEndEffectorBeamBreakAlert.set(ignoreEndEffectorBeamBreak.get());
         autoNotChosenAlert.set(!autoChosen.get());
+        recordingNotStartedAlert.set(!recordingStarted.get());
         manualReefSideAlert.set(manualReefSide.get());
     }
 
