@@ -20,6 +20,7 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.gamepiecevision.GamePieceVision;
+import frc.robot.subsystems.rollerfunnel.FunnelRoller;
 import frc.robot.subsystems.superstructure.ReefAlign;
 import frc.robot.subsystems.superstructure.Superstructure;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -45,6 +46,7 @@ public class RobotContainer {
     public final Elevator elevator = Elevator.get();
     public final EndEffector endEffector = EndEffector.get();
     public final Funnel funnel = Funnel.get();
+    public final FunnelRoller Roller = FunnelRoller.get();
     public final Drive drive = Drive.get();
     public final AprilTagVision aprilTagVision = AprilTagVision.get();
     public final GamePieceVision gamePieceVision = GamePieceVision.get();
@@ -124,6 +126,9 @@ public class RobotContainer {
         Trigger canFunnelIntake = new Trigger(superstructure::isEndEffectorTriggered)
                 .negate()
                 .or(operatorDashboard.ignoreEndEffectorBeamBreak::get);
+
+
+
         controller.rightTrigger()
                 .and(canFunnelIntake)
                 .whileTrue(superstructure.funnelIntake());

@@ -1,5 +1,6 @@
 package frc.robot.subsystems.superstructure;
 
+import com.pathplanner.lib.path.GoalEndState;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -14,6 +15,7 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.gamepiecevision.GamePieceVision;
+import frc.robot.subsystems.rollerfunnel.FunnelRoller;
 import frc.robot.subsystems.superstructure.ReefAlign.LocalReefSide;
 import frc.robot.subsystems.superstructure.ReefAlign.ReefZoneSide;
 import frc.robot.subsystems.superstructure.StationAlign.Station;
@@ -32,12 +34,12 @@ import static frc.robot.subsystems.superstructure.SuperstructureConstants.*;
 public class Superstructure extends CommandBasedSubsystem {
     private final RobotState robotState = RobotState.get();
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
-
     private final AprilTagVision aprilTagVision = AprilTagVision.get();
     private final Elevator elevator = Elevator.get();
     private final EndEffector endEffector = EndEffector.get();
     private final Funnel funnel = Funnel.get();
     private final GamePieceVision gamePieceVision = GamePieceVision.get();
+    private final FunnelRoller roller = FunnelRoller.get();
 
     private final SuperstructureIO io = createIO();
     private final SuperstructureIOInputsAutoLogged inputs = new SuperstructureIOInputsAutoLogged();
@@ -45,19 +47,20 @@ public class Superstructure extends CommandBasedSubsystem {
     private record Goals(
             Elevator.Goal elevatorGoal,
             EndEffector.Goal endEffectorGoal,
-            Funnel.Goal funnelGoal
+            Funnel.Goal funnelGoal,
+            FunnelRoller.Goal roller
     ) {}
 
     @RequiredArgsConstructor
     public enum Goal {
-        IDLE(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.IDLE, Funnel.Goal.IDLE)),
+        IDLE(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.IDLE, Funnel.Goal.IDLE, FunnelRoller.Goal.IDLE)),
 
-        MANUAL_SCORE_CORAL_WAIT_FOR_ELEVATOR(s -> new Goals(s.ctx.level().coralScoringElevatorGoal, EndEffector.Goal.IDLE, Funnel.Goal.IDLE)),
+        MANUAL_SCORE_CORAL_WAIT_FOR_ELEVATOR(s -> new Goals(s.ctx.level().coralScoringElevatorGoal, EndEffector.Goal.IDLE, Funnel.Goal.IDLE, FunnelRoller.Goal.IDLE)),
         MANUAL_SCORE_CORAL_WAIT_FOR_CONFIRM(MANUAL_SCORE_CORAL_WAIT_FOR_ELEVATOR.goals),
         MANUAL_SCORE_CORAL_SCORING(s -> new Goals(
                 s.ctx.level().coralScoringElevatorGoal,
                 s.ctx.level() == CoralScoringLevel.L1 ? EndEffector.Goal.SCORE_CORAL_L1 : EndEffector.Goal.SCORE_CORAL,
-                Funnel.Goal.IDLE
+                Funnel.Goal.IDLE, FunnelRoller.Goal.IDLE
         )),
 
         AUTO_SCORE_CORAL_WAIT_UNTIL_CAN_RAISE(IDLE.goals),
@@ -66,26 +69,26 @@ public class Superstructure extends CommandBasedSubsystem {
         AUTO_SCORE_CORAL_WAIT_BEFORE_SCORING(AUTO_SCORE_CORAL_WAIT_FOR_ELEVATOR.goals),
         AUTO_SCORE_CORAL_SCORING(MANUAL_SCORE_CORAL_SCORING.goals),
 
-        DESCORE_ALGAE_WAIT_FOR_ELEVATOR(s -> new Goals(s.ctx.reefSide().algaeDescoringElevatorGoal, EndEffector.Goal.IDLE, Funnel.Goal.IDLE)),
-        DESCORE_ALGAE_DESCORING(s -> new Goals(s.ctx.reefSide().algaeDescoringElevatorGoal, EndEffector.Goal.DESCORE_ALGAE, Funnel.Goal.IDLE)),
+        DESCORE_ALGAE_WAIT_FOR_ELEVATOR(s -> new Goals(s.ctx.reefSide().algaeDescoringElevatorGoal, EndEffector.Goal.IDLE, Funnel.Goal.IDLE, FunnelRoller.Goal.IDLE)),
+        DESCORE_ALGAE_DESCORING(s -> new Goals(s.ctx.reefSide().algaeDescoringElevatorGoal, EndEffector.Goal.DESCORE_ALGAE, Funnel.Goal.IDLE, FunnelRoller.Goal.IDLE)),
 
         AUTO_DESCORE_ALGAE_WAIT_UNTIL_CAN_RAISE(IDLE.goals),
         AUTO_DESCORE_ALGAE_WAIT_FOR_ALIGN(DESCORE_ALGAE_DESCORING.goals),
         AUTO_DESCORE_ALGAE_WAIT_FOR_AMPERAGE(AUTO_DESCORE_ALGAE_WAIT_FOR_ALIGN.goals),
         AUTO_DESCORE_ALGAE_MOVE_BACK(AUTO_DESCORE_ALGAE_WAIT_FOR_AMPERAGE.goals),
 
-        HANDOFF(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.FUNNEL_INTAKE, Funnel.Goal.INTAKE_ALTERNATE)),
-        HOME_STEP_1(s -> new Goals(Elevator.Goal.ZERO_CORAL, EndEffector.Goal.HOME_INITIAL, Funnel.Goal.IDLE)),
-        HOME_STEP_2(s -> new Goals(Elevator.Goal.ZERO_CORAL, EndEffector.Goal.ZERO_CORAL, Funnel.Goal.IDLE)),
-        HOME_STEP_3(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.IDLE, Funnel.Goal.IDLE)),
-        HOME_STEP_4(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.HOME_FINAL, Funnel.Goal.IDLE)),
+        HANDOFF(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.FUNNEL_INTAKE, Funnel.Goal.INTAKE_ALTERNATE, FunnelRoller.Goal.INTAKE_ALTERNATE)),
+        HOME_STEP_1(s -> new Goals(Elevator.Goal.ZERO_CORAL, EndEffector.Goal.HOME_INITIAL, Funnel.Goal.IDLE, FunnelRoller.Goal.IDLE)),
+        HOME_STEP_2(s -> new Goals(Elevator.Goal.ZERO_CORAL, EndEffector.Goal.ZERO_CORAL, Funnel.Goal.IDLE, FunnelRoller.Goal.IDLE)),
+        HOME_STEP_3(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.IDLE, Funnel.Goal.IDLE, FunnelRoller.Goal.IDLE)),
+        HOME_STEP_4(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.HOME_FINAL, Funnel.Goal.IDLE, FunnelRoller.Goal.IDLE)),
 
         FUNNEL_INTAKE_WAITING(HANDOFF.goals),
 
         AUTO_FUNNEL_INTAKE_WAITING_ALIGN(FUNNEL_INTAKE_WAITING.goals),
         AUTO_FUNNEL_INTAKE_WAITING_SHAKE(AUTO_FUNNEL_INTAKE_WAITING_ALIGN.goals),
 
-        EJECT(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.EJECT_ALTERNATE, Funnel.Goal.EJECT_ALTERNATE)),
+        EJECT(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.EJECT_ALTERNATE, Funnel.Goal.EJECT_ALTERNATE, FunnelRoller.Goal.EJECT_ALTERNATE)),
 
         ZERO_ELEVATOR(s -> {throw new RuntimeException("TODO SEE ELEVATOR JOYSTICK CONTROL");}),
         ;
