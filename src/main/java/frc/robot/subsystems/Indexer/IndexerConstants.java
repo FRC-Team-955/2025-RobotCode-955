@@ -1,4 +1,4 @@
-package frc.robot.subsystems.rollerfunnel;
+package frc.robot.subsystems.Indexer;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import frc.lib.PIDF;
@@ -8,7 +8,7 @@ import frc.lib.motor.MotorIOSparkMax;
 import frc.lib.motor.RequestTolerances;
 import frc.robot.BuildConstants;
 
-public class FunnelConstants {
+public class IndexerConstants {
     static final RequestTolerances tolerances = RequestTolerances.defaults();
     static final double gearRatio = 5;
     static final PIDF velocityGains = switch (BuildConstants.mode) {

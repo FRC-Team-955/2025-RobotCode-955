@@ -1,4 +1,4 @@
-package frc.robot.subsystems.rollerfunnel;
+package frc.robot.subsystems.Indexer;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
@@ -20,11 +20,11 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
 
+import static frc.robot.subsystems.Indexer.IndexerConstants.createIO;
+import static frc.robot.subsystems.Indexer.IndexerConstants.tolerances;
 import static frc.robot.subsystems.funnel.FunnelTuning.*;
-import static frc.robot.subsystems.rollerfunnel.FunnelConstants.createIO;
-import static frc.robot.subsystems.rollerfunnel.FunnelConstants.tolerances;
 
-public class FunnelRoller implements Periodic {
+public class Indexer implements Periodic {
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final RobotMechanism robotMechanism = RobotMechanism.get();
 
@@ -49,24 +49,24 @@ public class FunnelRoller implements Periodic {
 
     private final Alert motorDisconnectedAlert = new Alert("Funnel roller motor is disconnected.", Alert.AlertType.kError);
 
-    private static FunnelRoller instance;
+    private static Indexer instance;
 
-    public static FunnelRoller get() {
+    public static Indexer get() {
         if (instance == null)
-            synchronized (FunnelRoller.class) {
-                instance = new FunnelRoller();
+            synchronized (Indexer.class) {
+                instance = new Indexer();
             }
 
         return instance;
     }
 
-    private FunnelRoller() {
+    private Indexer() {
     }
 
     @Override
     public void periodicBeforeCommands() {
         io.updateInputs(inputs);
-        Logger.processInputs("Inputs/Roller", inputs);
+        Logger.processInputs("Inputs/Indexer", inputs);
 
         motorDisconnectedAlert.set(!inputs.connected);
 
@@ -81,7 +81,7 @@ public class FunnelRoller implements Periodic {
             io.setBrakeMode(!operatorDashboard.coastOverride.get());
         }
 
-        Logger.recordOutput("Funnel/Goal", goal);
+        Logger.recordOutput("Indexer/Goal", goal);
         if (DriverStation.isDisabled()) {
             io.setRequest(RequestType.VoltageVolts, 0);
         } else {
@@ -92,7 +92,7 @@ public class FunnelRoller implements Periodic {
         }
     }
 
-    @AutoLogOutput(key = "Funnel/AtGoal")
+    @AutoLogOutput(key = "Indexer/AtGoal")
     public boolean atGoal() {
         double value = goal.value.getAsDouble();
         return switch (goal.type) {

@@ -13,6 +13,7 @@ import frc.robot.autos.BargeSideAuto;
 import frc.robot.autos.CenterAuto;
 import frc.robot.autos.ProcessorSideAuto;
 import frc.robot.autos.ProcessorSideFriendlyAuto;
+import frc.robot.subsystems.Indexer.Indexer;
 import frc.robot.subsystems.apriltagvision.AprilTagVision;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.goals.WheelRadiusCharacterizationGoal;
@@ -20,7 +21,6 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.gamepiecevision.GamePieceVision;
-import frc.robot.subsystems.rollerfunnel.FunnelRoller;
 import frc.robot.subsystems.superstructure.ReefAlign;
 import frc.robot.subsystems.superstructure.Superstructure;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -46,7 +46,7 @@ public class RobotContainer {
     public final Elevator elevator = Elevator.get();
     public final EndEffector endEffector = EndEffector.get();
     public final Funnel funnel = Funnel.get();
-    public final FunnelRoller Roller = FunnelRoller.get();
+    public final Indexer indexer = Indexer.get();
     public final Drive drive = Drive.get();
     public final AprilTagVision aprilTagVision = AprilTagVision.get();
     public final GamePieceVision gamePieceVision = GamePieceVision.get();
@@ -126,7 +126,6 @@ public class RobotContainer {
         Trigger canFunnelIntake = new Trigger(superstructure::isEndEffectorTriggered)
                 .negate()
                 .or(operatorDashboard.ignoreEndEffectorBeamBreak::get);
-
 
 
         controller.rightTrigger()
