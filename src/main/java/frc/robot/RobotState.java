@@ -30,7 +30,8 @@ public class RobotState {
                     new SwerveModulePosition(),
                     new SwerveModulePosition()
             },
-            new Pose2d());
+            new Pose2d()
+    );
 
     private static RobotState instance;
 
