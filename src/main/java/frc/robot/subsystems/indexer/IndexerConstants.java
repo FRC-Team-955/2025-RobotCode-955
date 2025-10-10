@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Indexer;
+package frc.robot.subsystems.indexer;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import frc.lib.PIDF;

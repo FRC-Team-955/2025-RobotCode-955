@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Indexer;
+package frc.robot.subsystems.indexer;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
@@ -20,9 +20,9 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
 
-import static frc.robot.subsystems.Indexer.IndexerConstants.createIO;
-import static frc.robot.subsystems.Indexer.IndexerConstants.tolerances;
 import static frc.robot.subsystems.funnel.FunnelTuning.*;
+import static frc.robot.subsystems.indexer.IndexerConstants.createIO;
+import static frc.robot.subsystems.indexer.IndexerConstants.tolerances;
 
 public class Indexer implements Periodic {
     private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
@@ -47,7 +47,7 @@ public class Indexer implements Periodic {
     @Getter
     private Goal goal = Goal.IDLE;
 
-    private final Alert motorDisconnectedAlert = new Alert("Funnel roller motor is disconnected.", Alert.AlertType.kError);
+    private final Alert motorDisconnectedAlert = new Alert("Indexer motor is disconnected.", Alert.AlertType.kError);
 
     private static Indexer instance;
 
@@ -85,9 +85,9 @@ public class Indexer implements Periodic {
         if (DriverStation.isDisabled()) {
             io.setRequest(RequestType.VoltageVolts, 0);
         } else {
-            Logger.recordOutput("Funnel/RequestType", goal.type);
+            Logger.recordOutput("Indexer/RequestType", goal.type);
             double value = goal.value.getAsDouble();
-            Logger.recordOutput("Funnel/RequestValue", value);
+            Logger.recordOutput("Indexer/RequestValue", value);
             io.setRequest(goal.type, value);
         }
     }

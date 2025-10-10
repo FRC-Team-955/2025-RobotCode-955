@@ -13,7 +13,6 @@ import frc.robot.autos.BargeSideAuto;
 import frc.robot.autos.CenterAuto;
 import frc.robot.autos.ProcessorSideAuto;
 import frc.robot.autos.ProcessorSideFriendlyAuto;
-import frc.robot.subsystems.Indexer.Indexer;
 import frc.robot.subsystems.apriltagvision.AprilTagVision;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.goals.WheelRadiusCharacterizationGoal;
@@ -21,6 +20,7 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.endeffector.EndEffector;
 import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.gamepiecevision.GamePieceVision;
+import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.superstructure.ReefAlign;
 import frc.robot.subsystems.superstructure.Superstructure;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -35,12 +35,10 @@ public class RobotContainer {
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Choices");
     private final LoggedDashboardChooser<Command> characterizationChooser = new LoggedDashboardChooser<>("Characterization Choices");
-
     public final RobotState robotState = RobotState.get();
     public final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     public final Controller controller = Controller.get();
     public final CANLogger canLogger = CANLogger.get();
-
     /* Subsystems */
     // Note: order does matter
     public final Elevator elevator = Elevator.get();
@@ -65,19 +63,15 @@ public class RobotContainer {
     private void addAutos() {
         autoChooser.addOption("None", Commands.none());
         autoChooser.addOption("Leave", drive.runRobotRelative(() -> new ChassisSpeeds(-0.5, 0, 0)).withTimeout(5));
-
         autoChooser.addOption("Barge Side - Normal", BargeSideAuto.get(BargeSideAuto.Type.Normal));
         autoChooser.addOption("Barge Side - Avoid Middle Front", BargeSideAuto.get(BargeSideAuto.Type.AvoidMiddleFront));
         autoChooser.addOption("Barge Side - Avoid Middle Front And Adjacent", BargeSideAuto.get(BargeSideAuto.Type.AvoidMiddleFrontAndAdjacent));
-
         autoChooser.addOption("Processor Side - Normal", ProcessorSideAuto.get(ProcessorSideAuto.Type.Normal));
         autoChooser.addOption("Processor Side - Avoid Middle Front", ProcessorSideAuto.get(ProcessorSideAuto.Type.AvoidMiddleFront));
         autoChooser.addOption("Processor Side - Avoid Middle Front And Adjacent", ProcessorSideAuto.get(ProcessorSideAuto.Type.AvoidMiddleFrontAndAdjacent));
-
         autoChooser.addOption("Processor Side - Friendly", ProcessorSideFriendlyAuto.get());
         autoChooser.addOption("Center", CenterAuto.get(CenterAuto.Type.Normal));
         autoChooser.addOption("Center - Descore", CenterAuto.get(CenterAuto.Type.Descore));
-
         autoChooser.addOption(
                 "Characterization",
                 // We need to require the superstructure during characterization so that the default command doesn't get run
@@ -127,7 +121,6 @@ public class RobotContainer {
                 .negate()
                 .or(operatorDashboard.ignoreEndEffectorBeamBreak::get);
 
-
         controller.rightTrigger()
                 .and(canFunnelIntake)
                 .whileTrue(superstructure.funnelIntake());
@@ -137,6 +130,7 @@ public class RobotContainer {
         Trigger canScore = new Trigger(superstructure::isEndEffectorTriggered)
                 .or(operatorDashboard.ignoreEndEffectorBeamBreak::get);
         Trigger canAutoScore = new Trigger(() -> ReefAlign.isAlignable(robotState.getPose(), operatorDashboard.getSelectedReefZoneSide()));
+
         controller.leftTrigger()
                 .and(manualScoring.negate())
                 .and(canScore)
@@ -147,6 +141,7 @@ public class RobotContainer {
                         operatorDashboard::getSelectedCoralScoringLevel,
                         controller.leftTrigger()
                 ));
+
         controller.leftTrigger()
                 .and(manualScoring)
                 .and(canScore)
@@ -154,22 +149,22 @@ public class RobotContainer {
                         controller.leftTrigger(),
                         operatorDashboard::getSelectedCoralScoringLevel
                 ));
-
         Trigger manualDescoring = new Trigger(operatorDashboard.manualScoring::get);
         Trigger canDescore = new Trigger(superstructure::isEndEffectorTriggered)
                 .negate()
                 .or(operatorDashboard.ignoreEndEffectorBeamBreak::get);
         Trigger canAutoDescore = new Trigger(() -> ReefAlign.isAlignable(robotState.getPose(), operatorDashboard.getSelectedReefZoneSide()));
+
         controller.rightBumper()
                 .and(manualDescoring.negate())
                 .and(canDescore)
                 .and(canAutoDescore)
                 .onTrue(superstructure.autoDescoreAlgae(operatorDashboard::getSelectedReefZoneSide, controller.rightBumper()));
+
         controller.rightBumper()
                 .and(manualDescoring)
                 .and(canDescore)
                 .onTrue(superstructure.descoreAlgaeManual(operatorDashboard::getSelectedReefZoneSide));
-
         // TODO manual elevator see elevator and superstructure and stuff
 //        operatorDashboard.operatorKeypad.getOverride4()
 //                .or(operatorDashboard.zeroElevator::get)
