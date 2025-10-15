@@ -31,9 +31,10 @@ public class DriveJoystickGoal extends DriveGoal {
                 Logger.recordOutput("Drive/Assist/Running", true);
                 return DriveRequest.chassisSpeedsOptimized(getAssisted(assistPose));
             }
+        } else {
+            Logger.recordOutput("Drive/Assist/Present", false);
         }
 
-        Logger.recordOutput("Drive/Assist/Present", false);
         Logger.recordOutput("Drive/Assist/Running", false);
         return DriveRequest.chassisSpeedsOptimized(controller.getDriveSetpointRobotRelative(robotState.getRotation()));
     }
