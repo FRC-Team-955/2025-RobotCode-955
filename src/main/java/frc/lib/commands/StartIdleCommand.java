@@ -1,0 +1,21 @@
+package frc.lib.commands;
+
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Subsystem;
+
+class StartIdleCommand extends Command {
+    private final Runnable initialize;
+
+    public StartIdleCommand(
+            Runnable initialize,
+            Subsystem... requirements
+    ) {
+        this.initialize = initialize;
+        addRequirements(requirements);
+    }
+
+    @Override
+    public void initialize() {
+        initialize.run();
+    }
+}
