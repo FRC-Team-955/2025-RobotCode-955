@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static frc.lib.Util.epsilonEquals;
+
 
 @ExtensionMethod({Util.class})
 public class SwerveSetpointGenerator {

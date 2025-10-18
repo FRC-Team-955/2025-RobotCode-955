@@ -59,13 +59,13 @@ public class Util {
         return (a - epsilon <= b) && (a + epsilon >= b);
     }
 
-    public static boolean episilonEquals(ChassisSpeeds s1, ChassisSpeeds s2) {
+    public static boolean epsilonEquals(ChassisSpeeds s1, ChassisSpeeds s2) {
         return epsilonEquals(s1.vxMetersPerSecond, s2.vxMetersPerSecond)
                 && epsilonEquals(s1.vyMetersPerSecond, s2.vyMetersPerSecond)
                 && epsilonEquals(s1.omegaRadiansPerSecond, s2.omegaRadiansPerSecond);
     }
 
-    public static boolean greaterThanEpisilon(double a) {
+    public static boolean greaterThanEpsilon(double a) {
         return a > epsilon;
     }
 

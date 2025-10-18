@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static frc.lib.Util.epsilonEquals;
+import static frc.lib.Util.greaterThanEpsilon;
 
 public class SwerveSetpointGenerator {
     private final SwerveDriveKinematics kinematics;

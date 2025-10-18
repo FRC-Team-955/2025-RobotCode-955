@@ -8,6 +8,8 @@ import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import static frc.lib.Util.asyncExecutor;
+
 public class SparkUtil {
     public static boolean sparkStickyFault = false;
 
