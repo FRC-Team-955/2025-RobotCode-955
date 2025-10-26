@@ -25,7 +25,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.lib.LoggedTracer;
 import frc.lib.commands.CommandsExt;
 import frc.lib.subsystem.Periodic;
-import frc.robot.subsystems.drive.ModuleIOSim;
+//import frc.robot.subsystems.drive.ModuleIOSim;
 import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LogFileUtil;

@@ -37,7 +37,7 @@ public class ElevatorIOSparkMax extends ElevatorIO {
 
     public ElevatorIOSparkMax(
             int leaderCanID,
-            boolean leaderInverted,
+            boolean leaderInverted
     ) {
         leaderSpark = new SparkMax(leaderCanID, SparkLowLevel.MotorType.kBrushless);
         leaderEncoder = leaderSpark.getEncoder();

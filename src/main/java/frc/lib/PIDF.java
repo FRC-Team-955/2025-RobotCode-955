@@ -7,6 +7,7 @@ import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import edu.wpi.first.math.controller.*;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import frc.lib.network.LoggedTunableNumber;
 import frc.robot.Constants;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
