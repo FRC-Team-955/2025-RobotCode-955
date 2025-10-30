@@ -5,10 +5,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.commands.CommandsExt;
 import frc.robot.OperatorDashboard;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.endeffector.EndEffector;
+import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.superstructure.ReefAlign;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.superstructure.SuperstructureCommand;
-import frc.robot.subsystems.superstructure.SuperstructureContext;
 import lombok.RequiredArgsConstructor;
 
 import java.util.function.BooleanSupplier;
@@ -34,18 +36,33 @@ public class AutoScoreCoral extends SuperstructureCommand {
                 // Drive to initial position
                 drive.moveTo(alignPoseSupplier, false),
                 Commands.parallel(
-                        superstructure.setGoal(Superstructure.Goal.AUTO_SCORE_CORAL_WAIT_UNTIL_CAN_RAISE),
-                        Commands.waitUntil(() -> ReefAlign.canRaiseElevator(robotState.getPose(), reefSideSupplier.get(), sideSupplier.get()))
-                )
+                        superstructure.setGoal(
+                                Superstructure.Goal.AUTO_SCORE_CORAL_WAIT_UNTIL_CAN_RAISE,
+                                () -> Elevator.Goal.STOW,
+                                () -> EndEffector.Goal.IDLE,
+                                Funnel.Goal.IDLE
+                        )
+                ),
+                Commands.waitUntil(() -> ReefAlign.canRaiseElevator(robotState.getPose(), reefSideSupplier.get(), sideSupplier.get()))
         );
 
         Command waitFinalAndElevator = CommandsExt.eagerSequence(
                 Commands.parallel(
-                        superstructure.setGoal(Superstructure.Goal.AUTO_SCORE_CORAL_WAIT_FOR_ALIGN),
+                        superstructure.setGoal(
+                                Superstructure.Goal.AUTO_SCORE_CORAL_WAIT_FOR_ALIGN,
+                                () -> coralScoringLevelSupplier.get().coralScoringElevatorGoal,
+                                () -> EndEffector.Goal.IDLE,
+                                Funnel.Goal.IDLE
+                        ),
                         Commands.waitUntil(() -> ReefAlign.atFinalAlign(robotState.getPose(), drive.getMeasuredChassisSpeeds(), reefSideSupplier.get(), sideSupplier.get()))
                 ),
                 Commands.parallel(
-                        superstructure.setGoal(Superstructure.Goal.AUTO_SCORE_CORAL_WAIT_FOR_ELEVATOR),
+                        superstructure.setGoal(
+                                Superstructure.Goal.AUTO_SCORE_CORAL_WAIT_FOR_ELEVATOR,
+                                () -> coralScoringLevelSupplier.get().coralScoringElevatorGoal,
+                                () -> EndEffector.Goal.IDLE,
+                                Funnel.Goal.IDLE
+                        ),
                         elevator.waitUntilAtGoal()
                 )
         );
@@ -64,9 +81,21 @@ public class AutoScoreCoral extends SuperstructureCommand {
         );
 
         Command score = CommandsExt.eagerSequence(
-                superstructure.setGoal(Superstructure.Goal.AUTO_SCORE_CORAL_WAIT_BEFORE_SCORING),
+                superstructure.setGoal(
+                        Superstructure.Goal.AUTO_SCORE_CORAL_WAIT_BEFORE_SCORING,
+                        () -> coralScoringLevelSupplier.get().coralScoringElevatorGoal,
+                        () -> EndEffector.Goal.IDLE,
+                        Funnel.Goal.IDLE
+                ),
                 Commands.waitSeconds(0.3),
-                superstructure.setGoal(Superstructure.Goal.AUTO_SCORE_CORAL_SCORING),
+                superstructure.setGoal(
+                        Superstructure.Goal.AUTO_SCORE_CORAL_SCORING,
+                        () -> coralScoringLevelSupplier.get().coralScoringElevatorGoal,
+                        () -> coralScoringLevelSupplier.get() == OperatorDashboard.CoralScoringLevel.L1
+                                ? EndEffector.Goal.SCORE_CORAL_L1
+                                : EndEffector.Goal.SCORE_CORAL,
+                        Funnel.Goal.IDLE
+                ),
                 waitUntilEndEffectorNotTriggered()
         );
         // Wait for coral to settle and send the elevator back down
@@ -77,7 +106,6 @@ public class AutoScoreCoral extends SuperstructureCommand {
         );
 
         return CommandsExt.eagerSequence(
-                superstructure.initCtx(new SuperstructureContext(coralScoringLevelSupplier, reefSideSupplier)),
                 aprilTagVision.setTagIdFilter(ReefAlign.reefTagIds),
                 initial,
                 Commands.race(

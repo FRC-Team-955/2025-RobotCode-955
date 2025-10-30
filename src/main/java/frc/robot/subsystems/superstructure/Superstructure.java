@@ -24,7 +24,6 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.BooleanSupplier;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static frc.robot.subsystems.superstructure.SuperstructureConstants.*;
@@ -50,66 +49,52 @@ public class Superstructure extends CommandBasedSubsystem {
 
     @RequiredArgsConstructor
     public enum Goal {
-        IDLE(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.IDLE, Funnel.Goal.IDLE)),
+        IDLE,
 
-        MANUAL_SCORE_CORAL_WAIT_FOR_ELEVATOR(s -> new Goals(s.ctx.level().coralScoringElevatorGoal, EndEffector.Goal.IDLE, Funnel.Goal.IDLE)),
-        MANUAL_SCORE_CORAL_WAIT_FOR_CONFIRM(MANUAL_SCORE_CORAL_WAIT_FOR_ELEVATOR.goals),
-        MANUAL_SCORE_CORAL_SCORING(s -> new Goals(
-                s.ctx.level().coralScoringElevatorGoal,
-                s.ctx.level() == CoralScoringLevel.L1 ? EndEffector.Goal.SCORE_CORAL_L1 : EndEffector.Goal.SCORE_CORAL,
-                Funnel.Goal.IDLE
-        )),
+        MANUAL_SCORE_CORAL_WAIT_FOR_ELEVATOR,
+        MANUAL_SCORE_CORAL_WAIT_FOR_CONFIRM,
+        MANUAL_SCORE_CORAL_SCORING,
 
-        AUTO_SCORE_CORAL_WAIT_UNTIL_CAN_RAISE(IDLE.goals),
-        AUTO_SCORE_CORAL_WAIT_FOR_ALIGN(MANUAL_SCORE_CORAL_WAIT_FOR_ELEVATOR.goals),
-        AUTO_SCORE_CORAL_WAIT_FOR_ELEVATOR(AUTO_SCORE_CORAL_WAIT_FOR_ALIGN.goals),
-        AUTO_SCORE_CORAL_WAIT_BEFORE_SCORING(AUTO_SCORE_CORAL_WAIT_FOR_ELEVATOR.goals),
-        AUTO_SCORE_CORAL_SCORING(MANUAL_SCORE_CORAL_SCORING.goals),
+        AUTO_SCORE_CORAL_WAIT_UNTIL_CAN_RAISE,
+        AUTO_SCORE_CORAL_WAIT_FOR_ALIGN,
+        AUTO_SCORE_CORAL_WAIT_FOR_ELEVATOR,
+        AUTO_SCORE_CORAL_WAIT_BEFORE_SCORING,
+        AUTO_SCORE_CORAL_SCORING,
 
-        DESCORE_ALGAE_WAIT_FOR_ELEVATOR(s -> new Goals(s.ctx.reefSide().algaeDescoringElevatorGoal, EndEffector.Goal.IDLE, Funnel.Goal.IDLE)),
-        DESCORE_ALGAE_DESCORING(s -> new Goals(s.ctx.reefSide().algaeDescoringElevatorGoal, EndEffector.Goal.DESCORE_ALGAE, Funnel.Goal.IDLE)),
+        DESCORE_ALGAE_WAIT_FOR_ELEVATOR,
+        DESCORE_ALGAE_DESCORING,
 
-        AUTO_DESCORE_ALGAE_WAIT_UNTIL_CAN_RAISE(IDLE.goals),
-        AUTO_DESCORE_ALGAE_WAIT_FOR_ALIGN(DESCORE_ALGAE_DESCORING.goals),
-        AUTO_DESCORE_ALGAE_WAIT_FOR_AMPERAGE(AUTO_DESCORE_ALGAE_WAIT_FOR_ALIGN.goals),
-        AUTO_DESCORE_ALGAE_MOVE_BACK(AUTO_DESCORE_ALGAE_WAIT_FOR_AMPERAGE.goals),
+        AUTO_DESCORE_ALGAE_WAIT_UNTIL_CAN_RAISE,
+        AUTO_DESCORE_ALGAE_WAIT_FOR_ALIGN,
+        AUTO_DESCORE_ALGAE_WAIT_FOR_AMPERAGE,
+        AUTO_DESCORE_ALGAE_MOVE_BACK,
 
-        HANDOFF(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.FUNNEL_INTAKE, Funnel.Goal.INTAKE_ALTERNATE)),
-        HOME_STEP_1(s -> new Goals(Elevator.Goal.ZERO_CORAL, EndEffector.Goal.HOME_INITIAL, Funnel.Goal.IDLE)),
-        HOME_STEP_2(s -> new Goals(Elevator.Goal.ZERO_CORAL, EndEffector.Goal.ZERO_CORAL, Funnel.Goal.IDLE)),
-        HOME_STEP_3(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.IDLE, Funnel.Goal.IDLE)),
-        HOME_STEP_4(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.HOME_FINAL, Funnel.Goal.IDLE)),
+        HANDOFF,
+        HOME_STEP_1,
+        HOME_STEP_2,
+        HOME_STEP_3,
+        HOME_STEP_4,
 
-        FUNNEL_INTAKE_WAITING(HANDOFF.goals),
+        FUNNEL_INTAKE_WAITING,
 
-        AUTO_FUNNEL_INTAKE_WAITING_ALIGN(FUNNEL_INTAKE_WAITING.goals),
-        AUTO_FUNNEL_INTAKE_WAITING_SHAKE(AUTO_FUNNEL_INTAKE_WAITING_ALIGN.goals),
+        AUTO_FUNNEL_INTAKE_WAITING_ALIGN,
+        AUTO_FUNNEL_INTAKE_WAITING_SHAKE,
 
-        EJECT(s -> new Goals(Elevator.Goal.STOW, EndEffector.Goal.EJECT_ALTERNATE, Funnel.Goal.EJECT_ALTERNATE)),
+        EJECT,
 
-        ZERO_ELEVATOR(s -> {throw new RuntimeException("TODO SEE ELEVATOR JOYSTICK CONTROL");}),
+        ZERO_ELEVATOR, // TODO SEE ELEVATOR JOYSTICK CONTROL
         ;
-
-        private final Function<Superstructure, Goals> goals;
     }
 
     private Goal goal = Goal.IDLE;
 
-    public Command setGoal(Goal goal) {
+    public Command setGoal(Goal superstructureGoal, Supplier<Elevator.Goal> elevatorGoal, Supplier<EndEffector.Goal> endEffectorGoal, Funnel.Goal funnelGoal) {
         return runOnce(() -> {
-            this.goal = goal;
-
-            Goals goals = goal.goals.apply(this);
-            elevator.setGoal(goals.elevatorGoal);
-            endEffector.setGoal(goals.endEffectorGoal);
-            funnel.setGoal(goals.funnelGoal);
+            goal = superstructureGoal;
+            elevator.setGoal(elevatorGoal.get());
+            endEffector.setGoal(endEffectorGoal.get());
+            funnel.setGoal(funnelGoal);
         });
-    }
-
-    private SuperstructureContext ctx = SuperstructureContext.none();
-
-    public Command initCtx(SuperstructureContext ctx) {
-        return runOnce(() -> this.ctx = ctx);
     }
 
     private static Superstructure instance;
@@ -203,7 +188,12 @@ public class Superstructure extends CommandBasedSubsystem {
 
     public Command cancel() {
         return CommandsExt.eagerSequence(
-                setGoal(Goal.IDLE),
+                setGoal(
+                        Goal.IDLE,
+                        () -> Elevator.Goal.STOW,
+                        () -> EndEffector.Goal.IDLE,
+                        Funnel.Goal.IDLE
+                ),
                 aprilTagVision.setTagIdFilter(new int[0])
         ).ignoringDisable(true);
     }
@@ -213,18 +203,38 @@ public class Superstructure extends CommandBasedSubsystem {
                 CommandsExt.onlyIf(
                         () -> !endEffectorTriggered || operatorDashboard.ignoreEndEffectorBeamBreak.get(),
                         CommandsExt.eagerSequence(
-                                setGoal(Goal.HOME_STEP_1),
+                                setGoal(
+                                        Goal.HOME_STEP_1,
+                                        () -> Elevator.Goal.ZERO_CORAL,
+                                        () -> EndEffector.Goal.HOME_INITIAL,
+                                        Funnel.Goal.IDLE
+                                ),
                                 endEffector.waitUntilAtGoal()
                         )
                 ),
 
-                setGoal(Goal.HOME_STEP_2),
+                setGoal(
+                        Goal.HOME_STEP_2,
+                        () -> Elevator.Goal.ZERO_CORAL,
+                        () -> EndEffector.Goal.ZERO_CORAL,
+                        Funnel.Goal.IDLE
+                ),
                 Commands.waitSeconds(0.15),
 
-                setGoal(Goal.HOME_STEP_3),
+                setGoal(
+                        Goal.HOME_STEP_3,
+                        () -> Elevator.Goal.STOW,
+                        () -> EndEffector.Goal.IDLE,
+                        Funnel.Goal.IDLE
+                ),
                 Commands.waitSeconds(0.05),
 
-                setGoal(Goal.HOME_STEP_4),
+                setGoal(
+                        Goal.HOME_STEP_4,
+                        () -> Elevator.Goal.STOW,
+                        () -> EndEffector.Goal.HOME_FINAL,
+                        Funnel.Goal.IDLE
+                ),
                 endEffector.waitUntilAtGoal()
         );
     }
@@ -238,7 +248,12 @@ public class Superstructure extends CommandBasedSubsystem {
     }
 
     public Command eject() {
-        return setGoal(Goal.EJECT);
+        return setGoal(
+                Goal.EJECT,
+                () -> Elevator.Goal.STOW,
+                () -> EndEffector.Goal.EJECT_ALTERNATE,
+                Funnel.Goal.EJECT_ALTERNATE
+        );
     }
 
     public Command scoreCoralManual(

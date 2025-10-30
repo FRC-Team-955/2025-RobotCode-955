@@ -5,10 +5,12 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.commands.CommandsExt;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.endeffector.EndEffector;
+import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.superstructure.ReefAlign;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.superstructure.SuperstructureCommand;
-import frc.robot.subsystems.superstructure.SuperstructureContext;
 import lombok.RequiredArgsConstructor;
 
 import java.util.function.BooleanSupplier;
@@ -26,11 +28,21 @@ public class AutoDescoreAlgae extends SuperstructureCommand {
                 drive.moveTo(() -> ReefAlign.getDescoreAlignPose(reefZoneSideSupplier.get()), false),
                 CommandsExt.eagerSequence(
                         Commands.parallel(
-                                superstructure.setGoal(Superstructure.Goal.AUTO_DESCORE_ALGAE_WAIT_UNTIL_CAN_RAISE),
+                                superstructure.setGoal(
+                                        Superstructure.Goal.AUTO_DESCORE_ALGAE_WAIT_UNTIL_CAN_RAISE,
+                                        () -> Elevator.Goal.STOW,
+                                        () -> EndEffector.Goal.IDLE,
+                                        Funnel.Goal.IDLE
+                                ),
                                 Commands.waitUntil(() -> ReefAlign.descoreCanRaiseElevator(robotState.getPose(), reefZoneSideSupplier.get()))
                         ),
                         Commands.parallel(
-                                superstructure.setGoal(Superstructure.Goal.AUTO_DESCORE_ALGAE_WAIT_FOR_ALIGN),
+                                superstructure.setGoal(
+                                        Superstructure.Goal.AUTO_DESCORE_ALGAE_WAIT_FOR_ALIGN,
+                                        () -> reefZoneSideSupplier.get().algaeDescoringElevatorGoal,
+                                        () -> EndEffector.Goal.DESCORE_ALGAE,
+                                        Funnel.Goal.IDLE
+                                ),
                                 Commands.waitUntil(() -> ReefAlign.descoreIsAligned(robotState.getPose(), reefZoneSideSupplier.get()))
                         )
                 )
@@ -44,7 +56,12 @@ public class AutoDescoreAlgae extends SuperstructureCommand {
                                 endEffector.waitUntilDescoreAlgaeAmperageTriggered()
                         )
                 ),
-                superstructure.setGoal(Superstructure.Goal.AUTO_DESCORE_ALGAE_WAIT_FOR_AMPERAGE)
+                superstructure.setGoal(
+                        Superstructure.Goal.AUTO_DESCORE_ALGAE_WAIT_FOR_AMPERAGE,
+                        () -> reefZoneSideSupplier.get().algaeDescoringElevatorGoal,
+                        () -> EndEffector.Goal.DESCORE_ALGAE,
+                        Funnel.Goal.IDLE
+                )
         );
 
         Timer driveBackTimer = new Timer();
@@ -52,7 +69,12 @@ public class AutoDescoreAlgae extends SuperstructureCommand {
                 .withTimeout(0.5)
                 .deadlineFor(
                         Commands.runOnce(driveBackTimer::restart),
-                        superstructure.setGoal(Superstructure.Goal.AUTO_DESCORE_ALGAE_MOVE_BACK)
+                        superstructure.setGoal(
+                                Superstructure.Goal.AUTO_DESCORE_ALGAE_MOVE_BACK,
+                                () -> reefZoneSideSupplier.get().algaeDescoringElevatorGoal,
+                                () -> EndEffector.Goal.DESCORE_ALGAE,
+                                Funnel.Goal.IDLE
+                        )
                 );
 
         Command waitForForce = CommandsExt.eagerSequence(
@@ -61,7 +83,6 @@ public class AutoDescoreAlgae extends SuperstructureCommand {
         );
 
         return CommandsExt.eagerSequence(
-                superstructure.initCtx(SuperstructureContext.reefSideOnly(reefZoneSideSupplier)),
                 aprilTagVision.setTagIdFilter(ReefAlign.reefTagIds),
                 Commands.race(
                         CommandsExt.eagerSequence(

@@ -5,9 +5,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.commands.CommandsExt;
 import frc.robot.OperatorDashboard;
+import frc.robot.subsystems.endeffector.EndEffector;
+import frc.robot.subsystems.funnel.Funnel;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.superstructure.SuperstructureCommand;
-import frc.robot.subsystems.superstructure.SuperstructureContext;
 import lombok.RequiredArgsConstructor;
 
 import java.util.function.BooleanSupplier;
@@ -24,7 +25,12 @@ public class ScoreCoralManual extends SuperstructureCommand {
     @Override
     public Command create() {
         Command waitConfirm = Commands.parallel(
-                superstructure.setGoal(Superstructure.Goal.MANUAL_SCORE_CORAL_WAIT_FOR_CONFIRM),
+                superstructure.setGoal(
+                        Superstructure.Goal.MANUAL_SCORE_CORAL_WAIT_FOR_CONFIRM,
+                        () -> coralScoringLevelSupplier.get().coralScoringElevatorGoal,
+                        () -> EndEffector.Goal.IDLE,
+                        Funnel.Goal.IDLE
+                ),
                 rumble(),
                 Commands.waitUntil(forwardCondition)
         );
@@ -35,7 +41,14 @@ public class ScoreCoralManual extends SuperstructureCommand {
         );
 
         Command score = Commands.parallel(
-                superstructure.setGoal(Superstructure.Goal.MANUAL_SCORE_CORAL_SCORING),
+                superstructure.setGoal(
+                        Superstructure.Goal.MANUAL_SCORE_CORAL_SCORING,
+                        () -> coralScoringLevelSupplier.get().coralScoringElevatorGoal,
+                        () -> coralScoringLevelSupplier.get() == OperatorDashboard.CoralScoringLevel.L1
+                                ? EndEffector.Goal.SCORE_CORAL_L1
+                                : EndEffector.Goal.SCORE_CORAL,
+                        Funnel.Goal.IDLE
+                ),
                 waitUntilEndEffectorNotTriggered()
         );
 
@@ -47,8 +60,12 @@ public class ScoreCoralManual extends SuperstructureCommand {
         );
 
         return CommandsExt.eagerSequence(
-                superstructure.initCtx(SuperstructureContext.levelOnly(coralScoringLevelSupplier)),
-                superstructure.setGoal(Superstructure.Goal.MANUAL_SCORE_CORAL_WAIT_FOR_ELEVATOR),
+                superstructure.setGoal(
+                        Superstructure.Goal.MANUAL_SCORE_CORAL_WAIT_FOR_ELEVATOR,
+                        () -> coralScoringLevelSupplier.get().coralScoringElevatorGoal,
+                        () -> EndEffector.Goal.IDLE,
+                        Funnel.Goal.IDLE
+                ),
                 elevator.waitUntilAtGoal(),
                 waitConfirm,
                 CommandsExt.eagerSequence(
