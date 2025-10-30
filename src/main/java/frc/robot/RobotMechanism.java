@@ -35,9 +35,9 @@ public class RobotMechanism {
     @AutoLogOutput(key = "RobotState/Mechanism")
     public final LoggedMechanism2d mechanism = new LoggedMechanism2d(middleOfRobot * 2, 2.1, new Color8Bit(Color.kBlack));
 
-    public final Elevator elevator = new Elevator();
-    public final EndEffector endEffector = new EndEffector();
-    public final Funnel funnel = new Funnel();
+    public final ElevatorMechanism elevator = new ElevatorMechanism();
+    public final EndEffectorMechanism endEffector = new EndEffectorMechanism();
+    public final FunnelMechanism funnel = new FunnelMechanism();
 
     private void addBumpers() {
         double bumperThickness = Units.inchesToMeters(3.375);
@@ -61,7 +61,7 @@ public class RobotMechanism {
         ));
     }
 
-    public class Funnel {
+    public class FunnelMechanism {
         private static final double x = middleOfRobot + Units.inchesToMeters(12.2);
         private static final double y = Units.inchesToMeters(6);
         private static final double angle = 90;
@@ -81,7 +81,7 @@ public class RobotMechanism {
                 new Color8Bit(Color.kOrange)
         ));
 
-        private Funnel() {
+        private FunnelMechanism() {
             root.append(new LoggedMechanismLigament2d(
                     "ligament",
                     Units.inchesToMeters(14.75),
@@ -92,7 +92,7 @@ public class RobotMechanism {
         }
     }
 
-    public class Elevator {
+    public class ElevatorMechanism {
         public final LoggedMechanismRoot2d stage1Root = mechanism.getRoot("elevator_stage1", 0, 0);
         public final LoggedMechanismRoot2d stage2Root = mechanism.getRoot("elevator_stage2", 0, 0);
         public final LoggedMechanismRoot2d stage3Root = mechanism.getRoot("elevator_stage3", 0, 0);
@@ -102,7 +102,7 @@ public class RobotMechanism {
             hardstopSlowdownRoot.setPosition(middleOfRobot - Units.inchesToMeters(15), Units.inchesToMeters(2.85) + hardstopSlowdownMeters);
         }
 
-        private Elevator() {
+        private ElevatorMechanism() {
             var baseRoot = mechanism.getRoot(
                     "elevatorBase",
                     middleOfRobot - Units.inchesToMeters(7) + 0.06,
@@ -160,7 +160,7 @@ public class RobotMechanism {
         }
     }
 
-    public class EndEffector {
+    public class EndEffectorMechanism {
         public final LoggedMechanismRoot2d root = mechanism.getRoot("endEffector", 0, 0);
         public final LoggedMechanismLigament2d ligament = root.append(new LoggedMechanismLigament2d(
                 "ligament",
@@ -179,7 +179,7 @@ public class RobotMechanism {
                 new Color8Bit(Color.kOrange)
         ));
 
-        private EndEffector() {
+        private EndEffectorMechanism() {
         }
     }
 }
