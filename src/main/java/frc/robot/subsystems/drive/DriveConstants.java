@@ -164,8 +164,8 @@ public class DriveConstants {
     }
 
     public record MoveToConfig(
-            PIDF pureLinear,
-            PIDF pureAngular,
+            PIDF linear,
+            PIDF angular,
             double linearPositionToleranceMeters,
             double linearVelocityToleranceMetersPerSec,
             double angularPositionToleranceRad,

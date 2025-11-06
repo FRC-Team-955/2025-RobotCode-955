@@ -12,6 +12,6 @@ public class DriveTuning {
     public static final PIDF.Tunable moduleDriveGainsTunable = moduleConfig.driveGains().tunable("Drive/ModuleDrive");
     public static final PIDF.Tunable moduleTurnGainsTunable = moduleConfig.turnGains().tunable("Drive/ModuleTurn");
 
-    public static final PIDF.Tunable moveToPureLinearTunable = moveToConfig.pureLinear().tunable("Drive/MoveToPureLinear");
-    public static final PIDF.Tunable moveToPureAngularTunable = moveToConfig.pureAngular().tunable("Drive/MoveToPureAngular");
+    public static final PIDF.Tunable moveToLinearTunable = moveToConfig.linear().tunable("Drive/MoveToLinear");
+    public static final PIDF.Tunable moveToAngularTunable = moveToConfig.angular().tunable("Drive/MoveToAngular");
 }

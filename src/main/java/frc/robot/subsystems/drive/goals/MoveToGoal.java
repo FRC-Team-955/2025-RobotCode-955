@@ -16,8 +16,8 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.Supplier;
 
 import static frc.robot.subsystems.drive.DriveConstants.*;
-import static frc.robot.subsystems.drive.DriveTuning.moveToPureAngularTunable;
-import static frc.robot.subsystems.drive.DriveTuning.moveToPureLinearTunable;
+import static frc.robot.subsystems.drive.DriveTuning.moveToAngularTunable;
+import static frc.robot.subsystems.drive.DriveTuning.moveToLinearTunable;
 
 @RequiredArgsConstructor
 public class MoveToGoal extends DriveGoal {
@@ -28,17 +28,17 @@ public class MoveToGoal extends DriveGoal {
     private final Supplier<Pose2d> poseSupplier;
     private final boolean mergeJoystickDrive;
 
-    private final PIDController moveToPureLinearX = moveToPureLinearTunable.getOrOriginal()
+    private final PIDController moveToLinearX = moveToLinearTunable.getOrOriginal()
             .toPID(
                     moveToConfig.linearPositionToleranceMeters(),
                     moveToConfig.linearVelocityToleranceMetersPerSec()
             );
-    private final PIDController moveToPureLinearY = moveToPureLinearTunable.getOrOriginal()
+    private final PIDController moveToLinearY = moveToLinearTunable.getOrOriginal()
             .toPID(
                     moveToConfig.linearPositionToleranceMeters(),
                     moveToConfig.linearVelocityToleranceMetersPerSec()
             );
-    private final PIDController moveToPureAngular = moveToPureAngularTunable.getOrOriginal()
+    private final PIDController moveToAngular = moveToAngularTunable.getOrOriginal()
             .toPIDWrapRadians(
                     moveToConfig.angularPositionToleranceRad(),
                     moveToConfig.angularVelocityToleranceRadPerSec()
@@ -46,11 +46,11 @@ public class MoveToGoal extends DriveGoal {
 
     @Override
     public DriveRequest getRequest() {
-        moveToPureLinearTunable.ifChanged(gains -> {
-            gains.applyPID(moveToPureLinearX);
-            gains.applyPID(moveToPureLinearY);
+        moveToLinearTunable.ifChanged(gains -> {
+            gains.applyPID(moveToLinearX);
+            gains.applyPID(moveToLinearY);
         });
-        moveToPureAngularTunable.ifChanged(gains -> gains.applyPID(moveToPureAngular));
+        moveToAngularTunable.ifChanged(gains -> gains.applyPID(moveToAngular));
 
         //////////////////////////////////////////////////////////////////////
 
@@ -59,31 +59,31 @@ public class MoveToGoal extends DriveGoal {
         Pose2d goalPose = poseSupplier.get();
         Logger.recordOutput("Drive/MoveTo/Goal", goalPose);
 
-        double linearXVelocityMetersPerSec = moveToPureLinearX.calculate(
+        double linearXVelocityMetersPerSec = moveToLinearX.calculate(
                 currentPose.getX(),
                 goalPose.getX()
         );
-        boolean linearXAtSetpoint = moveToPureLinearX.atSetpoint();
+        boolean linearXAtSetpoint = moveToLinearX.atSetpoint();
         Logger.recordOutput("Drive/MoveTo/LinearXAtSetpoint", linearXAtSetpoint);
         if (linearXAtSetpoint) {
             linearXVelocityMetersPerSec = 0.0;
         }
 
-        double linearYVelocityMetersPerSec = moveToPureLinearY.calculate(
+        double linearYVelocityMetersPerSec = moveToLinearY.calculate(
                 currentPose.getY(),
                 goalPose.getY()
         );
-        boolean linearYAtSetpoint = moveToPureLinearY.atSetpoint();
+        boolean linearYAtSetpoint = moveToLinearY.atSetpoint();
         Logger.recordOutput("Drive/MoveTo/LinearYAtSetpoint", linearYAtSetpoint);
         if (linearYAtSetpoint) {
             linearYVelocityMetersPerSec = 0.0;
         }
 
-        double angularVelocityRadPerSec = moveToPureAngular.calculate(
+        double angularVelocityRadPerSec = moveToAngular.calculate(
                 MathUtil.angleModulus(currentPose.getRotation().getRadians()),
                 MathUtil.angleModulus(goalPose.getRotation().getRadians())
         );
-        boolean angularAtSetpoint = moveToPureAngular.atSetpoint();
+        boolean angularAtSetpoint = moveToAngular.atSetpoint();
         Logger.recordOutput("Drive/MoveTo/AngularAtSetpoint", angularAtSetpoint);
         if (angularAtSetpoint) {
             angularVelocityRadPerSec = 0.0;
