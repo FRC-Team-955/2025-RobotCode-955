@@ -1,16 +1,10 @@
 package frc.robot.subsystems.drive;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import frc.lib.PIDF;
 import frc.lib.swerve.ModuleLimits;
 import frc.robot.BuildConstants;
-
-import java.util.function.BiConsumer;
 
 public class DriveConstants {
     public static final double assistDirectionToleranceRad = Units.degreesToRadians(50);
@@ -24,21 +18,6 @@ public class DriveConstants {
             Units.degreesToRadians(2),
             Units.degreesToRadians(10)
     );
-
-    public static void calculateMoveToProfiledLinearConstraints(TrapezoidProfile.Constraints overallConstraints, Rotation2d directionOfTravel, BiConsumer<TrapezoidProfile.Constraints, TrapezoidProfile.Constraints> applyXYConstraints) {
-        Translation2d maxVelocities = new Pose2d(new Translation2d(), directionOfTravel)
-                .transformBy(new Transform2d(overallConstraints.maxVelocity, 0, new Rotation2d()))
-                .getTranslation();
-        Translation2d maxAccelerations = new Pose2d(new Translation2d(), directionOfTravel)
-                .transformBy(new Transform2d(overallConstraints.maxAcceleration, 0, new Rotation2d()))
-                .getTranslation();
-        applyXYConstraints.accept(
-                // X
-                new TrapezoidProfile.Constraints(Math.abs(maxVelocities.getX()), Math.abs(maxAccelerations.getX())),
-                // Y
-                new TrapezoidProfile.Constraints(Math.abs(maxVelocities.getY()), Math.abs(maxAccelerations.getY()))
-        );
-    }
 
     static final boolean useSetpointGenerator = true;
     public static final boolean disableDriving = false;
