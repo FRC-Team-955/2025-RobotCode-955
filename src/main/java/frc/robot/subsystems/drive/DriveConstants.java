@@ -31,7 +31,7 @@ public class DriveConstants {
 
     public static final DriveConfig driveConfig = switch (BuildConstants.mode) {
         case REAL, REPLAY -> new DriveConfig(
-                Units.inchesToMeters(1.935948620917915),
+                Units.inchesToMeters(2),
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(35),
@@ -39,9 +39,9 @@ public class DriveConstants {
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
                 new ModuleLimits(
-                        4.58,
-                        20,
-                        20
+                        0,
+                        0,
+                        0
                 )
         );
         case SIM -> new DriveConfig(
@@ -88,9 +88,9 @@ public class DriveConstants {
         case REAL, REPLAY -> new ModuleConfig(
                 PIDF.ofPDSVA(
                         0.0, 0.0,
-                        0.19, 0.125, 0.005
+                        0.0, 0.0, 0.0
                 ),
-                PIDF.ofPD(5, 0.04),
+                PIDF.ofPD(0.0, 0.0),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
@@ -119,10 +119,10 @@ public class DriveConstants {
             // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
             case REAL -> new ModuleIO[]{
                     // FL, FR, BL, BR
-                    new ModuleIOTalonFXSparkMaxCANcoder(1, 1, 5, 1.577),
-                    new ModuleIOTalonFXSparkMaxCANcoder(2, 2, 6, 1.770),
-                    new ModuleIOTalonFXSparkMaxCANcoder(3, 3, 7, 3.105),
-                    new ModuleIOTalonFXSparkMaxCANcoder(4, 4, 8, -2.817),
+                    new ModuleIOTalonFXSparkMaxCANcoder(1, 1, 5, 0.0),
+                    new ModuleIOTalonFXSparkMaxCANcoder(2, 2, 6, 0.0),
+                    new ModuleIOTalonFXSparkMaxCANcoder(3, 3, 7, 0.0),
+                    new ModuleIOTalonFXSparkMaxCANcoder(4, 4, 8, 0.0),
             };
             case SIM -> throw new RuntimeException();
             case REPLAY -> new ModuleIO[]{new ModuleIO(), new ModuleIO(), new ModuleIO(), new ModuleIO()};
