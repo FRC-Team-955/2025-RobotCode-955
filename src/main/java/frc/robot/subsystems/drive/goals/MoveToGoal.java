@@ -28,18 +28,21 @@ public class MoveToGoal extends DriveGoal {
     private final Supplier<Pose2d> poseSupplier;
     private final boolean mergeJoystickDrive;
 
-    private final PIDController moveToPureLinearX = moveToConfig.pureLinear().toPID(
-            moveToConfig.linearPositionToleranceMeters(),
-            moveToConfig.linearVelocityToleranceMetersPerSec()
-    );
-    private final PIDController moveToPureLinearY = moveToConfig.pureLinear().toPID(
-            moveToConfig.linearPositionToleranceMeters(),
-            moveToConfig.linearVelocityToleranceMetersPerSec()
-    );
-    private final PIDController moveToPureAngular = moveToConfig.pureAngular().toPIDWrapRadians(
-            moveToConfig.angularPositionToleranceRad(),
-            moveToConfig.angularVelocityToleranceRadPerSec()
-    );
+    private final PIDController moveToPureLinearX = moveToPureLinearTunable.getOrOriginal()
+            .toPID(
+                    moveToConfig.linearPositionToleranceMeters(),
+                    moveToConfig.linearVelocityToleranceMetersPerSec()
+            );
+    private final PIDController moveToPureLinearY = moveToPureLinearTunable.getOrOriginal()
+            .toPID(
+                    moveToConfig.linearPositionToleranceMeters(),
+                    moveToConfig.linearVelocityToleranceMetersPerSec()
+            );
+    private final PIDController moveToPureAngular = moveToPureAngularTunable.getOrOriginal()
+            .toPIDWrapRadians(
+                    moveToConfig.angularPositionToleranceRad(),
+                    moveToConfig.angularVelocityToleranceRadPerSec()
+            );
 
     @Override
     public DriveRequest getRequest() {

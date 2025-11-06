@@ -299,6 +299,11 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
         }
     }
 
+    // Needed to get the PIDF object from inside Tunable
+    private PIDF getSelf() {
+        return this;
+    }
+
     public class Tunable {
         private final String name;
         private final LoggedTunableNumber tunablekP;
@@ -328,6 +333,23 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
                 tunablekV = null;
                 tunablekA = null;
                 tunablekG = null;
+            }
+        }
+
+        @SuppressWarnings("DataFlowIssue") // tunable numbers are guaranteed not to be null if tuning mode is true
+        public PIDF getOrOriginal() {
+            if (Constants.tuningMode) {
+                return PIDF.ofPIDSVAG(
+                        tunablekP.get(),
+                        tunablekI.get(),
+                        tunablekD.get(),
+                        tunablekS.get(),
+                        tunablekV.get(),
+                        tunablekA.get(),
+                        tunablekG.get()
+                );
+            } else {
+                return getSelf();
             }
         }
 
