@@ -64,29 +64,26 @@ public class MoveToGoal extends DriveGoal {
                 goalPose.getX()
         );
         boolean linearXAtSetpoint = moveToPureLinearX.atSetpoint();
+        Logger.recordOutput("Drive/MoveTo/LinearXAtSetpoint", linearXAtSetpoint);
+        if (linearXAtSetpoint) {
+            linearXVelocityMetersPerSec = 0.0;
+        }
 
         double linearYVelocityMetersPerSec = moveToPureLinearY.calculate(
                 currentPose.getY(),
                 goalPose.getY()
         );
         boolean linearYAtSetpoint = moveToPureLinearY.atSetpoint();
+        Logger.recordOutput("Drive/MoveTo/LinearYAtSetpoint", linearYAtSetpoint);
+        if (linearYAtSetpoint) {
+            linearYVelocityMetersPerSec = 0.0;
+        }
 
         double angularVelocityRadPerSec = moveToPureAngular.calculate(
                 MathUtil.angleModulus(currentPose.getRotation().getRadians()),
                 MathUtil.angleModulus(goalPose.getRotation().getRadians())
         );
         boolean angularAtSetpoint = moveToPureAngular.atSetpoint();
-
-        Logger.recordOutput("Drive/MoveTo/LinearXAtSetpoint", linearXAtSetpoint);
-        if (linearXAtSetpoint) {
-            linearXVelocityMetersPerSec = 0.0;
-        }
-
-        Logger.recordOutput("Drive/MoveTo/LinearYAtSetpoint", linearYAtSetpoint);
-        if (linearYAtSetpoint) {
-            linearYVelocityMetersPerSec = 0.0;
-        }
-
         Logger.recordOutput("Drive/MoveTo/AngularAtSetpoint", angularAtSetpoint);
         if (angularAtSetpoint) {
             angularVelocityRadPerSec = 0.0;
