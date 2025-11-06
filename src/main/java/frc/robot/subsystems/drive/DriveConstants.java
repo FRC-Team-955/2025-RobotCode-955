@@ -46,7 +46,6 @@ public class DriveConstants {
     public static final boolean disableDriving = false;
     public static final boolean disableGyro = false;
     static final boolean useHighFrequencyOdometry = true;
-    public static final boolean useProfiledMoveTo = false;
 
     static final double odometryPositionDeltaDiscardMeters = Units.inchesToMeters(8);
 
