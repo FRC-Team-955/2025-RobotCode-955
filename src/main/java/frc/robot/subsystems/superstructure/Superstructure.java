@@ -41,12 +41,6 @@ public class Superstructure extends CommandBasedSubsystem {
     private final SuperstructureIO io = createIO();
     private final SuperstructureIOInputsAutoLogged inputs = new SuperstructureIOInputsAutoLogged();
 
-    private record Goals(
-            Elevator.Goal elevatorGoal,
-            EndEffector.Goal endEffectorGoal,
-            Funnel.Goal funnelGoal
-    ) {}
-
     @RequiredArgsConstructor
     public enum Goal {
         IDLE,
