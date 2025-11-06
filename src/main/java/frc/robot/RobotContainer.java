@@ -11,7 +11,6 @@ import frc.lib.CANLogger;
 import frc.lib.commands.CommandsExt;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.goals.WheelRadiusCharacterizationGoal;
-import frc.robot.subsystems.superstructure.Superstructure;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -33,7 +32,6 @@ public class RobotContainer {
     /* Subsystems */
     // Note: order does matter
     public final Drive drive = Drive.get();
-    public final Superstructure superstructure = Superstructure.get();
 
     public RobotContainer() {
         addAutos();
@@ -53,7 +51,6 @@ public class RobotContainer {
                 "Characterization",
                 // We need to require the superstructure during characterization so that the default command doesn't get run
                 Commands.deferredProxy(() -> CommandsExt.eagerSequence(
-                        superstructure.cancel(),
                         characterizationChooser.get()
                 ))
         );
@@ -72,7 +69,6 @@ public class RobotContainer {
     }
 
     private void setDefaultCommands() {
-        superstructure.setDefaultCommand(superstructure.cancel());
     }
 
     /**
@@ -86,8 +82,6 @@ public class RobotContainer {
         // You must do this because if you don't, superstructure's default command will cancel your command
 
         controller.y().onTrue(robotState.resetRotation());
-
-        controller.leftBumper().onTrue(superstructure.cancel());
 
         // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
         // You must do this because if you don't, superstructure's default command will cancel your command
