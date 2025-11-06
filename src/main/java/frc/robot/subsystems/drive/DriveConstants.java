@@ -19,8 +19,6 @@ public class DriveConstants {
     public static final MoveToConfig moveToConfig = new MoveToConfig(
             PIDF.ofPD(4.5, 0.05),
             PIDF.ofPD(4.5, 0.05),
-            PIDF.ofPD(1, 0).profiled(3.8, 5),
-            PIDF.ofPD(2, 0).profiled(3, 3),
             0.02,
             0.1,
             Units.degreesToRadians(2),
@@ -168,8 +166,6 @@ public class DriveConstants {
     public record MoveToConfig(
             PIDF pureLinear,
             PIDF pureAngular,
-            PIDF.Profiled profiledLinear,
-            PIDF.Profiled profiledAngular,
             double linearPositionToleranceMeters,
             double linearVelocityToleranceMetersPerSec,
             double angularPositionToleranceRad,

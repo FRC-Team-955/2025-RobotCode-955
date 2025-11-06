@@ -14,7 +14,4 @@ public class DriveTuning {
 
     public static final PIDF.Tunable moveToPureLinearTunable = moveToConfig.pureLinear().tunable("Drive/MoveToPureLinear");
     public static final PIDF.Tunable moveToPureAngularTunable = moveToConfig.pureAngular().tunable("Drive/MoveToPureAngular");
-
-    public static final PIDF.Profiled.Tunable moveToProfiledLinearTunable = moveToConfig.profiledLinear().tunable("Drive/MoveToProfiledLinear");
-    public static final PIDF.Profiled.Tunable moveToProfiledAngularTunable = moveToConfig.profiledAngular().tunable("Drive/MoveToProfiledAngular");
 }
