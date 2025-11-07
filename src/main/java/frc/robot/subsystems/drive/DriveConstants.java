@@ -31,7 +31,7 @@ public class DriveConstants {
 
     public static final DriveConfig driveConfig = switch (BuildConstants.mode) {
         case REAL, REPLAY -> new DriveConfig(
-                Units.inchesToMeters(2),
+                Units.inchesToMeters(1.935948620917915),
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(35),
@@ -39,9 +39,9 @@ public class DriveConstants {
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
                 new ModuleLimits(
-                        0,
-                        0,
-                        0
+                        4.58,
+                        20,
+                        20
                 )
         );
         case SIM -> new DriveConfig(
@@ -53,9 +53,9 @@ public class DriveConstants {
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
                 new ModuleLimits(
-                        0,
-                        0,
-                        0
+                        3.83,
+                        25,
+                        20
                 )
         );
     };
@@ -100,8 +100,8 @@ public class DriveConstants {
                 60
         );
         case SIM -> new ModuleConfig(
-                PIDF.ofPDSV(0.0, 0.0, 0.0, 0.0),
-                PIDF.ofPD(0.0, 0.0),
+                PIDF.ofPDSV(0.05, 0.0, 0.04075, 0.14117),
+                PIDF.ofPD(10.0, 0.07),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,

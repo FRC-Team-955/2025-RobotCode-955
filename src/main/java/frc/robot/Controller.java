@@ -58,6 +58,7 @@ public class Controller implements Periodic {
 
     @Override
     public void periodicBeforeCommands() {
+        double omega;
         controllerDisconnectedAlert.set(!controller.isConnected());
 
         // https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
@@ -66,7 +67,11 @@ public class Controller implements Periodic {
         // right on joystick is positive x - we want negative y for right
         double y = -controller.getLeftX();
         // right on joystick is positive x - we want negative x for right (CCW is positive)
-        double omega = -controller.getRightX();
+        if (BuildConstants.mode == BuildConstants.Mode.SIM && System.getProperty("os.name").contains("Mac OS X")) {
+            omega = -controller.getRawAxis(2);
+        } else {
+            omega = -controller.getRightY();
+        }
 
         Logger.recordOutput("JoystickDrive/Suppliers/X", x);
         Logger.recordOutput("JoystickDrive/Suppliers/Y", y);
