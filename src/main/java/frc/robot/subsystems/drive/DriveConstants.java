@@ -11,8 +11,8 @@ public class DriveConstants {
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
     public static final MoveToConfig moveToConfig = new MoveToConfig(
-            PIDF.ofPD(0.0, 0.0),
-            PIDF.ofPD(0.0, 0.0),
+            PIDF.ofPD(4.5, 0.05),
+            PIDF.ofPD(4.5, 0.05),
             0.02,
             0.1,
             Units.degreesToRadians(2),
@@ -39,9 +39,9 @@ public class DriveConstants {
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
                 new ModuleLimits(
-                        0,
-                        0,
-                        0
+                        4.58,
+                        20,
+                        20
                 )
         );
         case SIM -> new DriveConfig(
@@ -53,9 +53,9 @@ public class DriveConstants {
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
                 new ModuleLimits(
-                        0,
-                        0,
-                        0
+                        3.83,
+                        25,
+                        20
                 )
         );
     };
@@ -88,9 +88,9 @@ public class DriveConstants {
         case REAL, REPLAY -> new ModuleConfig(
                 PIDF.ofPDSVA(
                         0.0, 0.0,
-                        0.0, 0.0, 0.0
+                        0.19, 0.125, 0.005
                 ),
-                PIDF.ofPD(0.0, 0.0),
+                PIDF.ofPD(5.0, 0.04),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
@@ -100,8 +100,8 @@ public class DriveConstants {
                 60
         );
         case SIM -> new ModuleConfig(
-                PIDF.ofPDSV(0.0, 0.0, 0.0, 0.0),
-                PIDF.ofPD(0.0, 0.0),
+                PIDF.ofPDSV(0.05, 0.0, 0.04075, 0.14117),
+                PIDF.ofPD(10.0, 0.07),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
@@ -124,7 +124,12 @@ public class DriveConstants {
                     new ModuleIOTalonFXSparkMaxCANcoder(3, 3, 7, 0.0),
                     new ModuleIOTalonFXSparkMaxCANcoder(4, 4, 8, 0.0),
             };
-            case SIM -> throw new RuntimeException();
+            case SIM -> new ModuleIO[]{
+                    new ModuleIOSim(0),
+                    new ModuleIOSim(1),
+                    new ModuleIOSim(2),
+                    new ModuleIOSim(3)
+            };
             case REPLAY -> new ModuleIO[]{new ModuleIO(), new ModuleIO(), new ModuleIO(), new ModuleIO()};
         };
     }
@@ -132,7 +137,7 @@ public class DriveConstants {
     static GyroIO createGyroIO() {
         return switch (BuildConstants.mode) {
             case REAL -> new GyroIOPigeon2(9);
-            case SIM -> throw new RuntimeException();
+            case SIM -> new GyroIOSim();
             case REPLAY -> new GyroIO();
         };
     }
