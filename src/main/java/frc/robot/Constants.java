@@ -21,7 +21,7 @@ import com.ctre.phoenix6.CANBus;
  * (log replay from a file).
  */
 public final class Constants {
-    public static final boolean tuningMode = true;
+    public static final boolean tuningMode = false;
 
     public static final class Simulation {
         /**
