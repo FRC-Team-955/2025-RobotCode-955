@@ -124,7 +124,12 @@ public class DriveConstants {
                     new ModuleIOTalonFXSparkMaxCANcoder(3, 3, 7, 0.0),
                     new ModuleIOTalonFXSparkMaxCANcoder(4, 4, 8, 0.0),
             };
-            case SIM -> throw new RuntimeException();
+            case SIM -> new ModuleIO[]{
+                    new ModuleIOSim(0),
+                    new ModuleIOSim(1),
+                    new ModuleIOSim(2),
+                    new ModuleIOSim(3)
+            };
             case REPLAY -> new ModuleIO[]{new ModuleIO(), new ModuleIO(), new ModuleIO(), new ModuleIO()};
         };
     }
@@ -132,7 +137,7 @@ public class DriveConstants {
     static GyroIO createGyroIO() {
         return switch (BuildConstants.mode) {
             case REAL -> new GyroIOPigeon2(9);
-            case SIM -> throw new RuntimeException();
+            case SIM -> new GyroIOSim();
             case REPLAY -> new GyroIO();
         };
     }
