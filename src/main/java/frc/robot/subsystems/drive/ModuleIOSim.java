@@ -141,7 +141,7 @@ public class ModuleIOSim extends ModuleIO {
     @Override
     public void setTurnPIDF(PIDF newGains) {
         System.out.println("Setting turn gains");
-        turnController = newGains.toPID();
+        turnController = newGains.toPIDWrapRadians();
     }
 
     @Override
