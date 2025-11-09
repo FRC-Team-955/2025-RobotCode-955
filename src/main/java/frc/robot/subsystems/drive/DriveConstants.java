@@ -50,11 +50,11 @@ public class DriveConstants {
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(35),
                 Units.inchesToMeters(35),
-                PIDF.ofPD(3.6, 0.01),
-                PIDF.ofPD(2.9, 0.02),
+                PIDF.ofPD(3.5, 0.0),
+                PIDF.ofPD(3, 0.0),
                 new ModuleLimits(
-                        3.83,
-                        25,
+                        10,
+                        100,
                         20
                 )
         );
@@ -100,8 +100,8 @@ public class DriveConstants {
                 60
         );
         case SIM -> new ModuleConfig(
-                PIDF.ofPDSV(0.067, 0.0, 0.05, 0.16),
-                PIDF.ofPD(11.75, 0.08),
+                PIDF.ofPDSV(0.1267, 0.0, 0.05, 0.14),
+                PIDF.ofP(7.4),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
