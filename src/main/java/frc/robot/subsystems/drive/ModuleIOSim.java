@@ -57,7 +57,7 @@ public class ModuleIOSim extends ModuleIO {
                     .withBumperSize(Meters.of(driveConfig.bumperLengthMeters()), Meters.of(driveConfig.bumperWidthMeters()))
                     .withRobotMass(Pounds.of(125)),
             // Specify starting pose
-            new Pose2d(3, 3, new Rotation2d())
+            new Pose2d(2, 2, new Rotation2d())
     );
 
     static {
