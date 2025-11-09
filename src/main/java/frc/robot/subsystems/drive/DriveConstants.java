@@ -53,7 +53,7 @@ public class DriveConstants {
                 PIDF.ofPD(3.5, 0.0),
                 PIDF.ofPD(3, 0.0),
                 new ModuleLimits(
-                        10,
+                        3.96,
                         100,
                         20
                 )
