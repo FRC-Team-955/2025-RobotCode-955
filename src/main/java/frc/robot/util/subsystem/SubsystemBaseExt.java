@@ -16,5 +16,6 @@ public abstract class SubsystemBaseExt extends SubsystemBase implements Subsyste
     @Override
     public final void periodic() {
         this.periodicBeforeCommands();
+        this.periodicAfterCommands();
     }
 }

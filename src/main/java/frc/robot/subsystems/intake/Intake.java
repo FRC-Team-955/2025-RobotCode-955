@@ -10,6 +10,7 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 
 import static frc.robot.subsystems.intake.IntakeConstants.intakeSetpointToleranceRad;
+import static frc.robot.subsystems.intake.IntakeTuning.moduleIntakeGainsTunable;
 
 public class Intake extends SubsystemBaseExt {
     private final RobotMechanism robotMechanism = RobotMechanism.get();
@@ -27,7 +28,7 @@ public class Intake extends SubsystemBaseExt {
     }
 
     @Getter
-    private IntakeGoal intakeGoal = IntakeGoal.STOW;
+    private IntakeGoal intakeGoal;
 
     private static Intake instance;
 
@@ -39,22 +40,27 @@ public class Intake extends SubsystemBaseExt {
         return instance;
     }
 
-    private Intake() {}
+    private Intake() {
+        this.intakeGoal = IntakeGoal.STOW;
+    }
 
     @Override
     public void periodicBeforeCommands() {
         intakeIO.updateInputs(intakeInputs);
         Logger.processInputs("Inputs/Intake/Pivot", intakeInputs);
+
+        moduleIntakeGainsTunable.ifChanged(intakeIO::setPIDF);
     }
 
     @Override
     public void periodicAfterCommands() {
+        moduleIntakeGainsTunable.ifChanged(intakeIO::setPIDF);
         Logger.recordOutput("Intake/Pivot/Goal", intakeGoal);
         if (intakeGoal.setpointRad != null) {
             var intakeSetpointRad = intakeGoal.setpointRad.getAsDouble();
             intakeIO.setClosedLoop(intakeSetpointRad);
             Logger.recordOutput("Intake/Pivot/ClosedLoop", true);
-            Logger.recordOutput("Intake/Pivot/ClosedLoop", false);
+            Logger.recordOutput("Intake/Pivot/SetpointRad", intakeSetpointRad);
         } else {
             Logger.recordOutput("Intake/Pivot/ClosedLoop", false);
         }
@@ -82,4 +88,5 @@ public class Intake extends SubsystemBaseExt {
                 this::atIntakeGoal
         );
     }
+
 }

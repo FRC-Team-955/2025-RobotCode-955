@@ -95,14 +95,15 @@ public class RobotContainer {
         );
 
         intake.setDefaultCommand(
-                (Timer.getTimestamp() % 2 >= 1 ?
-                        Intake.get().setGoals(
-                                Intake.IntakeGoal.STOW
-                        ) :
-                        Intake.get().setGoals(
-                                Intake.IntakeGoal.INTAKE
-                        )
-                ));
+                intake.run(() -> {
+                    double time = Timer.getTimestamp();
+                    if ((time % 2) >= 1) {
+                        intake.setGoals(Intake.IntakeGoal.STOW).schedule();
+                    } else {
+                        intake.setGoals(Intake.IntakeGoal.INTAKE).schedule();
+                    }
+                })
+        );
     }
 
     /**

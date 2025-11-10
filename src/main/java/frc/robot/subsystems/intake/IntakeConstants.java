@@ -38,7 +38,7 @@ public class IntakeConstants {
                 40
         );
         case SIM -> new IntakeConfig(
-                PIDF.ofPSVAG(0.2, 0, 1.2, 1.2, 1.2),
+                PIDF.ofPSVAG(0.0, 0, 0.0, 0.0, 0.0),
                 60,
                 false,
                 false,
