@@ -38,7 +38,7 @@ public class IntakeConstants {
                 40
         );
         case SIM -> new IntakeConfig(
-                PIDF.ofPSVAG(0.0, 0, 0.0, 0.0, 0.0),
+                PIDF.ofPDSVAG(1.0, 0.0, 0.0, 14.0, 0.0, 1.405),
                 60,
                 false,
                 false,
@@ -47,8 +47,8 @@ public class IntakeConstants {
         case REPLAY -> null;
     };
 
-    //protected static IntakeIO createIntakeIO() {}
-    protected static final IntakeIO intakeIo = BuildConstants.mode == BuildConstants.Mode.REPLAY
+    // protected static IntakeIO createIntakeIO() {}
+    protected static final IntakeIO intakeIO = BuildConstants.mode == BuildConstants.Mode.REPLAY
             ? new IntakeIO()
             : switch (BuildConstants.mode) {
         case REAL -> null; //new IntakeIOTalonFX();

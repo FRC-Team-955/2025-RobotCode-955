@@ -33,11 +33,10 @@ public class IntakeIOSim extends IntakeIO {
                     intakeMaxAccelerationRadPerSecSquared
             )
     );
-    private final ArmFeedforward ff = intakeConfig.gains().toArmFF();
+    private static ArmFeedforward ff = intakeConfig.gains().toArmFF();
 
     private boolean closedLoop = true;
     private double appliedVolts;
-    private PIDController intakeController = intakeConfig.gains().toPID();
 
     public IntakeIOSim() {}
 
@@ -76,6 +75,9 @@ public class IntakeIOSim extends IntakeIO {
     @Override
     public void setIntakePIDF(PIDF newGains) {
         System.out.println("Setting intake gains");
-        intakeController = newGains.toPID();
+        pid.setP(newGains.kP());
+        pid.setI(newGains.kI());
+        pid.setD(newGains.kD());
+        ff = newGains.toArmFF();
     }
 }

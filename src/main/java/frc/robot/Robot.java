@@ -27,8 +27,8 @@ import frc.lib.Util;
 import frc.lib.commands.CommandsExt;
 import frc.lib.subsystem.Periodic;
 import frc.robot.subsystems.drive.ModuleIOSim;
-import frc.robot.util.subsystem.SubsystemBaseExt;
-import frc.robot.util.subsystem.VirtualSubsystem;
+//import frc.robot.util.subsystem.SubsystemBaseExt;
+//import frc.robot.util.subsystem.VirtualSubsystem;
 import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -55,20 +55,20 @@ public class Robot extends LoggedRobot {
 
     private static List<Periodic> periodics;
 
-    private static final HashSet<SubsystemBaseExt> extendedSubsystems = new HashSet<>();
-    private static final HashSet<VirtualSubsystem> virtualSubsystems = new HashSet<>();
-
-    public static void registerExtendedSubsystem(SubsystemBaseExt subsystem) {
-        if (!extendedSubsystems.add(subsystem)) {
-            Util.error("An extended subsystem has been registered more than once: " + subsystem.getName());
-        }
-    }
-
-    public static void registerVirtualSubsystem(VirtualSubsystem subsystem) {
-        if (!virtualSubsystems.add(subsystem)) {
-            Util.error("A virtual subsystem has been registered more than once: " + subsystem.getClass().getName());
-        }
-    }
+//    private static final HashSet<SubsystemBaseExt> extendedSubsystems = new HashSet<>();
+//    private static final HashSet<VirtualSubsystem> virtualSubsystems = new HashSet<>();
+//
+//    public static void registerExtendedSubsystem(SubsystemBaseExt subsystem) {
+//        if (!extendedSubsystems.add(subsystem)) {
+//            Util.error("An extended subsystem has been registered more than once: " + subsystem.getName());
+//        }
+//    }
+//
+//    public static void registerVirtualSubsystem(VirtualSubsystem subsystem) {
+//        if (!virtualSubsystems.add(subsystem)) {
+//            Util.error("A virtual subsystem has been registered more than once: " + subsystem.getClass().getName());
+//        }
+//    }
 
     public Robot() {
         AutoLogOutputManager.addPackage("frc");
