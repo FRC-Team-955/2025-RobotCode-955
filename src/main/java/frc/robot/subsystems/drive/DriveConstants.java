@@ -100,7 +100,7 @@ public class DriveConstants {
                 60
         );
         case SIM -> new ModuleConfig(
-                PIDF.ofPDSV(0.1267, 0.0, 0.05, 0.14),
+                PIDF.ofPDSV(0.14, 0.0, 0.05, 0.13882),
                 PIDF.ofP(7.4),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,

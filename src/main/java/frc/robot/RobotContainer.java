@@ -73,24 +73,24 @@ public class RobotContainer {
     }
 
     private void setDefaultCommands() {
-        drive.setDefaultCommand(Drive.get().driveJoystick());
-//        drive.setDefaultCommand(
-//                drive.runRobotRelative(() -> (Timer.getTimestamp() % 2 >= 1 ?
-//                        ChassisSpeeds.fromFieldRelativeSpeeds(
-//                                1,
-//                                0,
-//                                0.5,
-//                                new Rotation2d(0)
-//                        ) :
-//                        ChassisSpeeds.fromFieldRelativeSpeeds(
-//                                -1,
-//                                0,
-//                                1,
-//                                new Rotation2d(0)
-//                        )
-//                )
-//                )
-//        );
+//        drive.setDefaultCommand(Drive.get().driveJoystick());
+        drive.setDefaultCommand(
+                drive.runRobotRelative(() -> (Timer.getTimestamp() % 2 >= 1 ?
+                        ChassisSpeeds.fromFieldRelativeSpeeds(
+                                1,
+                                0,
+                                0.5,
+                                new Rotation2d(0)
+                        ) :
+                        ChassisSpeeds.fromFieldRelativeSpeeds(
+                                -1,
+                                0,
+                                1,
+                                new Rotation2d(0)
+                        )
+                )
+                )
+        );
     }
 
     /**
