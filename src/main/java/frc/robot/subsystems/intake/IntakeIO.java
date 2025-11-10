@@ -25,5 +25,5 @@ public class IntakeIO {
 
     public void setClosedLoop(double positionRad) {}
 
-    public void setPIDF(PIDF newGains) {}
+    public void setIntakePIDF(PIDF newGains) {}
 }

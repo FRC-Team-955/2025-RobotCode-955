@@ -1,13 +1,14 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import frc.lib.PIDF;
 import org.littletonrobotics.junction.Logger;
-
 import static frc.robot.subsystems.intake.IntakeConstants.*;
 
 public class IntakeIOSim extends IntakeIO {
@@ -36,6 +37,7 @@ public class IntakeIOSim extends IntakeIO {
 
     private boolean closedLoop = true;
     private double appliedVolts;
+    private PIDController intakeController = intakeConfig.gains().toPID();
 
     public IntakeIOSim() {}
 
@@ -69,5 +71,11 @@ public class IntakeIOSim extends IntakeIO {
     public void setClosedLoop(double positionRad) {
         closedLoop = true;
         pid.setGoal(new TrapezoidProfile.State(positionRad, 0));
+    }
+
+    @Override
+    public void setIntakePIDF(PIDF newGains) {
+        System.out.println("Setting intake gains");
+        intakeController = newGains.toPID();
     }
 }

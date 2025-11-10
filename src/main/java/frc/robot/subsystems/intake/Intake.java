@@ -49,12 +49,12 @@ public class Intake extends SubsystemBaseExt {
         intakeIO.updateInputs(intakeInputs);
         Logger.processInputs("Inputs/Intake/Pivot", intakeInputs);
 
-        moduleIntakeGainsTunable.ifChanged(intakeIO::setPIDF);
+        moduleIntakeGainsTunable.ifChanged(intakeIO::setIntakePIDF);
     }
 
     @Override
     public void periodicAfterCommands() {
-        moduleIntakeGainsTunable.ifChanged(intakeIO::setPIDF);
+        moduleIntakeGainsTunable.ifChanged(intakeIO::setIntakePIDF);
         Logger.recordOutput("Intake/Pivot/Goal", intakeGoal);
         if (intakeGoal.setpointRad != null) {
             var intakeSetpointRad = intakeGoal.setpointRad.getAsDouble();
