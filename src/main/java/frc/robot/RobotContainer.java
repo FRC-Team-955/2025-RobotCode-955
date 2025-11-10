@@ -18,6 +18,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import java.util.function.Supplier;
 
+import static edu.wpi.first.wpilibj2.command.Commands.run;
+
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -95,7 +97,7 @@ public class RobotContainer {
         );
 
         intake.setDefaultCommand(
-                intake.run(() -> {
+                run(() -> {
                     double time = Timer.getTimestamp();
                     if ((time % 2) >= 1) {
                         intake.setGoals(Intake.IntakeGoal.STOW).schedule();

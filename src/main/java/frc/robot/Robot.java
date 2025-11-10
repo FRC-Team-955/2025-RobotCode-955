@@ -152,6 +152,7 @@ public class Robot extends LoggedRobot {
                 robotContainer.operatorDashboard,
 
                 // Subsystems - the order of these doesn't matter
+                robotContainer.intake,
 
                 // Misc
                 robotContainer.canLogger
