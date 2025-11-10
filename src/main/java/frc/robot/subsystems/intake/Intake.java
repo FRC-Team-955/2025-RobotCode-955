@@ -1,9 +1,8 @@
 package frc.robot.subsystems.intake;
 
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.lib.subsystem.CommandBasedSubsystem;
 import frc.robot.RobotMechanism;
+import frc.robot.util.subsystem.SubsystemBaseExt;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;
@@ -12,7 +11,7 @@ import java.util.function.DoubleSupplier;
 
 import static frc.robot.subsystems.intake.IntakeConstants.intakeSetpointToleranceRad;
 
-public class Intake extends CommandBasedSubsystem {
+public class Intake extends SubsystemBaseExt {
     private final RobotMechanism robotMechanism = RobotMechanism.get();
 
     private static final IntakeIO intakeIO = IntakeConstants.intakeIo;

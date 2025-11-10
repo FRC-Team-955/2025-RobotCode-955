@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake;
 
+import frc.lib.PIDF;
 import org.littletonrobotics.junction.AutoLog;
 
 public class IntakeIO {
