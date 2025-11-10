@@ -13,6 +13,7 @@ import frc.lib.CANLogger;
 import frc.lib.commands.CommandsExt;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.goals.WheelRadiusCharacterizationGoal;
+import frc.robot.subsystems.intake.Intake;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import java.util.function.Supplier;
@@ -36,6 +37,7 @@ public class RobotContainer {
     /* Subsystems */
     // Note: order does matter
     public final Drive drive = Drive.get();
+    public final Intake intake = Intake.get();
 
     public RobotContainer() {
         addAutos();
@@ -91,6 +93,16 @@ public class RobotContainer {
                 )
                 )
         );
+
+        intake.setDefaultCommand(
+                (Timer.getTimestamp() % 2 >= 1 ?
+                        Intake.get().setGoals(
+                                Intake.IntakeGoal.STOW
+                        ) :
+                        Intake.get().setGoals(
+                                Intake.IntakeGoal.INTAKE
+                        )
+                ));
     }
 
     /**
