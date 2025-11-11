@@ -68,6 +68,9 @@ public class Intake implements Periodic {
         if (defaultCommand != null && !defaultCommand.isScheduled()) {
             defaultCommand.schedule();
         }
+
+        RobotMechanism.get().PivotMechanism.update();
+
     }
 
     public void setDefaultCommand(Command command) {
@@ -75,6 +78,14 @@ public class Intake implements Periodic {
         if (command != null) {
             command.schedule();
         }
+    }
+
+    public double getCurrentAngleRad() {
+        return intakeInputs.positionRad;
+    }
+
+    public IntakeGoal getCurrentGoal() {
+        return intakeGoal;
     }
 
     public Command setGoals(IntakeGoal intakeGoal) {

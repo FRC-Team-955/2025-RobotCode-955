@@ -23,8 +23,11 @@ public class RobotMechanism {
         return instance;
     }
 
+    public final IntakeMechanism PivotMechanism;
+
     private RobotMechanism() {
         addBumpers();
+        PivotMechanism = new IntakeMechanism();
     }
 
     /** Middle of the robot in the mechanism */
@@ -53,5 +56,54 @@ public class RobotMechanism {
                 90,
                 new Color8Bit(Color.kBlue)
         ));
+    }
+
+    public class IntakeMechanism {
+        private static final double x = middleOfRobot - Units.inchesToMeters(12);
+        private static final double y = Units.inchesToMeters(6);
+
+        public final LoggedMechanismRoot2d root = mechanism.getRoot("intake_root", x, y);
+
+        private static final double upperLength = Units.inchesToMeters(10);
+        public final LoggedMechanismLigament2d upperArm = root.append(new LoggedMechanismLigament2d(
+                "intake_upperArm",
+                upperLength,
+                90,
+                12,
+                new Color8Bit(Color.kOrange)
+        ));
+        private static final double lowerLength = Units.inchesToMeters(8);
+        public final LoggedMechanismLigament2d lowerArm = upperArm.append(new LoggedMechanismLigament2d(
+                "intake_lowerArm",
+                lowerLength,
+                0,
+                10,
+                new Color8Bit(Color.kRed)
+        ));
+        private static final double rollerLength = Units.inchesToMeters(2);
+        public final LoggedMechanismLigament2d roller = lowerArm.append(new LoggedMechanismLigament2d(
+                "intake_roller",
+                rollerLength,
+                0,
+                8,
+                new Color8Bit(Color.kGray)
+        ));
+
+        public IntakeMechanism() {}
+
+        public void update() {
+            Intake intake = Intake.get();
+            double angleRad = intake.getCurrentAngleRad();
+            Intake.IntakeGoal goal = intake.getCurrentGoal();
+
+            double displayAngleDeg = switch (goal) {
+                case STOW -> 90;
+                case INTAKE -> 180;
+                default -> 90;
+            };
+            upperArm.setAngle(displayAngleDeg);
+            lowerArm.setAngle(45);
+            roller.setAngle(0);
+        }
     }
 }

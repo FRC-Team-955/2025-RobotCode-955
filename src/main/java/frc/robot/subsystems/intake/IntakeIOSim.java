@@ -45,6 +45,7 @@ public class IntakeIOSim extends IntakeIO {
         if (closedLoop) {
             appliedVolts = pid.calculate(armSim.getAngleRads())
                     + ff.calculate(armSim.getAngleRads(), pid.getSetpoint().velocity);
+            appliedVolts = Math.max(-12.0, Math.min(12.0, appliedVolts));
             Logger.recordOutput("Intake/Pivot/SetpointVelocityRadPerSec", pid.getSetpoint().velocity);
         } else {
             pid.reset(new TrapezoidProfile.State(armSim.getAngleRads(), armSim.getVelocityRadPerSec()));
