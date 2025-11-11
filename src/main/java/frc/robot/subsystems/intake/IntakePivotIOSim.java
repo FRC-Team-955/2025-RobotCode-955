@@ -1,7 +1,6 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -11,7 +10,7 @@ import frc.lib.PIDF;
 import org.littletonrobotics.junction.Logger;
 import static frc.robot.subsystems.intake.IntakeConstants.*;
 
-public class IntakeIOSim extends IntakeIO {
+public class IntakePivotIOSim extends IntakePivotIO {
     private final SingleJointedArmSim armSim = new SingleJointedArmSim(
             DCMotor.getKrakenX60(1),
             intakeConfig.motorGearRatio(),
@@ -38,10 +37,10 @@ public class IntakeIOSim extends IntakeIO {
     private boolean closedLoop = true;
     private double appliedVolts;
 
-    public IntakeIOSim() {}
+    public IntakePivotIOSim() {}
 
     @Override
-    public void updateInputs(IntakeIOInputs inputs) {
+    public void updateInputs(IntakePivotIOInputs inputs) {
         if (closedLoop) {
             appliedVolts = pid.calculate(armSim.getAngleRads())
                     + ff.calculate(armSim.getAngleRads(), pid.getSetpoint().velocity);
@@ -75,7 +74,7 @@ public class IntakeIOSim extends IntakeIO {
 
     @Override
     public void setIntakePIDF(PIDF newGains) {
-        System.out.println("Setting intake gains");
+        System.out.println("Setting intake pivot gains");
         pid.setP(newGains.kP());
         pid.setI(newGains.kI());
         pid.setD(newGains.kD());

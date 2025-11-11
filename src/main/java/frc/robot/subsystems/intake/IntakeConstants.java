@@ -48,12 +48,12 @@ public class IntakeConstants {
     };
 
     // protected static IntakeIO createIntakeIO() {}
-    protected static final IntakeIO intakeIO = BuildConstants.mode == BuildConstants.Mode.REPLAY
-            ? new IntakeIO()
+    protected static final IntakePivotIO intakePivotIO = BuildConstants.mode == BuildConstants.Mode.REPLAY
+            ? new IntakePivotIO()
             : switch (BuildConstants.mode) {
         case REAL -> null; //new IntakeIOTalonFX();
-        case SIM -> new IntakeIOSim();
-        case REPLAY -> new IntakeIO();
+        case SIM -> new IntakePivotIOSim();
+        case REPLAY -> new IntakePivotIO();
     };
 
     public record IntakeConfig(

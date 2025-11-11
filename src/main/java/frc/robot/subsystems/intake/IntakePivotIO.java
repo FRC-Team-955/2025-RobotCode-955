@@ -3,9 +3,9 @@ package frc.robot.subsystems.intake;
 import frc.lib.PIDF;
 import org.littletonrobotics.junction.AutoLog;
 
-public class IntakeIO {
+public class IntakePivotIO {
     @AutoLog
-    public static class IntakeIOInputs {
+    public static class IntakePivotIOInputs {
         public boolean connected = false;
         public double positionRad = 0.0;
         public double velocityRadPerSec = 0.0;
@@ -17,7 +17,7 @@ public class IntakeIO {
         public double absolutePositionRad = 0.0;
     }
 
-    public void updateInputs(IntakeIOInputs inputs) {}
+    public void updateInputs(IntakePivotIOInputs inputs) {}
 
     public void setBrakeMode(boolean enable) {}
 

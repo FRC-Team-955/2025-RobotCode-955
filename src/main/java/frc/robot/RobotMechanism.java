@@ -4,7 +4,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import frc.robot.subsystems.drive.DriveConstants;
-import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakePivot;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
@@ -92,9 +92,9 @@ public class RobotMechanism {
         public IntakeMechanism() {}
 
         public void update() {
-            Intake intake = Intake.get();
-            double angleRad = intake.getCurrentAngleRad();
-            Intake.IntakeGoal goal = intake.getCurrentGoal();
+            IntakePivot intakePivot = IntakePivot.get();
+            double angleRad = intakePivot.getCurrentAngleRad();
+            IntakePivot.IntakePivotGoal goal = intakePivot.getCurrentGoal();
 
             double displayAngleDeg = switch (goal) {
                 case STOW -> 90;

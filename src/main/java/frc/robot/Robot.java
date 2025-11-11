@@ -23,7 +23,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.lib.LoggedTracer;
-import frc.lib.Util;
 import frc.lib.commands.CommandsExt;
 import frc.lib.subsystem.Periodic;
 import frc.robot.subsystems.drive.ModuleIOSim;
@@ -39,7 +38,6 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import java.lang.reflect.Array;
-import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -152,7 +150,7 @@ public class Robot extends LoggedRobot {
                 robotContainer.operatorDashboard,
 
                 // Subsystems - the order of these doesn't matter
-                robotContainer.intake,
+                robotContainer.intakePivot,
 
                 // Misc
                 robotContainer.canLogger

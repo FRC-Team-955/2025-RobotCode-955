@@ -1,8 +1,6 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.subsystem.Periodic;
 import frc.robot.RobotMechanism;
 import org.littletonrobotics.junction.Logger;
@@ -14,51 +12,51 @@ import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 import static frc.robot.subsystems.intake.IntakeConstants.intakeSetpointToleranceRad;
 import static frc.robot.subsystems.intake.IntakeTuning.moduleIntakeGainsTunable;
 
-public class Intake implements Periodic {
+public class IntakePivot implements Periodic {
     private final RobotMechanism robotMechanism = RobotMechanism.get();
 
-    private static final IntakeIO intakeIO = IntakeConstants.intakeIO;
-    private static final IntakeIOInputsAutoLogged intakeInputs = new IntakeIOInputsAutoLogged();
+    private static final IntakePivotIO intakePivotIO = IntakeConstants.intakePivotIO;
+    private static final IntakePivotIOInputsAutoLogged intakeInputs = new IntakePivotIOInputsAutoLogged();
 
     private Command defaultCommand;
 
-    public enum IntakeGoal {
+    public enum IntakePivotGoal {
         CHARACTERIZATION(null),
         STOW(() -> 1.353),
         INTAKE(() -> 0.12833586);
 
         private final DoubleSupplier setpointRad;
-        IntakeGoal(DoubleSupplier setpointRad) { this.setpointRad = setpointRad; }
+        IntakePivotGoal(DoubleSupplier setpointRad) { this.setpointRad = setpointRad; }
     }
 
-    private IntakeGoal intakeGoal = IntakeGoal.STOW;
+    private IntakePivotGoal intakePivotGoal = IntakePivotGoal.STOW;
 
-    private static Intake instance;
-    public static Intake get() {
+    private static IntakePivot instance;
+    public static IntakePivot get() {
         if (instance == null) {
-            synchronized (Intake.class) {
-                instance = new Intake();
+            synchronized (IntakePivot.class) {
+                instance = new IntakePivot();
             }
         }
         return instance;
     }
 
-    private Intake() {}
+    private IntakePivot() {}
 
     @Override
     public void periodicBeforeCommands() {
-        intakeIO.updateInputs(intakeInputs);
+        intakePivotIO.updateInputs(intakeInputs);
         Logger.processInputs("Inputs/Intake/Pivot", intakeInputs);
 
-        moduleIntakeGainsTunable.ifChanged(intakeIO::setIntakePIDF);
+        moduleIntakeGainsTunable.ifChanged(intakePivotIO::setIntakePIDF);
     }
 
     @Override
     public void periodicAfterCommands() {
-        Logger.recordOutput("Intake/Pivot/Goal", intakeGoal);
-        if (intakeGoal.setpointRad != null) {
-            double intakeSetpointRad = intakeGoal.setpointRad.getAsDouble();
-            intakeIO.setClosedLoop(intakeSetpointRad);
+        Logger.recordOutput("Intake/Pivot/Goal", intakePivotGoal);
+        if (intakePivotGoal.setpointRad != null) {
+            double intakeSetpointRad = intakePivotGoal.setpointRad.getAsDouble();
+            intakePivotIO.setClosedLoop(intakeSetpointRad);
             Logger.recordOutput("Intake/Pivot/ClosedLoop", true);
             Logger.recordOutput("Intake/Pivot/SetpointRad", intakeSetpointRad);
         } else {
@@ -84,24 +82,24 @@ public class Intake implements Periodic {
         return intakeInputs.positionRad;
     }
 
-    public IntakeGoal getCurrentGoal() {
-        return intakeGoal;
+    public IntakePivotGoal getCurrentGoal() {
+        return intakePivotGoal;
     }
 
-    public Command setGoals(IntakeGoal intakeGoal) {
-        return runOnce(() -> this.intakeGoal = intakeGoal);
+    public Command setGoals(IntakePivotGoal intakePivotGoal) {
+        return runOnce(() -> this.intakePivotGoal = intakePivotGoal);
     }
 
-    private boolean atIntakeGoal() {
-        return intakeGoal.setpointRad != null &&
-                Math.abs(intakeGoal.setpointRad.getAsDouble() - intakeInputs.positionRad) <= intakeSetpointToleranceRad;
+    private boolean atIntakePivotGoal() {
+        return intakePivotGoal.setpointRad != null &&
+                Math.abs(intakePivotGoal.setpointRad.getAsDouble() - intakeInputs.positionRad) <= intakeSetpointToleranceRad;
     }
 
     public Command waitUntilAtIntakeGoal() {
-        return run(() -> {}).until(this::atIntakeGoal);
+        return run(() -> {}).until(this::atIntakePivotGoal);
     }
 
-    public Command setGoalsAndWaitUntilAtIntakeGoal(IntakeGoal intakeGoal) {
-        return runOnce(() -> this.intakeGoal = intakeGoal).andThen(waitUntilAtIntakeGoal());
+    public Command setGoalsAndWaitUntilAtIntakeGoal(IntakePivotGoal intakePivotGoal) {
+        return runOnce(() -> this.intakePivotGoal = intakePivotGoal).andThen(waitUntilAtIntakeGoal());
     }
 }
