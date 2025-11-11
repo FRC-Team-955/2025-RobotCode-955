@@ -13,7 +13,8 @@ import frc.lib.CANLogger;
 import frc.lib.commands.CommandsExt;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.goals.WheelRadiusCharacterizationGoal;
-import frc.robot.subsystems.intake.IntakePivot;
+import frc.robot.subsystems.intakepivot.IntakePivot;
+import frc.robot.subsystems.intakerollers.IntakeRollers;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import static edu.wpi.first.wpilibj2.command.Commands.run;
@@ -38,6 +39,7 @@ public class RobotContainer {
     // Note: order does matter
     public final Drive drive = Drive.get();
     public final IntakePivot intakePivot = IntakePivot.get();
+    public final IntakeRollers intakeRollers = IntakeRollers.get();
 
     public RobotContainer() {
         addAutos();
@@ -101,6 +103,17 @@ public class RobotContainer {
                         intakePivot.setGoals(IntakePivot.IntakePivotGoal.STOW).schedule();
                     } else {
                         intakePivot.setGoals(IntakePivot.IntakePivotGoal.INTAKE).schedule();
+                    }
+                })
+        );
+
+        intakeRollers.setDefaultCommand(
+                run(() -> {
+                    double time = Timer.getTimestamp();
+                    if ((time % 2) >= 1) {
+                        intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.IDLE).schedule();
+                    } else {
+                        intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.INTAKE).schedule();
                     }
                 })
         );

@@ -1,4 +1,4 @@
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.intakepivot;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.subsystem.Periodic;
@@ -9,8 +9,8 @@ import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.wpilibj2.command.Commands.run;
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
-import static frc.robot.subsystems.intake.IntakeConstants.intakeSetpointToleranceRad;
-import static frc.robot.subsystems.intake.IntakeTuning.moduleIntakeGainsTunable;
+import static frc.robot.subsystems.intakepivot.IntakeConstants.intakeSetpointToleranceRad;
+import static frc.robot.subsystems.intakepivot.IntakeTuning.moduleIntakeGainsTunable;
 
 public class IntakePivot implements Periodic {
     private final RobotMechanism robotMechanism = RobotMechanism.get();
@@ -68,7 +68,6 @@ public class IntakePivot implements Periodic {
         }
 
         RobotMechanism.get().PivotMechanism.update();
-
     }
 
     public void setDefaultCommand(Command command) {

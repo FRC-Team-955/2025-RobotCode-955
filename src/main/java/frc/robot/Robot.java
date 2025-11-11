@@ -151,6 +151,7 @@ public class Robot extends LoggedRobot {
 
                 // Subsystems - the order of these doesn't matter
                 robotContainer.intakePivot,
+                robotContainer.intakeRollers,
 
                 // Misc
                 robotContainer.canLogger

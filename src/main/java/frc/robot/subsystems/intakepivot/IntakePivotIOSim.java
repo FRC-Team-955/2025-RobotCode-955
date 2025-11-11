@@ -1,4 +1,4 @@
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.intakepivot;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -8,7 +8,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.lib.PIDF;
 import org.littletonrobotics.junction.Logger;
-import static frc.robot.subsystems.intake.IntakeConstants.*;
+import static frc.robot.subsystems.intakepivot.IntakeConstants.*;
 
 public class IntakePivotIOSim extends IntakePivotIO {
     private final SingleJointedArmSim armSim = new SingleJointedArmSim(

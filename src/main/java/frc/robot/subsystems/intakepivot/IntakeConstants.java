@@ -1,4 +1,4 @@
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.intakepivot;
 
 import edu.wpi.first.math.util.Units;
 import frc.lib.PIDF;
