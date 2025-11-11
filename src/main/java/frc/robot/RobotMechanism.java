@@ -70,7 +70,7 @@ public class RobotMechanism {
                 upperLength,
                 90,
                 12,
-                new Color8Bit(Color.kOrange)
+                new Color8Bit(Color.kBlue)
         ));
         private static final double lowerLength = Units.inchesToMeters(8);
         public final LoggedMechanismLigament2d lowerArm = upperArm.append(new LoggedMechanismLigament2d(
@@ -78,7 +78,7 @@ public class RobotMechanism {
                 lowerLength,
                 0,
                 10,
-                new Color8Bit(Color.kRed)
+                new Color8Bit(Color.kBlack)
         ));
         private static final double rollerLength = Units.inchesToMeters(2);
         public final LoggedMechanismLigament2d roller = lowerArm.append(new LoggedMechanismLigament2d(
@@ -86,7 +86,7 @@ public class RobotMechanism {
                 rollerLength,
                 0,
                 8,
-                new Color8Bit(Color.kGray)
+                new Color8Bit(Color.kBlack)
         ));
 
         public IntakeMechanism() {}
