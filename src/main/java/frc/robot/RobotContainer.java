@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.CANLogger;
 import frc.lib.commands.CommandsExt;
@@ -18,6 +19,7 @@ import frc.robot.subsystems.intakerollers.IntakeRollers;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import static edu.wpi.first.wpilibj2.command.Commands.run;
+import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -77,46 +79,46 @@ public class RobotContainer {
     }
 
     private void setDefaultCommands() {
-//        drive.setDefaultCommand(Drive.get().driveJoystick());
-        drive.setDefaultCommand(
-                drive.runRobotRelative(() -> (Timer.getTimestamp() % 2 >= 1 ?
-                        ChassisSpeeds.fromFieldRelativeSpeeds(
-                                1,
-                                0,
-                                0.5,
-                                new Rotation2d(0)
-                        ) :
-                        ChassisSpeeds.fromFieldRelativeSpeeds(
-                                -1,
-                                0,
-                                1,
-                                new Rotation2d(0)
-                        )
-                )
-                )
-        );
+        drive.setDefaultCommand(Drive.get().driveJoystick());
+//        drive.setDefaultCommand(
+//                drive.runRobotRelative(() -> (Timer.getTimestamp() % 2 >= 1 ?
+//                        ChassisSpeeds.fromFieldRelativeSpeeds(
+//                                1,
+//                                0,
+//                                0.5,
+//                                new Rotation2d(0)
+//                        ) :
+//                        ChassisSpeeds.fromFieldRelativeSpeeds(
+//                                -1,
+//                                0,
+//                                1,
+//                                new Rotation2d(0)
+//                        )
+//                )
+//                )
+//        );
 
-        intakePivot.setDefaultCommand(
-                run(() -> {
-                    double time = Timer.getTimestamp();
-                    if ((time % 2) >= 1) {
-                        intakePivot.setGoals(IntakePivot.IntakePivotGoal.STOW).schedule();
-                    } else {
-                        intakePivot.setGoals(IntakePivot.IntakePivotGoal.INTAKE).schedule();
-                    }
-                })
-        );
+//        intakePivot.setDefaultCommand(
+//                run(() -> {
+//                    double time = Timer.getTimestamp();
+//                    if ((time % 2) >= 1) {
+//                        intakePivot.setGoals(IntakePivot.IntakePivotGoal.STOW).schedule();
+//                    } else {
+//                        intakePivot.setGoals(IntakePivot.IntakePivotGoal.INTAKE).schedule();
+//                    }
+//                })
+//        );
 
-        intakeRollers.setDefaultCommand(
-                run(() -> {
-                    double time = Timer.getTimestamp();
-                    if ((time % 2) >= 1) {
-                        intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.IDLE).schedule();
-                    } else {
-                        intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.INTAKE).schedule();
-                    }
-                })
-        );
+//        intakeRollers.setDefaultCommand(
+//                run(() -> {
+//                    double time = Timer.getTimestamp();
+//                    if ((time % 2) >= 1) {
+//                        intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.IDLE).schedule();
+//                    } else {
+//                        intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.INTAKE).schedule();
+//                    }
+//                })
+//        );
     }
 
     /**
@@ -126,10 +128,33 @@ public class RobotContainer {
      * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
+
         // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
         // You must do this because if you don't, superstructure's default command will cancel your command
-
         controller.y().onTrue(robotState.resetRotation());
+
+        controller.rightBumper().onTrue(
+                runOnce(() -> {
+                    if (intakePivot.getCurrentGoal() == IntakePivot.IntakePivotGoal.STOW) {
+                        intakePivot.setGoals(IntakePivot.IntakePivotGoal.INTAKE).schedule();
+                    } else {
+                        intakePivot.setGoals(IntakePivot.IntakePivotGoal.STOW).schedule();
+                    }
+                })
+        );
+
+        controller.rightTrigger().whileTrue(
+                runOnce(() -> {
+                    if (intakePivot.getCurrentGoal() == IntakePivot.IntakePivotGoal.INTAKE) {
+                        intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.INTAKE).schedule();
+                    }
+                })
+        );
+        controller.rightTrigger().whileFalse(
+                runOnce(() -> {
+                    intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.IDLE).schedule();
+                })
+        );
 
         // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
         // You must do this because if you don't, superstructure's default command will cancel your command

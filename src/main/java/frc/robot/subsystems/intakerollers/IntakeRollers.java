@@ -79,6 +79,10 @@ public class IntakeRollers implements Periodic {
         }
     }
 
+    public IntakeRollersGoal getCurrentGoal() {
+        return intakeRollersGoal;
+    }
+
     public Command setGoals(IntakeRollersGoal intakeRollersGoal) {
         return runOnce(() -> this.intakeRollersGoal = intakeRollersGoal);
     }
