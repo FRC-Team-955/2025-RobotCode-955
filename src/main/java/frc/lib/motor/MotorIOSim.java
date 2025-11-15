@@ -68,20 +68,20 @@ public class MotorIOSim extends MotorIO {
 
     @Override
     public void setPositionPIDF(PIDF newGains) {
-        System.out.println("Setting roller position gains");
+        System.out.println("Setting motor position gains");
         positionPid = newGains.toPID();
     }
 
     @Override
     public void setVelocityPIDF(PIDF newGains) {
-        System.out.println("Setting roller velocity gains");
+        System.out.println("Setting motor velocity gains");
         velocityFeedforward = newGains.toSimpleFF();
         velocityPid = newGains.toPID();
     }
 
     @Override
     public void setBrakeMode(boolean enable) {
-        System.out.println("Setting rollers brake mode to " + enable);
+        System.out.println("Setting motor brake mode to " + enable);
     }
 
     @Override

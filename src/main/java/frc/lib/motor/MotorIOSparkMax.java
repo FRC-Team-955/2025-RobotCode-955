@@ -118,6 +118,7 @@ public class MotorIOSparkMax extends MotorIO {
 
     @Override
     public void setBrakeMode(boolean enable) {
+        System.out.println("Setting motor brake mode to " + enable);
         var newConfig = new SparkMaxConfig().idleMode(enable ? SparkBaseConfig.IdleMode.kBrake : SparkBaseConfig.IdleMode.kCoast);
         tryUntilOkAsync(5, () -> spark.configure(
                 newConfig,
