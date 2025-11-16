@@ -35,8 +35,16 @@ public record PIDF(double kP, double kI, double kD, double kS, double kV, double
         return new PIDF(kP, 0, 0, 0, 0, 0, 0);
     }
 
+    public static PIDF ofPG(double kP, double kG) {
+        return new PIDF(kP, 0, 0, 0, 0, 0, kG);
+    }
+
     public static PIDF ofPD(double kP, double kD) {
         return new PIDF(kP, 0, kD, 0, 0, 0, 0);
+    }
+
+    public static PIDF ofPDG(double kP, double kD, double kG) {
+        return new PIDF(kP, 0, kD, 0, 0, 0, kG);
     }
 
     public static PIDF ofSV(double kS, double kV) {
