@@ -85,14 +85,14 @@ public class IntakePivot implements Periodic {
             if (goal != Goal.STOW) {
                 t.restart();
                 start = inputs.positionRad;
-//                last = profile.calculate(0.15, last, new TrapezoidProfile.State(Goal.STOW.setpointRad, 0));
+                last = profile.calculate(0.15, last, new TrapezoidProfile.State(Goal.STOW.setpointRad, 0));
             }
             goal = IntakePivot.Goal.STOW;
         } else {
             if (goal != Goal.DEPLOY) {
                 t.restart();
                 start = inputs.positionRad;
-//                last = profile.calculate(0.15, last, new TrapezoidProfile.State(Goal.DEPLOY.setpointRad, 0));
+                last = profile.calculate(0.15, last, new TrapezoidProfile.State(Goal.DEPLOY.setpointRad, 0));
             }
             goal = IntakePivot.Goal.DEPLOY;
         }
@@ -112,7 +112,7 @@ public class IntakePivot implements Periodic {
             ) {
                 setpoint = goal.setpointRad;
             }
-//            setpoint = last.position;
+            setpoint = last.position;
 
 //            double setpoint = start + t.get() * t.get() * Math.copySign(0.5, goal.setpointRad - inputs.positionRad);
 //            if (
