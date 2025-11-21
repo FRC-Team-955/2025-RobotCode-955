@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intakepivot;
 
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
@@ -71,6 +72,12 @@ public class IntakePivot implements Periodic {
 
     final Timer t = new Timer();
     double start = 0;
+    final TrapezoidProfile profile = new TrapezoidProfile(new TrapezoidProfile.Constraints(
+            1,
+            3
+    ));
+    TrapezoidProfile.State last = new TrapezoidProfile.State();
+    TrapezoidProfile.State last2 = new TrapezoidProfile.State();
 
     @Override
     public void periodicAfterCommands() {
@@ -78,12 +85,14 @@ public class IntakePivot implements Periodic {
             if (goal != Goal.STOW) {
                 t.restart();
                 start = inputs.positionRad;
+//                last = profile.calculate(0.15, last, new TrapezoidProfile.State(Goal.STOW.setpointRad, 0));
             }
             goal = IntakePivot.Goal.STOW;
         } else {
             if (goal != Goal.DEPLOY) {
                 t.restart();
                 start = inputs.positionRad;
+//                last = profile.calculate(0.15, last, new TrapezoidProfile.State(Goal.DEPLOY.setpointRad, 0));
             }
             goal = IntakePivot.Goal.DEPLOY;
         }
@@ -92,14 +101,28 @@ public class IntakePivot implements Periodic {
         if (DriverStation.isDisabled()) {
             io.setRequest(RequestType.VoltageVolts, 0);
         } else {
-            double setpoint = start + t.get() * t.get() * Math.copySign(0.5, goal.setpointRad - inputs.positionRad);
+            last2 = profile.calculate(0.02, last2, new TrapezoidProfile.State(goal.setpointRad, 0));
+            last = profile.calculate(0.02, last, new TrapezoidProfile.State(goal.setpointRad, 0));
+            Logger.recordOutput("IntakePivot/OrigSetpointRad", last2.position);
+
+            double setpoint = last.position + Math.copySign(0.1, goal.setpointRad - inputs.positionRad);
             if (
-                    Math.abs(goal.setpointRad - inputs.positionRad) < 0.2 ||
-                            (goal.setpointRad > inputs.positionRad && setpoint > goal.setpointRad) ||
+                    (goal.setpointRad > inputs.positionRad && setpoint > goal.setpointRad) ||
                             (goal.setpointRad < inputs.positionRad && setpoint < goal.setpointRad)
             ) {
                 setpoint = goal.setpointRad;
             }
+//            setpoint = last.position;
+
+//            double setpoint = start + t.get() * t.get() * Math.copySign(0.5, goal.setpointRad - inputs.positionRad);
+//            if (
+//                    Math.abs(goal.setpointRad - inputs.positionRad) < 0.2 ||
+//                            (goal.setpointRad > inputs.positionRad && setpoint > goal.setpointRad) ||
+//                            (goal.setpointRad < inputs.positionRad && setpoint < goal.setpointRad)
+//            ) {
+//                setpoint = goal.setpointRad;
+//            }
+
 //            double setpoint = goal.setpointRad;
 //            if (Math.abs(goal.setpointRad - inputs.positionRad) > 0.2) {
 //                setpoint = inputs.positionRad + Math.copySign(0.2, goal.setpointRad - inputs.positionRad);
