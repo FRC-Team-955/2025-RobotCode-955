@@ -11,6 +11,7 @@ import frc.lib.CANLogger;
 import frc.lib.commands.CommandsExt;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.goals.WheelRadiusCharacterizationGoal;
+import frc.robot.subsystems.drive.intake.CoralIntake;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -28,7 +29,7 @@ public class RobotContainer {
     public final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     public final Controller controller = Controller.get();
     public final CANLogger canLogger = CANLogger.get();
-
+    public final CoralIntake pivot = CoralIntake.get();
     /* Subsystems */
     // Note: order does matter
     public final Drive drive = Drive.get();
@@ -70,6 +71,8 @@ public class RobotContainer {
 
     private void setDefaultCommands() {
         drive.setDefaultCommand(drive.driveJoystick());
+
+
         /*drive.setDefaultCommand(
                 drive.runRobotRelative(() -> (Timer.getTimestamp() % 2 >= 1 ?
                                 ChassisSpeeds.fromFieldRelativeSpeeds(

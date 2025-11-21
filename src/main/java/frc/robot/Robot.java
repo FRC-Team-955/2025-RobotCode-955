@@ -122,7 +122,6 @@ public class Robot extends LoggedRobot {
 
         periodics = List.of(
                 // Order matters! Execution order is ascending (that is, the first one listed will execute first)
-
                 // Lots of things depend on controller
                 robotContainer.controller,
                 // Vision depends on drive
@@ -133,7 +132,7 @@ public class Robot extends LoggedRobot {
                 robotContainer.operatorDashboard,
 
                 // Subsystems - the order of these doesn't matter
-
+                robotContainer.pivot,
                 // Misc
                 robotContainer.canLogger
         );
