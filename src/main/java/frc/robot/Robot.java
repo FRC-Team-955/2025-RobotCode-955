@@ -23,11 +23,12 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.lib.LoggedTracer;
+import frc.lib.Util;
 import frc.lib.commands.CommandsExt;
 import frc.lib.subsystem.Periodic;
 import frc.robot.subsystems.drive.ModuleIOSim;
-//import frc.robot.util.subsystem.SubsystemBaseExt;
-//import frc.robot.util.subsystem.VirtualSubsystem;
+import frc.robot.util.subsystem.SubsystemBaseExt;
+import frc.robot.util.subsystem.VirtualSubsystem;
 import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -38,6 +39,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import java.lang.reflect.Array;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -53,20 +55,20 @@ public class Robot extends LoggedRobot {
 
     private static List<Periodic> periodics;
 
-//    private static final HashSet<SubsystemBaseExt> extendedSubsystems = new HashSet<>();
-//    private static final HashSet<VirtualSubsystem> virtualSubsystems = new HashSet<>();
-//
-//    public static void registerExtendedSubsystem(SubsystemBaseExt subsystem) {
-//        if (!extendedSubsystems.add(subsystem)) {
-//            Util.error("An extended subsystem has been registered more than once: " + subsystem.getName());
-//        }
-//    }
-//
-//    public static void registerVirtualSubsystem(VirtualSubsystem subsystem) {
-//        if (!virtualSubsystems.add(subsystem)) {
-//            Util.error("A virtual subsystem has been registered more than once: " + subsystem.getClass().getName());
-//        }
-//    }
+    private static final HashSet<SubsystemBaseExt> extendedSubsystems = new HashSet<>();
+    private static final HashSet<VirtualSubsystem> virtualSubsystems = new HashSet<>();
+
+    public static void registerExtendedSubsystem(SubsystemBaseExt subsystem) {
+        if (!extendedSubsystems.add(subsystem)) {
+            Util.error("An extended subsystem has been registered more than once: " + subsystem.getName());
+        }
+    }
+
+    public static void registerVirtualSubsystem(VirtualSubsystem subsystem) {
+        if (!virtualSubsystems.add(subsystem)) {
+            Util.error("A virtual subsystem has been registered more than once: " + subsystem.getClass().getName());
+        }
+    }
 
     public Robot() {
         AutoLogOutputManager.addPackage("frc");
@@ -142,10 +144,13 @@ public class Robot extends LoggedRobot {
 
                 // Lots of things depend on controller
                 robotContainer.controller,
+
+                robotContainer.gamePieceVision,
                 // Vision depends on drive
                 robotContainer.drive,
                 // The rest of the subsystems require vision
                 // Subsystems depend on goals issued by superstructure
+                robotContainer.superstructure,
                 // Operator dashboard depends on superstructure
                 robotContainer.operatorDashboard,
 

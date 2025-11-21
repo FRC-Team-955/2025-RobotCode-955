@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intakepivot;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -44,7 +45,7 @@ public class IntakePivotIOSim extends IntakePivotIO {
         if (closedLoop) {
             appliedVolts = pid.calculate(armSim.getAngleRads())
                     + ff.calculate(armSim.getAngleRads(), pid.getSetpoint().velocity);
-            appliedVolts = Math.max(-12.0, Math.min(12.0, appliedVolts));
+            appliedVolts = MathUtil.clamp(appliedVolts, -12.0, 12.0);
             Logger.recordOutput("Intake/Pivot/SetpointVelocityRadPerSec", pid.getSetpoint().velocity);
         } else {
             pid.reset(new TrapezoidProfile.State(armSim.getAngleRads(), armSim.getVelocityRadPerSec()));

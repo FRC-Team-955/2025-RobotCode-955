@@ -1,7 +1,9 @@
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Timer;
@@ -14,12 +16,18 @@ import frc.lib.CANLogger;
 import frc.lib.commands.CommandsExt;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.goals.WheelRadiusCharacterizationGoal;
+import frc.robot.subsystems.gamepiecevision.GamePieceVision;
 import frc.robot.subsystems.intakepivot.IntakePivot;
 import frc.robot.subsystems.intakerollers.IntakeRollers;
+import frc.robot.subsystems.intakerollers.IntakeRollersIO;
+import frc.robot.subsystems.superstructure.Superstructure;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import static edu.wpi.first.wpilibj2.command.Commands.run;
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
+import static frc.robot.BuildConstants.mode;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -42,6 +50,9 @@ public class RobotContainer {
     public final Drive drive = Drive.get();
     public final IntakePivot intakePivot = IntakePivot.get();
     public final IntakeRollers intakeRollers = IntakeRollers.get();
+
+    public final GamePieceVision gamePieceVision = GamePieceVision.get();
+    public final Superstructure superstructure = Superstructure.get();
 
     public RobotContainer() {
         addAutos();
@@ -80,6 +91,7 @@ public class RobotContainer {
 
     private void setDefaultCommands() {
         drive.setDefaultCommand(Drive.get().driveJoystick());
+        superstructure.setDefaultCommand(superstructure.idle().ignoringDisable(true));
 //        drive.setDefaultCommand(
 //                drive.runRobotRelative(() -> (Timer.getTimestamp() % 2 >= 1 ?
 //                        ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -108,14 +120,16 @@ public class RobotContainer {
 //                    }
 //                })
 //        );
-
+//
 //        intakeRollers.setDefaultCommand(
 //                run(() -> {
 //                    double time = Timer.getTimestamp();
 //                    if ((time % 2) >= 1) {
 //                        intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.IDLE).schedule();
+//                        intakeRollers.setRunning(false);
 //                    } else {
 //                        intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.INTAKE).schedule();
+//                        intakeRollers.setRunning(true);
 //                    }
 //                })
 //        );
@@ -132,29 +146,48 @@ public class RobotContainer {
         // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
         // You must do this because if you don't, superstructure's default command will cancel your command
         controller.y().onTrue(robotState.resetRotation());
+        controller.rightBumper().onTrue(superstructure.moveToCoralSim());
+//                runOnce(() -> {
+//                    if (GamePieceVision.get().getVisibility()) {
+//
+//                    }
+//                }));
+        controller.leftBumper().whileTrue(superstructure.intakeIdle());
 
-        controller.rightBumper().onTrue(
-                runOnce(() -> {
-                    if (intakePivot.getCurrentGoal() == IntakePivot.IntakePivotGoal.STOW) {
-                        intakePivot.setGoals(IntakePivot.IntakePivotGoal.INTAKE).schedule();
-                    } else {
-                        intakePivot.setGoals(IntakePivot.IntakePivotGoal.STOW).schedule();
-                    }
-                })
-        );
+        if (mode == BuildConstants.Mode.SIM) {
+            controller.x().onTrue(Commands.runOnce(() ->
+                    SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(
+                            new Pose2d(Units.inchesToMeters(650), Units.inchesToMeters(30), new Rotation2d(Math.random() * 2 * Math.PI))
+                    ))
+            ));
+            controller.a().onTrue(Commands.runOnce(() ->
+                    SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(
+                            new Pose2d(Units.inchesToMeters(650), Units.inchesToMeters(285), new Rotation2d(Math.random() * 2 * Math.PI))
+                    ))
+            ));
+        }
 
-        controller.rightTrigger().whileTrue(
-                runOnce(() -> {
-                    if (intakePivot.getCurrentGoal() == IntakePivot.IntakePivotGoal.INTAKE) {
-                        intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.INTAKE).schedule();
-                    }
-                })
-        );
-        controller.rightTrigger().whileFalse(
-                runOnce(() -> {
-                    intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.IDLE).schedule();
-                })
-        );
+//        controller.rightBumper().onTrue(
+//                runOnce(() -> {
+//                    if (intakePivot.getCurrentGoal() == IntakePivot.IntakePivotGoal.STOW) {
+//                        intakePivot.setGoals(IntakePivot.IntakePivotGoal.INTAKE).schedule();
+//                    } else {
+//                        intakePivot.setGoals(IntakePivot.IntakePivotGoal.STOW).schedule();
+//                    }
+//                })
+//        );
+        //        controller.rightTrigger().whileTrue(
+//                runOnce(() -> {
+//                    if (intakePivot.getCurrentGoal() == IntakePivot.IntakePivotGoal.INTAKE) {
+//                        intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.INTAKE).schedule();
+//                    }
+//                })
+//        );
+//        controller.rightTrigger().whileFalse(
+//                runOnce(() -> {
+//                    intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.IDLE).schedule();
+//                })
+//        );
 
         // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
         // You must do this because if you don't, superstructure's default command will cancel your command

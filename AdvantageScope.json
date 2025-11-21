@@ -1,17 +1,16 @@
 {
   "hubs": [
     {
-      "x": 0,
-      "y": 33,
+      "x": 136,
+      "y": 123,
       "width": 1280,
       "height": 799,
       "state": {
         "sidebar": {
-          "width": 399,
+          "width": 398,
           "expanded": [
             "/RealOutputs/Vision/Camera1",
             "/RealOutputs/Vision/Camera0",
-            "/RealOutputs/RobotState/Pose",
             "/RealOutputs/Drive/MoveToSetpoint",
             "/RealOutputs/Drive/Assist/RobotToAssistDirection",
             "/RealOutputs/Drive/Assist/Pose",
@@ -40,9 +39,7 @@
             "/RealOutputs/Drive/ModuleStates/Setpoints/0/angle",
             "/Inputs/Drive/Module0",
             "/Inputs/Drive/Module3",
-            "/RealOutputs/Drive/ModuleStates/Setpoints",
             "/RealOutputs/Drive/ChassisSpeeds/Setpoint",
-            "/RealOutputs/Drive/ModuleStates/SetpointsOptimized",
             "/RealOutputs/Drive/ModuleStates/SetpointsOptimized/0",
             "/RealOutputs/Drive/ModuleStates/SetpointsOptimized/0/angle",
             "/RealOutputs/Drive/ChassisSpeeds/Measured",
@@ -65,7 +62,6 @@
             "/RealOutputs/CoralIntake/Rollers",
             "/RealOutputs/CoralIntake/Pivot",
             "/RealOutputs/EndEffector/Rollers",
-            "/Tuning",
             "/RealOutputs/Vision/Summary/TagPoses",
             "/Tuning/Drive/ModuleTurn",
             "/Tuning/Elevator/Gains",
@@ -77,7 +73,6 @@
             "/RealOutputs/Vision/Summary/RobotPosesAccepted",
             "/RealOutputs/Vision/Summary/RobotPosesRejected",
             "/RealOutputs/Drive/ModuleLimits",
-            "/RealOutputs/Drive/ModuleStates/Measured",
             "/RealOutputs/Drive/ModuleStates/Measured/0/angle",
             "/Tuning/Drive/ModuleDrive",
             "/Inputs/EndEffector/Rollers",
@@ -86,7 +81,6 @@
             "/RealOutputs/Choreo Alerts/warnings",
             "/RealOutputs/Choreo Alerts/infos",
             "/RealOutputs/Choreo Alerts/errors",
-            "/RealOutputs",
             "/RealOutputs/Drive/ModuleStates/Measured/1",
             "/RealOutputs/Drive/ModuleStates/Measured/1/angle",
             "/RealOutputs/Drive/ModuleStates/Setpoints/1",
@@ -101,7 +95,6 @@
             "/RealOutputs/Drive/ModuleStates/Measured/2/angle",
             "/RealOutputs/CANivore",
             "/SystemStats/CANBus",
-            "/RealOutputs/Drive/ChassisSpeeds",
             "/RealOutputs/Drive/RadiusCharacterization",
             "/RealOutputs/Drive/WheelRadiusCharacterization",
             "/Tuning/EndEffector/Velocity",
@@ -120,7 +113,6 @@
             "/RadioStatus/Status",
             "/RadioStatus/Status/networkStatus6",
             "/Tuning/Drive/MoveToOmega",
-            "/Tuning/OperatorDashboard",
             "/Tuning/Drive/MoveToXY",
             "/Tuning/OperatorDashboard/ReefZoneSides",
             "/Tuning/OperatorDashboard/LocalReefSides",
@@ -144,8 +136,6 @@
             "/Tuning/Funnel/Belt",
             "/Tuning/Funnel/Belt/Velocity",
             "/Tuning/Funnel/Belt/Goal",
-            "/Tuning/Drive",
-            "/Tuning/Drive/MoveToLinear",
             "/ReplayOutputs",
             "/ReplayOutputs/RobotState",
             "/Inputs/Vision",
@@ -178,7 +168,6 @@
             "/RealOutputs/Superstructure/ClosestSide/RobotToRight",
             "/RealOutputs/Superstructure/ClosestSide/RobotToLeft",
             "/RealOutputs/Superstructure/ClosestSide/JoystickAngle",
-            "/Inputs",
             "/Inputs/Vision/AprilTag/StationCam/AprilTagObservations",
             "/Inputs/Vision/AprilTag/StationCam/PoseObservations/0",
             "/Inputs/Vision/AprilTag/StationCam/AprilTagObservations/0",
@@ -208,11 +197,29 @@
             "/RealOutputs/AprilTagVision",
             "/RealOutputs/AprilTagVision/Summary",
             "/Inputs/GamePieceVision",
-            "/RealOutputs/GamePieceVision"
+            "/RealOutputs/GamePieceVision",
+            "/SystemStats",
+            "/Tuning",
+            "/RealOutputs",
+            "/RealOutputs/Drive",
+            "/RealOutputs/Drive/ModuleStates",
+            "/RealOutputs/Drive/ModuleStates/Measured/0",
+            "/Inputs",
+            "/Inputs/Intake",
+            "/Inputs/Intake/Pivot",
+            "/RealOutputs/Intake",
+            "/RealOutputs/RobotState",
+            "/Tuning/Intake",
+            "/RealOutputs/Intake/Pivot",
+            "/Inputs/Intake/Rollers",
+            "/RealOutputs/Intake/Rollers",
+            "/Tuning/Intake/Rollers/Position",
+            "/Tuning/Intake/Pivot",
+            "/Tuning/Intake/Rollers"
           ]
         },
         "tabs": {
-          "selected": 8,
+          "selected": 6,
           "tabs": [
             {
               "type": 0,
@@ -576,6 +583,96 @@
             },
             {
               "type": 1,
+              "title": "Pivot",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Intake/Pivot/SetpointRad",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/Inputs/Intake/Pivot/PositionRad",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#af2437",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [],
+                "discreteSources": [],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "rightUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "2qfl9xwst22kv01z4qojp5pdi152r763",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
+              "title": "Rollers",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "/Inputs/Intake/Rollers/VelocityRadPerSec",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#e5b31b",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Intake/Rollers/SetpointRadPerSec",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [],
+                "discreteSources": [],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "rightUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "wkugdeff990o584s7fv6qsnr3iyrgn25",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
               "title": "Elevator",
               "controller": {
                 "leftSources": [
@@ -733,7 +830,7 @@
                     "type": "stepped",
                     "logKey": "/RealOutputs/Drive/ModuleStates/SetpointsOptimized/0/speed",
                     "logType": "Number",
-                    "visible": false,
+                    "visible": true,
                     "options": {
                       "color": "#e5b31b",
                       "size": "normal"
@@ -753,7 +850,7 @@
                     "type": "stepped",
                     "logKey": "/Inputs/Drive/Module0/TurnVelocityRadPerSec",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#e5b31b",
                       "size": "normal"
@@ -763,9 +860,19 @@
                     "type": "stepped",
                     "logKey": "/RealOutputs/Drive/Module0/VelocitySetpointRadPerSec",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#80588e",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Drive/ModuleStates/Measured/0/speed",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#af2437",
                       "size": "normal"
                     }
                   }
@@ -1001,7 +1108,7 @@
                     "type": "mechanism",
                     "logKey": "/RealOutputs/RobotState/Mechanism",
                     "logType": "Mechanism2d",
-                    "visible": false,
+                    "visible": true,
                     "options": {}
                   },
                   {
@@ -1182,14 +1289,14 @@
                 "cameraIndex": -1,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  8.236020082597427,
-                  6.560118495510449,
-                  2.4329426115386643
+                  6.987303262693008,
+                  2.3606283006098536,
+                  2.831286373197553
                 ],
                 "cameraTarget": [
-                  5.380175993638884,
-                  -0.640614656551369,
-                  -1.2350755558169175
+                  1.9465907027328533,
+                  -0.8890047724051491,
+                  -2.2625137403132203
                 ]
               },
               "controlsHeight": 267
@@ -1333,7 +1440,7 @@
                     }
                   }
                 ],
-                "maxSpeed": 5,
+                "maxSpeed": 1,
                 "sizeX": 0.65,
                 "sizeY": 0.65,
                 "orientation": 1
@@ -1348,5 +1455,5 @@
     }
   ],
   "satellites": [],
-  "version": "4.1.5"
+  "version": "4.1.6"
 }

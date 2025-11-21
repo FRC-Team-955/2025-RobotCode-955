@@ -12,6 +12,7 @@ public class IntakeRollersIO {
         public double appliedVolts = 0.0;
         public double currentAmps = 0.0;
         public double temperatureCelsius = 0.0;
+        public boolean isNoteInsideIntake = false;
     }
 
     public void updateInputs(IntakeRollersIOInputs inputs) {}
@@ -27,4 +28,8 @@ public class IntakeRollersIO {
     public void setVelocity(double velocityRadPerSec) {}
 
     public void setPosition(double positionRad) {}
+
+    public void setRunning(boolean runIntake) {}
+
+    public void launchNote() {}
 }

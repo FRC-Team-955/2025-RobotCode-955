@@ -3,6 +3,7 @@ package frc.robot.subsystems.intakepivot;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.subsystem.Periodic;
 import frc.robot.RobotMechanism;
+import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
@@ -20,13 +21,13 @@ public class IntakePivot implements Periodic {
 
     private Command defaultCommand;
 
+    @RequiredArgsConstructor
     public enum IntakePivotGoal {
         CHARACTERIZATION(null),
         STOW(() -> 1.353),
         INTAKE(() -> 0.12833586);
 
         private final DoubleSupplier setpointRad;
-        IntakePivotGoal(DoubleSupplier setpointRad) { this.setpointRad = setpointRad; }
     }
 
     private IntakePivotGoal intakePivotGoal = IntakePivotGoal.STOW;
@@ -67,7 +68,7 @@ public class IntakePivot implements Periodic {
             defaultCommand.schedule();
         }
 
-        RobotMechanism.get().PivotMechanism.update();
+        robotMechanism.PivotMechanism.update();
     }
 
     public void setDefaultCommand(Command command) {

@@ -4,7 +4,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.subsystem.Periodic;
 import frc.robot.RobotMechanism;
-import frc.robot.subsystems.intakepivot.IntakePivot;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.littletonrobotics.junction.Logger;
@@ -12,7 +11,6 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
-//import static frc.robot.subsystems.intakerollers.IntakeRollersTuning.moduleIntakeRollersPositionGainsTunable;
 import static frc.robot.subsystems.intakerollers.IntakeRollersTuning.moduleIntakeRollersVelocityGainsTunable;
 
 public class IntakeRollers implements Periodic {
@@ -27,7 +25,7 @@ public class IntakeRollers implements Periodic {
     public enum IntakeRollersGoal {
         CHARACTERIZATION(null),
         IDLE(() -> 0),
-        INTAKE(() -> Units.rotationsPerMinuteToRadiansPerSecond(-200)),
+        INTAKE(() -> Units.rotationsPerMinuteToRadiansPerSecond(-2000)),
         EJECT(() -> 1);
 
         private final DoubleSupplier setpointRadPerSec;

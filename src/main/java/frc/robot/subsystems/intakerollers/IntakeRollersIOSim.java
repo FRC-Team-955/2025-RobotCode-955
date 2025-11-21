@@ -4,11 +4,14 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.lib.PIDF;
-import frc.robot.subsystems.intakepivot.IntakePivotIO;
-import org.littletonrobotics.junction.Logger;
+import frc.robot.subsystems.drive.ModuleIOSim;
+import org.ironmaple.simulation.IntakeSimulation;
+
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
 import static frc.robot.subsystems.intakerollers.IntakeRollersConstants.intakeRollersConfig;
 
 public class IntakeRollersIOSim extends IntakeRollersIO {
@@ -53,6 +56,17 @@ public class IntakeRollersIOSim extends IntakeRollersIO {
         inputs.velocityRadPerSec = motorSim.getAngularVelocityRadPerSec();
         inputs.appliedVolts = appliedVolts;
         inputs.currentAmps = Math.abs(motorSim.getCurrentDrawAmps());
+
+//        if (IntakeRollers.get().getCurrentGoal() == IntakeRollers.IntakeRollersGoal.INTAKE) {
+//            intakeSimulation.startIntake();
+//        } else {
+//            intakeSimulation.stopIntake();
+//        }
+//
+//        var intakedCoral = intakeSimulation.getGamePiecesAmount() > 0;
+////        if (intakedCoral) {
+//            intakeSimulation.obtainGamePieceFromIntake();
+//        }
     }
 
 //    @Override
