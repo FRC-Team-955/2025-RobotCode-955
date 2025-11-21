@@ -10,7 +10,7 @@ public class IntakePivotConstants {
     static final double gearRatio = 120;
     static final PIDF gains = switch (BuildConstants.mode) {
         case REAL, REPLAY -> PIDF.ofPG(0.5, 0);
-        case SIM -> PIDF.ofPDG(16.7, 0.01, 3.165);
+        case SIM -> PIDF.ofPDG(16.7, 0.01, 2.68);
     };
 
     static MotorIO createIO() {

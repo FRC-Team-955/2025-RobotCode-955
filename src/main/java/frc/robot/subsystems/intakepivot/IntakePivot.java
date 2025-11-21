@@ -69,12 +69,22 @@ public class IntakePivot implements Periodic {
         gainsTunable.ifChanged(io::setPositionPIDF);
     }
 
+    final Timer t = new Timer();
+    double start = 0;
+
     @Override
     public void periodicAfterCommands() {
-
-        if (Timer.getTimestamp() % 2 < 1) {
+        if (Timer.getTimestamp() % 4 < 2) {
+            if (goal != Goal.STOW) {
+                t.restart();
+                start = inputs.positionRad;
+            }
             goal = IntakePivot.Goal.STOW;
         } else {
+            if (goal != Goal.DEPLOY) {
+                t.restart();
+                start = inputs.positionRad;
+            }
             goal = IntakePivot.Goal.DEPLOY;
         }
 
@@ -82,8 +92,20 @@ public class IntakePivot implements Periodic {
         if (DriverStation.isDisabled()) {
             io.setRequest(RequestType.VoltageVolts, 0);
         } else {
-            Logger.recordOutput("IntakePivot/SetpointRad", goal.setpointRad);
-            io.setRequest(RequestType.PositionRad, goal.setpointRad);
+            double setpoint = start + t.get() * t.get() * Math.copySign(0.5, goal.setpointRad - inputs.positionRad);
+            if (
+                    Math.abs(goal.setpointRad - inputs.positionRad) < 0.2 ||
+                            (goal.setpointRad > inputs.positionRad && setpoint > goal.setpointRad) ||
+                            (goal.setpointRad < inputs.positionRad && setpoint < goal.setpointRad)
+            ) {
+                setpoint = goal.setpointRad;
+            }
+//            double setpoint = goal.setpointRad;
+//            if (Math.abs(goal.setpointRad - inputs.positionRad) > 0.2) {
+//                setpoint = inputs.positionRad + Math.copySign(0.2, goal.setpointRad - inputs.positionRad);
+//            }
+            Logger.recordOutput("IntakePivot/SetpointRad", setpoint);
+            io.setRequest(RequestType.PositionRad, setpoint);
         }
     }
 }
