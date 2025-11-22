@@ -14,12 +14,14 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.CANLogger;
 import frc.lib.commands.CommandsExt;
+import frc.robot.subsystems.apriltagvision.AprilTagVision;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.goals.WheelRadiusCharacterizationGoal;
 import frc.robot.subsystems.gamepiecevision.GamePieceVision;
 import frc.robot.subsystems.intakepivot.IntakePivot;
 import frc.robot.subsystems.intakerollers.IntakeRollers;
 import frc.robot.subsystems.intakerollers.IntakeRollersIO;
+import frc.robot.subsystems.superstructure.ReefAlign;
 import frc.robot.subsystems.superstructure.Superstructure;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
@@ -48,10 +50,12 @@ public class RobotContainer {
     /* Subsystems */
     // Note: order does matter
     public final Drive drive = Drive.get();
+    public final AprilTagVision aprilTagVision = AprilTagVision.get();
+    public final GamePieceVision gamePieceVision = GamePieceVision.get();
+
     public final IntakePivot intakePivot = IntakePivot.get();
     public final IntakeRollers intakeRollers = IntakeRollers.get();
 
-    public final GamePieceVision gamePieceVision = GamePieceVision.get();
     public final Superstructure superstructure = Superstructure.get();
 
     public RobotContainer() {
@@ -166,6 +170,13 @@ public class RobotContainer {
                     ))
             ));
         }
+
+        controller.leftTrigger()
+                .onTrue(superstructure.autoScoreCoral(
+                        () -> ReefAlign.ReefZoneSide.LeftBack,
+                        () -> ReefAlign.LocalReefSide.Left,
+                        controller.leftTrigger()
+                ));
 
 //        controller.rightBumper().onTrue(
 //                runOnce(() -> {

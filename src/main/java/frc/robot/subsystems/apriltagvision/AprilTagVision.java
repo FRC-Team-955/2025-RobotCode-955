@@ -1,0 +1,312 @@
+package frc.robot.subsystems.apriltagvision;
+
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import frc.lib.Util;
+import frc.lib.subsystem.Periodic;
+import frc.robot.RobotState;
+import org.dyn4j.geometry.Rotation;
+import org.littletonrobotics.junction.Logger;
+
+import java.util.*;
+
+import static frc.robot.subsystems.apriltagvision.AprilTagVisionConstants.*;
+
+public class AprilTagVision implements Periodic {
+    private final RobotState robotState = RobotState.get();
+
+    private final EnumMap<Camera, CameraData> cameras = Util.createEnumMap(
+            Camera.class,
+            Camera.values(),
+            (cam) -> new CameraData(
+                    new AprilTagVisionIOInputsAutoLogged(),
+                    cam.createIO(),
+                    new Alert("AprilTag Vision Camera " + cam.name() + " is disconnected", Alert.AlertType.kError)
+            )
+    );
+
+    private int[] tagIdFilter = {};
+
+    public Command setTagIdFilter(int[] tagIds) {
+        return Commands.runOnce(
+                () -> tagIdFilter = tagIds
+        );
+    }
+
+    private static AprilTagVision instance;
+
+    public static AprilTagVision get() {
+        if (instance == null) {
+            synchronized (AprilTagVision.class) {
+                instance = new AprilTagVision();
+            }
+        }
+        return instance;
+    }
+
+    private AprilTagVision() {}
+
+    @Override
+    public void periodicBeforeCommands() {
+        for (Map.Entry<Camera, CameraData> cam: cameras.entrySet()) {
+            Camera metadata = cam.getKey();
+            CameraData data = cam.getValue();
+            data.io.updateInputs(data.inputs);
+            Logger.processInputs("Inputs/AprilTagVision/" + metadata.name(), data.inputs);
+            data.disconnectedAlert.set(!data.inputs.connected);
+        }
+
+        Logger.recordOutput("AprilTagVision/TagIdFilter", tagIdFilter);
+
+        List<Pose3d> allTagPoses = new LinkedList<>();
+        List<Pose3d> allRobotPoses = new LinkedList<>();
+        List<Pose3d> allRobotPosesAccepted = new LinkedList<>();
+        List<Pose3d> allRobotPosesRejected = new LinkedList<>();
+
+        for (Map.Entry<Camera, CameraData> cam : cameras.entrySet()) {
+            Camera metadata = cam.getKey();
+            CameraData data = cam.getValue();
+
+            List<Pose3d> tagPoses = new LinkedList<>();
+            List<Pose3d> robotPoses = new LinkedList<>();
+            List<Pose3d> robotPosesAccepted = new LinkedList<>();
+            List<Pose3d> robotPosesRejected = new LinkedList<>();
+
+            for (var observation : data.inputs.aprilTagObservations) {
+                var tagPose = aprilTagLayout.getTagPose(observation.id());
+                if (tagPose.isPresent()) {
+                    tagPoses.add(tagPose.get());
+                } else {
+                    Util.error("Couldn't find tag with ID " + observation.id());
+                }
+            }
+            List<SingleTagPoseObservation> singleTagPoseObservations = new LinkedList<>();
+            for (var observation : data.inputs.bestTargetObservations) {
+                Optional<Pose3d> tagPoseOptional = aprilTagLayout.getTagPose(observation.tagID());
+                if (tagPoseOptional.isEmpty()) {
+                    Util.error("Couldn't find tag with ID " + observation.tagID());
+                    continue;
+                }
+                Pose3d tagPose = tagPoseOptional.get();
+
+                double tagDistance = observation.cameraToTarget().getTranslation().getNorm();
+
+
+                Transform3d fieldToTarget = new Transform3d(tagPose.getTranslation(), tagPose.getRotation());
+                Transform3d fieldToCamera = fieldToTarget.plus(observation.cameraToTarget().inverse());
+                Transform3d fieldToRobot = fieldToCamera.plus(metadata.robotToCamera.inverse());
+                Pose3d poseEstimate3dSolve = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
+
+
+                boolean poseEstimateTrigPresent = false;
+                Pose2d poseEstimateTrig = new Pose2d();
+                Optional<Rotation2d> headingSampleOptional = robotState.getPoseAtTimestamp(observation.timestamp()).map(Pose2d::getRotation);
+                if (headingSampleOptional.isPresent()) {
+                    Rotation2d headingSample = headingSampleOptional.get();
+
+                    Translation2d camToTagTranslation = new Translation3d(
+                            observation.cameraToTarget().getTranslation().getNorm(),
+                            new Rotation3d(
+                                    0,
+                                    -Math.toRadians(observation.pitch()),
+                                    -Math.toRadians(observation.yaw())
+                            )
+                    )
+                            .rotateBy(metadata.robotToCamera.getRotation())
+                            .toTranslation2d()
+                            .rotateBy(headingSample);
+
+                    Translation2d fieldToCameraTranslation = tagPose
+                            .toPose2d()
+                            .getTranslation()
+                            .plus(camToTagTranslation.unaryMinus());
+
+                    Translation2d camToRobotTranslation = metadata.robotToCamera
+                            .getTranslation()
+                            .toTranslation2d()
+                            .unaryMinus()
+                            .rotateBy(headingSample);
+
+                    poseEstimateTrigPresent = true;
+                    poseEstimateTrig = new Pose2d(fieldToCameraTranslation.plus(camToRobotTranslation), headingSample);
+                }
+                singleTagPoseObservations.add(new SingleTagPoseObservation(
+                        observation.timestamp(),
+                        observation.ambiguity(),
+                        observation.tagID(),
+                        tagDistance,
+                        poseEstimate3dSolve,
+                        poseEstimateTrigPresent,
+                        poseEstimateTrig
+                ));
+            }
+
+            List<MultiTagPoseObservation> multiTagPoseObservations = new LinkedList<>();
+            for (var observation : data.inputs.multiTagObservations) {
+                Transform3d fieldToRobot = observation.fieldToCamera().plus(metadata.robotToCamera.inverse());
+                Pose3d robotPose = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
+
+                multiTagPoseObservations.add(new MultiTagPoseObservation(
+                        observation.timestamp(),
+                        observation.ambiguity(),
+                        observation.tagCount(),
+                        observation.averageTagDistance(),
+                        robotPose
+                ));
+            }
+
+            List<GenericPoseObservation> genericPoseObservations = new LinkedList<>();
+            for(var observation : singleTagPoseObservations) {
+                if (tagIdFilter.length > 0) {
+                    if (Arrays.stream(tagIdFilter).noneMatch(id -> observation.tagID() == id)) {
+                        continue;
+                    }
+                }
+
+                Pose2d poseEstimate3dSolve2d = observation.poseEstimate3dSolve().toPose2d();
+
+                if (observation.poseEstimateTrigPresent() &&
+                        observation.tagDistance() < distanceFromTagForTrigMeters &&
+                        poseEstimate3dSolve2d.getTranslation().getDistance(observation.poseEstimateTrig().getTranslation()) < trig3dSolveMaxDiffMeters &&
+                        Math.abs(poseEstimate3dSolve2d.getRotation().minus(observation.poseEstimateTrig().getRotation()).getRadians()) < trig3dSolveMaxDiffRad
+                ) {
+                    genericPoseObservations.add(new GenericPoseObservation(
+                            observation.timestamp(),
+                            observation.ambiguity(),
+                            1,
+                            observation.tagDistance(),
+                            new Pose3d(observation.poseEstimateTrig()),
+                            linearStdDevBaselineTrigMeters,
+                            angularStdDevBaselineTrigRad
+                    ));
+                } else {
+                    genericPoseObservations.add(new GenericPoseObservation(
+                            observation.timestamp(),
+                            observation.ambiguity(),
+                            1,
+                            observation.tagDistance(),
+                            observation.poseEstimate3dSolve(),
+                            linearStdDevBaseline3dSolveMeters,
+                            angularStdDevBaseline3dSolveRad
+                    ));
+                }
+            }
+
+            if (tagIdFilter.length == 0) {
+                for (var observation : multiTagPoseObservations) {
+                    genericPoseObservations.add(new GenericPoseObservation(
+                            observation.timestamp(),
+                            observation.ambiguity(),
+                            observation.tagCount(),
+                            observation.averageTagDistance(),
+                            observation.poseEstimate(),
+                            linearStdDevBaseline3dSolveMeters,
+                            angularStdDevBaseline3dSolveRad
+                    ));
+                }
+            }
+
+            for (var observation : genericPoseObservations) {
+                boolean rejectPose =
+                        observation.tagCount() == 0
+                                || (observation.tagCount() == 1 && observation.ambiguity() > maxAmbiguity)
+                                || Math.abs(observation.poseEstimate().getZ()) > maxZError
+                                || observation.poseEstimate().getX() < 0.0
+                                || observation.poseEstimate().getX() > aprilTagLayout.getFieldLength()
+                                || observation.poseEstimate().getY() < 0.0
+                                || observation.poseEstimate().getY() > aprilTagLayout.getFieldWidth();
+
+                robotPoses.add(observation.poseEstimate());
+                if (rejectPose) {
+                    robotPosesRejected.add(observation.poseEstimate());
+                } else {
+                    robotPosesAccepted.add(observation.poseEstimate());
+                }
+
+                if (rejectPose) {
+                    continue;
+                }
+
+                double stdDevFactor = Math.pow(observation.averageTagDistance(), metadata.distancePower) / observation.tagCount();
+                double linearStdDev = observation.linearStdDevBaseline * stdDevFactor * metadata.stddevMultiplier;
+                double angularStdDev = observation.angularStdDevBaseline * stdDevFactor * metadata.stddevMultiplier;
+
+                robotState.addVisionMeasurement(
+                        observation.poseEstimate().toPose2d(),
+                        observation.timestamp(),
+                        VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev)
+                );
+            }
+
+            String prefix = "AprilTagVision/" + metadata.name() + "/";
+            Logger.recordOutput(prefix + "TagPoses", tagPoses.toArray(Pose3d[]::new));
+            Logger.recordOutput(prefix + "SingleTagPoseObservations", singleTagPoseObservations.toArray(SingleTagPoseObservation[]::new));
+            Logger.recordOutput(prefix + "MultiTagPoseObservations", multiTagPoseObservations.toArray(MultiTagPoseObservation[]::new));
+            Logger.recordOutput(prefix + "GenericPoseObservations", genericPoseObservations.toArray(GenericPoseObservation[]::new));
+            Logger.recordOutput(prefix + "RobotPoses", robotPoses.toArray(Pose3d[]::new));
+            Logger.recordOutput(prefix + "RobotPosesAccepted", robotPosesAccepted.toArray(Pose3d[]::new));
+            Logger.recordOutput(prefix + "RobotPosesRejected", robotPosesRejected.toArray(Pose3d[]::new));
+            allTagPoses.addAll(tagPoses);
+            allRobotPoses.addAll(robotPoses);
+            allRobotPosesAccepted.addAll(robotPosesAccepted);
+            allRobotPosesRejected.addAll(robotPosesRejected);
+        }
+        Logger.recordOutput("AprilTagVision/Summary/TagPoses", allTagPoses.toArray(Pose3d[]::new));
+        Logger.recordOutput("AprilTagVision/Summary/RobotPoses", allRobotPoses.toArray(Pose3d[]::new));
+        Logger.recordOutput("AprilTagVision/Summary/RobotPosesAccepted", allRobotPosesAccepted.toArray(Pose3d[]::new));
+        Logger.recordOutput("AprilTagVision/Summary/RobotPosesRejected", allRobotPosesRejected.toArray(Pose3d[]::new));
+     }
+
+     @Override
+     public void periodicAfterCommands() {
+        var robotPose = new Pose3d(robotState.getPose());
+        Logger.recordOutput(
+                "AprilTagVision/CameraPoses",
+                Arrays.stream(Camera.values())
+                        .map(cam -> robotPose.transformBy(cam.robotToCamera))
+                        .toArray(Pose3d[]::new)
+        );
+     }
+
+
+    private record SingleTagPoseObservation(
+            double timestamp,
+            double ambiguity,
+            int tagID,
+            double tagDistance,
+            Pose3d poseEstimate3dSolve,
+            boolean poseEstimateTrigPresent,
+            Pose2d poseEstimateTrig
+    ) {
+    }
+
+    private record MultiTagPoseObservation(
+            double timestamp,
+            double ambiguity,
+            int tagCount,
+            double averageTagDistance,
+            Pose3d poseEstimate
+    ) {
+    }
+
+    private record GenericPoseObservation(
+            double timestamp,
+            double ambiguity,
+            int tagCount,
+            double averageTagDistance,
+            Pose3d poseEstimate,
+            double linearStdDevBaseline,
+            double angularStdDevBaseline
+    ) {
+    }
+
+    private record CameraData(
+            AprilTagVisionIOInputsAutoLogged inputs,
+            AprilTagVisionIO io,
+            Alert disconnectedAlert
+    ) {
+    }
+}

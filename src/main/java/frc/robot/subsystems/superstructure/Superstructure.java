@@ -6,7 +6,6 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import frc.lib.subsystem.CommandBasedSubsystem;
 import frc.robot.OperatorDashboard;
@@ -15,13 +14,10 @@ import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.gamepiecevision.GamePieceVision;
-import frc.robot.subsystems.gamepiecevision.GamePieceVisionIO;
 import frc.robot.subsystems.intakepivot.IntakePivot;
 import frc.robot.subsystems.intakerollers.IntakeRollers;
-import frc.robot.util.commands.CommandsExt;
-import frc.robot.util.subsystem.SubsystemBaseExt;
+import frc.robot.subsystems.superstructure.commands.AutoScoreCoral;
 import lombok.Getter;
-import org.ironmaple.simulation.IntakeSimulation;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.BooleanSupplier;
@@ -53,7 +49,13 @@ public class Superstructure extends CommandBasedSubsystem {
         HANDOFF_WAIT,
         HANDOFF_HANDING_OFF,
 
-        MOVING_TO_CORAL,
+        AUTO_MOVING_TO_CORAL,
+
+        AUTO_ALIGN_REEF,
+        AUTO_ALIGN_STATION,
+
+        AUTO_SCORE_CORAL_WAIT,
+        AUTO_SCORE_CORAL_SCORING,
 
         EJECT,
     }
@@ -71,7 +73,7 @@ public class Superstructure extends CommandBasedSubsystem {
         };
     }
 
-    private Command setGoal(Goal goal) {
+    public Command setGoal(Goal goal) {
         return runOnce(() -> this.goal = goal);
     }
 
@@ -189,5 +191,14 @@ public class Superstructure extends CommandBasedSubsystem {
         return Math.abs(relative.getX()) < toleranceXMeters
                 && Math.abs(relative.getY()) < toleranceYMeters
                 && Math.abs(relative.getRotation().getRadians()) < angularToleranceRad;
+    }
+
+    public Command autoScoreCoral(
+            Supplier<ReefAlign.ReefZoneSide> reefSideSupplier,
+            Supplier<ReefAlign.LocalReefSide> sideSupplier,
+//            Supplier<CoralScoringLevel> coralScoringLevelSupplier,
+            BooleanSupplier forceCondition
+    ) {
+        return new AutoScoreCoral(reefSideSupplier, sideSupplier, forceCondition).create();
     }
 }
