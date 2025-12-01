@@ -8,9 +8,16 @@ import frc.lib.Util;
 import frc.lib.network.LoggedNetworkBooleanExt;
 import frc.lib.subsystem.Periodic;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.superstructure.ReefAlign;
+import frc.robot.subsystems.superstructure.ReefAlign.LocalReefSide;
+import frc.robot.subsystems.superstructure.ReefAlign.ReefZoneSide;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import java.util.EnumMap;
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 
 public class OperatorDashboard implements Periodic {
     private final RobotState robotState = RobotState.get();
@@ -19,6 +26,14 @@ public class OperatorDashboard implements Periodic {
     private static final String prefix = "/OperatorDashboard/";
 
     public final LoggedNetworkBooleanExt coastOverride = new LoggedNetworkBooleanExt(prefix + "CoastOverride", false);
+
+    @Getter
+    private ReefZoneSide selectedReefZoneSide = ReefZoneSide.LeftFront;
+    @Getter
+    private LocalReefSide selectedLocalReefSide = ReefAlign.LocalReefSide.Left;
+    @Getter
+    @Setter
+    private CoralScoringLevel selectedCoralScoringLevel = CoralScoringLevel.L4;
 
     private final Alert coastOverrideAlert = new Alert("Coast override is enabled.", Alert.AlertType.kWarning);
     @SuppressWarnings("FieldCanBeLocal")
@@ -49,6 +64,8 @@ public class OperatorDashboard implements Periodic {
         if (operatorKeypad.isConnected()) {
             operatorKeypadDisconnectedAlert.set(false);
             operatorKeypad.update();
+
+            selectedReefZoneSide = ReefAlign.determineClosestReefSide(robotState.getPose(), controller.getSetpointFieldRelative());
         } else {
             operatorKeypadDisconnectedAlert.set(true);
         }
@@ -56,6 +73,18 @@ public class OperatorDashboard implements Periodic {
         // Note - we only handle alerts for general overrides.
         // So subsystem toggles are handled in their respective subsystems
         coastOverrideAlert.set(coastOverride.get());
+    }
+
+    @RequiredArgsConstructor
+    public enum CoralScoringLevel {
+        L1(() -> 0.33),
+        L2(() -> 0.81),
+        L3(() -> 1.21),
+        L4(() -> 1.83),
+        EJECT(() -> 0.1);
+
+
+        public final DoubleSupplier coralScoringGoal;
     }
 
     private static <E extends Enum<E>> void updateToggles(

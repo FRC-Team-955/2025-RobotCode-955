@@ -11,8 +11,8 @@ public class DriveConstants {
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
     public static final MoveToConfig moveToConfig = new MoveToConfig(
-            PIDF.ofPD(0.0, 0.0),
-            PIDF.ofPD(0.0, 0.0),
+            PIDF.ofPD(5.0, 0.01),
+            PIDF.ofPD(5.0, 0.01),
             0.02,
             0.1,
             Units.degreesToRadians(2),
@@ -53,7 +53,7 @@ public class DriveConstants {
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
                 new ModuleLimits(
-                        3.83,
+                        3.95,
                         25,
                         20
                 )
@@ -100,8 +100,8 @@ public class DriveConstants {
                 60
         );
         case SIM -> new ModuleConfig(
-                PIDF.ofPDSV(0.05, 0.0, 0.04075, 0.14117),
-                PIDF.ofPD(10.0, 0.07),
+                PIDF.ofPDSV(0.14, 0.001, 0.05, 0.14),
+                PIDF.ofPD(7.367, 0.0025),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,

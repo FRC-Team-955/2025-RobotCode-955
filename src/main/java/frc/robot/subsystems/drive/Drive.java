@@ -66,11 +66,13 @@ public class Drive extends CommandBasedSubsystem {
     private static Drive instance;
 
     public static Drive get() {
-        if (instance == null)
+        if (instance == null) {
+
+
             synchronized (Drive.class) {
                 instance = new Drive();
             }
-
+        }
         return instance;
     }
 

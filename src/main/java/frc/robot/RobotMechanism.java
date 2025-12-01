@@ -24,6 +24,7 @@ public class RobotMechanism {
 
     private RobotMechanism() {
         addBumpers();
+
     }
 
     /** Middle of the robot in the mechanism */
@@ -31,6 +32,9 @@ public class RobotMechanism {
 
     @AutoLogOutput(key = "RobotState/Mechanism")
     public final LoggedMechanism2d mechanism = new LoggedMechanism2d(middleOfRobot * 2, 2.1, new Color8Bit(Color.kBlack));
+
+    public final IntakePivot intakePivot = new IntakePivot();
+    public final IntakeRoller intakeRoller = new IntakeRoller();
 
     private void addBumpers() {
         double bumperThickness = Units.inchesToMeters(3.375);
@@ -53,4 +57,84 @@ public class RobotMechanism {
                 new Color8Bit(Color.kBlue)
         ));
     }
+
+    public class IntakePivot {
+        public final LoggedMechanismRoot2d root = mechanism.getRoot("intakePivot", 0, 0);
+        public final LoggedMechanismLigament2d ligament = root.append(new LoggedMechanismLigament2d(
+                "ligament",
+                Units.inchesToMeters(1), // width, x
+                0,
+                35, // height, y
+                new Color8Bit(Color.kGreen)
+        ));
+
+        public final LoggedMechanismRoot2d rangeRoot = mechanism.getRoot(
+                "intakePivot_range",
+                middleOfRobot + Units.inchesToMeters(18),
+                Units.inchesToMeters(7)
+        );
+
+        public final LoggedMechanismLigament2d rangeLigament = rangeRoot.append(new LoggedMechanismLigament2d(
+                "intakePivot_range",
+                Units.inchesToMeters(1),
+                135,
+                11,
+                new Color8Bit(Color.kRed)
+        ));
+
+
+        private IntakePivot() {
+        }
+    }
+
+    public class IntakeRoller {
+
+//        public final double rollerLength = Units.inchesToMeters(12.0);
+//
+//
+//        public final Translation2d getRollerTip2d() {
+//            Translation2d robotPos = ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose().getTranslation();
+//            double pivotAngle = frc.robot.subsystems.intakePivot.IntakePivot.get().getPositionRad();
+//            double robotAngle = RobotState.get().getRotation().getRadians();
+//
+//
+//            return new Translation2d(
+//                    robotPos.getX() + rollerLength * Math.cos(robotAngle + pivotAngle),
+//                    robotPos.getX() + rollerLength * Math.sin(robotAngle + pivotAngle)
+//
+//            );
+//        }
+//
+//        public final Translation3d getRollerTip3d() {
+//            Translation2d tip2d = getRollerTip2d();
+//
+//
+//            return new Translation3d(
+//                    tip2d.getX(),
+//                    tip2d.getY(),
+//                    0.0
+//            );
+//        }
+
+        public final LoggedMechanismRoot2d topRollersRoot = mechanism.getRoot(
+                "intakeRoller_topRollers",
+                middleOfRobot + Units.inchesToMeters(23),
+                Units.inchesToMeters(7)
+        );
+        public final LoggedMechanismLigament2d topRollersLigament = topRollersRoot.append(new LoggedMechanismLigament2d(
+                "intakeRoller_topRollers",
+                Units.inchesToMeters(1),
+                0,
+                12,
+                new Color8Bit(Color.kOrange)
+        ));
+
+        private IntakeRoller() {
+
+        }
+
+
+    }
+
+
 }

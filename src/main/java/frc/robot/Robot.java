@@ -127,6 +127,11 @@ public class Robot extends LoggedRobot {
                 robotContainer.controller,
                 // Vision depends on drive
                 robotContainer.drive,
+                robotContainer.intakePivot,
+                robotContainer.intakeRoller,
+                robotContainer.gamePieceVision,
+                robotContainer.superstructure,
+                robotContainer.aprilTagVision,
                 // The rest of the subsystems require vision
                 // Subsystems depend on goals issued by superstructure
                 // Operator dashboard depends on superstructure
