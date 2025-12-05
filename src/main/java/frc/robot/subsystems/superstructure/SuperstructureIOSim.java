@@ -1,18 +1,19 @@
 package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.robot.OperatorDashboard;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.intakepivot.IntakePivot;
 import frc.robot.subsystems.intakerollers.IntakeRollers;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
@@ -46,6 +47,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
             1);
 
     private final RobotState robotState = RobotState.get();
+    private final OperatorDashboard operatorDashboard = OperatorDashboard.get();
     private final IntakePivot intakePivot = IntakePivot.get();
     private final IntakeRollers intakeRollers = IntakeRollers.get();
 
@@ -55,13 +57,15 @@ public class SuperstructureIOSim extends SuperstructureIO {
     private static final double handoffTime = 0.5;
     private final Timer sinceAtStation = new Timer();
     private static final double stationIntakeTime = 1.5 - indexTime;
+    @Setter
     private CoralState coralState = CoralState.SCORING;
 
-
+    @Getter
     private enum CoralState {
         NO_CORAL,
         INDEXING,
-        SCORING
+        SCORING,
+        PLACING_CORAL
     }
 
     public SuperstructureIOSim() {
@@ -87,6 +91,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
         Transform3d coralRobotRelative = null;
         switch (coralState) {
             case NO_CORAL -> {
+                inputs.hasCoral = false;
 //                var current = robotState.getPose().getTranslation();
 //                if (Arrays.stream(stationLocations).anyMatch(t -> t.getDistance(current) < 1.5) ) {
 //                    if (!sinceAtStation.isRunning()) {
@@ -104,6 +109,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 if (sinceCoralIntaked.hasElapsed(indexTime)) {
                     coralState = CoralState.SCORING;
                 }
+                inputs.hasCoral = true;
                 var interp = MathUtil.clamp(sinceCoralIntaked.get() / indexTime, 0, 1);
                 coralRobotRelative = new Transform3d(
                         Units.inchesToMeters(20) - Units.inchesToMeters(15) * interp,
@@ -121,30 +127,35 @@ public class SuperstructureIOSim extends SuperstructureIO {
                 );
             }
             case SCORING -> {
-                var angle = Units.degreesToRadians(45);
-                var coralOffsetX = Units.inchesToMeters(-8.5) + Units.inchesToMeters(6) * Math.tan(angle);
-                var coralOffsetZ = Units.inchesToMeters(13.5) +  Units.inchesToMeters(4) * Math.tan(angle);
-                coralState = CoralState.NO_CORAL;
+                inputs.hasCoral = true;
+                if (inputs.readyToPlace) {
+                    coralState = CoralState.PLACING_CORAL;
+                }
+            }
+            case PLACING_CORAL -> {
                 SimulatedArena.getInstance()
                         .addGamePieceProjectile(new ReefscapeCoralOnFly(
                                 pose.getTranslation(),
-                                new Translation2d(coralOffsetX - Units.inchesToMeters(2), 0),
+                                new Translation2d(Units.inchesToMeters(2), 0),
                                 ModuleIOSim.driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-                                pose.getRotation(),
-                                Meters.of(coralOffsetZ + Units.inchesToMeters(2)),
-                                MetersPerSecond.of(-1),
+                                pose.getRotation().rotateBy(Rotation2d.k180deg),
+                                Meters.of(operatorDashboard.getSelectedCoralScoringLevel().ordinal()),
+                                MetersPerSecond.of(-1.0),
                                 Degrees.of(65)
                         ));
+                coralState = CoralState.NO_CORAL;
+                inputs.readyToPlace = false;
             }
         }
         switch (coralState) {
             case NO_CORAL-> {
                 inputs.intakeRangeMeters = Double.MAX_VALUE;
             }
-            case INDEXING, SCORING -> {
+            case INDEXING, SCORING, PLACING_CORAL-> {
                 inputs.intakeRangeMeters = 0;
             }
         }
     }
+
 
 }

@@ -18,7 +18,7 @@ public class ReefAlign {
     private static final double distanceCenterOfReefToBranchMeters = Units.inchesToMeters(6.5);
 
     private static final Transform2d initialAlignStartOffset = new Transform2d(1.5, 0, new Rotation2d());
-    private static final Transform2d initialAlignEndOffset = new Transform2d(0.5, 0, new Rotation2d());
+    private static final Transform2d initialAlignEndOffset = new Transform2d(0.5, 0, new Rotation2d().plus(Rotation2d.k180deg));
     private static final double initialAlignDistYForStartMeters = 1.5;
     private static final double initialAlignDistYOffset = 0.5;
     private static final double initialAlignDistXForFullAngle = 0.5;
@@ -26,8 +26,8 @@ public class ReefAlign {
     private static final double finalAlignAngularDiffForInitialRad = Units.degreesToRadians(30);
     private static final double finalAlignElevatorPercentageMultiplier = 1.25;
 
-    public static final double alignLinearToleranceMeters = 0.04;
-    public static final double alignAngularToleranceRad = Units.degreesToRadians(4);
+    public static final double alignLinearToleranceMeters = 0.6;
+    public static final double alignAngularToleranceRad = 3.2;
     public static final double alignLinearToleranceMetersPerSecond = 0.02;
     public static final double alignAngularToleranceRadPerSecond = Units.degreesToRadians(8);
 
@@ -35,6 +35,8 @@ public class ReefAlign {
         Pose2d finalAlign = getFinalAlignPose(reefZoneSide, localReefSide);
         boolean positionMet = Util.isAtPoseWithTolerance(currentPose, finalAlign, alignLinearToleranceMeters, alignAngularToleranceRad);
         boolean velocityMet = Util.isWithinVelocityTolerance(measuredChassisSpeeds, alignLinearToleranceMetersPerSecond, alignAngularToleranceRadPerSecond);
+        Logger.recordOutput("Superstructure/ReefAlign/CurrentPose", currentPose);
+        Logger.recordOutput("Superstructure/ReefAlign/FinalAlign", finalAlign);
         Logger.recordOutput("Superstructure/ReefAlign/PositionMet", positionMet);
         Logger.recordOutput("Superstructure/ReefAlign/VelocityMet", velocityMet);
         return positionMet && velocityMet;

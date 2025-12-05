@@ -7,10 +7,14 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WrapperCommand;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.lib.commands.CommandsExt;
 import frc.lib.subsystem.CommandBasedSubsystem;
 import frc.robot.OperatorDashboard;
 import frc.robot.RobotMechanism;
 import frc.robot.RobotState;
+import frc.robot.subsystems.apriltagvision.AprilTagVision;
+import frc.robot.subsystems.apriltagvision.AprilTagVisionConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.gamepiecevision.GamePieceVision;
@@ -33,6 +37,7 @@ public class Superstructure extends CommandBasedSubsystem {
     private final IntakePivot intakePivot = IntakePivot.get();
     private final IntakeRollers intakeRollers = IntakeRollers.get();
     private final Drive drive = Drive.get();
+    private final AprilTagVision aprilTagVision = AprilTagVision.get();
 
     private final SuperstructureIO io = createIO();
     private final SuperstructureIOInputsAutoLogged inputs = new SuperstructureIOInputsAutoLogged();
@@ -115,6 +120,10 @@ public class Superstructure extends CommandBasedSubsystem {
         return setGoal(Goal.IDLE).andThen(Commands.idle());
     }
 
+    public boolean hasCoral() {
+        return inputs.hasCoral;
+    }
+
     public Command intakeIdle() {
         return intakePivot.setGoals(IntakePivot.IntakePivotGoal.STOW)
                 .alongWith(intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.IDLE))
@@ -179,6 +188,17 @@ public class Superstructure extends CommandBasedSubsystem {
         );
     }
 
+    public Command cancel() {
+        return CommandsExt.eagerSequence(
+                setGoal(
+                        Goal.IDLE
+                ),
+                intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.IDLE),
+                intakePivot.setGoals(IntakePivot.IntakePivotGoal.STOW),
+                aprilTagVision.setTagIdFilter(new int[0])
+        ).ignoringDisable(true);
+    }
+
     private boolean isAtPoseWithTolerance(Pose2d desiredPose, double linearToleranceMeters, double angularToleranceRad) {
         Pose2d currentPose = robotState.getPose();
         return desiredPose.getTranslation().getDistance(currentPose.getTranslation()) < linearToleranceMeters
@@ -196,9 +216,15 @@ public class Superstructure extends CommandBasedSubsystem {
     public Command autoScoreCoral(
             Supplier<ReefAlign.ReefZoneSide> reefSideSupplier,
             Supplier<ReefAlign.LocalReefSide> sideSupplier,
-//            Supplier<CoralScoringLevel> coralScoringLevelSupplier,
-            BooleanSupplier forceCondition
+            Trigger forceCondition
     ) {
-        return new AutoScoreCoral(reefSideSupplier, sideSupplier, forceCondition).create();
+        return Commands.sequence(
+                cancel(),
+                new AutoScoreCoral(reefSideSupplier, sideSupplier, forceCondition).create(),
+                runOnce(() -> inputs.readyToPlace = true)
+                        .withName("Signal ready to place"),
+                waitUntil(() -> !forceCondition.getAsBoolean()),
+                cancel()
+        );
     }
 }

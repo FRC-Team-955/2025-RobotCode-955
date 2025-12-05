@@ -8,9 +8,14 @@ import frc.lib.Util;
 import frc.lib.network.LoggedNetworkBooleanExt;
 import frc.lib.subsystem.Periodic;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.superstructure.ReefAlign;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 
 public class OperatorDashboard implements Periodic {
     private final RobotState robotState = RobotState.get();
@@ -20,6 +25,9 @@ public class OperatorDashboard implements Periodic {
 
     public final LoggedNetworkBooleanExt coastOverride = new LoggedNetworkBooleanExt(prefix + "CoastOverride", false);
 
+    private final EnumMap<ReefAlign.ReefZoneSide, LoggedNetworkBooleanExt> reefZoneSides = generateTogglesForEnum("ReefZoneSides", ReefAlign.ReefZoneSide.values(), ReefAlign.ReefZoneSide.class);
+    private final EnumMap<ReefAlign.LocalReefSide, LoggedNetworkBooleanExt> localReefSides = generateTogglesForEnum("LocalReefSides", Arrays.stream(ReefAlign.LocalReefSide.values()).filter(side -> side != ReefAlign.LocalReefSide.Middle).toArray(ReefAlign.LocalReefSide[]::new), ReefAlign.LocalReefSide.class);
+
     private final Alert coastOverrideAlert = new Alert("Coast override is enabled.", Alert.AlertType.kWarning);
     @SuppressWarnings("FieldCanBeLocal")
     private final Alert constantSetAlert = new Alert("Constants are set.", Alert.AlertType.kInfo);
@@ -28,6 +36,10 @@ public class OperatorDashboard implements Periodic {
     private final Alert operatorKeypadDisconnectedAlert = new Alert("Operator keypad is not connected!", Alert.AlertType.kError);
 
     private static OperatorDashboard instance;
+    private ReefAlign.ReefZoneSide selectedReefZoneSide = ReefAlign.ReefZoneSide.MiddleFront;
+    private ReefAlign.LocalReefSide selectedLocalReefSide = ReefAlign.LocalReefSide.Left;
+    @Getter
+    private OperatorKeypad.CoralScoringLevel selectedCoralScoringLevel = OperatorKeypad.CoralScoringLevel.L4;
 
     public static OperatorDashboard get() {
         if (instance == null)
@@ -53,9 +65,49 @@ public class OperatorDashboard implements Periodic {
             operatorKeypadDisconnectedAlert.set(true);
         }
 
+        selectedReefZoneSide = ReefAlign.determineClosestReefSide(robotState.getPose(), controller.getSetpointFieldRelative());
+        updateToggles(reefZoneSides, selectedReefZoneSide);
+        handleEnumToggles(
+                reefZoneSides,
+                selectedReefZoneSide,
+                selected -> selectedReefZoneSide = selected);
+        if (operatorKeypad.isConnected()) {
+            operatorKeypad.update();
+
+            // Manual reef zone side handled elsewhere
+            ReefAlign.LocalReefSide newLocalReefSide = operatorKeypad.getLocalReefSide();
+            if (newLocalReefSide != null) selectedLocalReefSide = newLocalReefSide;
+
+            updateToggles(localReefSides, selectedLocalReefSide);
+        } else {
+            handleEnumToggles(
+                    localReefSides,
+                    selectedLocalReefSide,
+                    selected -> selectedLocalReefSide = selected
+            );
+        }
+
         // Note - we only handle alerts for general overrides.
         // So subsystem toggles are handled in their respective subsystems
         coastOverrideAlert.set(coastOverride.get());
+    }
+
+    public ReefAlign.ReefZoneSide getSelectedReefZoneSide() {
+        for (var entry : reefZoneSides.entrySet()) {
+            if (entry.getValue().get()) {
+                return entry.getKey();
+            }
+        }
+        return ReefAlign.ReefZoneSide.MiddleFront;
+    }
+
+    public ReefAlign.LocalReefSide getSelectedLocalReefSide() {
+        for (var entry : localReefSides.entrySet()) {
+            if (entry.getValue().get()) {
+                return entry.getKey();
+            }
+        }
+        return ReefAlign.LocalReefSide.Left;
     }
 
     private static <E extends Enum<E>> void updateToggles(
@@ -156,8 +208,25 @@ public class OperatorDashboard implements Periodic {
             return hid.isConnected();
         }
 
-        private Object getReefZoneSide() {
+
+        private ReefAlign.ReefZoneSide getReefZoneSide() {
+            if (hid.getRawButton(1)) return ReefAlign.ReefZoneSide.LeftFront;
+            if (hid.getRawButton(2)) return ReefAlign.ReefZoneSide.MiddleFront;
+            if (hid.getRawButton(3)) return ReefAlign.ReefZoneSide.RightFront;
+            if (hid.getRawButton(4)) return ReefAlign.ReefZoneSide.RightBack;
+            if (hid.getRawButton(5)) return ReefAlign.ReefZoneSide.MiddleBack;
+            if (hid.getRawButton(6)) return ReefAlign.ReefZoneSide.LeftBack;
             return null;
+        }
+
+        @RequiredArgsConstructor
+        public enum CoralScoringLevel {
+            L1(() -> 0.33),
+            L2(() -> 0.81),
+            L3(() -> 1.21),
+            L4(() -> 1.83);
+
+            public final DoubleSupplier coralScoringGoal;
         }
 
         private boolean getOverride1() {
@@ -191,15 +260,23 @@ public class OperatorDashboard implements Periodic {
         }
 
         private Object getCoralScoringLevel() {
+            if (hid.getRawButton(7)) return CoralScoringLevel.L1;
+            if (hid.getRawButton(8)) return CoralScoringLevel.L2;
+            if (hid.getRawButton(9)) return CoralScoringLevel.L3;
+            if (hid.getRawButton(10)) return CoralScoringLevel.L4;
             return null;
         }
 
-        private Object getLocalReefSide() {
+        private ReefAlign.LocalReefSide getLocalReefSide() {
+            if (hid.getRawButton(11)) return ReefAlign.LocalReefSide.Left;
+            if (hid.getRawButton(12)) return ReefAlign.LocalReefSide.Right;
             return null;
         }
 
         private boolean getManualReefSide() {
             return hid.getRawButton(13);
         }
+
+
     }
 }

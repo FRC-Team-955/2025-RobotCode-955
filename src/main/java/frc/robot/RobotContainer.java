@@ -147,16 +147,8 @@ public class RobotContainer {
      */
     private void configureButtonBindings() {
 
-        // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
-        // You must do this because if you don't, superstructure's default command will cancel your command
         controller.y().onTrue(robotState.resetRotation());
-        controller.rightBumper().onTrue(superstructure.moveToCoralSim());
-//                runOnce(() -> {
-//                    if (GamePieceVision.get().getVisibility()) {
-//
-//                    }
-//                }));
-        controller.leftBumper().whileTrue(superstructure.intakeIdle());
+        controller.leftBumper().whileTrue(superstructure.cancel());
 
         if (mode == BuildConstants.Mode.SIM) {
             controller.x().onTrue(Commands.runOnce(() ->
@@ -171,37 +163,36 @@ public class RobotContainer {
             ));
         }
 
-        controller.leftTrigger()
-                .onTrue(superstructure.autoScoreCoral(
-                        () -> ReefAlign.ReefZoneSide.LeftBack,
-                        () -> ReefAlign.LocalReefSide.Left,
-                        controller.leftTrigger()
-                ));
+        Trigger canAutoScore =
+                new Trigger(() -> ReefAlign.isAlignable(robotState.getPose(),
+                        operatorDashboard.getSelectedReefZoneSide()));
 
-//        controller.rightBumper().onTrue(
-//                runOnce(() -> {
-//                    if (intakePivot.getCurrentGoal() == IntakePivot.IntakePivotGoal.STOW) {
-//                        intakePivot.setGoals(IntakePivot.IntakePivotGoal.INTAKE).schedule();
-//                    } else {
-//                        intakePivot.setGoals(IntakePivot.IntakePivotGoal.STOW).schedule();
-//                    }
-//                })
-//        );
-        //        controller.rightTrigger().whileTrue(
-//                runOnce(() -> {
-//                    if (intakePivot.getCurrentGoal() == IntakePivot.IntakePivotGoal.INTAKE) {
-//                        intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.INTAKE).schedule();
-//                    }
-//                })
-//        );
-//        controller.rightTrigger().whileFalse(
-//                runOnce(() -> {
-//                    intakeRollers.setGoals(IntakeRollers.IntakeRollersGoal.IDLE).schedule();
-//                })
-//        );
+        Trigger hasCoral = new Trigger(superstructure::hasCoral);
 
-        // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
-        // You must do this because if you don't, superstructure's default command will cancel your command
+        // 🔥 NEW AUTO-ALIGN BUTTON (replaces old Left Trigger + Right Bumper)
+        controller.rightBumper().onTrue(
+                CommandsExt.eagerSequence(
+                        superstructure.cancel(),
+                        Commands.either(
+                                superstructure.autoScoreCoral(
+                                        operatorDashboard::getSelectedReefZoneSide,
+                                        operatorDashboard::getSelectedLocalReefSide,
+                                        controller.rightBumper()
+                                ),
+
+                                Commands.sequence(
+                                        superstructure.moveToCoralSim(),
+                                        superstructure.autoScoreCoral(
+                                                operatorDashboard::getSelectedReefZoneSide,
+                                                operatorDashboard::getSelectedLocalReefSide,
+                                                controller.rightBumper()
+                                        )
+                                ),
+
+                                superstructure::hasCoral
+                        )
+                )
+        );
     }
 
     /**

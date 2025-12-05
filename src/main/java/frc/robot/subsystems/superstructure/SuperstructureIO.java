@@ -7,6 +7,8 @@ public class SuperstructureIO {
     public static class SuperstructureIOInputs {
         public boolean intakeRangeConnected = false;
         public double intakeRangeMeters = Double.MAX_VALUE;
+        public boolean readyToPlace = false;
+        public boolean hasCoral = false;
     }
 
     public void updateInputs(SuperstructureIOInputs inputs) {}
