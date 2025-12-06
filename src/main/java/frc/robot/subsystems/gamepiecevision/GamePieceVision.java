@@ -1,9 +1,6 @@
 package frc.robot.subsystems.gamepiecevision;
 
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.Alert;
 import frc.lib.subsystem.Periodic;
 import frc.robot.RobotState;
@@ -51,7 +48,7 @@ public class GamePieceVision implements Periodic {
         for (var observation : inputs.targetObservations) {
             // Calculate position
             double camToCoralZ = -camera.robotToCamera().getZ() + coralHeightMeters / 2.0;
-            double camToCoralX = -camToCoralZ / observation.pitch().getTan();
+            double camToCoralX = -camToCoralZ / observation.pitch().plus(Rotation2d.fromRadians(camera.robotToCamera().getRotation().getY())).getTan();
             Transform3d camToCoral = new Transform3d(
                     new Translation3d(
                             camToCoralX,
@@ -60,7 +57,7 @@ public class GamePieceVision implements Periodic {
                     ),
                     new Rotation3d()
             );
-            Transform3d robotToCoral = camera.robotToCamera().plus(camToCoral);
+            Transform3d robotToCoral = new Transform3d(camera.robotToCamera().getTranslation(), new Rotation3d()).plus(camToCoral);
             seenCoralToLastSeen.put(new Pose3d(robotState.getPose()).transformBy(robotToCoral), observation.timestamp());
         }
 

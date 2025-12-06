@@ -12,7 +12,7 @@ public class GamePieceVisionConstants {
     static final double coralHeightMeters = Units.inchesToMeters(4.25);
 
     static final Camera camera = new Camera(
-            new Transform3d(0, 0, 0.5, new Rotation3d()),//new Rotation3d(Units.degreesToRadians(30.0), Units.degreesToRadians(30.0), Units.degreesToRadians(30.0))),
+            new Transform3d(0, 0, 0.5, new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(30), Units.degreesToRadians(30))),//new Rotation3d(Units.degreesToRadians(30.0), Units.degreesToRadians(30.0), Units.degreesToRadians(30.0))),
             Units.degreesToRadians(62.5),
             Units.degreesToRadians(48.9)
     );
