@@ -26,16 +26,13 @@ public class DriveConstants {
 
     static final double odometryPositionDeltaDiscardMeters = Units.inchesToMeters(8);
 
-    // Slow to 30% speed during driver control
-    public static final double constraintScalarWhenElevatorAtMaxHeightDriver = 0.3;
-
     public static final DriveConfig driveConfig = switch (BuildConstants.mode) {
         case REAL, REPLAY -> new DriveConfig(
                 Units.inchesToMeters(2),
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(22.75),
-                Units.inchesToMeters(35),
-                Units.inchesToMeters(35),
+                Units.inchesToMeters(28),
+                Units.inchesToMeters(28),
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
                 new ModuleLimits(
@@ -48,8 +45,8 @@ public class DriveConstants {
                 Units.inchesToMeters(2),
                 Units.inchesToMeters(22.75),
                 Units.inchesToMeters(22.75),
-                Units.inchesToMeters(35),
-                Units.inchesToMeters(35),
+                Units.inchesToMeters(28),
+                Units.inchesToMeters(28),
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
                 new ModuleLimits(
