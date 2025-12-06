@@ -14,7 +14,6 @@ import static frc.robot.subsystems.gamepiecevision.GamePieceVisionConstants.came
 
 public class GamePieceVisionIOSim extends GamePieceVisionIO {
     public GamePieceVisionIOSim() {
-
     }
 
     @Override
