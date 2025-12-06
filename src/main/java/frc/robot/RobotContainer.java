@@ -71,6 +71,7 @@ public class RobotContainer {
     }
 
     private void setDefaultCommands() {
+        drive.setDefaultCommand(drive.driveJoystick());
     }
 
     /**
