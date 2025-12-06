@@ -281,5 +281,6 @@ public class Robot extends LoggedRobot {
                 "FieldSimulation/Coral",
                 SimulatedArena.getInstance().getGamePiecesArrayByType("Coral")
         );
+        robotContainer.robotState.setPose(ModuleIOSim.driveSimulation.getSimulatedDriveTrainPose());
     }
 }
