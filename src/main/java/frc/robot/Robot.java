@@ -111,11 +111,6 @@ public class Robot extends LoggedRobot {
         // Disable controller disconnection alerts since we have our own alert
         DriverStation.silenceJoystickConnectionWarning(true);
 
-        if (BuildConstants.mode == BuildConstants.Mode.SIM) {
-            DriverStationSim.setAllianceStationId(AllianceStationID.Blue1);
-            DriverStationSim.notifyNewData();
-        }
-
         // No references to RobotContainer/RobotState/any subsystem should be made before this point!
         System.out.println("********** Initializing RobotContainer **********");
         robotContainer = new RobotContainer();
@@ -255,6 +250,9 @@ public class Robot extends LoggedRobot {
     public void simulationInit() {
         // In case of replay, don't do sim
         if (BuildConstants.mode == BuildConstants.Mode.REPLAY) return;
+
+        DriverStationSim.setAllianceStationId(AllianceStationID.Blue1);
+        DriverStationSim.notifyNewData();
 
         SimulatedArena.getInstance().resetFieldForAuto();
         RobotModeTriggers.autonomous().onTrue(Commands.runOnce(SimulatedArena.getInstance()::resetFieldForAuto));
