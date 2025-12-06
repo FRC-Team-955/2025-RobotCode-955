@@ -2,6 +2,7 @@ package frc.robot.subsystems.gamepiecevision;
 
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Timer;
 import frc.lib.subsystem.Periodic;
 import frc.robot.RobotState;
 import org.littletonrobotics.junction.Logger;
@@ -45,7 +46,7 @@ public class GamePieceVision implements Periodic {
         // Update disconnected alert
         disconnectedAlert.set(!inputs.connected);
 
-        seenCoralToLastSeen.clear();
+        Map<Pose3d, Double> newlySeenCoralToLastSeen = new HashMap<>();
         List<Translation2d> targetPoints = new LinkedList<>();
 
         // Process observations
@@ -69,14 +70,22 @@ public class GamePieceVision implements Periodic {
 
             Translation3d robotToTarget = new Translation3d(robotToTargetXY.getX(), robotToTargetXY.getY(), robotToTargetZ);
 
-            seenCoralToLastSeen.put(
+            newlySeenCoralToLastSeen.put(
                     robotPose.transformBy(new Transform3d(robotToTarget, new Rotation3d())),
                     observation.timestamp()
             );
         }
 
-        // TODO: remove coral in same position
-        // TODO: remove coral seen too long ago
+        // Handle newly seen coral
+        for (var pose : newlySeenCoralToLastSeen.keySet()) {
+            // Remove old coral within distance to be counted as the same piece of coral
+            seenCoralToLastSeen.keySet()
+                    .removeIf(otherPose -> pose.getTranslation().getDistance(otherPose.getTranslation()) < minDistanceForSameCoralMeters);
+        }
+        seenCoralToLastSeen.putAll(newlySeenCoralToLastSeen);
+
+        // Clean up seen coral
+        seenCoralToLastSeen.values().removeIf(lastSeen -> Timer.getTimestamp() - lastSeen > seenCoralExpireTimeSeconds);
 
         // Log results
         Logger.recordOutput("GamePieceVision/TargetPoints", targetPoints.toArray(Translation2d[]::new));

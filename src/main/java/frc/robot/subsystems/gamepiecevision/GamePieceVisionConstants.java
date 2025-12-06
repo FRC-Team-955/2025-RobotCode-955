@@ -9,8 +9,8 @@ import frc.robot.BuildConstants;
 
 public class GamePieceVisionConstants {
     /** Minimum distance between two seen coral for them to be counted as the same coral */
-    static final double minDistanceForSameCoral = 0.25;
-    static final double seenCoralExpireTime = 3;
+    static final double minDistanceForSameCoralMeters = 3;
+    static final double seenCoralExpireTimeSeconds = 5;
     static final double coralHeightMeters = Units.inchesToMeters(4.25);
 
     static final Camera camera = new Camera(
