@@ -11,6 +11,7 @@ import frc.lib.CANLogger;
 import frc.lib.commands.CommandsExt;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.goals.WheelRadiusCharacterizationGoal;
+import frc.robot.subsystems.gamepiecevision.GamePieceVision;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -32,6 +33,7 @@ public class RobotContainer {
     /* Subsystems */
     // Note: order does matter
     public final Drive drive = Drive.get();
+    public final GamePieceVision gamePieceVision = GamePieceVision.get();
 
     public RobotContainer() {
         addAutos();
