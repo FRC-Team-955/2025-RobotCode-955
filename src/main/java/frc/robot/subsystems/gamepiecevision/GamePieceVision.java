@@ -46,56 +46,40 @@ public class GamePieceVision implements Periodic {
         disconnectedAlert.set(!inputs.connected);
 
         seenCoralToLastSeen.clear();
-        List<Pose3d> pointingAtCorals = new LinkedList<>();
+        List<Translation2d> targetPoints = new LinkedList<>();
 
         // Process observations
         var robotPose = new Pose3d(robotState.getPose());
         for (var observation : inputs.targetObservations) {
-            // Rotate camera by pitch and yaw so that it points at coral
-            Rotation3d pointingAtCoral = camera.robotToCamera().getRotation()
-                    // rotation order is yaw-pitch (Tait-Bryan angles without roll)
-                    .rotateBy(new Rotation3d(0, 0, observation.yawRad()))
-                    .rotateBy(new Rotation3d(0, observation.pitchRad(), 0));
+            targetPoints.add(new Translation2d(observation.yawRad(), observation.pitchRad()));
 
-            // Log camera pointing at coral for debugging
-            Transform3d robotToCameraPointingAtCoral = new Transform3d(camera.robotToCamera().getTranslation(), pointingAtCoral);
-            pointingAtCorals.add(robotPose.transformBy(robotToCameraPointingAtCoral));
-            for (int i = 0; i < 20; i++) {
-                double j = i / 10.0;
-                Transform3d a = robotToCameraPointingAtCoral.plus(new Transform3d(j, 0, 0, new Rotation3d()));
-                pointingAtCorals.add(robotPose.transformBy(a));
-            }
+            // First, calculate position of target in camera space
+            double camToTargetZ = -camera.robotToCamera().getZ() + coralHeightMeters / 2.0;
+            // Account for pitch of camera
+            double camToTargetX = camToTargetZ / Math.tan(observation.pitchRad() - cameraOrientation.pitchRad);
+            double camToTargetY = camToTargetX * Math.tan(-observation.yawRad());
 
-            // Get yaw and pitch from robot to camera translation to coral
-            Quaternion q = pointingAtCoral.getQuaternion();
-            // https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles#Quaternion_to_Euler_angles_(in_3-2-1_sequence)_conversion
-            double coralYaw = Math.atan2(2.0 * (q.getW() * q.getZ() + q.getX() * q.getY()), 1.0 - 2.0 * (q.getY() * q.getY() + q.getZ() * q.getZ()));
-            double coralPitch = (-Math.PI / 2.0) + 2.0 * Math.atan2(Math.sqrt(1 + 2.0 * (q.getW() * q.getY() - q.getX() * q.getZ())), Math.sqrt(1 - 2.0 * (q.getW() * q.getY() - q.getX() * q.getZ())));
+            // Next, translate x and y to robot coordinates
+            Translation2d camToTargetXY = new Translation2d(camToTargetX, camToTargetY);
+            Translation2d robotToTargetXY = camera.robotToCamera().getTranslation().toTranslation2d()
+                    .plus(camToTargetXY)
+                    // Account for yaw of camera
+                    .rotateBy(Rotation2d.fromRadians(cameraOrientation.yawRad));
+            double robotToTargetZ = camToTargetZ + camera.robotToCamera().getZ();
 
-            // Calculate position
-            double camToCoralZ = -camera.robotToCamera().getZ() + coralHeightMeters / 2.0;
-            double camToCoralX = -camToCoralZ / Math.tan(coralPitch);
-            Transform3d camToCoral = new Transform3d(
-                    new Translation3d(
-                            camToCoralX,
-                            camToCoralX * Math.tan(coralYaw),
-                            camToCoralZ
-                    ),
-                    new Rotation3d()
+            Translation3d robotToTarget = new Translation3d(robotToTargetXY.getX(), robotToTargetXY.getY(), robotToTargetZ);
+
+            seenCoralToLastSeen.put(
+                    robotPose.transformBy(new Transform3d(robotToTarget, new Rotation3d())),
+                    observation.timestamp()
             );
-
-            Transform3d robotToCoral = new Transform3d(
-                    camera.robotToCamera().getTranslation(),
-                    new Rotation3d()
-            ).plus(camToCoral);
-            seenCoralToLastSeen.put(new Pose3d(robotState.getPose()).transformBy(robotToCoral), observation.timestamp());
         }
 
         // TODO: remove coral in same position
         // TODO: remove coral seen too long ago
 
         // Log results
-        Logger.recordOutput("GamePieceVision/PointingAtCorals", pointingAtCorals.toArray(Pose3d[]::new));
+        Logger.recordOutput("GamePieceVision/TargetPoints", targetPoints.toArray(Translation2d[]::new));
         Logger.recordOutput("GamePieceVision/SeenCoral", seenCoralToLastSeen.keySet().toArray(Pose3d[]::new));
     }
 

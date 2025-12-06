@@ -34,16 +34,17 @@ public class GamePieceVisionIOSim extends GamePieceVisionIO {
             Transform3d camToCoral = camera.robotToCamera().inverse().plus(robotToCoral);
 
             double yaw = Math.atan2(camToCoral.getY(), camToCoral.getX());
-            // rotation order is yaw-pitch (Tait-Bryan angles without roll)
-            // that's why we use hypotenuse of x-y triangle (xyDist) when calculating pitch instead of x
-            double xyDist = Math.sqrt(camToCoral.getX() * camToCoral.getX() + camToCoral.getY() * camToCoral.getY());
-            double pitch = -Math.atan2(camToCoral.getZ(), xyDist);
+            double pitch = -Math.atan2(camToCoral.getZ(), camToCoral.getX());
 
             if (Math.abs(yaw) > camera.horizontalFovRad() / 2.0 || Math.abs(pitch) > camera.verticalFovRad() / 2.0) {
                 continue;
             }
 
-            targetObservations.add(new TargetObservation(Timer.getFPGATimestamp(), yaw, pitch));
+            targetObservations.add(new TargetObservation(
+                    Timer.getFPGATimestamp(),
+                    -yaw,
+                    -pitch
+            ));
         }
 
         inputs.targetObservations = targetObservations.toArray(TargetObservation[]::new);

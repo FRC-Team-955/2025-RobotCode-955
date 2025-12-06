@@ -11,10 +11,9 @@ public class GamePieceVisionIO {
 
     public record TargetObservation(
             double timestamp,
-            // rotation order is yaw-pitch (Tait-Bryan angles without roll)
-            // left (ccw about z) is positive
+            // yaw and pitch are not necessarily rotations, but
+            // correspond to a point on a 2d plane
             double yawRad,
-            // down (ccw about y) is positive
             double pitchRad
     ) {}
 
