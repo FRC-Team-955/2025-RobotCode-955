@@ -1,6 +1,5 @@
 package frc.robot.subsystems.gamepiecevision;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
 public class GamePieceVisionIO {
@@ -12,10 +11,11 @@ public class GamePieceVisionIO {
 
     public record TargetObservation(
             double timestamp,
+            // rotation order is yaw-pitch (Tait-Bryan angles without roll)
             // left (ccw about z) is positive
-            Rotation2d yaw,
+            double yawRad,
             // down (ccw about y) is positive
-            Rotation2d pitch
+            double pitchRad
     ) {}
 
     public void updateInputs(GamePieceVisionIOInputs inputs) {

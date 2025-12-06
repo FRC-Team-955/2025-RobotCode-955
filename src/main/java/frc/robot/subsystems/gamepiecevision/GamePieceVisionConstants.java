@@ -2,6 +2,7 @@ package frc.robot.subsystems.gamepiecevision;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.BuildConstants;
 
@@ -12,7 +13,13 @@ public class GamePieceVisionConstants {
     static final double coralHeightMeters = Units.inchesToMeters(4.25);
 
     static final Camera camera = new Camera(
-            new Transform3d(0, 0, 0.5, new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(30), Units.degreesToRadians(30))),//new Rotation3d(Units.degreesToRadians(30.0), Units.degreesToRadians(30.0), Units.degreesToRadians(30.0))),
+            new Transform3d(
+                    new Translation3d(0, 0, 0.5),
+                    new Rotation3d(0, 0, Units.degreesToRadians(30.0))
+                    //new Rotation3d(0, Units.degreesToRadians(30.0), 0)
+                    //.rotateBy(new Rotation3d(0, 0, Units.degreesToRadians(30.0)))
+                    //.rotateBy(new Rotation3d(Units.degreesToRadians(30.0), 0, 0))
+            ),
             Units.degreesToRadians(62.5),
             Units.degreesToRadians(48.9)
     );
