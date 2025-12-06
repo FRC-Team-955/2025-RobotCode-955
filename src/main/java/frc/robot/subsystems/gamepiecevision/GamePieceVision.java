@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Timer;
 import frc.lib.subsystem.Periodic;
 import frc.robot.RobotState;
+import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.HashMap;
@@ -22,7 +23,11 @@ public class GamePieceVision implements Periodic {
 
     private final Alert disconnectedAlert = new Alert("Game piece vision is disconnected.", Alert.AlertType.kError);
 
-    private final Map<Pose3d, Double> seenCoralToLastSeen = new HashMap<>();
+    private final Map<Pose3d, Double> coralPoseToLastSeen = new HashMap<>();
+    @Getter
+    private List<Pose3d> freshCoral = List.of();
+    @Getter
+    private List<Pose3d> staleCoral = List.of();
 
     private static GamePieceVision instance;
 
@@ -46,7 +51,7 @@ public class GamePieceVision implements Periodic {
         // Update disconnected alert
         disconnectedAlert.set(!inputs.connected);
 
-        Map<Pose3d, Double> newlySeenCoralToLastSeen = new HashMap<>();
+        Map<Pose3d, Double> newlySeenCoral = new HashMap<>();
         List<Translation2d> targetPoints = new LinkedList<>();
 
         // Process observations
@@ -70,26 +75,41 @@ public class GamePieceVision implements Periodic {
 
             Translation3d robotToTarget = new Translation3d(robotToTargetXY.getX(), robotToTargetXY.getY(), robotToTargetZ);
 
-            newlySeenCoralToLastSeen.put(
+            newlySeenCoral.put(
                     robotPose.transformBy(new Transform3d(robotToTarget, new Rotation3d())),
                     observation.timestamp()
             );
         }
 
         // Handle newly seen coral
-        for (var pose : newlySeenCoralToLastSeen.keySet()) {
+        for (var pose : newlySeenCoral.keySet()) {
             // Remove old coral within distance to be counted as the same piece of coral
-            seenCoralToLastSeen.keySet()
+            coralPoseToLastSeen.keySet()
                     .removeIf(otherPose -> pose.getTranslation().getDistance(otherPose.getTranslation()) < minDistanceForSameCoralMeters);
         }
-        seenCoralToLastSeen.putAll(newlySeenCoralToLastSeen);
+        coralPoseToLastSeen.putAll(newlySeenCoral);
 
-        // Clean up seen coral
-        seenCoralToLastSeen.values().removeIf(lastSeen -> Timer.getTimestamp() - lastSeen > seenCoralExpireTimeSeconds);
+        // Remove expired coral
+        coralPoseToLastSeen.values().removeIf(lastSeen -> Timer.getTimestamp() - lastSeen > seenCoralExpireTimeSeconds);
+
+        // Generate fresh/stale arrays
+        freshCoral = new LinkedList<>();
+        staleCoral = new LinkedList<>();
+        for (var entry : coralPoseToLastSeen.entrySet()) {
+            Pose3d pose = entry.getKey();
+            double lastSeen = entry.getValue();
+
+            if (Timer.getTimestamp() - lastSeen < seenCoralTimeForRecent) {
+                freshCoral.add(pose);
+            } else {
+                staleCoral.add(pose);
+            }
+        }
 
         // Log results
         Logger.recordOutput("GamePieceVision/TargetPoints", targetPoints.toArray(Translation2d[]::new));
-        Logger.recordOutput("GamePieceVision/SeenCoral", seenCoralToLastSeen.keySet().toArray(Pose3d[]::new));
+        Logger.recordOutput("GamePieceVision/FreshCoral", freshCoral.toArray(Pose3d[]::new));
+        Logger.recordOutput("GamePieceVision/StaleCoral", staleCoral.toArray(Pose3d[]::new));
     }
 
     @Override
