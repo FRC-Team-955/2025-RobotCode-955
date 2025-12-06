@@ -28,14 +28,14 @@ public class GamePieceVisionIOSim extends GamePieceVisionIO {
             Transform3d robotToCoral = new Transform3d(robotPose, coralPose);
             Transform3d camToCoral = camera.robotToCamera().inverse().plus(robotToCoral);
 
-            double tx = -Math.atan2(camToCoral.getY(), camToCoral.getX());
-            double ty = Math.atan2(camToCoral.getZ(), camToCoral.getX());
+            double yaw = Math.atan2(camToCoral.getY(), camToCoral.getX());
+            double pitch = -Math.atan2(camToCoral.getZ(), camToCoral.getX());
 
-            if (Math.abs(tx) > camera.horizontalFovRad() || Math.abs(ty) > camera.verticalFovRad()) {
+            if (Math.abs(yaw) > camera.horizontalFovRad() || Math.abs(pitch) > camera.verticalFovRad()) {
                 continue;
             }
 
-            targetObservations.add(new TargetObservation(Timer.getFPGATimestamp(), Rotation2d.fromRadians(tx), Rotation2d.fromRadians(ty)));
+            targetObservations.add(new TargetObservation(Timer.getFPGATimestamp(), Rotation2d.fromRadians(yaw), Rotation2d.fromRadians(pitch)));
         }
 
         inputs.targetObservations = targetObservations.toArray(TargetObservation[]::new);

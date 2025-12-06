@@ -12,8 +12,10 @@ public class GamePieceVisionIO {
 
     public record TargetObservation(
             double timestamp,
-            Rotation2d tx,
-            Rotation2d ty
+            // left (ccw about z) is positive
+            Rotation2d yaw,
+            // down (ccw about y) is positive
+            Rotation2d pitch
     ) {}
 
     public void updateInputs(GamePieceVisionIOInputs inputs) {

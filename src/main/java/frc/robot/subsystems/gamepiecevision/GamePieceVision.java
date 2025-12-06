@@ -1,13 +1,18 @@
 package frc.robot.subsystems.gamepiecevision;
 
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.Alert;
 import frc.lib.subsystem.Periodic;
 import frc.robot.RobotState;
 import org.littletonrobotics.junction.Logger;
 
-import static frc.robot.subsystems.gamepiecevision.GamePieceVisionConstants.camera;
-import static frc.robot.subsystems.gamepiecevision.GamePieceVisionConstants.createIO;
+import java.util.HashMap;
+import java.util.Map;
+
+import static frc.robot.subsystems.gamepiecevision.GamePieceVisionConstants.*;
 
 public class GamePieceVision implements Periodic {
     private final RobotState robotState = RobotState.get();
@@ -16,6 +21,8 @@ public class GamePieceVision implements Periodic {
     private final GamePieceVisionIOInputsAutoLogged inputs = new GamePieceVisionIOInputsAutoLogged();
 
     private final Alert disconnectedAlert = new Alert("Game piece vision is disconnected.", Alert.AlertType.kError);
+
+    private final Map<Pose3d, Double> seenCoralToLastSeen = new HashMap<>();
 
     private static GamePieceVision instance;
 
@@ -38,6 +45,30 @@ public class GamePieceVision implements Periodic {
 
         // Update disconnected alert
         disconnectedAlert.set(!inputs.connected);
+
+        // Process observations
+        seenCoralToLastSeen.clear();
+        for (var observation : inputs.targetObservations) {
+            // Calculate position
+            double camToCoralZ = -camera.robotToCamera().getZ() + coralHeightMeters / 2.0;
+            double camToCoralX = -camToCoralZ / observation.pitch().getTan();
+            Transform3d camToCoral = new Transform3d(
+                    new Translation3d(
+                            camToCoralX,
+                            camToCoralX * observation.yaw().getTan(),
+                            camToCoralZ
+                    ),
+                    new Rotation3d()
+            );
+            Transform3d robotToCoral = camera.robotToCamera().plus(camToCoral);
+            seenCoralToLastSeen.put(new Pose3d(robotState.getPose()).transformBy(robotToCoral), observation.timestamp());
+        }
+
+        // TODO: remove coral in same position
+        // TODO: remove coral seen too long ago
+
+        // Log seen coral
+        Logger.recordOutput("GamePieceVision/SeenCoral", seenCoralToLastSeen.keySet().toArray(Pose3d[]::new));
     }
 
     @Override
