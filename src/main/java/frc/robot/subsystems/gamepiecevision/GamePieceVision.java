@@ -57,13 +57,19 @@ public class GamePieceVision implements Periodic {
         // Process observations
         var robotPose = new Pose3d(robotState.getPose());
         for (var observation : inputs.targetObservations) {
-            targetPoints.add(new Translation2d(observation.yawRad(), observation.pitchRad()));
+            Translation2d targetYawPitch = new Translation2d(observation.yawRad(), observation.pitchRad());
+            targetPoints.add(targetYawPitch);
+
+            // Account for roll of camera
+            targetYawPitch = targetYawPitch.rotateBy(Rotation2d.fromRadians(-cameraOrientation.rollRad));
+            double targetYaw = targetYawPitch.getX();
+            double targetPitch = targetYawPitch.getY();
 
             // First, calculate position of target in camera space
             double camToTargetZ = -camera.robotToCamera().getZ() + coralHeightMeters / 2.0;
             // Account for pitch of camera
-            double camToTargetX = camToTargetZ / Math.tan(observation.pitchRad() - cameraOrientation.pitchRad);
-            double camToTargetY = camToTargetX * Math.tan(-observation.yawRad());
+            double camToTargetX = camToTargetZ / Math.tan(targetPitch - cameraOrientation.pitchRad);
+            double camToTargetY = camToTargetX * Math.tan(-targetYaw);
 
             // Next, translate x and y to robot coordinates
             Translation2d camToTargetXY = new Translation2d(camToTargetX, camToTargetY);

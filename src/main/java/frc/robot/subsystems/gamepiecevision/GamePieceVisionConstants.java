@@ -17,7 +17,8 @@ public class GamePieceVisionConstants {
     static final Camera camera = new Camera(
             new Transform3d(
                     new Translation3d(0, 0, 0.5),
-                    new Rotation3d(0, Units.degreesToRadians(30.0), 0)
+                    new Rotation3d(Units.degreesToRadians(30.0), 0, 0)
+                            .rotateBy(new Rotation3d(0, Units.degreesToRadians(30.0), 0))
                             .rotateBy(new Rotation3d(0, 0, Units.degreesToRadians(30.0)))
             ),
             Units.degreesToRadians(62.5),
