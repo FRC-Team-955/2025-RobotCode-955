@@ -9,11 +9,16 @@ import org.ironmaple.simulation.SimulatedArena;
 import java.util.LinkedList;
 import java.util.List;
 
-import static frc.robot.subsystems.gamepiecevision.GamePieceVisionConstants.camera;
 import static frc.robot.subsystems.gamepiecevision.GamePieceVisionConstants.coralHeightMeters;
+import static frc.robot.subsystems.gamepiecevision.GamePieceVisionConstants.robotToCamera;
 
 public class GamePieceVisionIOSim extends GamePieceVisionIO {
-    public GamePieceVisionIOSim() {
+    private final double horizontalFovRad;
+    private final double verticalFovRad;
+
+    public GamePieceVisionIOSim(double horizontalFovRad, double verticalFovRad) {
+        this.horizontalFovRad = horizontalFovRad;
+        this.verticalFovRad = verticalFovRad;
     }
 
     @Override
@@ -31,12 +36,12 @@ public class GamePieceVisionIOSim extends GamePieceVisionIO {
             }
 
             Transform3d robotToCoral = new Transform3d(robotPose, coralPose);
-            Transform3d camToCoral = camera.robotToCamera().inverse().plus(robotToCoral);
+            Transform3d camToCoral = robotToCamera.inverse().plus(robotToCoral);
 
             double yaw = Math.atan2(camToCoral.getY(), camToCoral.getX());
             double pitch = -Math.atan2(camToCoral.getZ(), camToCoral.getX());
 
-            if (Math.abs(yaw) > camera.horizontalFovRad() / 2.0 || Math.abs(pitch) > camera.verticalFovRad() / 2.0) {
+            if (Math.abs(yaw) > horizontalFovRad / 2.0 || Math.abs(pitch) > verticalFovRad / 2.0) {
                 continue;
             }
 

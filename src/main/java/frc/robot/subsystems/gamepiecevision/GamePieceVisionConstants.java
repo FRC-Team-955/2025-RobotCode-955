@@ -16,35 +16,28 @@ public class GamePieceVisionConstants {
     static final double coralHeightMeters = Units.inchesToMeters(4.25);
     static final double seenCoralTimeForRecent = 0.5;
 
-    static final Camera camera = new Camera(
-            new Transform3d(
-                    new Translation3d(
-                            Units.inchesToMeters(8.452489),
-                            Units.inchesToMeters(9.467625),
-                            // Carpet to bottom of frame
-                            (driveConfig.wheelRadiusMeters() - Units.inchesToMeters(0.247775))
-                                    // Bottom of frame to camera
-                                    + Units.inchesToMeters(8.604877)
-                    ),
-                    new Rotation3d(0, Units.degreesToRadians(25.0), 0)
-                            .rotateBy(new Rotation3d(0, 0, Units.degreesToRadians(-20.0)))
+    static final Transform3d robotToCamera = new Transform3d(
+            new Translation3d(
+                    Units.inchesToMeters(8.452489),
+                    Units.inchesToMeters(9.467625),
+                    // Carpet to bottom of frame
+                    (driveConfig.wheelRadiusMeters() - Units.inchesToMeters(0.247775))
+                            // Bottom of frame to camera
+                            + Units.inchesToMeters(8.604877)
             ),
-            Units.degreesToRadians(62.5),
-            Units.degreesToRadians(48.9)
+            new Rotation3d(0, Units.degreesToRadians(25.0), 0)
+                    .rotateBy(new Rotation3d(0, 0, Units.degreesToRadians(-20.0)))
     );
-    static final TaitBryanAngles cameraOrientation = new TaitBryanAngles(camera.robotToCamera().getRotation().getQuaternion());
+    static final TaitBryanAngles cameraOrientation = new TaitBryanAngles(robotToCamera.getRotation().getQuaternion());
 
     static GamePieceVisionIO createIO() {
         return switch (BuildConstants.mode) {
             case REAL -> null;
-            case SIM -> new GamePieceVisionIOSim();
-            case REPLAY -> null;
+            case SIM -> new GamePieceVisionIOSim(
+                    Units.degreesToRadians(62.5),
+                    Units.degreesToRadians(48.9)
+            );
+            case REPLAY -> new GamePieceVisionIO();
         };
     }
-
-    record Camera(
-            Transform3d robotToCamera,
-            double horizontalFovRad,
-            double verticalFovRad
-    ) {}
 }
