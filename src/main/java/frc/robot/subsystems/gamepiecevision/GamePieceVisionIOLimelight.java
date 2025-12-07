@@ -45,6 +45,7 @@ public class GamePieceVisionIOLimelight extends GamePieceVisionIO {
 
         inputs.targetObservations = targetObservations.toArray(TargetObservation[]::new);
 
+        // Ensures NT changes are propagated ASAP
         // Only needed when modifying values
         // Increases network traffic but recommended by Limelight
         //NetworkTableInstance.getDefault().flush();
