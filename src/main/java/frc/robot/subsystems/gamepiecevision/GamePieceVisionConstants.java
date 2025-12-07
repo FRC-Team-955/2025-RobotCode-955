@@ -32,7 +32,7 @@ public class GamePieceVisionConstants {
 
     static GamePieceVisionIO createIO() {
         return switch (BuildConstants.mode) {
-            case REAL -> null;
+            case REAL -> new GamePieceVisionIOLimelight("limelight");
             case SIM -> new GamePieceVisionIOSim(
                     Units.degreesToRadians(62.5),
                     Units.degreesToRadians(48.9)
