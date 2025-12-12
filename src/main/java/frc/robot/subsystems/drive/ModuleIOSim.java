@@ -46,7 +46,7 @@ public class ModuleIOSim extends ModuleIO {
                     .withGyro(COTS.ofPigeon2())
                     // Specify swerve module (for realistic swerve dynamics)
                     .withSwerveModule(COTS.ofMark4i(
-                            DCMotor.getKrakenX60(1),
+                            DCMotor.getNEO(1),
                             DCMotor.getNEO(1),
                             COTS.WHEELS.DEFAULT_NEOPRENE_TREAD.cof,
                             2 // L2 Gear ratio
