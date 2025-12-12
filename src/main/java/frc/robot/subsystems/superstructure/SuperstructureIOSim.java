@@ -15,7 +15,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
         if (superstructure == null) {
             superstructure = Superstructure.get();
         }
-        if (superstructure.getGoal() == Superstructure.Goal.AUTO_INTAKE_SEARCHING || superstructure.getGoal() == Superstructure.Goal.AUTO_INTAKE_APPROACHING_STALE || superstructure.getGoal() == Superstructure.Goal.AUTO_INTAKE_INTAKING) {
+        if (superstructure.getGoal() == Superstructure.Goal.AUTO_INTAKE_SEARCHING || superstructure.getGoal() == Superstructure.Goal.AUTO_INTAKE_SEARCHING_FOR_STALE || superstructure.getGoal() == Superstructure.Goal.AUTO_INTAKE_INTAKING) {
             if (!added) {
                 SimulatedArena.getInstance().clearGamePieces();
                 SimulatedArena.getInstance().addGamePiece(new ReefscapeCoralOnField(new Pose2d(0.7 + 3.0 * Math.random(), 0.7 + 2.5 * Math.random(), new Rotation2d())));

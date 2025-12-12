@@ -34,7 +34,7 @@ public class Superstructure extends CommandBasedSubsystem {
         IDLE,
 
         AUTO_INTAKE_SEARCHING,
-        AUTO_INTAKE_APPROACHING_STALE,
+        AUTO_INTAKE_SEARCHING_FOR_STALE,
         AUTO_INTAKE_INTAKING,
         ;
     }
@@ -81,8 +81,9 @@ public class Superstructure extends CommandBasedSubsystem {
         // TODO: searching mode (turn left and right and slowly move forward) when no coral
         // TODO: don't end until intaked coral - CANrange
         // TODO: different goals for different states
-        Timer staleTimer = new Timer();
-        Timer noneTimer = new Timer();
+        Timer searchingTimer = new Timer();
+        final Rotation2d searchRange = Rotation2d.fromDegrees(60);
+        final double lookPeriodSecs = 5.0;
         var state = new Object() {
             Rotation2d originalHeading = null;
             Pose2d currentSetpoint = null;
@@ -105,8 +106,7 @@ public class Superstructure extends CommandBasedSubsystem {
 
             if (closestCoral != null) {
                 // found fresh coral
-                staleTimer.stop();
-                noneTimer.stop();
+                searchingTimer.stop();
                 Pose2d closestCoralFacingRobot = new Pose2d(
                         closestCoral,
                         closestCoral.minus(pose.getTranslation()).getAngle()
@@ -128,44 +128,40 @@ public class Superstructure extends CommandBasedSubsystem {
 
             if (closestCoral != null) {
                 // Stale coral
-                if (!staleTimer.isRunning()) {
-                    staleTimer.restart();
+                if (!searchingTimer.isRunning()) {
+                    searchingTimer.restart();
                 }
                 Rotation2d facingTowardsCoral = closestCoral.minus(pose.getTranslation()).getAngle();
 
-                final Rotation2d searchRange = Rotation2d.fromDegrees(30);
                 Rotation2d lookToRight = facingTowardsCoral.plus(searchRange);
                 Rotation2d lookToLeft = facingTowardsCoral.minus(searchRange);
 
-                Logger.recordOutput("Superstructure/AutoIntakeCoral/StaleTimer", staleTimer.get());
-                final double lookPeriodSecs = 3.0;
-                double lookInterpolation = 0.5 + 0.5 * Math.cos(2.0 * Math.PI * (staleTimer.get() % lookPeriodSecs) / lookPeriodSecs);
+                Logger.recordOutput("Superstructure/AutoIntakeCoral/SearchingTimer", searchingTimer.get());
+                double lookInterpolation = 0.5 + 0.5 * Math.cos(2.0 * Math.PI * (searchingTimer.get() % lookPeriodSecs) / lookPeriodSecs);
                 Logger.recordOutput("Superstructure/AutoIntakeCoral/LookInterpolation", lookInterpolation);
 
                 state.currentSetpoint = new Pose2d(
                         new Pose2d(
                                 pose.getTranslation(),
                                 facingTowardsCoral
-                        ).transformBy(new Transform2d(0.05, 0, new Rotation2d())).getTranslation(),
+                        ).transformBy(new Transform2d(0.1, 0, new Rotation2d())).getTranslation(),
                         lookToLeft.interpolate(lookToRight, lookInterpolation)
                 );
                 state.finalSetpoint = null;
 
-                return Goal.AUTO_INTAKE_APPROACHING_STALE;
+                return Goal.AUTO_INTAKE_SEARCHING_FOR_STALE;
             }
 
             // No coral
-            if (!noneTimer.isRunning()) {
-                noneTimer.restart();
+            if (!searchingTimer.isRunning()) {
+                searchingTimer.restart();
             }
 
-            final Rotation2d searchRange = Rotation2d.fromDegrees(60);
             Rotation2d lookToRight = state.originalHeading.plus(searchRange);
             Rotation2d lookToLeft = state.originalHeading.minus(searchRange);
-            Logger.recordOutput("Superstructure/AutoIntakeCoral/NoneTimer", noneTimer.get());
+            Logger.recordOutput("Superstructure/AutoIntakeCoral/SearchingTimer", searchingTimer.get());
 
-            final double lookPeriodSecs = 5.0;
-            double lookInterpolation = 0.5 + 0.5 * Math.cos(2.0 * Math.PI * (noneTimer.get() % lookPeriodSecs) / lookPeriodSecs);
+            double lookInterpolation = 0.5 + 0.5 * Math.cos(2.0 * Math.PI * (searchingTimer.get() % lookPeriodSecs) / lookPeriodSecs);
             Logger.recordOutput("Superstructure/AutoIntakeCoral/LookInterpolation", lookInterpolation);
             Pose2d forwardPose = new Pose2d(
                     pose.getTranslation(),
