@@ -1,5 +1,7 @@
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -8,8 +10,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.CANLogger;
+import frc.lib.Util;
 import frc.lib.commands.CommandsExt;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.goals.WheelRadiusCharacterizationGoal;
 import frc.robot.subsystems.gamepiecevision.GamePieceVision;
 import frc.robot.subsystems.superstructure.Superstructure;
@@ -53,7 +58,17 @@ public class RobotContainer {
         autoChooser.addOption("None", Commands.none());
         autoChooser.addOption("Leave", drive.runRobotRelative(() -> new ChassisSpeeds(-0.5, 0, 0)).withTimeout(5));
 
-        autoChooser.addDefaultOption("Coral intake", Commands.repeatingSequence());
+        final var startingPose = new Pose2d(5, 1.25, Rotation2d.fromDegrees(180.0 - 15.0));
+        autoChooser.addDefaultOption("Coral intake", CommandsExt.eagerSequence(
+                robotState.setPose(() -> startingPose),
+                Commands.runOnce(() -> ModuleIOSim.driveSimulation.setSimulationWorldPose(startingPose)),
+                CommandsExt.eagerSequence(
+                        superstructure.autoIntakeCoral(),
+                        superstructure.cancel(),
+                        drive.moveTo(() -> startingPose, false)
+                                .until(() -> Util.isAtPoseWithTolerance(robotState.getPose(), startingPose, DriveConstants.moveToConfig.linearPositionToleranceMeters(), DriveConstants.moveToConfig.angularPositionToleranceRad()))
+                ).repeatedly()
+        ));
 
         autoChooser.addOption(
                 "Characterization",
