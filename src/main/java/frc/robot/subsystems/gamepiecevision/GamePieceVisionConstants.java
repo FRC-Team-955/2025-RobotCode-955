@@ -12,9 +12,9 @@ import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
 public class GamePieceVisionConstants {
     /** Minimum distance between two seen coral for them to be counted as the same coral */
     static final double minDistanceForSameCoralMeters = 1;
-    static final double seenCoralExpireTimeSeconds = 5;
+    static final double staleExpireTimeSeconds = 3;
     static final double coralHeightMeters = Units.inchesToMeters(4.25);
-    static final double seenCoralTimeForRecent = 0.5;
+    static final double freshExpireTimeSeconds = 0.5;
 
     static final Transform3d robotToCamera = new Transform3d(
             new Translation3d(

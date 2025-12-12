@@ -100,7 +100,7 @@ public class GamePieceVision implements Periodic {
         coralPoseToLastSeen.putAll(newlySeenCoral);
 
         // Remove expired coral
-        coralPoseToLastSeen.values().removeIf(lastSeen -> Timer.getTimestamp() - lastSeen > seenCoralExpireTimeSeconds);
+        coralPoseToLastSeen.values().removeIf(lastSeen -> Timer.getTimestamp() - lastSeen > staleExpireTimeSeconds);
 
         // Generate fresh/stale arrays
         freshCoral = new LinkedList<>();
@@ -109,7 +109,7 @@ public class GamePieceVision implements Periodic {
             Pose3d pose = entry.getKey();
             double lastSeen = entry.getValue();
 
-            if (Timer.getTimestamp() - lastSeen < seenCoralTimeForRecent) {
+            if (Timer.getTimestamp() - lastSeen < freshExpireTimeSeconds) {
                 freshCoral.add(pose);
             } else {
                 staleCoral.add(pose);
