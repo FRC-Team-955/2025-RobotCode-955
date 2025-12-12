@@ -15,6 +15,8 @@ import frc.robot.subsystems.gamepiecevision.GamePieceVision;
 import frc.robot.subsystems.superstructure.Superstructure;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
+import java.util.function.Supplier;
+
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -24,7 +26,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Choices");
-    private final LoggedDashboardChooser<Command> characterizationChooser = new LoggedDashboardChooser<>("Characterization Choices");
+    private final LoggedDashboardChooser<Supplier<Command>> characterizationChooser = new LoggedDashboardChooser<>("Characterization Choices");
 
     public final RobotState robotState = RobotState.get();
     public final OperatorDashboard operatorDashboard = OperatorDashboard.get();
@@ -51,11 +53,14 @@ public class RobotContainer {
         autoChooser.addOption("None", Commands.none());
         autoChooser.addOption("Leave", drive.runRobotRelative(() -> new ChassisSpeeds(-0.5, 0, 0)).withTimeout(5));
 
+        autoChooser.addDefaultOption("Coral intake", Commands.repeatingSequence());
+
         autoChooser.addOption(
                 "Characterization",
                 // We need to require the superstructure during characterization so that the default command doesn't get run
                 Commands.deferredProxy(() -> CommandsExt.eagerSequence(
-                        characterizationChooser.get()
+                        superstructure.cancel(),
+                        characterizationChooser.get().get()
                 ))
         );
     }
@@ -64,12 +69,12 @@ public class RobotContainer {
         ////////////////////// DRIVE //////////////////////
 
         // TODO
-        characterizationChooser.addOption("Drive 1 m/s Characterization", drive.runRobotRelative(() -> new ChassisSpeeds(1.0, 0.0, 0.0)));
-        characterizationChooser.addOption("Drive 2 m/s Characterization", drive.runRobotRelative(() -> new ChassisSpeeds(2.0, 0.0, 0.0)));
-        characterizationChooser.addOption("Drive 3 m/s Characterization", drive.runRobotRelative(() -> new ChassisSpeeds(3.0, 0.0, 0.0)));
-        characterizationChooser.addOption("Drive 4 m/s Characterization", drive.runRobotRelative(() -> new ChassisSpeeds(4.0, 0.0, 0.0)));
-        characterizationChooser.addOption("Drive Full Speed Characterization", drive.fullSpeedCharacterization());
-        characterizationChooser.addOption("Drive Wheel Radius Characterization", drive.wheelRadiusCharacterization(WheelRadiusCharacterizationGoal.Direction.CLOCKWISE));
+        characterizationChooser.addOption("Drive 1 m/s Characterization", () -> drive.runRobotRelative(() -> new ChassisSpeeds(1.0, 0.0, 0.0)));
+        characterizationChooser.addOption("Drive 2 m/s Characterization", () -> drive.runRobotRelative(() -> new ChassisSpeeds(2.0, 0.0, 0.0)));
+        characterizationChooser.addOption("Drive 3 m/s Characterization", () -> drive.runRobotRelative(() -> new ChassisSpeeds(3.0, 0.0, 0.0)));
+        characterizationChooser.addOption("Drive 4 m/s Characterization", () -> drive.runRobotRelative(() -> new ChassisSpeeds(4.0, 0.0, 0.0)));
+        characterizationChooser.addOption("Drive Full Speed Characterization", () -> drive.fullSpeedCharacterization());
+        characterizationChooser.addOption("Drive Wheel Radius Characterization", () -> drive.wheelRadiusCharacterization(WheelRadiusCharacterizationGoal.Direction.CLOCKWISE));
     }
 
     private void setDefaultCommands() {
