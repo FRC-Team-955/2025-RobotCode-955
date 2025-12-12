@@ -12,6 +12,7 @@ import frc.lib.commands.CommandsExt;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.goals.WheelRadiusCharacterizationGoal;
 import frc.robot.subsystems.gamepiecevision.GamePieceVision;
+import frc.robot.subsystems.superstructure.Superstructure;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -34,6 +35,7 @@ public class RobotContainer {
     // Note: order does matter
     public final Drive drive = Drive.get();
     public final GamePieceVision gamePieceVision = GamePieceVision.get();
+    public final Superstructure superstructure = Superstructure.get();
 
     public RobotContainer() {
         addAutos();
@@ -71,6 +73,7 @@ public class RobotContainer {
     }
 
     private void setDefaultCommands() {
+        superstructure.setDefaultCommand(superstructure.cancel());
         drive.setDefaultCommand(drive.driveJoystick());
     }
 
@@ -85,6 +88,8 @@ public class RobotContainer {
         // You must do this because if you don't, superstructure's default command will cancel your command
 
         controller.y().onTrue(robotState.resetRotation());
+        controller.leftBumper().onTrue(superstructure.cancel());
+        controller.a().onTrue(superstructure.autoIntakeCoral());
 
         // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
         // You must do this because if you don't, superstructure's default command will cancel your command
