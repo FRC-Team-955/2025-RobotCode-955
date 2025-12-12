@@ -11,8 +11,8 @@ public class DriveConstants {
     public static final double assistMaximumDistanceMeters = Units.feetToMeters(5);
 
     public static final MoveToConfig moveToConfig = new MoveToConfig(
-            PIDF.ofPD(0.0, 0.0),
-            PIDF.ofPD(0.0, 0.0),
+            PIDF.ofPD(4.5, 0.05),
+            PIDF.ofPD(4.5, 0.05),
             0.02,
             0.1,
             Units.degreesToRadians(2),
@@ -36,9 +36,9 @@ public class DriveConstants {
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
                 new ModuleLimits(
-                        0,
-                        0,
-                        0
+                        4.5,
+                        20,
+                        20
                 )
         );
         case SIM -> new DriveConfig(
@@ -84,10 +84,10 @@ public class DriveConstants {
     static final ModuleConfig moduleConfig = switch (BuildConstants.mode) {
         case REAL, REPLAY -> new ModuleConfig(
                 PIDF.ofPDSVA(
-                        0.0, 0.0,
-                        0.0, 0.0, 0.0
+                        0.01, 0.0,
+                        0.1, 0.13, 0.0
                 ),
-                PIDF.ofPD(0.0, 0.0),
+                PIDF.ofPD(5.0, 0.04),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
@@ -116,10 +116,10 @@ public class DriveConstants {
             // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
             case REAL -> new ModuleIO[]{
                     // FL, FR, BL, BR
-                    new ModuleIOTalonFXSparkMaxCANcoder(1, 1, 5, 0.0),
-                    new ModuleIOTalonFXSparkMaxCANcoder(2, 2, 6, 0.0),
-                    new ModuleIOTalonFXSparkMaxCANcoder(3, 3, 7, 0.0),
-                    new ModuleIOTalonFXSparkMaxCANcoder(4, 4, 8, 0.0),
+                    new ModuleIOSparkMaxCANcoder(7, 8, 10, -2.626),
+                    new ModuleIOSparkMaxCANcoder(5, 6, 9, -2.183),
+                    new ModuleIOSparkMaxCANcoder(1, 2, 12, 0.250),
+                    new ModuleIOSparkMaxCANcoder(3, 4, 11, 0.824),
             };
             case SIM -> new ModuleIO[]{
                     new ModuleIOSim(0),
@@ -133,7 +133,7 @@ public class DriveConstants {
 
     static GyroIO createGyroIO() {
         return switch (BuildConstants.mode) {
-            case REAL -> new GyroIOPigeon2(9);
+            case REAL -> new GyroIOPigeon2(13);
             case SIM -> new GyroIOSim();
             case REPLAY -> new GyroIO();
         };
