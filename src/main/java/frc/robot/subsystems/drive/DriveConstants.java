@@ -13,7 +13,7 @@ public class DriveConstants {
     public static final MoveToConfig moveToConfig = new MoveToConfig(
             PIDF.ofPD(4.5, 0.05),
             PIDF.ofPD(4.5, 0.05),
-            0.02,
+            0.04,
             0.1,
             Units.degreesToRadians(2),
             Units.degreesToRadians(10)
