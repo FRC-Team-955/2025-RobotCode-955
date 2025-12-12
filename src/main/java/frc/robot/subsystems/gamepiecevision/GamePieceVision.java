@@ -55,8 +55,12 @@ public class GamePieceVision implements Periodic {
         List<Translation2d> targetPoints = new LinkedList<>();
 
         // Process observations
-        var robotPose = new Pose3d(robotState.getPose());
         for (var observation : inputs.targetObservations) {
+            var robotPose2d = robotState.getPoseAtTimestamp(observation.timestampSeconds());
+            if (robotPose2d.isEmpty()) {
+                continue;
+            }
+            var robotPose = new Pose3d(robotPose2d.get());
             Translation2d targetYawPitch = new Translation2d(observation.yawRad(), observation.pitchRad());
             targetPoints.add(targetYawPitch);
 
@@ -83,7 +87,7 @@ public class GamePieceVision implements Periodic {
 
             newlySeenCoral.put(
                     robotPose.transformBy(new Transform3d(robotToTarget, new Rotation3d())),
-                    observation.timestamp()
+                    observation.timestampSeconds()
             );
         }
 

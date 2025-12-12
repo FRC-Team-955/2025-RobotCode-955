@@ -10,7 +10,7 @@ public class GamePieceVisionIO {
     }
 
     public record TargetObservation(
-            double timestamp,
+            double timestampSeconds,
             // yaw and pitch are not necessarily rotations, but
             // correspond to a point on a 2d plane
             double yawRad,
