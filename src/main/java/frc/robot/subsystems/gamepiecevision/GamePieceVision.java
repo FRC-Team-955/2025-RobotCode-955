@@ -75,13 +75,13 @@ public class GamePieceVision implements Periodic {
             double camToTargetX = camToTargetZ / Math.tan(targetPitch - cameraOrientation.pitchRad);
             double camToTargetY = camToTargetX * Math.tan(-targetYaw);
 
-            // Next, translate x and y to robot coordinates
-            Translation2d camToTargetXY = new Translation2d(camToTargetX, camToTargetY);
-            Translation2d robotToTargetXY = robotToCamera.getTranslation().toTranslation2d()
-                    .plus(camToTargetXY)
+            Translation2d camToTargetXY = new Translation2d(camToTargetX, camToTargetY)
                     // Account for yaw of camera
+                    // Note that we do this BEFORE translating to robot coordinates
                     .rotateBy(Rotation2d.fromRadians(cameraOrientation.yawRad));
-            double robotToTargetZ = camToTargetZ + robotToCamera.getZ();
+            // Next, translate x and y to robot coordinates
+            Translation2d robotToTargetXY = robotToCamera.getTranslation().toTranslation2d().plus(camToTargetXY);
+            double robotToTargetZ = robotToCamera.getZ() + camToTargetZ;
 
             Translation3d robotToTarget = new Translation3d(robotToTargetXY.getX(), robotToTargetXY.getY(), robotToTargetZ);
 
