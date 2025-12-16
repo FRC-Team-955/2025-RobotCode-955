@@ -41,8 +41,10 @@ public class GamePieceVisionIOSim extends GamePieceVisionIO {
         double bestDist = Double.MAX_VALUE;
 
         for (Pose3d coral : corals) {
-            Translation2d coralXY = new Translation2d(coral.getX(),
-                    coral.getY());
+            if (coral.getZ() > 0.2) {
+                continue;
+            }
+            Translation2d coralXY = new Translation2d(coral.getX(), coral.getY());
             double dist = coralXY.getDistance(robotXY);
             if (dist < bestDist) {
                 bestDist = dist;

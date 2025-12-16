@@ -181,7 +181,11 @@ public class RobotContainer {
                                 ),
 
                                 Commands.sequence(
-                                        superstructure.moveToCoralSim(),
+                                        Commands.either(
+                                                superstructure.moveToCoralReal(),
+                                                superstructure.moveToCoralSim(),
+                                                () -> mode == BuildConstants.Mode.REAL
+                                        ),
                                         superstructure.autoScoreCoral(
                                                 operatorDashboard::getSelectedReefZoneSide,
                                                 operatorDashboard::getSelectedLocalReefSide,

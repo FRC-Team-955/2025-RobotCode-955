@@ -18,7 +18,7 @@ public class ReefAlign {
     private static final double distanceCenterOfReefToBranchMeters = Units.inchesToMeters(6.5);
 
     private static final Transform2d initialAlignStartOffset = new Transform2d(1.5, 0, new Rotation2d());
-    private static final Transform2d initialAlignEndOffset = new Transform2d(0.5, 0, new Rotation2d().plus(Rotation2d.k180deg));
+    private static final Transform2d initialAlignEndOffset = new Transform2d(0, 0, new Rotation2d().plus(Rotation2d.k180deg));
     private static final double initialAlignDistYForStartMeters = 1.5;
     private static final double initialAlignDistYOffset = 0.5;
     private static final double initialAlignDistXForFullAngle = 0.5;

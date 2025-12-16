@@ -27,6 +27,7 @@ public class OperatorDashboard implements Periodic {
 
     private final EnumMap<ReefAlign.ReefZoneSide, LoggedNetworkBooleanExt> reefZoneSides = generateTogglesForEnum("ReefZoneSides", ReefAlign.ReefZoneSide.values(), ReefAlign.ReefZoneSide.class);
     private final EnumMap<ReefAlign.LocalReefSide, LoggedNetworkBooleanExt> localReefSides = generateTogglesForEnum("LocalReefSides", Arrays.stream(ReefAlign.LocalReefSide.values()).filter(side -> side != ReefAlign.LocalReefSide.Middle).toArray(ReefAlign.LocalReefSide[]::new), ReefAlign.LocalReefSide.class);
+    private final EnumMap<OperatorKeypad.CoralScoringLevel, LoggedNetworkBooleanExt> coralScoringLevels = generateTogglesForEnum("CoralScoringLevels", OperatorKeypad.CoralScoringLevel.values(), OperatorKeypad.CoralScoringLevel.class);
 
     private final Alert coastOverrideAlert = new Alert("Coast override is enabled.", Alert.AlertType.kWarning);
     @SuppressWarnings("FieldCanBeLocal")
@@ -63,6 +64,22 @@ public class OperatorDashboard implements Periodic {
             operatorKeypad.update();
         } else {
             operatorKeypadDisconnectedAlert.set(true);
+        }
+
+        if (operatorKeypad.isConnected()) {
+            operatorKeypad.update();
+
+            // Manual reef zone side handled elsewhere
+            OperatorKeypad.CoralScoringLevel newLevel = (OperatorKeypad.CoralScoringLevel) operatorKeypad.getCoralScoringLevel();
+            if (newLevel != null) selectedCoralScoringLevel = newLevel;
+
+            updateToggles(coralScoringLevels, selectedCoralScoringLevel);
+        } else {
+            handleEnumToggles(
+                    coralScoringLevels,
+                    selectedCoralScoringLevel,
+                    selected -> selectedCoralScoringLevel = selected
+            );
         }
 
         selectedReefZoneSide = ReefAlign.determineClosestReefSide(robotState.getPose(), controller.getSetpointFieldRelative());

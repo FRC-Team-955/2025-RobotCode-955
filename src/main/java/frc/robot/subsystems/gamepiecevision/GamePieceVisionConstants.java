@@ -10,7 +10,7 @@ public class GamePieceVisionConstants {
 
     static GamePieceVisionIO createIO() {
         return switch (BuildConstants.mode) {
-            case REAL -> new GamePieceVisionIO();
+            case REAL -> new GamePieceVisionIOLimelight("*");
             case SIM -> new GamePieceVisionIOSim();
             case REPLAY -> new GamePieceVisionIO();
         };

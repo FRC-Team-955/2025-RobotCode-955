@@ -23,6 +23,7 @@ import java.util.Arrays;
 
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
+import static frc.robot.subsystems.drive.ModuleIOSim.driveSimulation;
 
 public class SuperstructureIOSim extends SuperstructureIO {
     private static final Translation2d[] stationLocations = {
@@ -36,7 +37,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
             // Specify the type of game pieces that the intake can collect
             "Coral",
             // Specify the drivetrain to which this intake is attached
-            ModuleIOSim.driveSimulation,
+            driveSimulation,
             // Width of the intake
             Meters.of(driveConfig.trackWidthMeters()),
             // The extension length of the intake beyond the robot's frame (when activated)
@@ -65,7 +66,8 @@ public class SuperstructureIOSim extends SuperstructureIO {
         NO_CORAL,
         INDEXING,
         SCORING,
-        PLACING_CORAL
+        PLACING_CORAL_L4,
+        PLACING_CORAL_L3 
     }
 
     public SuperstructureIOSim() {
@@ -129,20 +131,50 @@ public class SuperstructureIOSim extends SuperstructureIO {
             case SCORING -> {
                 inputs.hasCoral = true;
                 if (inputs.readyToPlace) {
-                    coralState = CoralState.PLACING_CORAL;
+                    if (operatorDashboard.getSelectedCoralScoringLevel() == OperatorDashboard.OperatorKeypad.CoralScoringLevel.L4) {
+                        coralState = CoralState.PLACING_CORAL_L4;
+                    } else {
+                        coralState = CoralState.PLACING_CORAL_L3;
+                    }
                 }
             }
-            case PLACING_CORAL -> {
+            case PLACING_CORAL_L4 -> {
                 SimulatedArena.getInstance()
                         .addGamePieceProjectile(new ReefscapeCoralOnFly(
-                                pose.getTranslation(),
-                                new Translation2d(Units.inchesToMeters(2), 0),
-                                ModuleIOSim.driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
-                                pose.getRotation().rotateBy(Rotation2d.k180deg),
-                                Meters.of(operatorDashboard.getSelectedCoralScoringLevel().ordinal()),
-                                MetersPerSecond.of(-1.0),
-                                Degrees.of(65)
-                        ));
+                                driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
+                                // The scoring mechanism is installed at (0.46, 0) (meters) on the robot
+                                new Translation2d(0.55, 0),
+                                // Obtain robot speed from drive simulation
+                                driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+                                // Obtain robot facing from drive simulation
+                                driveSimulation.getSimulatedDriveTrainPose().getRotation(),
+                                // The height at which the coral is ejected
+                                Meters.of(2.1),
+                                // The initial speed of the coral
+                                MetersPerSecond.of(1),
+                                // The coral is ejected vertically downwards
+                                Degrees.of(-90)));
+                coralState = CoralState.NO_CORAL;
+                inputs.readyToPlace = false;
+            }
+
+            case PLACING_CORAL_L3 -> {
+                SimulatedArena.getInstance()
+                        .addGamePieceProjectile(new ReefscapeCoralOnFly(
+                                // Obtain robot position from drive simulation
+                                driveSimulation.getSimulatedDriveTrainPose().getTranslation(),
+                                // The scoring mechanism is installed at (0.46, 0) (meters) on the robot
+                                new Translation2d(0.5, 0),
+                                // Obtain robot speed from drive simulation
+                                driveSimulation.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+                                // Obtain robot facing from drive simulation
+                                driveSimulation.getSimulatedDriveTrainPose().getRotation(),
+                                // The height at which the coral is ejected
+                                Meters.of(1.28),
+                                // The initial speed of the coral
+                                MetersPerSecond.of(2),
+                                // The coral is ejected at a 35-degree slope
+                                Degrees.of(-35)));
                 coralState = CoralState.NO_CORAL;
                 inputs.readyToPlace = false;
             }
@@ -151,7 +183,7 @@ public class SuperstructureIOSim extends SuperstructureIO {
             case NO_CORAL-> {
                 inputs.intakeRangeMeters = Double.MAX_VALUE;
             }
-            case INDEXING, SCORING, PLACING_CORAL-> {
+            case INDEXING, SCORING, PLACING_CORAL_L4, PLACING_CORAL_L3-> {
                 inputs.intakeRangeMeters = 0;
             }
         }

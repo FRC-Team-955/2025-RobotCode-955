@@ -153,6 +153,46 @@ public class Superstructure extends CommandBasedSubsystem {
         );
     }
 
+    public Command moveToCoralReal() {
+        return Commands.sequence(
+                setGoal(Goal.AUTO_MOVING_TO_CORAL),
+
+                Commands.waitUntil(() -> {
+                    Pose2d coral = GamePieceVision.get().getCoralPos();
+                    Pose2d robot = robotState.getPose();
+
+                    return robot.getTranslation()
+                            .getDistance(coral.getTranslation()) < 0.6;
+                }).raceWith(
+                        drive.moveTo(this::getCoralApproachPoseReal, false)
+                ),
+
+                intakeCoral()
+        );
+    }
+
+    public Pose2d getCoralApproachPoseReal() {
+        Pose2d coral = GamePieceVision.get().getCoralPos();
+        Pose2d robot = robotState.getPose();
+
+        double standoffDistance = 0.5;
+
+        Rotation2d heading = new Rotation2d(
+                Math.atan2(
+                        coral.getY() - robot.getY(),
+                        coral.getX() - robot.getX()
+                )
+        ).rotateBy(Rotation2d.fromDegrees(180));
+
+        Translation2d offset = new Translation2d(-standoffDistance, heading);
+
+        return new Pose2d(
+                coral.getX() + offset.getX(),
+                coral.getY() + offset.getY(),
+                heading
+        );
+    }
+
 
     public Command moveToCoralSim() {
             return Commands.sequence(
