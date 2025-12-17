@@ -11,12 +11,17 @@ public class GamePieceVisionIO {
         public boolean connected = false;
         public boolean ledsOn = false;
         public boolean visible = false;
-        public Pose2d coralPos = new Pose2d();
-        public Rotation2d coralYaw = new Rotation2d();
         public Rotation2d coralPitch = new Rotation2d();
+        public Rotation2d coralYaw = new Rotation2d();
+        public Pose2d coralPos = new Pose2d();
+        public TargetObservation[] targetObservations = new TargetObservation[0];
     }
 
+
     public void updateInputs(GamePieceVisionIOInputs inputs) {
+    }
+
+    public record TargetObservation(double timestamp, double pitchRad, double yawRad) {
     }
 
     public void setLEDs(boolean on) {}

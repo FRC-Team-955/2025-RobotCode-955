@@ -1,7 +1,8 @@
 package frc.robot.subsystems.gamepiecevision;
 
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.subsystem.Periodic;
@@ -14,6 +15,7 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.function.Supplier;
 
+import static frc.robot.subsystems.gamepiecevision.GamePieceVisionConstants.camToRobot;
 import static frc.robot.subsystems.gamepiecevision.GamePieceVisionConstants.createIO;
 
 public class GamePieceVision implements Periodic {
@@ -42,6 +44,7 @@ public class GamePieceVision implements Periodic {
     @Override
     public void periodicBeforeCommands() {
         io.updateInputs(inputs);
+        computeCoralPose();
         Logger.processInputs("Inputs/GamePieceVision", inputs);
         disconnectedAlert.set(!inputs.connected);
     }
@@ -69,5 +72,46 @@ public class GamePieceVision implements Periodic {
 
     public boolean getVisibility() {
         return inputs.visible;
+    }
+
+    private void computeCoralPose() {
+        if (!inputs.connected || inputs.targetObservations.length == 0) {
+            inputs.visible = false;
+            return;
+        }
+
+        Pose2d robotPose = RobotState.get().getPose();
+
+        Translation2d closest = null;
+        double closestDistance = Double.MAX_VALUE;
+
+        for (var obs : inputs.targetObservations) {
+            double distance =
+                    (Units.inchesToMeters(4.5) - camToRobot.getTranslation().getZ())
+                            / Math.tan(GamePieceVisionConstants.cameraPitch + obs.pitchRad());
+
+            if (!Double.isFinite(distance) || distance <= 0) continue;
+
+            Translation2d robotRelative =
+                    new Translation2d(
+                            distance * Math.sin(obs.yawRad()),
+                            distance * Math.cos(obs.yawRad())
+                    );
+            Translation2d fieldRelative =
+                    robotPose.getTranslation().plus(robotRelative.rotateBy(robotPose.getRotation()));
+
+            double distToRobot = fieldRelative.getDistance(robotPose.getTranslation());
+            if (distToRobot < closestDistance) {
+                closestDistance = distToRobot;
+                closest = fieldRelative;
+            }
+        }
+
+        if (closest != null) {
+            inputs.coralPos = new Pose2d(closest, new Rotation2d());
+            inputs.visible = true;
+        } else {
+            inputs.visible = false;
+        }
     }
 }

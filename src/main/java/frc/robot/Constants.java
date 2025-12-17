@@ -21,7 +21,7 @@ import com.ctre.phoenix6.CANBus;
  * (log replay from a file).
  */
 public final class Constants {
-    public static final boolean tuningMode = false;
+    public static final boolean tuningMode = true;
 
     public static final class Simulation {
         /**
@@ -32,7 +32,7 @@ public final class Constants {
     }
 
     public static final class CANivore {
-        public static final String busName = "*"; // the canivore is called electrical_problem, but using * is better because it will select any canivore it sees
+        public static final String busName = "rio"; // the canivore is called electrical_problem, but using * is better because it will select any canivore it sees
         public static final boolean isCANFD = switch (BuildConstants.mode) {
             case REAL -> new CANBus(busName).isNetworkFD();
             case SIM, REPLAY -> false;
