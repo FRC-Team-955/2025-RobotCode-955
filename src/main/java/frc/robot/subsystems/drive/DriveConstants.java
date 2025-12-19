@@ -36,8 +36,8 @@ public class DriveConstants {
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
                 new ModuleLimits(
-                        4.5,
-                        20,
+                        2.5,
+                        15,
                         20
                 )
         );
@@ -50,8 +50,8 @@ public class DriveConstants {
                 PIDF.ofPD(3.5, 0),
                 PIDF.ofPD(3, 0),
                 new ModuleLimits(
-                        3.95,
-                        20,
+                        2.5,
+                        15,
                         20
                 )
         );
