@@ -27,6 +27,7 @@ public class GamePieceVisionConstants {
             ),
             new Rotation3d(0, Units.degreesToRadians(25.0), 0)
                     .rotateBy(new Rotation3d(0, 0, Units.degreesToRadians(-20.0)))
+            // .rotateBy(new Rotation3d(.2, 0, 0)) // TODO fix roll comp
     );
     static final TaitBryanAngles cameraOrientation = new TaitBryanAngles(robotToCamera.getRotation().getQuaternion());
 

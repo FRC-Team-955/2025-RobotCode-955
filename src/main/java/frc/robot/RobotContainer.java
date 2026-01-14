@@ -14,7 +14,6 @@ import frc.lib.Util;
 import frc.lib.commands.CommandsExt;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
-import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.goals.WheelRadiusCharacterizationGoal;
 import frc.robot.subsystems.gamepiecevision.GamePieceVision;
 import frc.robot.subsystems.superstructure.Superstructure;
@@ -61,7 +60,7 @@ public class RobotContainer {
         final var startingPose = new Pose2d(5, 1.25, Rotation2d.fromDegrees(180.0 - 15.0));
         autoChooser.addDefaultOption("Coral intake", CommandsExt.eagerSequence(
                 robotState.setPose(() -> startingPose),
-                Commands.runOnce(() -> ModuleIOSim.driveSimulation.setSimulationWorldPose(startingPose)),
+//                Commands.runOnce(() -> ModuleIOSim.driveSimulation.setSimulationWorldPose(startingPose)),
                 CommandsExt.eagerSequence(
                         superstructure.autoIntakeCoral(),
                         superstructure.cancel(),
@@ -109,7 +108,7 @@ public class RobotContainer {
 
         controller.y().onTrue(robotState.resetRotation());
         controller.leftBumper().onTrue(superstructure.cancel());
-        controller.a().onTrue(superstructure.autoIntakeCoral());
+//        controller.a().onTrue(superstructure.autoIntakeCoral());
 
         // NOTE: if you are binding a trigger to a command returned by a subsystem, you must wrap it in CommandsExt.eagerSequence(superstructure.cancel(), <your command>)
         // You must do this because if you don't, superstructure's default command will cancel your command

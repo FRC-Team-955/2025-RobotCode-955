@@ -26,36 +26,20 @@ public class DriveConstants {
 
     static final double odometryPositionDeltaDiscardMeters = Units.inchesToMeters(8);
 
-    public static final DriveConfig driveConfig = switch (BuildConstants.mode) {
-        case REAL, REPLAY -> new DriveConfig(
-                Units.inchesToMeters(2),
-                Units.inchesToMeters(22.75),
-                Units.inchesToMeters(22.75),
-                Units.inchesToMeters(28),
-                Units.inchesToMeters(28),
-                PIDF.ofPD(3.5, 0),
-                PIDF.ofPD(3, 0),
-                new ModuleLimits(
-                        2.5,
-                        15,
-                        20
-                )
-        );
-        case SIM -> new DriveConfig(
-                Units.inchesToMeters(2),
-                Units.inchesToMeters(22.75),
-                Units.inchesToMeters(22.75),
-                Units.inchesToMeters(28),
-                Units.inchesToMeters(28),
-                PIDF.ofPD(3.5, 0),
-                PIDF.ofPD(3, 0),
-                new ModuleLimits(
-                        2.5,
-                        15,
-                        20
-                )
-        );
-    };
+    public static final DriveConfig driveConfig = new DriveConfig(
+            Units.inchesToMeters(2),
+            Units.inchesToMeters(22.75),
+            Units.inchesToMeters(22.75),
+            Units.inchesToMeters(28),
+            Units.inchesToMeters(28),
+            PIDF.ofPD(3.5, 0),
+            PIDF.ofPD(3, 0),
+            new ModuleLimits(
+                    4.5,
+                    20,
+                    20
+            )
+    );
 
     public static final ModuleLimits moveToModuleLimits = new ModuleLimits(
             driveConfig.moduleLimits().maxDriveVelocityMetersPerSec(),
@@ -116,10 +100,10 @@ public class DriveConstants {
             // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
             case REAL -> new ModuleIO[]{
                     // FL, FR, BL, BR
-                    new ModuleIOSparkMaxCANcoder(7, 8, 10, -2.626),
-                    new ModuleIOSparkMaxCANcoder(5, 6, 9, -2.183),
-                    new ModuleIOSparkMaxCANcoder(1, 2, 12, 0.250),
-                    new ModuleIOSparkMaxCANcoder(3, 4, 11, 0.824),
+                    new ModuleIOSparkMaxCANcoder(7, 8, 10, -2.589),
+                    new ModuleIOSparkMaxCANcoder(5, 6, 9, -2.182),
+                    new ModuleIOSparkMaxCANcoder(1, 2, 12, 0.268),
+                    new ModuleIOSparkMaxCANcoder(3, 4, 11, 0.825),
             };
             case SIM -> new ModuleIO[]{
                     new ModuleIOSim(0),
