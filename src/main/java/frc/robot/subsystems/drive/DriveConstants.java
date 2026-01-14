@@ -71,7 +71,7 @@ public class DriveConstants {
                         0.01, 0.0,
                         0.1, 0.13, 0.0
                 ),
-                PIDF.ofPD(5.0, 0.04),
+                PIDF.ofPD(6.0, 0.04),
                 Mk4iGearRatios.L2,
                 Mk4iGearRatios.TURN,
                 true,
@@ -100,8 +100,8 @@ public class DriveConstants {
             // absolute encoders using AdvantageScope. These values are logged under "/Inputs/Drive/ModuleX/TurnAbsolutePositionRad"
             case REAL -> new ModuleIO[]{
                     // FL, FR, BL, BR
-                    new ModuleIOSparkMaxCANcoder(7, 8, 10, -2.589),
-                    new ModuleIOSparkMaxCANcoder(5, 6, 9, -2.182),
+                    new ModuleIOSparkMaxCANcoder(7, 8, 10, -2.675),
+                    new ModuleIOSparkMaxCANcoder(5, 6, 9, -2.295),
                     new ModuleIOSparkMaxCANcoder(1, 2, 12, 0.268),
                     new ModuleIOSparkMaxCANcoder(3, 4, 11, 0.825),
             };
