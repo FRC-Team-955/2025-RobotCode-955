@@ -14,6 +14,7 @@
 package frc.robot.subsystems.drive;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -22,13 +23,13 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.lib.PIDF;
 import org.littletonrobotics.junction.Logger;
 
-import static frc.robot.subsystems.drive.DriveConstants.disableDriving;
-import static frc.robot.subsystems.drive.DriveConstants.driveConfig;
+import static frc.robot.subsystems.drive.DriveConstants.*;
 
 public class Module {
     private final ModuleIO io;
     private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
     private final int index;
+    private PIDController turnPID = moduleConfig.turnGains().toPIDWrapRadians();
 
     private final Alert driveDisconnectedAlert;
     private final Alert turnDisconnectedAlert;
@@ -66,7 +67,7 @@ public class Module {
         if (Math.abs(state.speedMetersPerSecond) < 1e-4 && Math.abs(getTurnAngle().minus(state.angle).getRadians()) < 0.1) {
             io.setTurnOpenLoop(0.0);
         } else {
-            io.setTurnClosedLoop(state.angle.getRadians());
+            io.setTurnOpenLoop(turnPID.calculate(inputs.turnAbsolutePositionRad, state.angle.getRadians()));
         }
     }
 
@@ -75,7 +76,7 @@ public class Module {
      */
     public void runCharacterization(double output) {
         io.setDriveOpenLoop(output);
-        io.setTurnClosedLoop(0.0);
+        io.setTurnOpenLoop(turnPID.calculate(inputs.turnAbsolutePositionRad, 0.0));
     }
 
     /**
@@ -91,7 +92,9 @@ public class Module {
     }
 
     public void setTurnPIDF(PIDF newGains) {
-        io.setTurnPIDF(newGains);
+        System.out.println("NEW set tune PID");
+        turnPID = newGains.toPIDWrapRadians();
+//        io.setTurnPIDF(newGains);
     }
 
     public void setBrakeMode(boolean enable) {
@@ -103,7 +106,7 @@ public class Module {
      * Returns the current turn angle of the module.
      */
     public Rotation2d getTurnAngle() {
-        return new Rotation2d(MathUtil.angleModulus(inputs.turnPositionRad));
+        return new Rotation2d(MathUtil.angleModulus(inputs.turnAbsolutePositionRad));
     }
 
     public double getDrivePositionRad() {
