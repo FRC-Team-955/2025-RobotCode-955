@@ -13,6 +13,8 @@
 
 package frc.robot;
 
+import com.revrobotics.spark.SparkLowLevel;
+import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
@@ -24,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.lib.LoggedTracer;
 import frc.lib.commands.CommandsExt;
+import frc.lib.network.LoggedNetworkNumberExt;
 import frc.lib.subsystem.Periodic;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import org.ironmaple.simulation.SimulatedArena;
@@ -162,8 +165,17 @@ public class Robot extends LoggedRobot {
         }
     }
 
+    private final SparkMax motor = new SparkMax(20, SparkLowLevel.MotorType.kBrushed);
+    private final LoggedNetworkNumberExt volts = new LoggedNetworkNumberExt("MotorVolts", 3.0);
+
     @Override
     public void robotPeriodic() {
+        if (robotContainer.controller.a().getAsBoolean()) {
+            motor.setVoltage(volts.get());
+        } else {
+            motor.stopMotor();
+        }
+
         LoggedTracer.reset();
 
         for (var periodic : periodics) {
